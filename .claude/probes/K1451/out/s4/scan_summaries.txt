@@ -1,0 +1,48 @@
+== fl0_clip_g41_def_tw64.txt
+g41_def_tw64	clip	v2 3	{"vdip:tie":3}	v1 375	{"dbreak:tie":20,"rbreak:plain":3,"rbreak:tie":1,"rthin:plain":350,"rthin:thru":1}	{"raster":15514,"v1":1021,"v2":3665}
+== fl0_clip_g41_ring_tw64.txt
+g41_ring_tw64	clip	v2 0	{}	v1 138	{"dbreak:tie":2,"rbreak:plain":34,"rbreak:tie":1,"rthin:plain":101}	{"raster":4462,"v1":467,"v2":1215}
+== fl0_clip_g41_user_tw64.txt
+g41_user_tw64	clip	v2 2	{"vdip:tie":2}	v1 325	{"dbreak:tie":10,"rbreak:plain":51,"rbreak:tie":3,"rthin:plain":260,"rthin:thru":1}	{"raster":6746,"v1":558,"v2":1634}
+== fl0_clip_muse_hash.txt
+muse_hash	clip	v2 22	{"dstray:tie":5,"dstray:plain":2,"rstray:plain":7,"vdip:tie":8}	v1 608	{"dbreak:tie":27,"dstray:tie":5,"dstray:plain":2,"rbreak:tie":4,"rstray:plain":18,"rthin:plain":544,"rthin:tie":6,"rthin:thru":2}	{"raster":21022,"v1":1130,"v2":3688}
+== fl0_over_g41_def_tw64.txt
+g41_def_tw64	over	v2 3	{"vdip:tie":3}	v1 375	{"dbreak:tie":20,"rbreak:plain":3,"rbreak:tie":1,"rthin:plain":350,"rthin:thru":1}	{"raster":17668,"v1":1018,"v2":3764}
+== fl0_over_g41_ring_tw64.txt
+g41_ring_tw64	over	v2 0	{}	v1 138	{"dbreak:tie":2,"rbreak:plain":34,"rbreak:tie":1,"rthin:plain":101}	{"raster":4022,"v1":454,"v2":1189}
+== fl0_over_g41_user_tw64.txt
+g41_user_tw64	over	v2 2	{"vdip:tie":2}	v1 324	{"dbreak:tie":10,"rbreak:plain":51,"rbreak:tie":3,"rthin:plain":259,"rthin:thru":1}	{"raster":6865,"v1":414,"v2":1360}
+== fl0_over_muse_hash.txt
+muse_hash	over	v2 17	{"dstray:tie":2,"dstray:plain":2,"rstray:plain":7,"vdip:tie":6}	v1 602	{"dbreak:tie":25,"dstray:tie":2,"dstray:plain":2,"rbreak:tie":4,"rstray:plain":18,"rthin:plain":546,"rthin:tie":3,"rthin:thru":2}	{"raster":20515,"v1":1140,"v2":3914}
+== fl1.2_clip_g41_def_tw64.txt
+g41_def_tw64	clip	v2 1	{"rstray:ramp":1}	v1 310	{"rstray:ramp":1,"rthin:ramp":120,"rthin:plain":188,"rthin:thru":1}	{"raster":16963,"v1":1010,"v2":3673}
+== fl1.2_clip_g41_ring_tw64.txt
+g41_ring_tw64	clip	v2 0	{}	v1 129	{"rbreak:plain":34,"rthin:plain":79,"rthin:ramp":16}	{"raster":4081,"v1":485,"v2":1183}
+== fl1.2_clip_g41_user_tw64.txt
+g41_user_tw64	clip	v2 2	{"rstray:plain":1,"rstray:ramp":1}	v1 290	{"rbreak:plain":49,"rbreak:ramp":1,"rstray:plain":2,"rstray:ramp":1,"rthin:plain":160,"rthin:ramp":76,"rthin:thru":1}	{"raster":6750,"v1":401,"v2":1409}
+== fl1.2_clip_muse_hash.txt
+muse_hash	clip	v2 27	{"dstray:tie":5,"dstray:plain":2,"dstray:ramp":1,"rstray:plain":8,"rstray:ramp":6,"vdip:ramp":1,"vdip:tie":4}	v1 542	{"dbreak:tie":5,"dstray:tie":5,"dstray:plain":2,"dstray:ramp":1,"rbreak:tie":1,"rstray:plain":18,"rstray:ramp":7,"rthin:plain":287,"rthin:ramp":208,"rthin:tie":6,"rthin:thru":2}	{"raster":21450,"v1":1108,"v2":3631}
+== fl1.2_over_g41_def_tw64.txt
+g41_def_tw64	over	v2 1	{"rstray:ramp":1}	v1 310	{"rstray:ramp":1,"rthin:ramp":120,"rthin:plain":188,"rthin:thru":1}	{"raster":18629,"v1":745,"v2":2795}
+== fl1.2_over_g41_ring_tw64.txt
+g41_ring_tw64	over	v2 0	{}	v1 129	{"rbreak:plain":34,"rthin:plain":79,"rthin:ramp":16}	{"raster":4292,"v1":522,"v2":1195}
+== fl1.2_over_g41_user_tw64.txt
+g41_user_tw64	over	v2 2	{"rstray:plain":1,"rstray:ramp":1}	v1 289	{"rbreak:plain":49,"rbreak:ramp":1,"rstray:plain":2,"rstray:ramp":1,"rthin:plain":159,"rthin:ramp":76,"rthin:thru":1}	{"raster":8907,"v1":528,"v2":1604}
+== fl1.2_over_muse_hash.txt
+muse_hash	over	v2 22	{"dstray:tie":2,"dstray:plain":2,"dstray:ramp":1,"rstray:plain":8,"rstray:ramp":6,"vdip:ramp":1,"vdip:tie":2}	v1 536	{"dbreak:tie":3,"dstray:tie":2,"dstray:plain":2,"dstray:ramp":1,"rbreak:tie":1,"rstray:plain":18,"rstray:ramp":7,"rthin:plain":289,"rthin:ramp":208,"rthin:tie":3,"rthin:thru":2}	{"raster":23434,"v1":1148,"v2":4156}
+== fld_clip_g41_def_tw64.txt
+g41_def_tw64	clip	v2 20	{"rstray:tie":2,"vdip:plain":15,"vdip:ramp":3}	v1 343	{"rstray:tie":3,"rthin:plain":300,"rthin:ramp":24,"rthin:tie":15,"rthin:thru":1}	{"raster":15821,"v1":1035,"v2":3629}
+== fld_clip_g41_ring_tw64.txt
+g41_ring_tw64	clip	v2 2	{"rstray:tie":1,"vdip:plain":1}	v1 134	{"rbreak:plain":34,"rstray:tie":1,"rthin:plain":93,"rthin:ramp":5,"rthin:tie":1}	{"raster":4110,"v1":380,"v2":1006}
+== fld_clip_g41_user_tw64.txt
+g41_user_tw64	clip	v2 2	{"rstray:tie":1,"vdip:plain":1}	v1 325	{"rbreak:plain":50,"rstray:tie":1,"rthin:plain":233,"rthin:ramp":30,"rthin:tie":10,"rthin:thru":1}	{"raster":6689,"v1":544,"v2":1522}
+== fld_clip_muse_hash.txt
+muse_hash	clip	v2 38	{"dstray:tie":5,"dstray:plain":2,"rstray:plain":9,"vdip:plain":16,"vdip:tie":4,"vdip:ramp":2}	v1 582	{"dbreak:tie":5,"dstray:tie":5,"dstray:plain":2,"rbreak:tie":1,"rstray:plain":19,"rstray:ramp":1,"rthin:plain":419,"rthin:ramp":97,"rthin:tie":31,"rthin:thru":2}	{"raster":20158,"v1":1179,"v2":3698}
+== fld_over_g41_def_tw64.txt
+g41_def_tw64	over	v2 20	{"rstray:tie":2,"vdip:plain":15,"vdip:ramp":3}	v1 343	{"rstray:tie":3,"rthin:plain":300,"rthin:ramp":24,"rthin:tie":15,"rthin:thru":1}	{"raster":17881,"v1":1009,"v2":3765}
+== fld_over_g41_ring_tw64.txt
+g41_ring_tw64	over	v2 2	{"rstray:tie":1,"vdip:plain":1}	v1 134	{"rbreak:plain":34,"rstray:tie":1,"rthin:plain":93,"rthin:ramp":5,"rthin:tie":1}	{"raster":3765,"v1":445,"v2":1176}
+== fld_over_g41_user_tw64.txt
+g41_user_tw64	over	v2 2	{"rstray:tie":1,"vdip:plain":1}	v1 324	{"rbreak:plain":50,"rstray:tie":1,"rthin:plain":232,"rthin:ramp":30,"rthin:tie":10,"rthin:thru":1}	{"raster":7566,"v1":525,"v2":1695}
+== fld_over_muse_hash.txt
+muse_hash	over	v2 33	{"dstray:tie":2,"dstray:plain":2,"rstray:plain":9,"vdip:plain":16,"vdip:tie":2,"vdip:ramp":2}	v1 576	{"dbreak:tie":3,"dstray:tie":2,"dstray:plain":2,"rbreak:tie":1,"rstray:plain":19,"rstray:ramp":1,"rthin:plain":421,"rthin:ramp":97,"rthin:tie":28,"rthin:thru":2}	{"raster":21190,"v1":1129,"v2":4356}

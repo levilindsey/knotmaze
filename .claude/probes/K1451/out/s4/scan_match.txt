@@ -1,0 +1,30 @@
+fl0 g41_def_tw64: clip 3 over 3 new 0 gone 0 grew 0
+fl0 g41_ring_tw64: clip 0 over 0 new 0 gone 0 grew 0
+fl0 g41_user_tw64: clip 2 over 2 new 0 gone 0 grew 0
+fl0 muse_hash: clip 22 over 17 new 0 gone 5 grew 0
+   GONE muse_hash:16.34:18.34 dstray:tie 3px
+   GONE muse_hash:22.02:18.62 dstray:tie 17px
+   GONE muse_hash:21.86:18.66 dstray:tie 4px
+   GONE muse_hash:16.33:18.36 vdip:tie 11px
+   GONE muse_hash:22.03:18.64 vdip:tie 15px
+fl1.2 g41_def_tw64: clip 1 over 1 new 0 gone 0 grew 0
+fl1.2 g41_ring_tw64: clip 0 over 0 new 0 gone 0 grew 0
+fl1.2 g41_user_tw64: clip 2 over 2 new 0 gone 0 grew 0
+fl1.2 muse_hash: clip 27 over 22 new 0 gone 5 grew 0
+   GONE muse_hash:16.34:18.34 dstray:tie 3px
+   GONE muse_hash:22.02:18.62 dstray:tie 17px
+   GONE muse_hash:21.86:18.66 dstray:tie 4px
+   GONE muse_hash:16.33:18.36 vdip:tie 11px
+   GONE muse_hash:22.03:18.64 vdip:tie 15px
+fld g41_def_tw64: clip 20 over 20 new 0 gone 0 grew 0
+fld g41_ring_tw64: clip 2 over 2 new 0 gone 0 grew 0
+fld g41_user_tw64: clip 2 over 2 new 0 gone 0 grew 0
+fld muse_hash: clip 38 over 33 new 0 gone 5 grew 0
+   GONE muse_hash:16.34:18.34 dstray:tie 3px
+   GONE muse_hash:22.02:18.62 dstray:tie 17px
+   GONE muse_hash:21.86:18.66 dstray:tie 4px
+   GONE muse_hash:16.33:18.36 vdip:tie 11px
+   GONE muse_hash:22.03:18.64 vdip:tie 15px
+TOTAL fl0: clip 27 over 22 new 0 gone 5 grew 0
+TOTAL fl1.2: clip 30 over 25 new 0 gone 5 grew 0
+TOTAL fld: clip 62 over 57 new 0 gone 5 grew 0

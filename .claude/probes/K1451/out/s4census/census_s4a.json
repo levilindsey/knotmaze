@@ -1,0 +1,5371 @@
+{
+ "ppu": 160,
+ "minPx": 40,
+ "scenes": [
+  "muse_hash",
+  "g41_ring_tw64"
+ ],
+ "arts": [
+  {
+   "id": "muse_hash#0",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 3.48,
+   "y": 2.165,
+   "px": 225,
+   "sizePx": 32,
+   "bbox": [
+    3.375,
+    2.119,
+    3.575,
+    2.219
+   ],
+   "near": "j2",
+   "dNear": 0.312,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#1",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 4.032,
+   "y": 2.465,
+   "px": 202,
+   "sizePx": 25,
+   "bbox": [
+    3.975,
+    2.388,
+    4.075,
+    2.544
+   ],
+   "near": "j2",
+   "dNear": 0.448,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#2",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 4.926,
+   "y": 3.151,
+   "px": 683,
+   "sizePx": 37,
+   "bbox": [
+    4.844,
+    3.006,
+    5.056,
+    3.237
+   ],
+   "near": "x100",
+   "dNear": 0.701,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#3",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 5.336,
+   "y": 3.149,
+   "px": 48,
+   "sizePx": 10,
+   "bbox": [
+    5.306,
+    3.119,
+    5.369,
+    3.175
+   ],
+   "near": "j64",
+   "dNear": 0.45,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#4",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 5.292,
+   "y": 4.186,
+   "px": 167,
+   "sizePx": 28,
+   "bbox": [
+    5.188,
+    4.15,
+    5.362,
+    4.219
+   ],
+   "near": "j110",
+   "dNear": 0.262,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#5",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 5.676,
+   "y": 4.399,
+   "px": 405,
+   "sizePx": 28,
+   "bbox": [
+    5.588,
+    4.325,
+    5.763,
+    4.469
+   ],
+   "near": "j110",
+   "dNear": 0.274,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#6",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 5.391,
+   "y": 4.421,
+   "px": 84,
+   "sizePx": 13,
+   "bbox": [
+    5.362,
+    4.388,
+    5.438,
+    4.469
+   ],
+   "near": "j110",
+   "dNear": 0.012,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.001"
+  },
+  {
+   "id": "muse_hash#7",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 10.495,
+   "y": 0.955,
+   "px": 100,
+   "sizePx": 17,
+   "bbox": [
+    10.463,
+    0.912,
+    10.537,
+    1.019
+   ],
+   "near": "j109",
+   "dNear": 0.327,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#8",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 8.847,
+   "y": 1.148,
+   "px": 354,
+   "sizePx": 30,
+   "bbox": [
+    8.787,
+    1.056,
+    8.925,
+    1.244
+   ],
+   "near": "j93",
+   "dNear": 0.417,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#9",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 9.982,
+   "y": 1.163,
+   "px": 124,
+   "sizePx": 18,
+   "bbox": [
+    9.919,
+    1.119,
+    10.031,
+    1.219
+   ],
+   "near": "j109",
+   "dNear": 0.344,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#10",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 13.987,
+   "y": 1.369,
+   "px": 288,
+   "sizePx": 27,
+   "bbox": [
+    13.9,
+    1.294,
+    14.069,
+    1.431
+   ],
+   "near": "j111",
+   "dNear": 0.387,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#11",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 12.983,
+   "y": 1.494,
+   "px": 284,
+   "sizePx": 27,
+   "bbox": [
+    12.938,
+    1.406,
+    13.05,
+    1.575
+   ],
+   "near": "j65",
+   "dNear": 0.353,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#12",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 10.844,
+   "y": 2.476,
+   "px": 969,
+   "sizePx": 72,
+   "bbox": [
+    10.662,
+    2.275,
+    11.094,
+    2.725
+   ],
+   "near": "j3",
+   "dNear": 0.284,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#13",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 12.248,
+   "y": 3.091,
+   "px": 80,
+   "sizePx": 17,
+   "bbox": [
+    12.213,
+    3.038,
+    12.275,
+    3.144
+   ],
+   "near": "j121",
+   "dNear": 0.337,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#14",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 13.49,
+   "y": 5.786,
+   "px": 260,
+   "sizePx": 25,
+   "bbox": [
+    13.419,
+    5.713,
+    13.575,
+    5.838
+   ],
+   "near": "j91",
+   "dNear": 0.374,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#15",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 22.163,
+   "y": 5.654,
+   "px": 427,
+   "sizePx": 97,
+   "bbox": [
+    21.956,
+    5.344,
+    22.3,
+    5.95
+   ],
+   "near": "j5",
+   "dNear": 0.512,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#16",
+   "scene": "muse_hash",
+   "kind": "paper",
+   "sub": "notch",
+   "x": 22.064,
+   "y": 5.56,
+   "px": 26,
+   "sizePx": 50,
+   "bbox": [
+    21.969,
+    5.406,
+    22.131,
+    5.719
+   ],
+   "near": "j5",
+   "dNear": 0.638,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#17",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 14.554,
+   "y": 1.177,
+   "px": 361,
+   "sizePx": 28,
+   "bbox": [
+    14.469,
+    1.125,
+    14.644,
+    1.281
+   ],
+   "near": "j111",
+   "dNear": 0.505,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#18",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 21.993,
+   "y": 2.968,
+   "px": 1092,
+   "sizePx": 67,
+   "bbox": [
+    21.813,
+    2.725,
+    22.231,
+    3.081
+   ],
+   "near": "j130",
+   "dNear": 0.659,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#19",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 17.1,
+   "y": 3.099,
+   "px": 371,
+   "sizePx": 24,
+   "bbox": [
+    17.031,
+    3.031,
+    17.181,
+    3.15
+   ],
+   "near": "j149",
+   "dNear": 0.619,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#20",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 14.391,
+   "y": 3.264,
+   "px": 178,
+   "sizePx": 24,
+   "bbox": [
+    14.313,
+    3.225,
+    14.463,
+    3.313
+   ],
+   "near": "j108",
+   "dNear": 0.319,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#21",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.239,
+   "y": 4.635,
+   "px": 372,
+   "sizePx": 30,
+   "bbox": [
+    15.144,
+    4.544,
+    15.331,
+    4.694
+   ],
+   "near": "j107",
+   "dNear": 0.437,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#22",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 16.418,
+   "y": 4.745,
+   "px": 1131,
+   "sizePx": 82,
+   "bbox": [
+    16.181,
+    4.544,
+    16.694,
+    4.9
+   ],
+   "near": "j126",
+   "dNear": 0.295,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#23",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.064,
+   "y": 5.564,
+   "px": 63,
+   "sizePx": 70,
+   "bbox": [
+    21.919,
+    5.35,
+    22.15,
+    5.787
+   ],
+   "near": "j5",
+   "dNear": 0.636,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#24",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.187,
+   "y": 5.5,
+   "px": 281,
+   "sizePx": 28,
+   "bbox": [
+    15.106,
+    5.438,
+    15.281,
+    5.569
+   ],
+   "near": "j148",
+   "dNear": 0.393,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#25",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.358,
+   "y": 5.677,
+   "px": 78,
+   "sizePx": 15,
+   "bbox": [
+    22.313,
+    5.65,
+    22.406,
+    5.713
+   ],
+   "near": "j5",
+   "dNear": 0.321,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#26",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.468,
+   "y": 6.003,
+   "px": 127,
+   "sizePx": 20,
+   "bbox": [
+    15.425,
+    5.944,
+    15.5,
+    6.069
+   ],
+   "near": "j148",
+   "dNear": 0.303,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#27",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.363,
+   "y": 1.169,
+   "px": 166,
+   "sizePx": 24,
+   "bbox": [
+    25.331,
+    1.094,
+    25.413,
+    1.244
+   ],
+   "near": "j7",
+   "dNear": 0.403,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#28",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.777,
+   "y": 1.539,
+   "px": 121,
+   "sizePx": 20,
+   "bbox": [
+    25.712,
+    1.5,
+    25.837,
+    1.569
+   ],
+   "near": "j7",
+   "dNear": 0.39,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#29",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 27.569,
+   "y": 1.536,
+   "px": 57,
+   "sizePx": 14,
+   "bbox": [
+    27.525,
+    1.506,
+    27.613,
+    1.563
+   ],
+   "near": "j8",
+   "dNear": 0.4,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#30",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 24.18,
+   "y": 2.135,
+   "px": 75,
+   "sizePx": 14,
+   "bbox": [
+    24.137,
+    2.106,
+    24.225,
+    2.163
+   ],
+   "near": "j6",
+   "dNear": 0.255,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#31",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 23.749,
+   "y": 2.444,
+   "px": 49,
+   "sizePx": 13,
+   "bbox": [
+    23.712,
+    2.406,
+    23.788,
+    2.487
+   ],
+   "near": "j6",
+   "dNear": 0.358,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#32",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 24.072,
+   "y": 2.766,
+   "px": 184,
+   "sizePx": 22,
+   "bbox": [
+    24,
+    2.725,
+    24.137,
+    2.813
+   ],
+   "near": "j6",
+   "dNear": 0.389,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#33",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.843,
+   "y": 2.893,
+   "px": 123,
+   "sizePx": 19,
+   "bbox": [
+    22.781,
+    2.856,
+    22.9,
+    2.925
+   ],
+   "near": "j129",
+   "dNear": 0.327,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#34",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 30.184,
+   "y": 3.15,
+   "px": 50,
+   "sizePx": 13,
+   "bbox": [
+    30.156,
+    3.112,
+    30.206,
+    3.194
+   ],
+   "near": "j9",
+   "dNear": 0.283,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#35",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.991,
+   "y": 5.489,
+   "px": 323,
+   "sizePx": 27,
+   "bbox": [
+    25.913,
+    5.419,
+    26.081,
+    5.563
+   ],
+   "near": "j143",
+   "dNear": 0.348,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#36",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 23.002,
+   "y": 5.721,
+   "px": 182,
+   "sizePx": 24,
+   "bbox": [
+    22.969,
+    5.656,
+    23.044,
+    5.806
+   ],
+   "near": "j5",
+   "dNear": 0.363,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#37",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 26.376,
+   "y": 5.709,
+   "px": 75,
+   "sizePx": 15,
+   "bbox": [
+    26.331,
+    5.681,
+    26.425,
+    5.731
+   ],
+   "near": "j143",
+   "dNear": 0.251,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#38",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.803,
+   "y": 6.042,
+   "px": 428,
+   "sizePx": 39,
+   "bbox": [
+    22.669,
+    5.931,
+    22.913,
+    6.119
+   ],
+   "near": "j5",
+   "dNear": 0.278,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#39",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 30.211,
+   "y": 4.47,
+   "px": 68,
+   "sizePx": 17,
+   "bbox": [
+    30.15,
+    4.444,
+    30.256,
+    4.487
+   ],
+   "near": "j55",
+   "dNear": 0.161,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.001"
+  },
+  {
+   "id": "muse_hash#40",
+   "scene": "muse_hash",
+   "kind": "paper",
+   "sub": "notch",
+   "x": 5.839,
+   "y": 9.057,
+   "px": 66,
+   "sizePx": 15,
+   "bbox": [
+    5.781,
+    9.037,
+    5.875,
+    9.094
+   ],
+   "near": "j78",
+   "dNear": 0.579,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#41",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 2.377,
+   "y": 6.354,
+   "px": 199,
+   "sizePx": 19,
+   "bbox": [
+    2.319,
+    6.287,
+    2.425,
+    6.406
+   ],
+   "near": "j76",
+   "dNear": 0.295,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#42",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.944,
+   "y": 6.72,
+   "px": 230,
+   "sizePx": 31,
+   "bbox": [
+    1.875,
+    6.625,
+    2.031,
+    6.819
+   ],
+   "near": "j76",
+   "dNear": 0.32,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#43",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 2.268,
+   "y": 6.993,
+   "px": 203,
+   "sizePx": 24,
+   "bbox": [
+    2.188,
+    6.956,
+    2.337,
+    7.044
+   ],
+   "near": "j76",
+   "dNear": 0.373,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#44",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 5.093,
+   "y": 8.351,
+   "px": 1289,
+   "sizePx": 87,
+   "bbox": [
+    4.931,
+    8.106,
+    5.287,
+    8.65
+   ],
+   "near": "j77",
+   "dNear": 0.308,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#45",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 6.027,
+   "y": 8.44,
+   "px": 271,
+   "sizePx": 27,
+   "bbox": [
+    5.944,
+    8.387,
+    6.112,
+    8.512
+   ],
+   "near": "j78",
+   "dNear": 0.32,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#46",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 2.158,
+   "y": 9.753,
+   "px": 1285,
+   "sizePx": 78,
+   "bbox": [
+    1.887,
+    9.537,
+    2.375,
+    9.981
+   ],
+   "near": "j21",
+   "dNear": 0.459,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#47",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.458,
+   "y": 11.276,
+   "px": 285,
+   "sizePx": 28,
+   "bbox": [
+    1.406,
+    11.188,
+    1.531,
+    11.363
+   ],
+   "near": "j25",
+   "dNear": 0.42,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#48",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.931,
+   "y": 11.614,
+   "px": 83,
+   "sizePx": 16,
+   "bbox": [
+    1.881,
+    11.581,
+    1.981,
+    11.637
+   ],
+   "near": "j25",
+   "dNear": 0.258,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#49",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 0.741,
+   "y": 12.553,
+   "px": 57,
+   "sizePx": 15,
+   "bbox": [
+    0.719,
+    12.506,
+    0.762,
+    12.6
+   ],
+   "near": "j24",
+   "dNear": 0.291,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#50",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 0.409,
+   "y": 12.978,
+   "px": 109,
+   "sizePx": 18,
+   "bbox": [
+    0.356,
+    12.944,
+    0.469,
+    13.006
+   ],
+   "near": "j24",
+   "dNear": 0.297,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#51",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.46,
+   "y": 13.255,
+   "px": 919,
+   "sizePx": 78,
+   "bbox": [
+    1.212,
+    13.094,
+    1.7,
+    13.5
+   ],
+   "near": "j22",
+   "dNear": 0.452,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#52",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 4.491,
+   "y": 13.298,
+   "px": 525,
+   "sizePx": 30,
+   "bbox": [
+    4.394,
+    13.219,
+    4.581,
+    13.4
+   ],
+   "near": "j75",
+   "dNear": 0.394,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#53",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 0.942,
+   "y": 13.653,
+   "px": 102,
+   "sizePx": 17,
+   "bbox": [
+    0.919,
+    13.6,
+    0.975,
+    13.706
+   ],
+   "near": "j22",
+   "dNear": 0.25,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#54",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 6.106,
+   "y": 8.563,
+   "px": 306,
+   "sizePx": 38,
+   "bbox": [
+    6.037,
+    8.456,
+    6.175,
+    8.694
+   ],
+   "near": "j78",
+   "dNear": 0.181,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.044"
+  },
+  {
+   "id": "muse_hash#55",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 6.365,
+   "y": 8.741,
+   "px": 337,
+   "sizePx": 40,
+   "bbox": [
+    6.225,
+    8.706,
+    6.475,
+    8.8
+   ],
+   "near": "j78",
+   "dNear": 0.133,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.002"
+  },
+  {
+   "id": "muse_hash#56",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 11.173,
+   "y": 6.278,
+   "px": 230,
+   "sizePx": 26,
+   "bbox": [
+    11.088,
+    6.219,
+    11.25,
+    6.331
+   ],
+   "near": "j125",
+   "dNear": 0.389,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#57",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 9.224,
+   "y": 7.108,
+   "px": 131,
+   "sizePx": 20,
+   "bbox": [
+    9.181,
+    7.037,
+    9.262,
+    7.162
+   ],
+   "near": "j122",
+   "dNear": 0.378,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#58",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 6.507,
+   "y": 8.776,
+   "px": 256,
+   "sizePx": 25,
+   "bbox": [
+    6.444,
+    8.688,
+    6.569,
+    8.844
+   ],
+   "near": "j78",
+   "dNear": 0.274,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#59",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 9.907,
+   "y": 9.43,
+   "px": 159,
+   "sizePx": 22,
+   "bbox": [
+    9.838,
+    9.381,
+    9.975,
+    9.469
+   ],
+   "near": "j156",
+   "dNear": 0.347,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#60",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 11.357,
+   "y": 10.07,
+   "px": 695,
+   "sizePx": 73,
+   "bbox": [
+    11.175,
+    9.875,
+    11.581,
+    10.331
+   ],
+   "near": "j157",
+   "dNear": 0.273,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#61",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 11.85,
+   "y": 10.327,
+   "px": 75,
+   "sizePx": 16,
+   "bbox": [
+    11.825,
+    10.281,
+    11.875,
+    10.381
+   ],
+   "near": "j157",
+   "dNear": 0.283,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#62",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 12.932,
+   "y": 10.549,
+   "px": 424,
+   "sizePx": 29,
+   "bbox": [
+    12.844,
+    10.444,
+    13.025,
+    10.625
+   ],
+   "near": "j124",
+   "dNear": 0.856,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#63",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 8.315,
+   "y": 10.653,
+   "px": 165,
+   "sizePx": 25,
+   "bbox": [
+    8.281,
+    10.575,
+    8.356,
+    10.731
+   ],
+   "near": "j79",
+   "dNear": 0.343,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#64",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 12.598,
+   "y": 14.016,
+   "px": 75,
+   "sizePx": 15,
+   "bbox": [
+    12.569,
+    13.963,
+    12.631,
+    14.056
+   ],
+   "near": "j112",
+   "dNear": 0.433,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#65",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 14.375,
+   "y": 14.09,
+   "px": 328,
+   "sizePx": 24,
+   "bbox": [
+    14.3,
+    14.019,
+    14.45,
+    14.169
+   ],
+   "near": "j99",
+   "dNear": 0.23,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#66",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.257,
+   "y": 10.265,
+   "px": 148,
+   "sizePx": 22,
+   "bbox": [
+    15.194,
+    10.225,
+    15.331,
+    10.313
+   ],
+   "near": "j94",
+   "dNear": 0.332,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#67",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 19.035,
+   "y": 10.499,
+   "px": 72,
+   "sizePx": 17,
+   "bbox": [
+    19.019,
+    10.444,
+    19.063,
+    10.55
+   ],
+   "near": "j158",
+   "dNear": 0.257,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#68",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.367,
+   "y": 10.732,
+   "px": 1007,
+   "sizePx": 65,
+   "bbox": [
+    22.188,
+    10.531,
+    22.531,
+    10.938
+   ],
+   "near": "j0",
+   "dNear": 0.305,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#69",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.676,
+   "y": 10.652,
+   "px": 344,
+   "sizePx": 25,
+   "bbox": [
+    15.594,
+    10.575,
+    15.744,
+    10.731
+   ],
+   "near": "j94",
+   "dNear": 0.426,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#70",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 19.457,
+   "y": 10.917,
+   "px": 486,
+   "sizePx": 32,
+   "bbox": [
+    19.363,
+    10.813,
+    19.563,
+    11
+   ],
+   "near": "j158",
+   "dNear": 0.426,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#71",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 21.103,
+   "y": 12.88,
+   "px": 47,
+   "sizePx": 13,
+   "bbox": [
+    21.081,
+    12.838,
+    21.125,
+    12.919
+   ],
+   "near": "j1",
+   "dNear": 0.267,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#72",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 19.678,
+   "y": 13.179,
+   "px": 181,
+   "sizePx": 20,
+   "bbox": [
+    19.606,
+    13.106,
+    19.731,
+    13.231
+   ],
+   "near": "j159",
+   "dNear": 0.371,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#73",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 26.721,
+   "y": 6.728,
+   "px": 262,
+   "sizePx": 27,
+   "bbox": [
+    26.656,
+    6.65,
+    26.781,
+    6.819
+   ],
+   "near": "j10",
+   "dNear": 0.367,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#74",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 26.248,
+   "y": 7.054,
+   "px": 189,
+   "sizePx": 25,
+   "bbox": [
+    26.169,
+    7,
+    26.325,
+    7.094
+   ],
+   "near": "j10",
+   "dNear": 0.341,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#75",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 28.081,
+   "y": 9.198,
+   "px": 390,
+   "sizePx": 29,
+   "bbox": [
+    28.019,
+    9.106,
+    28.163,
+    9.287
+   ],
+   "near": "j131",
+   "dNear": 0.341,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#76",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.42,
+   "y": 10.77,
+   "px": 1168,
+   "sizePx": 72,
+   "bbox": [
+    22.231,
+    10.525,
+    22.681,
+    10.938
+   ],
+   "near": "j0",
+   "dNear": 0.279,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#77",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 30.145,
+   "y": 11.853,
+   "px": 153,
+   "sizePx": 22,
+   "bbox": [
+    30.075,
+    11.806,
+    30.212,
+    11.887
+   ],
+   "near": "j115",
+   "dNear": 0.458,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#78",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 27.937,
+   "y": 11.886,
+   "px": 268,
+   "sizePx": 26,
+   "bbox": [
+    27.863,
+    11.813,
+    28.025,
+    11.944
+   ],
+   "near": "j68",
+   "dNear": 0.442,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#79",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.422,
+   "y": 13.163,
+   "px": 421,
+   "sizePx": 30,
+   "bbox": [
+    25.35,
+    13.063,
+    25.519,
+    13.25
+   ],
+   "near": "j116",
+   "dNear": 0.442,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#80",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.516,
+   "y": 13.826,
+   "px": 689,
+   "sizePx": 36,
+   "bbox": [
+    25.425,
+    13.738,
+    25.65,
+    13.925
+   ],
+   "near": "j116",
+   "dNear": 0.748,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#81",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 33.427,
+   "y": 9.795,
+   "px": 547,
+   "sizePx": 35,
+   "bbox": [
+    33.325,
+    9.719,
+    33.544,
+    9.887
+   ],
+   "near": "j51",
+   "dNear": 0.361,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#82",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 34.76,
+   "y": 10.644,
+   "px": 495,
+   "sizePx": 39,
+   "bbox": [
+    34.638,
+    10.563,
+    34.881,
+    10.725
+   ],
+   "near": "j52",
+   "dNear": 0.336,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#83",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 34.14,
+   "y": 10.762,
+   "px": 340,
+   "sizePx": 38,
+   "bbox": [
+    34.069,
+    10.662,
+    34.212,
+    10.9
+   ],
+   "near": "j52",
+   "dNear": 0.326,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#84",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 34.42,
+   "y": 11.167,
+   "px": 165,
+   "sizePx": 21,
+   "bbox": [
+    34.356,
+    11.125,
+    34.487,
+    11.206
+   ],
+   "near": "j52",
+   "dNear": 0.366,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#85",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 31.074,
+   "y": 11.366,
+   "px": 124,
+   "sizePx": 20,
+   "bbox": [
+    31.038,
+    11.306,
+    31.113,
+    11.431
+   ],
+   "near": "j12",
+   "dNear": 0.511,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#86",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 34.393,
+   "y": 10.982,
+   "px": 332,
+   "sizePx": 51,
+   "bbox": [
+    34.281,
+    10.813,
+    34.506,
+    11.131
+   ],
+   "near": "j52",
+   "dNear": 0.192,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.005"
+  },
+  {
+   "id": "muse_hash#87",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 5.627,
+   "y": 14.995,
+   "px": 443,
+   "sizePx": 31,
+   "bbox": [
+    5.556,
+    14.9,
+    5.688,
+    15.094
+   ],
+   "near": "j73",
+   "dNear": 0.398,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#88",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 1.239,
+   "y": 17.275,
+   "px": 63,
+   "sizePx": 11,
+   "bbox": [
+    1.212,
+    17.244,
+    1.262,
+    17.313
+   ],
+   "near": "j23",
+   "dNear": 0.685,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#89",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.097,
+   "y": 17.257,
+   "px": 363,
+   "sizePx": 44,
+   "bbox": [
+    1.05,
+    17.125,
+    1.163,
+    17.4
+   ],
+   "near": "j23",
+   "dNear": 0.542,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#90",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 2.975,
+   "y": 17.273,
+   "px": 597,
+   "sizePx": 38,
+   "bbox": [
+    2.894,
+    17.163,
+    3.1,
+    17.4
+   ],
+   "near": "j30",
+   "dNear": 0.576,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#91",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 6.293,
+   "y": 19.243,
+   "px": 145,
+   "sizePx": 21,
+   "bbox": [
+    6.231,
+    19.212,
+    6.362,
+    19.288
+   ],
+   "near": "j134",
+   "dNear": 0.314,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#92",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.063,
+   "y": 20.749,
+   "px": 180,
+   "sizePx": 25,
+   "bbox": [
+    1.031,
+    20.669,
+    1.113,
+    20.825
+   ],
+   "near": "j32",
+   "dNear": 0.369,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#93",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 3.928,
+   "y": 21.468,
+   "px": 1159,
+   "sizePx": 77,
+   "bbox": [
+    3.656,
+    21.331,
+    4.138,
+    21.681
+   ],
+   "near": "j102",
+   "dNear": 0.247,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#94",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 5.181,
+   "y": 21.414,
+   "px": 321,
+   "sizePx": 28,
+   "bbox": [
+    5.088,
+    21.344,
+    5.263,
+    21.5
+   ],
+   "near": "j16",
+   "dNear": 0.585,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#95",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 0.907,
+   "y": 21.555,
+   "px": 152,
+   "sizePx": 22,
+   "bbox": [
+    0.863,
+    21.494,
+    0.95,
+    21.631
+   ],
+   "near": "j33",
+   "dNear": 0.34,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#96",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 3.945,
+   "y": 22.005,
+   "px": 328,
+   "sizePx": 26,
+   "bbox": [
+    3.875,
+    21.919,
+    4.019,
+    22.081
+   ],
+   "near": "j102",
+   "dNear": 0.307,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#97",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 11.49,
+   "y": 14.2,
+   "px": 206,
+   "sizePx": 24,
+   "bbox": [
+    11.431,
+    14.131,
+    11.537,
+    14.281
+   ],
+   "near": "j100",
+   "dNear": 0.425,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#98",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 14.198,
+   "y": 14.501,
+   "px": 754,
+   "sizePx": 45,
+   "bbox": [
+    14.106,
+    14.363,
+    14.294,
+    14.644
+   ],
+   "near": "j99",
+   "dNear": 0.396,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#99",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 11.156,
+   "y": 14.729,
+   "px": 591,
+   "sizePx": 34,
+   "bbox": [
+    11.056,
+    14.606,
+    11.269,
+    14.819
+   ],
+   "near": "j100",
+   "dNear": 0.597,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#100",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 9.938,
+   "y": 15.293,
+   "px": 45,
+   "sizePx": 10,
+   "bbox": [
+    9.906,
+    15.275,
+    9.969,
+    15.313
+   ],
+   "near": "j101",
+   "dNear": 0.411,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#101",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 9.65,
+   "y": 15.923,
+   "px": 137,
+   "sizePx": 20,
+   "bbox": [
+    9.581,
+    15.881,
+    9.706,
+    15.95
+   ],
+   "near": "j101",
+   "dNear": 0.283,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#102",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 13.12,
+   "y": 16.328,
+   "px": 131,
+   "sizePx": 31,
+   "bbox": [
+    13.088,
+    16.2,
+    13.162,
+    16.394
+   ],
+   "near": "j87",
+   "dNear": 0.289,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#103",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 13.298,
+   "y": 16.679,
+   "px": 309,
+   "sizePx": 24,
+   "bbox": [
+    13.225,
+    16.6,
+    13.369,
+    16.75
+   ],
+   "near": "j87",
+   "dNear": 0.276,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#104",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 6.479,
+   "y": 20.249,
+   "px": 232,
+   "sizePx": 25,
+   "bbox": [
+    6.425,
+    20.169,
+    6.544,
+    20.325
+   ],
+   "near": "j137",
+   "dNear": 0.42,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#105",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 13.234,
+   "y": 20.463,
+   "px": 102,
+   "sizePx": 18,
+   "bbox": [
+    13.181,
+    20.425,
+    13.294,
+    20.5
+   ],
+   "near": "j127",
+   "dNear": 0.307,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#106",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 8.226,
+   "y": 21.722,
+   "px": 436,
+   "sizePx": 28,
+   "bbox": [
+    8.144,
+    21.644,
+    8.319,
+    21.806
+   ],
+   "near": "j47",
+   "dNear": 0.39,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#107",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 8.704,
+   "y": 21.886,
+   "px": 128,
+   "sizePx": 21,
+   "bbox": [
+    8.644,
+    21.844,
+    8.775,
+    21.919
+   ],
+   "near": "j47",
+   "dNear": 0.275,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#108",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 9.887,
+   "y": 15.434,
+   "px": 242,
+   "sizePx": 45,
+   "bbox": [
+    9.844,
+    15.313,
+    9.931,
+    15.594
+   ],
+   "near": "j101",
+   "dNear": 0.262,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.015"
+  },
+  {
+   "id": "muse_hash#109",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 16.319,
+   "y": 18.34,
+   "px": 66,
+   "sizePx": 10,
+   "bbox": [
+    16.294,
+    18.306,
+    16.344,
+    18.369
+   ],
+   "near": "j140",
+   "dNear": 0.556,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#110",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 22,
+   "y": 18.59,
+   "px": 215,
+   "sizePx": 21,
+   "bbox": [
+    21.962,
+    18.512,
+    22.05,
+    18.644
+   ],
+   "near": "x301",
+   "dNear": 0.76,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#111",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 19.194,
+   "y": 14.321,
+   "px": 419,
+   "sizePx": 30,
+   "bbox": [
+    19.113,
+    14.219,
+    19.3,
+    14.4
+   ],
+   "near": "j29",
+   "dNear": 0.7,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#112",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 19.821,
+   "y": 14.754,
+   "px": 113,
+   "sizePx": 16,
+   "bbox": [
+    19.762,
+    14.713,
+    19.863,
+    14.794
+   ],
+   "near": "j29",
+   "dNear": 0.264,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#113",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 18.768,
+   "y": 16.392,
+   "px": 338,
+   "sizePx": 27,
+   "bbox": [
+    18.675,
+    16.306,
+    18.844,
+    16.462
+   ],
+   "near": "j28",
+   "dNear": 0.429,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#114",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 17.452,
+   "y": 17.034,
+   "px": 1089,
+   "sizePx": 75,
+   "bbox": [
+    17.225,
+    16.825,
+    17.625,
+    17.294
+   ],
+   "near": "j139",
+   "dNear": 0.295,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#115",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 14.913,
+   "y": 17.173,
+   "px": 369,
+   "sizePx": 30,
+   "bbox": [
+    14.819,
+    17.106,
+    15.006,
+    17.256
+   ],
+   "near": "j105",
+   "dNear": 0.39,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#116",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 16.873,
+   "y": 17.273,
+   "px": 343,
+   "sizePx": 30,
+   "bbox": [
+    16.819,
+    17.188,
+    16.938,
+    17.375
+   ],
+   "near": "j139",
+   "dNear": 0.332,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#117",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 17.118,
+   "y": 18.03,
+   "px": 456,
+   "sizePx": 33,
+   "bbox": [
+    17.031,
+    17.919,
+    17.188,
+    18.125
+   ],
+   "near": "j140",
+   "dNear": 0.306,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#118",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 16.651,
+   "y": 18.672,
+   "px": 373,
+   "sizePx": 27,
+   "bbox": [
+    16.563,
+    18.587,
+    16.731,
+    18.744
+   ],
+   "near": "j140",
+   "dNear": 0.596,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#119",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 16.072,
+   "y": 19.723,
+   "px": 256,
+   "sizePx": 25,
+   "bbox": [
+    16.006,
+    19.65,
+    16.131,
+    19.806
+   ],
+   "near": "j123",
+   "dNear": 0.437,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#120",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.427,
+   "y": 19.786,
+   "px": 212,
+   "sizePx": 21,
+   "bbox": [
+    15.363,
+    19.719,
+    15.494,
+    19.85
+   ],
+   "near": "j123",
+   "dNear": 0.249,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#121",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.524,
+   "y": 21.092,
+   "px": 197,
+   "sizePx": 24,
+   "bbox": [
+    15.469,
+    21.025,
+    15.581,
+    21.175
+   ],
+   "near": "j86",
+   "dNear": 0.351,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#122",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.167,
+   "y": 21.317,
+   "px": 57,
+   "sizePx": 12,
+   "bbox": [
+    22.131,
+    21.288,
+    22.206,
+    21.337
+   ],
+   "near": "j80",
+   "dNear": 0.285,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#123",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 20.966,
+   "y": 21.493,
+   "px": 294,
+   "sizePx": 29,
+   "bbox": [
+    20.906,
+    21.394,
+    21.038,
+    21.575
+   ],
+   "near": "j35",
+   "dNear": 0.377,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#124",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.232,
+   "y": 21.624,
+   "px": 219,
+   "sizePx": 25,
+   "bbox": [
+    15.144,
+    21.569,
+    15.3,
+    21.688
+   ],
+   "near": "j151",
+   "dNear": 0.368,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#125",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 16.895,
+   "y": 21.674,
+   "px": 118,
+   "sizePx": 20,
+   "bbox": [
+    16.856,
+    21.613,
+    16.919,
+    21.738
+   ],
+   "near": "j34",
+   "dNear": 0.282,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#126",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 14.677,
+   "y": 21.953,
+   "px": 534,
+   "sizePx": 34,
+   "bbox": [
+    14.588,
+    21.844,
+    14.8,
+    22.044
+   ],
+   "near": "j151",
+   "dNear": 0.581,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#127",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 15.895,
+   "y": 19.705,
+   "px": 132,
+   "sizePx": 46,
+   "bbox": [
+    15.75,
+    19.631,
+    16.038,
+    19.794
+   ],
+   "near": "j123",
+   "dNear": 0.287,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.018"
+  },
+  {
+   "id": "muse_hash#128",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.997,
+   "y": 14.291,
+   "px": 192,
+   "sizePx": 21,
+   "bbox": [
+    25.944,
+    14.231,
+    26.075,
+    14.344
+   ],
+   "near": "j117",
+   "dNear": 0.465,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#129",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 29.315,
+   "y": 14.595,
+   "px": 148,
+   "sizePx": 21,
+   "bbox": [
+    29.269,
+    14.525,
+    29.363,
+    14.656
+   ],
+   "near": "j69",
+   "dNear": 0.32,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#130",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 27.917,
+   "y": 15.378,
+   "px": 416,
+   "sizePx": 30,
+   "bbox": [
+    27.831,
+    15.275,
+    28.019,
+    15.456
+   ],
+   "near": "j70",
+   "dNear": 0.534,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#131",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 23.702,
+   "y": 17.151,
+   "px": 340,
+   "sizePx": 33,
+   "bbox": [
+    23.606,
+    17.1,
+    23.813,
+    17.231
+   ],
+   "near": "j114",
+   "dNear": 0.619,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#132",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 27.602,
+   "y": 17.297,
+   "px": 982,
+   "sizePx": 63,
+   "bbox": [
+    27.413,
+    17.137,
+    27.806,
+    17.512
+   ],
+   "near": "j71",
+   "dNear": 0.404,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#133",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 27.141,
+   "y": 17.683,
+   "px": 65,
+   "sizePx": 15,
+   "bbox": [
+    27.119,
+    17.637,
+    27.169,
+    17.731
+   ],
+   "near": "j71",
+   "dNear": 0.241,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#134",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 23.34,
+   "y": 18.34,
+   "px": 444,
+   "sizePx": 33,
+   "bbox": [
+    23.256,
+    18.244,
+    23.413,
+    18.45
+   ],
+   "near": "j119",
+   "dNear": 0.628,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#135",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.388,
+   "y": 18.293,
+   "px": 217,
+   "sizePx": 26,
+   "bbox": [
+    25.3,
+    18.244,
+    25.462,
+    18.325
+   ],
+   "near": "j120",
+   "dNear": 0.364,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#136",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.623,
+   "y": 18.428,
+   "px": 264,
+   "sizePx": 27,
+   "bbox": [
+    22.538,
+    18.356,
+    22.706,
+    18.481
+   ],
+   "near": "j119",
+   "dNear": 0.387,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#137",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.071,
+   "y": 18.535,
+   "px": 271,
+   "sizePx": 33,
+   "bbox": [
+    25.012,
+    18.438,
+    25.156,
+    18.644
+   ],
+   "near": "j120",
+   "dNear": 0.269,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#138",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.47,
+   "y": 18.907,
+   "px": 80,
+   "sizePx": 14,
+   "bbox": [
+    25.425,
+    18.875,
+    25.512,
+    18.938
+   ],
+   "near": "j120",
+   "dNear": 0.301,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#139",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.646,
+   "y": 20.002,
+   "px": 154,
+   "sizePx": 22,
+   "bbox": [
+    25.6,
+    19.931,
+    25.675,
+    20.069
+   ],
+   "near": "j147",
+   "dNear": 0.375,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#140",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 29.753,
+   "y": 20.263,
+   "px": 2849,
+   "sizePx": 149,
+   "bbox": [
+    29.225,
+    20.106,
+    30.156,
+    20.469
+   ],
+   "near": "j36",
+   "dNear": 0.391,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#141",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.632,
+   "y": 20.947,
+   "px": 336,
+   "sizePx": 29,
+   "bbox": [
+    22.55,
+    20.85,
+    22.694,
+    21.031
+   ],
+   "near": "j80",
+   "dNear": 0.437,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#142",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 26.674,
+   "y": 20.944,
+   "px": 350,
+   "sizePx": 28,
+   "bbox": [
+    26.587,
+    20.856,
+    26.731,
+    21.031
+   ],
+   "near": "j146",
+   "dNear": 0.528,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#143",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 26.194,
+   "y": 21.294,
+   "px": 78,
+   "sizePx": 16,
+   "bbox": [
+    26.15,
+    21.262,
+    26.25,
+    21.319
+   ],
+   "near": "j146",
+   "dNear": 0.392,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#144",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 25.404,
+   "y": 18.389,
+   "px": 159,
+   "sizePx": 21,
+   "bbox": [
+    25.337,
+    18.344,
+    25.469,
+    18.431
+   ],
+   "near": "j120",
+   "dNear": 0.275,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.002"
+  },
+  {
+   "id": "muse_hash#145",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 25.188,
+   "y": 18.569,
+   "px": 92,
+   "sizePx": 15,
+   "bbox": [
+    25.137,
+    18.531,
+    25.231,
+    18.594
+   ],
+   "near": "j120",
+   "dNear": 0.15,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.002"
+  },
+  {
+   "id": "muse_hash#146",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 34.17,
+   "y": 18.49,
+   "px": 220,
+   "sizePx": 24,
+   "bbox": [
+    34.1,
+    18.45,
+    34.25,
+    18.531
+   ],
+   "near": "j57",
+   "dNear": 0.473,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#147",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 30.52,
+   "y": 20.278,
+   "px": 1911,
+   "sizePx": 83,
+   "bbox": [
+    30.356,
+    20.031,
+    30.762,
+    20.55
+   ],
+   "near": "j36",
+   "dNear": 0.625,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#148",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 34.298,
+   "y": 18.397,
+   "px": 74,
+   "sizePx": 13,
+   "bbox": [
+    34.275,
+    18.35,
+    34.325,
+    18.431
+   ],
+   "near": "j57",
+   "dNear": 0.354,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#149",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 32.131,
+   "y": 18.925,
+   "px": 441,
+   "sizePx": 35,
+   "bbox": [
+    32.025,
+    18.85,
+    32.244,
+    19.012
+   ],
+   "near": "j138",
+   "dNear": 0.637,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#150",
+   "scene": "muse_hash",
+   "kind": "paper",
+   "sub": "notch",
+   "x": 4.7,
+   "y": 24.42,
+   "px": 128,
+   "sizePx": 18,
+   "bbox": [
+    4.638,
+    24.369,
+    4.75,
+    24.475
+   ],
+   "near": "j135",
+   "dNear": 0.579,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#151",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 5.431,
+   "y": 24.967,
+   "px": 139,
+   "sizePx": 22,
+   "bbox": [
+    5.362,
+    24.925,
+    5.5,
+    24.994
+   ],
+   "near": "j20",
+   "dNear": 0.313,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#152",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.734,
+   "y": 25.068,
+   "px": 449,
+   "sizePx": 34,
+   "bbox": [
+    1.656,
+    24.962,
+    1.819,
+    25.175
+   ],
+   "near": "j17",
+   "dNear": 0.539,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#153",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 2.632,
+   "y": 26.924,
+   "px": 607,
+   "sizePx": 39,
+   "bbox": [
+    2.494,
+    26.806,
+    2.737,
+    27.019
+   ],
+   "near": "j104",
+   "dNear": 0.562,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#154",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 2.51,
+   "y": 28.026,
+   "px": 57,
+   "sizePx": 13,
+   "bbox": [
+    2.469,
+    28,
+    2.55,
+    28.056
+   ],
+   "near": "j18",
+   "dNear": 0.268,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#155",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 3.758,
+   "y": 28.35,
+   "px": 115,
+   "sizePx": 18,
+   "bbox": [
+    3.725,
+    28.288,
+    3.8,
+    28.4
+   ],
+   "near": "j19",
+   "dNear": 0.4,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#156",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 3.16,
+   "y": 30.083,
+   "px": 418,
+   "sizePx": 28,
+   "bbox": [
+    3.081,
+    29.988,
+    3.25,
+    30.163
+   ],
+   "near": "j26",
+   "dNear": 0.355,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#157",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 1.955,
+   "y": 23.639,
+   "px": 169,
+   "sizePx": 40,
+   "bbox": [
+    1.819,
+    23.556,
+    2.069,
+    23.694
+   ],
+   "near": "j103",
+   "dNear": 0.171,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.002"
+  },
+  {
+   "id": "muse_hash#158",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 8.283,
+   "y": 22.664,
+   "px": 528,
+   "sizePx": 119,
+   "bbox": [
+    8.188,
+    22.3,
+    8.475,
+    23.044
+   ],
+   "near": "j48",
+   "dNear": 0.677,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#159",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 7.552,
+   "y": 22.213,
+   "px": 158,
+   "sizePx": 23,
+   "bbox": [
+    7.481,
+    22.181,
+    7.625,
+    22.256
+   ],
+   "near": "j48",
+   "dNear": 0.34,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#160",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 8.149,
+   "y": 22.616,
+   "px": 593,
+   "sizePx": 134,
+   "bbox": [
+    8.037,
+    22.2,
+    8.363,
+    23.038
+   ],
+   "near": "j48",
+   "dNear": 0.537,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#161",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 14.323,
+   "y": 22.77,
+   "px": 697,
+   "sizePx": 59,
+   "bbox": [
+    14.131,
+    22.613,
+    14.5,
+    22.9
+   ],
+   "near": "j95",
+   "dNear": 0.308,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#162",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 9.285,
+   "y": 23.506,
+   "px": 427,
+   "sizePx": 30,
+   "bbox": [
+    9.206,
+    23.419,
+    9.394,
+    23.6
+   ],
+   "near": "j133",
+   "dNear": 0.462,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#163",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 12.914,
+   "y": 23.487,
+   "px": 332,
+   "sizePx": 30,
+   "bbox": [
+    12.825,
+    23.419,
+    13.012,
+    23.569
+   ],
+   "near": "j141",
+   "dNear": 0.427,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#164",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 8.539,
+   "y": 25.283,
+   "px": 109,
+   "sizePx": 18,
+   "bbox": [
+    8.488,
+    25.256,
+    8.6,
+    25.319
+   ],
+   "near": "j15",
+   "dNear": 0.471,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#165",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 8.605,
+   "y": 25.918,
+   "px": 432,
+   "sizePx": 45,
+   "bbox": [
+    8.456,
+    25.825,
+    8.738,
+    26.019
+   ],
+   "near": "j15",
+   "dNear": 0.199,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#166",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 11.556,
+   "y": 26.976,
+   "px": 468,
+   "sizePx": 31,
+   "bbox": [
+    11.469,
+    26.894,
+    11.662,
+    27.087
+   ],
+   "near": "j96",
+   "dNear": 0.591,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#167",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 9.548,
+   "y": 29.156,
+   "px": 103,
+   "sizePx": 18,
+   "bbox": [
+    9.488,
+    29.125,
+    9.6,
+    29.188
+   ],
+   "near": "j14",
+   "dNear": 0.296,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#168",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 9.937,
+   "y": 29.27,
+   "px": 75,
+   "sizePx": 23,
+   "bbox": [
+    9.875,
+    29.2,
+    9.994,
+    29.344
+   ],
+   "near": "j14",
+   "dNear": 0.417,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#169",
+   "scene": "muse_hash",
+   "kind": "paper",
+   "sub": "notch",
+   "x": 17.322,
+   "y": 29.681,
+   "px": 26,
+   "sizePx": 9,
+   "bbox": [
+    17.294,
+    29.65,
+    17.344,
+    29.706
+   ],
+   "near": "j98",
+   "dNear": 0.563,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#170",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 20.709,
+   "y": 23.567,
+   "px": 157,
+   "sizePx": 21,
+   "bbox": [
+    20.637,
+    23.519,
+    20.769,
+    23.619
+   ],
+   "near": "j142",
+   "dNear": 0.333,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#171",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 20.214,
+   "y": 23.918,
+   "px": 356,
+   "sizePx": 28,
+   "bbox": [
+    20.15,
+    23.825,
+    20.306,
+    24
+   ],
+   "near": "j142",
+   "dNear": 0.469,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#172",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 17.387,
+   "y": 24.025,
+   "px": 93,
+   "sizePx": 17,
+   "bbox": [
+    17.325,
+    23.994,
+    17.431,
+    24.05
+   ],
+   "near": "j42",
+   "dNear": 0.281,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#173",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.605,
+   "y": 25.616,
+   "px": 200,
+   "sizePx": 24,
+   "bbox": [
+    15.563,
+    25.544,
+    15.662,
+    25.694
+   ],
+   "near": "j153",
+   "dNear": 0.392,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#174",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 17.952,
+   "y": 29.026,
+   "px": 196,
+   "sizePx": 41,
+   "bbox": [
+    17.85,
+    28.969,
+    18.106,
+    29.081
+   ],
+   "near": "j154",
+   "dNear": 0.322,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#175",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 26.745,
+   "y": 23.318,
+   "px": 984,
+   "sizePx": 86,
+   "bbox": [
+    26.481,
+    23.238,
+    27.019,
+    23.469
+   ],
+   "near": "j37",
+   "dNear": 0.466,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#176",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 28.942,
+   "y": 23.871,
+   "px": 66,
+   "sizePx": 26,
+   "bbox": [
+    28.863,
+    23.837,
+    29.025,
+    23.913
+   ],
+   "near": "j62",
+   "dNear": 0.513,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#177",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 29.189,
+   "y": 24.015,
+   "px": 143,
+   "sizePx": 42,
+   "bbox": [
+    29.063,
+    23.931,
+    29.325,
+    24.131
+   ],
+   "near": "j62",
+   "dNear": 0.47,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#178",
+   "scene": "muse_hash",
+   "kind": "paper",
+   "sub": "notch",
+   "x": 26.776,
+   "y": 23.446,
+   "px": 377,
+   "sizePx": 50,
+   "bbox": [
+    26.625,
+    23.394,
+    26.938,
+    23.531
+   ],
+   "near": "j37",
+   "dNear": 0.597,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#179",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 24.673,
+   "y": 23.134,
+   "px": 1539,
+   "sizePx": 72,
+   "bbox": [
+    24.519,
+    22.938,
+    24.781,
+    23.387
+   ],
+   "near": "j81",
+   "dNear": 0.633,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#180",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 29.513,
+   "y": 23.292,
+   "px": 813,
+   "sizePx": 56,
+   "bbox": [
+    29.325,
+    23.131,
+    29.675,
+    23.481
+   ],
+   "near": "j62",
+   "dNear": 0.323,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#181",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 26.762,
+   "y": 23.439,
+   "px": 60,
+   "sizePx": 56,
+   "bbox": [
+    26.6,
+    23.387,
+    26.95,
+    23.556
+   ],
+   "near": "j37",
+   "dNear": 0.588,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#182",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.75,
+   "y": 23.773,
+   "px": 899,
+   "sizePx": 92,
+   "bbox": [
+    22.444,
+    23.587,
+    23.019,
+    23.894
+   ],
+   "near": "j164",
+   "dNear": 0.418,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#183",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 29.162,
+   "y": 23.831,
+   "px": 199,
+   "sizePx": 19,
+   "bbox": [
+    29.119,
+    23.775,
+    29.219,
+    23.894
+   ],
+   "near": "j62",
+   "dNear": 0.323,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#184",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 23.587,
+   "y": 25.715,
+   "px": 78,
+   "sizePx": 15,
+   "bbox": [
+    23.531,
+    25.688,
+    23.625,
+    25.75
+   ],
+   "near": "j84",
+   "dNear": 0.259,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#185",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.992,
+   "y": 28.527,
+   "px": 148,
+   "sizePx": 21,
+   "bbox": [
+    25.944,
+    28.456,
+    26.056,
+    28.587
+   ],
+   "near": "j38",
+   "dNear": 0.432,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#186",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 27.108,
+   "y": 28.627,
+   "px": 218,
+   "sizePx": 22,
+   "bbox": [
+    27.056,
+    28.575,
+    27.194,
+    28.7
+   ],
+   "near": "j82",
+   "dNear": 0.36,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#187",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 23.754,
+   "y": 25.287,
+   "px": 286,
+   "sizePx": 42,
+   "bbox": [
+    23.675,
+    25.156,
+    23.831,
+    25.419
+   ],
+   "near": "j84",
+   "dNear": 0.211,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.013"
+  },
+  {
+   "id": "muse_hash#188",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 32.993,
+   "y": 22.968,
+   "px": 901,
+   "sizePx": 89,
+   "bbox": [
+    32.888,
+    22.644,
+    33.175,
+    23.2
+   ],
+   "near": "j46",
+   "dNear": 0.469,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#189",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 33.544,
+   "y": 23.301,
+   "px": 66,
+   "sizePx": 14,
+   "bbox": [
+    33.506,
+    23.275,
+    33.594,
+    23.331
+   ],
+   "near": "j46",
+   "dNear": 0.237,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#190",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 32.345,
+   "y": 23.576,
+   "px": 68,
+   "sizePx": 16,
+   "bbox": [
+    32.294,
+    23.556,
+    32.394,
+    23.6
+   ],
+   "near": "j45",
+   "dNear": 0.26,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#191",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 32.787,
+   "y": 23.937,
+   "px": 293,
+   "sizePx": 29,
+   "bbox": [
+    32.719,
+    23.85,
+    32.837,
+    24.031
+   ],
+   "near": "j45",
+   "dNear": 0.389,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#192",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 3.618,
+   "y": 30.422,
+   "px": 150,
+   "sizePx": 20,
+   "bbox": [
+    3.563,
+    30.356,
+    3.663,
+    30.481
+   ],
+   "near": "j26",
+   "dNear": 0.294,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#193",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 4.971,
+   "y": 32.193,
+   "px": 193,
+   "sizePx": 40,
+   "bbox": [
+    4.925,
+    32.05,
+    5.069,
+    32.3
+   ],
+   "near": "j59",
+   "dNear": 0.3,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#194",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 5.101,
+   "y": 32.617,
+   "px": 264,
+   "sizePx": 23,
+   "bbox": [
+    5.025,
+    32.544,
+    5.169,
+    32.681
+   ],
+   "near": "j59",
+   "dNear": 0.268,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#195",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 4.293,
+   "y": 33.073,
+   "px": 220,
+   "sizePx": 26,
+   "bbox": [
+    4.206,
+    33.019,
+    4.369,
+    33.125
+   ],
+   "near": "j58",
+   "dNear": 0.367,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#196",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 4.893,
+   "y": 33.361,
+   "px": 2463,
+   "sizePx": 78,
+   "bbox": [
+    4.713,
+    33.144,
+    5.1,
+    33.631
+   ],
+   "near": "j58",
+   "dNear": 0.43,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#197",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.482,
+   "y": 34.219,
+   "px": 141,
+   "sizePx": 22,
+   "bbox": [
+    1.419,
+    34.175,
+    1.556,
+    34.263
+   ],
+   "near": "j27",
+   "dNear": 0.352,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#198",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 9.624,
+   "y": 30.215,
+   "px": 60,
+   "sizePx": 12,
+   "bbox": [
+    9.588,
+    30.175,
+    9.656,
+    30.25
+   ],
+   "near": "j89",
+   "dNear": 0.363,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#199",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 12.287,
+   "y": 31.389,
+   "px": 273,
+   "sizePx": 26,
+   "bbox": [
+    12.231,
+    31.306,
+    12.363,
+    31.469
+   ],
+   "near": "j53",
+   "dNear": 0.486,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#200",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 11.552,
+   "y": 32.103,
+   "px": 787,
+   "sizePx": 78,
+   "bbox": [
+    11.425,
+    31.869,
+    11.756,
+    32.356
+   ],
+   "near": "j54",
+   "dNear": 0.272,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#201",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 12.091,
+   "y": 32.234,
+   "px": 106,
+   "sizePx": 16,
+   "bbox": [
+    12.056,
+    32.188,
+    12.131,
+    32.288
+   ],
+   "near": "j54",
+   "dNear": 0.287,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#202",
+   "scene": "muse_hash",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 21.764,
+   "y": 34.337,
+   "px": 2943,
+   "sizePx": 103,
+   "bbox": [
+    21.444,
+    34.038,
+    22.087,
+    34.638
+   ],
+   "near": "j50",
+   "dNear": 0.714,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#203",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 14.706,
+   "y": 30.68,
+   "px": 558,
+   "sizePx": 36,
+   "bbox": [
+    14.594,
+    30.581,
+    14.819,
+    30.769
+   ],
+   "near": "j88",
+   "dNear": 0.384,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#204",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 19.1,
+   "y": 32.724,
+   "px": 1002,
+   "sizePx": 85,
+   "bbox": [
+    18.794,
+    32.631,
+    19.325,
+    32.906
+   ],
+   "near": "j61",
+   "dNear": 0.348,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#205",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.7,
+   "y": 33.284,
+   "px": 258,
+   "sizePx": 26,
+   "bbox": [
+    15.631,
+    33.194,
+    15.762,
+    33.356
+   ],
+   "near": "j44",
+   "dNear": 0.445,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#206",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 17.925,
+   "y": 33.281,
+   "px": 66,
+   "sizePx": 14,
+   "bbox": [
+    17.881,
+    33.263,
+    17.969,
+    33.306
+   ],
+   "near": "j60",
+   "dNear": 0.234,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#207",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 19.082,
+   "y": 33.327,
+   "px": 64,
+   "sizePx": 16,
+   "bbox": [
+    19.031,
+    33.306,
+    19.131,
+    33.344
+   ],
+   "near": "j61",
+   "dNear": 0.269,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#208",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 21.845,
+   "y": 33.584,
+   "px": 100,
+   "sizePx": 20,
+   "bbox": [
+    21.813,
+    33.519,
+    21.869,
+    33.644
+   ],
+   "near": "j50",
+   "dNear": 0.303,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#209",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 18.484,
+   "y": 33.664,
+   "px": 400,
+   "sizePx": 28,
+   "bbox": [
+    18.387,
+    33.587,
+    18.563,
+    33.763
+   ],
+   "near": "j60",
+   "dNear": 0.571,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#210",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.275,
+   "y": 33.691,
+   "px": 82,
+   "sizePx": 16,
+   "bbox": [
+    15.225,
+    33.663,
+    15.325,
+    33.712
+   ],
+   "near": "j44",
+   "dNear": 0.247,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#211",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 21.588,
+   "y": 33.899,
+   "px": 375,
+   "sizePx": 28,
+   "bbox": [
+    21.519,
+    33.806,
+    21.663,
+    33.981
+   ],
+   "near": "j50",
+   "dNear": 0.247,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#212",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 15.821,
+   "y": 34.37,
+   "px": 100,
+   "sizePx": 17,
+   "bbox": [
+    15.781,
+    34.313,
+    15.856,
+    34.419
+   ],
+   "near": "j43",
+   "dNear": 0.261,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#213",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 21.533,
+   "y": 33.61,
+   "px": 78,
+   "sizePx": 14,
+   "bbox": [
+    21.488,
+    33.581,
+    21.575,
+    33.65
+   ],
+   "near": "j50",
+   "dNear": 0.047,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.000"
+  },
+  {
+   "id": "muse_hash#214",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 21.791,
+   "y": 34.198,
+   "px": 786,
+   "sizePx": 71,
+   "bbox": [
+    21.587,
+    34.025,
+    22.031,
+    34.419
+   ],
+   "near": "j50",
+   "dNear": 0.595,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.196"
+  },
+  {
+   "id": "muse_hash#215",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 24.687,
+   "y": 30.956,
+   "px": 159,
+   "sizePx": 21,
+   "bbox": [
+    24.631,
+    30.894,
+    24.738,
+    31.025
+   ],
+   "near": "j136",
+   "dNear": 0.406,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#216",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 24.249,
+   "y": 32.688,
+   "px": 71,
+   "sizePx": 13,
+   "bbox": [
+    24.206,
+    32.663,
+    24.288,
+    32.712
+   ],
+   "near": "j83",
+   "dNear": 0.367,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#217",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.62,
+   "y": 34.183,
+   "px": 196,
+   "sizePx": 27,
+   "bbox": [
+    22.525,
+    34.125,
+    22.694,
+    34.244
+   ],
+   "near": "j49",
+   "dNear": 0.309,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#218",
+   "scene": "muse_hash",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.563,
+   "y": 34.786,
+   "px": 452,
+   "sizePx": 46,
+   "bbox": [
+    22.475,
+    34.663,
+    22.675,
+    34.95
+   ],
+   "near": "j49",
+   "dNear": 0.328,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_hash#219",
+   "scene": "muse_hash",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 24.182,
+   "y": 32.512,
+   "px": 281,
+   "sizePx": 38,
+   "bbox": [
+    24.069,
+    32.406,
+    24.306,
+    32.638
+   ],
+   "near": "j83",
+   "dNear": 0.183,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.004"
+  },
+  {
+   "id": "g41_ring_tw64#0",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 10.553,
+   "y": 1.93,
+   "px": 60,
+   "sizePx": 13,
+   "bbox": [
+    10.512,
+    1.906,
+    10.594,
+    1.956
+   ],
+   "near": "j5",
+   "dNear": 0.256,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#1",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 11.204,
+   "y": 4.412,
+   "px": 77,
+   "sizePx": 15,
+   "bbox": [
+    11.181,
+    4.362,
+    11.238,
+    4.456
+   ],
+   "near": "j11",
+   "dNear": 0.256,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#2",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 14.765,
+   "y": 4.482,
+   "px": 305,
+   "sizePx": 25,
+   "bbox": [
+    14.681,
+    4.419,
+    14.838,
+    4.544
+   ],
+   "near": "j10",
+   "dNear": 0.337,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#3",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 11.497,
+   "y": 4.768,
+   "px": 103,
+   "sizePx": 17,
+   "bbox": [
+    11.444,
+    4.725,
+    11.55,
+    4.8
+   ],
+   "near": "j11",
+   "dNear": 0.295,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#4",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 10.618,
+   "y": 5.087,
+   "px": 217,
+   "sizePx": 21,
+   "bbox": [
+    10.544,
+    5.031,
+    10.675,
+    5.15
+   ],
+   "near": "j7",
+   "dNear": 0.225,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#5",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 10.897,
+   "y": 5.422,
+   "px": 292,
+   "sizePx": 31,
+   "bbox": [
+    10.838,
+    5.338,
+    10.938,
+    5.531
+   ],
+   "near": "j7",
+   "dNear": 0.278,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#6",
+   "scene": "g41_ring_tw64",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 10.6,
+   "y": 5.217,
+   "px": 71,
+   "sizePx": 20,
+   "bbox": [
+    10.575,
+    5.156,
+    10.631,
+    5.281
+   ],
+   "near": "j7",
+   "dNear": 0.103,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.002"
+  },
+  {
+   "id": "g41_ring_tw64#7",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 16.447,
+   "y": 2.877,
+   "px": 762,
+   "sizePx": 57,
+   "bbox": [
+    16.262,
+    2.731,
+    16.619,
+    2.981
+   ],
+   "near": "j2",
+   "dNear": 0.271,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#8",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 6.399,
+   "y": 7.56,
+   "px": 117,
+   "sizePx": 15,
+   "bbox": [
+    6.369,
+    7.506,
+    6.45,
+    7.6
+   ],
+   "near": "j4",
+   "dNear": 0.254,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#9",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 5.051,
+   "y": 12.537,
+   "px": 52,
+   "sizePx": 12,
+   "bbox": [
+    5.025,
+    12.5,
+    5.069,
+    12.575
+   ],
+   "near": "j16",
+   "dNear": 0.243,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#10",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 4.702,
+   "y": 12.803,
+   "px": 89,
+   "sizePx": 15,
+   "bbox": [
+    4.65,
+    12.775,
+    4.744,
+    12.831
+   ],
+   "near": "j16",
+   "dNear": 0.239,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#11",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.544,
+   "y": 15.105,
+   "px": 136,
+   "sizePx": 20,
+   "bbox": [
+    1.481,
+    15.063,
+    1.606,
+    15.137
+   ],
+   "near": "j15",
+   "dNear": 0.306,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#12",
+   "scene": "g41_ring_tw64",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 6.526,
+   "y": 7.517,
+   "px": 54,
+   "sizePx": 18,
+   "bbox": [
+    6.475,
+    7.481,
+    6.588,
+    7.556
+   ],
+   "near": "j4",
+   "dNear": 0.131,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.003"
+  },
+  {
+   "id": "g41_ring_tw64#13",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.757,
+   "y": 15.332,
+   "px": 250,
+   "sizePx": 32,
+   "bbox": [
+    1.706,
+    15.238,
+    1.813,
+    15.438
+   ],
+   "near": "j15",
+   "dNear": 0.257,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#14",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 1.321,
+   "y": 15.557,
+   "px": 199,
+   "sizePx": 22,
+   "bbox": [
+    1.244,
+    15.512,
+    1.381,
+    15.606
+   ],
+   "near": "j15",
+   "dNear": 0.241,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#15",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 5.599,
+   "y": 20.256,
+   "px": 54,
+   "sizePx": 13,
+   "bbox": [
+    5.556,
+    20.238,
+    5.638,
+    20.281
+   ],
+   "near": "j21",
+   "dNear": 0.236,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#16",
+   "scene": "g41_ring_tw64",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 19.773,
+   "y": 20.227,
+   "px": 3687,
+   "sizePx": 170,
+   "bbox": [
+    19.219,
+    19.837,
+    20.281,
+    20.594
+   ],
+   "near": "x68",
+   "dNear": 1.243,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#17",
+   "scene": "g41_ring_tw64",
+   "kind": "stray_ink",
+   "sub": "spike",
+   "x": 18.08,
+   "y": 20.722,
+   "px": 781,
+   "sizePx": 50,
+   "bbox": [
+    17.956,
+    20.55,
+    18.206,
+    20.863
+   ],
+   "near": "x67",
+   "dNear": 0.762,
+   "part": "?",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#18",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 16.076,
+   "y": 18.578,
+   "px": 769,
+   "sizePx": 59,
+   "bbox": [
+    15.975,
+    18.375,
+    16.281,
+    18.744
+   ],
+   "near": "j18",
+   "dNear": 0.283,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#19",
+   "scene": "g41_ring_tw64",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 16.589,
+   "y": 18.465,
+   "px": 59,
+   "sizePx": 13,
+   "bbox": [
+    16.563,
+    18.425,
+    16.606,
+    18.506
+   ],
+   "near": "j18",
+   "dNear": 0.242,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "g41_ring_tw64#20",
+   "scene": "g41_ring_tw64",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 19.861,
+   "y": 20.411,
+   "px": 953,
+   "sizePx": 117,
+   "bbox": [
+    19.444,
+    20.106,
+    20.175,
+    20.613
+   ],
+   "near": "x68",
+   "dNear": 1.047,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.247"
+  }
+ ],
+ "stats": {
+  "muse_hash": {
+   "diff": {
+    "px": 42744544,
+    "ink": {
+     "max": 0.08440678475819763,
+     "p99": 0.00005623413251903491,
+     "p999": 0.00014125375446227554,
+     "at": [
+      24.5969,
+      22.9719
+     ],
+     "n": 42744544
+    },
+    "cov": {
+     "max": 0.0003447071201927443,
+     "p99": 0.000025118864315095822,
+     "p999": 0.00009999999999999999,
+     "at": [
+      33.3344,
+      35.3031
+     ],
+     "n": 42744544
+    },
+    "s": {
+     "max": 21.97507751690733,
+     "p99": 0.000003981071705534969,
+     "p999": 0.0002818382931264449,
+     "at": [
+      6.1406,
+      33.9031
+     ],
+     "n": 27021846
+    },
+    "chainMis": 356,
+    "chainMisAt": [
+     [
+      3.9656,
+      1.1219,
+      79,
+      41
+     ],
+     [
+      0.8719,
+      2.0156,
+      74,
+      79
+     ],
+     [
+      3.6031,
+      2.7844,
+      1,
+      28
+     ],
+     [
+      5.9656,
+      3.3531,
+      56,
+      28
+     ],
+     [
+      2.0094,
+      4.8781,
+      56,
+      79
+     ],
+     [
+      1.9469,
+      4.9344,
+      56,
+      79
+     ],
+     [
+      10.0094,
+      0.4531,
+      52,
+      46
+     ],
+     [
+      10.0969,
+      0.6844,
+      52,
+      46
+     ],
+     [
+      13.5594,
+      1.7094,
+      28,
+      83
+     ],
+     [
+      13.5719,
+      1.7219,
+      83,
+      28
+     ],
+     [
+      13.6344,
+      1.7844,
+      83,
+      28
+     ],
+     [
+      13.6406,
+      1.7906,
+      83,
+      28
+     ]
+    ],
+    "winMis": 2213,
+    "segMis": 123,
+    "kMis": 0,
+    "inkOver1e3_1e2_1e1": [
+     35,
+     4,
+     0
+    ]
+   },
+   "gpu": {
+    "renderer": "ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "tiles": 25,
+    "readMs": 240582,
+    "lost": 0
+   },
+   "px": 42744544,
+   "evalMs": 267723,
+   "seg": {
+    "mean": 29.57378403662465,
+    "p95": 56,
+    "max": 88
+   },
+   "corners": {
+    "mean": 0.5275351165285562,
+    "p95": 2,
+    "max": 4
+   },
+   "tables": {
+    "vtx": 7.7502000000022235,
+    "pins": 24.67859999999928,
+    "arms": 6.569400000000314,
+    "corners": 34.83230000000185,
+    "bins": 9.62159999999858,
+    "kp": 2.292699999998149,
+    "total": 87.8353999999963
+   },
+   "nCh": 2958,
+   "nK": 198,
+   "nA": 503,
+   "cells": 9506
+  },
+  "g41_ring_tw64": {
+   "diff": {
+    "px": 18330690,
+    "ink": {
+     "max": 0.0021256660505766523,
+     "p99": 0.00002818382931264455,
+     "p999": 0.00011220184543019653,
+     "at": [
+      15.9906,
+      18.4719
+     ],
+     "n": 18330690
+    },
+    "cov": {
+     "max": 0.0002487459503919265,
+     "p99": 0.0000035481338923357534,
+     "p999": 0.00007943282347242821,
+     "at": [
+      18.3406,
+      16.3406
+     ],
+     "n": 18330690
+    },
+    "s": {
+     "max": 18.375231113257797,
+     "p99": 0.000005011872336272725,
+     "p999": 0.00011220184543019653,
+     "at": [
+      1.5219,
+      8.4719
+     ],
+     "n": 5898093
+    },
+    "chainMis": 21,
+    "chainMisAt": [
+     [
+      9.4969,
+      1.1469,
+      1,
+      8
+     ],
+     [
+      15.0906,
+      1.8594,
+      1,
+      0
+     ],
+     [
+      15.0531,
+      1.8844,
+      1,
+      0
+     ],
+     [
+      15.0344,
+      1.8969,
+      0,
+      1
+     ],
+     [
+      14.2219,
+      4.1969,
+      1,
+      12
+     ],
+     [
+      11.6531,
+      4.3281,
+      13,
+      1
+     ],
+     [
+      10.4844,
+      5.4469,
+      13,
+      1
+     ],
+     [
+      15.4156,
+      5.4906,
+      12,
+      1
+     ],
+     [
+      7.9719,
+      6.8281,
+      -1,
+      1
+     ],
+     [
+      16.5281,
+      1.8094,
+      0,
+      -1
+     ],
+     [
+      19.2531,
+      3.1219,
+      11,
+      1
+     ],
+     [
+      17.2594,
+      6.8219,
+      -1,
+      1
+     ]
+    ],
+    "winMis": 106,
+    "segMis": 12,
+    "kMis": 0,
+    "inkOver1e3_1e2_1e1": [
+     1,
+     0,
+     0
+    ]
+   },
+   "gpu": {
+    "renderer": "ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "tiles": 41,
+    "readMs": 336205,
+    "lost": 0
+   },
+   "px": 18330690,
+   "evalMs": 58057,
+   "seg": {
+    "mean": 11.503707770956794,
+    "p95": 33,
+    "max": 65
+   },
+   "corners": {
+    "mean": 0.13620414725250385,
+    "p95": 1,
+    "max": 4
+   },
+   "tables": {
+    "vtx": 0.793100000009872,
+    "pins": 0.6117000000085682,
+    "arms": 1.3088999999454245,
+    "corners": 4.399600000004284,
+    "bins": 3.818599999998696,
+    "kp": 0.6605999999446794,
+    "total": 11.907800000044517
+   },
+   "nCh": 575,
+   "nK": 41,
+   "nA": 76,
+   "cells": 6320
+  }
+ }
+}
