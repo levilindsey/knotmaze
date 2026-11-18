@@ -182,3 +182,18 @@ strokes toward today's, and do not use today's border strokes as a bar.
   against 1286 max; at the app's pacing the clock sits at 825-1100.
   Time passes back to back (sync4) and at frame pacing (frame1), and
   read the clock beside every number (`k1362s3_gpuclk.mjs`).
+
+## Screening the GPU's picture (K1436 s2, 2026-11-17) and the cold load (K1468)
+
+`.claude/probes/K1436/k1436_screen.mjs` captures a frozen K868 state in the fill and border looks at DSF 3,
+and `k1436_screen_scan.ts` runs scan v2's band profile and strays on the screen's ink (labels and depth come
+from the mirror's tables at the same pixel). `k1436_bar.ps1 -Ref <c>` is the A/B, untested end to end. Speck
+tests need an 8-neighbour median (a 7x7 one reads every fade ramp as specks). Close the panel with
+localStorage `knotmaze.panelOpen=0`, or it covers the knot.
+
+COLD LOADS KILL THE GPU PROCESS (K1468, open): on a Chrome profile without the build's gf shaders cached, the
+first draw of each multi-target gf program hangs the GPU main thread for 50-70 s and Chrome's watchdog kills
+the GPU process; the context is lost, gf recompiles and it loops. So warm the profile once per build before
+any capture (`--disable-gpu-watchdog` lets a cold load finish), count `webglcontextlost` on the app's canvas,
+and when a load stalls look in `<profile>/Crashpad/reports` before blaming the build under test.
+`.claude/probes/K1468/gfts.mjs` and `gputhreads.ps1` are the time series.
