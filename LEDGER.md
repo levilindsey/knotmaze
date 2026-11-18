@@ -619,11 +619,11 @@ Next free ID: K1469.
   threads (junction B, ci3 upper right, the blue kink loop at ?3); (3) a dashed dark tick across the kink loop
   at ?3 at every fade; (4) today's protect term (pr) is not ported to gf's gap window; (5) a round blob at
   junction B at fade 0. Next: bake.mjs on those crossings (missing over threads, the +-40-sample scan cap)
-  - owner: agent `a2d11c7ef2d27e635` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 15:27, 2 h cap ~17:27)
-  - branch: `worktree-agent-a2d11c7ef2d27e635`, worktree `.claude/worktrees/agent-a2d11c7ef2d27e635`; last commit: `9ee87cdf`
-  - evidence: .claude/probes/K1460/ (out/b1 stage 2 crops, out/s3 stage 3), .claude/probes/K1458/
-  - next: stage 3 running: the kink loop's hard edge at fade 1.2, the jB line and blob, protect, the second link, the carried-over checks
-  - brief: `docs/design/K1460_s3_fade_loop.md`
+  - owner: agent `a3840a23f835d4829` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 17:16, 2 h cap ~19:16)
+  - branch: `worktree-agent-a3840a23f835d4829`, worktree `.claude/worktrees/agent-a3840a23f835d4829`; last commit: `1e20f0f4`
+  - evidence: .claude/probes/K1460/ (stage 3's WIP and handoff: branch worktree-agent-a2d11c7ef2d27e635, tip bf05e69f, not merged: 236f8f4e tested on four spots, e1a4fea0 unverified)
+  - next: stage 4: captures with the watchdog off and a warm profile, judge 236f8f4e and e1a4fea0 on sheets, then the kink loop's edge, junction B and protect
+  - brief: `docs/design/K1460_s4_fade_loop.md`
 - **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
   wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
