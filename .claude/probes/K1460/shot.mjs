@@ -27,7 +27,6 @@ async function load(mode, fl) {
   await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
   await page.goto(linkOf(mode, fl), { waitUntil: "load", timeout: 900000 });
   await page.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
-  if (mode !== "today") await page.waitForFunction(() => (globalThis.__knotGf?.stats?.switchedMs ?? -1) > 0 && (globalThis.__knotGf?.stats?.composites ?? 0) > 2, { timeout: 900000, polling: 300 }); // K1460 s3: gf has switched in (be6ae5f6)
   const hash = await page.evaluate(async (t) => {
     await window.__knotPhysFreeze(true);
     await window.__knotStepUntil(t);
@@ -37,6 +36,7 @@ async function load(mode, fl) {
     const d = await window.__knotPhysDump();
     const h = d?.hashes ?? d; return String(h?.all ?? JSON.stringify(h).slice(0, 80));
   }, SIMT);
+  if (mode !== "today") await page.waitForFunction(() => (globalThis.__knotGf?.stats?.switchedMs ?? -1) > 0 && (globalThis.__knotGf?.stats?.composites ?? 0) > 2, { timeout: 900000, polling: 300 }); // K1460 s3 (after the freeze: the sim must not run on during the compile): gf has switched in (be6ae5f6)
   await sleep(2500);
   if (mode !== "today") {
     const c0 = await page.evaluate(() => { globalThis.__knotGfOpts = { ...(globalThis.__knotGfOpts ?? {}), redraw: true }; return globalThis.__knotGf.stats.composites; });

@@ -437,17 +437,27 @@ function gapPointAt(S: GapSamples, arc: number, o: { x: number; y: number }): vo
  * [winNeg, winPos] of arc from the under centre. capNeg/capPos bound the march (the caller's neighbour
  * caps); a side whose distance never clears runs to its cap, as the solve's does.
  */
-export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number, fillHalf: number, margin: number, fade: number, capNeg: number, capPos: number, roomNeg = 1e6, roomPos = 1e6): [number, number, number, number, number, number] {
-  const R = 3.4; // the over polyline's reach around the crossing (the march's caps stay inside it)
+export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number, fillHalf: number, margin: number, fade: number, capNeg: number, capPos: number, roomNeg = 1e6, roomPos = 1e6, oNeg = GAP_OVER_RANGE, oPos = GAP_OVER_RANGE, selfEx = 0): [number, number, number, number, number, number] {
+  // the over polyline's reach around the crossing (the march's caps stay inside it). K1460 s3: a self
+  // crossing's over range stops at the split (today's oCapNeg / oCapPos), and a point within selfEx of
+  // the under point's own arc is no over pass (today's polyDist exclusion): without both, the polyline
+  // held the under pass itself, the distance never cleared and the window ran to its cap around a kink loop.
   const stepO = Math.max(1, Math.round(0.1 / so.arcPer)) * so.arcPer; // today's coarse march spacing
-  const nO = Math.max(2, Math.round((2 * R) / stepO) + 1);
-  const ox = new Float64Array(nO), oy = new Float64Array(nO);
+  const nO = Math.max(2, Math.round((oNeg + oPos) / stepO) + 1);
+  const ox = new Float64Array(nO), oy = new Float64Array(nO), oa = new Float64Array(nO);
   const pt = { x: 0, y: 0 }, p0 = { x: 0, y: 0 }, p1 = { x: 0, y: 0 };
-  for (let i = 0; i < nO; i++) { gapPointAt(so, oC - R + i * stepO, pt); ox[i] = pt.x; oy[i] = pt.y; }
+  for (let i = 0; i < nO; i++) { oa[i] = oC - oNeg + i * stepO; gapPointAt(so, oa[i], pt); ox[i] = pt.x; oy[i] = pt.y; }
+  const per = so.closed ? so.total : 0;
+  const near = (a: number, arcU: number): boolean => {
+    let da = a - arcU;
+    if (per > 0) da -= per * Math.floor(da / per + 0.5);
+    return Math.abs(da) < selfEx;
+  };
   const dAt = (arcU: number): { d: number; sin: number } => {
     gapPointAt(su, arcU, pt);
     let bd = Infinity, bi = 0;
     for (let i = 0; i + 1 < nO; i++) {
+      if (selfEx > 0 && (near(oa[i], arcU) || near(oa[i + 1], arcU))) continue;
       const ax = ox[i], ay = oy[i], dx = ox[i + 1] - ax, dy = oy[i + 1] - ay;
       const l2 = dx * dx + dy * dy;
       const u = l2 > 0 ? Math.max(0, Math.min(1, ((pt.x - ax) * dx + (pt.y - ay) * dy) / l2)) : 0;
@@ -590,7 +600,11 @@ export class GfGapTable {
         if (d >= 0) jRoomP = Math.min(jRoomP, Math.max(0, d - (r.jointClear ?? 0)));
         else jRoomN = Math.min(jRoomN, Math.max(0, -d - (r.jointClear ?? 0)));
       }
-      const [wn, wp, msN, fsN, msP, fsP] = gapWindow(su, so, uC, oC, r.fillHalf, r.margin, r.fade, capN, capP, jRoomN, jRoomP);
+      // K1460 s3: a self crossing's over range and own-arc exclusion, as setupUnder hands marchUnder (oCapNeg/Pos
+      // take splitBwd/Fwd; selfEx = both half-widths + margin + fade + the exit pad)
+      const oRN = self ? Math.min(GAP_OVER_RANGE, splitP) : GAP_OVER_RANGE, oRP = self ? Math.min(GAP_OVER_RANGE, splitN) : GAP_OVER_RANGE;
+      const selfEx = self ? 2 * r.fillHalf + r.margin + r.fade + GAP_EXIT_PAD : 0;
+      const [wn, wp, msN, fsN, msP, fsP] = gapWindow(su, so, uC, oC, r.fillHalf, r.margin, r.fade, capN, capP, jRoomN, jRoomP, oRN, oRP, selfEx);
       // K1458: the side's clearance scales ride the scan field's fraction (gwScales)
       const packN = (Math.round(fsN * 31) * 32 + Math.round(msN * 31)) / 1024, packP = (Math.round(fsP * 31) * 32 + Math.round(msP * 31)) / 1024;
       this.wins?.push(cents.indexOf(e), wn, wp, capN, capP);
@@ -1423,10 +1437,7 @@ int lkj[MAXS]; float lks[MAXS];
 `;
 const M_ANCHOR = "\nvoid main() {\n";
 function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? s : s + ".0"; }
-// PROBE K1460 s3 (reverted): lkdbg bits 1 no window, 2 no far reach, 4 no candidate loop, 8 no fringe
-const LKDBG = typeof location !== "undefined" ? Number(new URLSearchParams(location.search).get("lkdbg") ?? 0) | 0 : 0;
 const M_LOOK = `
-#define LKDBG ${LKDBG}
 uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG; uniform float uLkF;
 uniform highp sampler2D uPt; uniform vec3 uGold;
 uniform highp sampler2D uGw; uniform float uGwLive;
@@ -1892,7 +1903,7 @@ float lkCut(float d, float sinT, float exg, float wm, float pxw, vec2 sc) {
   float e = d - uH - uLkG * sc.x;
   float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);
   float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;
-  if (uGwLive > 0.5 && (LKDBG & 1) == 0) {
+  if (uGwLive > 0.5) {
     float fs = clamp(wm / max(0.5 * uLkF, pxw), 0.0, 1.0);
     fs = mix(1.0, fs * fs * (3.0 - 2.0 * fs), clamp(e / pxw, 0.0, 1.0));
     cut *= clamp(wm / pxw + 0.5, 0.0, 1.0) * fs;
@@ -1908,7 +1919,6 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   vec2 sc = vec2(1.0);
   if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
   for (int j = 0; j < np; j++) {
-    if ((LKDBG & 4) != 0) break;
     if (!(pkey[j] > key + uZt)) continue;
     vec2 qO = lookQ(j, p); vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
@@ -1920,7 +1930,7 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   // rc = h + W + 2aa of the pixel, so the loop above sees the over thread only about W past its edge:
   // the ramp stopped there, a hard edge whatever the fade. Inside a window, the bake names the over
   // pass and its arc near this sample; the pass's true nearest point gives today's distance.
-  if (uGwLive > 0.5 && wm > -pxw && g < 0.999 && (LKDBG & 2) == 0) {
+  if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {
     if (sl.x >= 0.0) {
       int cO = int(sl.x + 0.5);
       vec3 N = lkNearOn(cO, sl.y, sl.z, p, cO == cU ? qU.x : -1.0);
@@ -1939,7 +1949,6 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
 // the under thread beside an over pass, the uncut fringe drew a dotted line across the faded under thread. Cut the
 // fringe by its lowest covering piece's gap, keeping whatever pieces above that one cover the pixel.
 void lkFringe(vec2 p, inout float ink, inout float cov) {
-  if ((LKDBG & 8) != 0) return;
   int jU = -1; float kU = BIG;
   for (int j = 0; j < np; j++) { if (pd[j] < uH + uAA && pkey[j] < kU) { kU = pkey[j]; jU = j; } }
   if (jU < 0) return;
