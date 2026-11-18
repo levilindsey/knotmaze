@@ -440,3 +440,32 @@ Others at work: a Claude agent on the border faults (K1482) edits the key and co
 commit small, and if a pull conflicts in `layers()`, redo your change on top of theirs. Another Claude agent
 (K1456 stage 3) has the compile worker and its start (`gf_app.ts`, `gf_pass.ts`, `gf_compile_worker.ts`,
 `gf_split.ts`, `frame_loop.ts`): keep out of those.
+
+## Run K (26K): K1500, rp=gf has no crossing fade at the start and exit markers
+
+Added 2026-11-18. Today's renderer fades a thread away from a marker disc (start, exit) over the Crossing
+fade's length (`fadeLength`, URL key `fl`, 0 to 1.2, default 0.14): `renderMarkerGaps` in
+`src/render/ribbon/crossing_gaps.ts`. rp=gf draws the same cut at the disc and keeps it crisp at every `fl`:
+`gf_look.ts` has no port of the marker gap's fade (K1495's handoff in `docs/design/K1495_fade_reach.md`, last
+bullet of its sheets list; its probes in `.claude/probes/K1495/`: `shots.mjs` sets the fade live, `prof2.py`
+measures a ramp along a thread's centre line). Levi drags that slider on
+`?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1` and wants it to act on the fly. K1492 (3d7acffe) made the border look's
+outline fade by the gap's kept fraction (`lkCo.a` in the label pass): the marker's fade must reach the border
+look the same way.
+
+The same cautions as Run G (precision, hung loads, K1472 stage 2's functions). `gf_look.ts` is also Runs G
+and H's file: start from master as those runs left it.
+
+Done: 1. The number first, failing on master: on link A with markers shown
+(`?3.FGH1HtvQeDjm6e4BII&am=instant&rp=gf&gfh=1&tlk=fill`, and today's renderer on the same link without
+`rp=gf` and `gfh`), at rest in one physics hash, at `fl` 0, 0.14, 0.5 and 1.2 (set live, as a slider drag
+does, and by `&fl=<v>`): at both markers, every thread that meets the disc, the 10%-90% ramp of the thread's
+coverage along its centre line against distance from the disc's edge, today | gf, in device px. 2. The cause
+named in the code. 3. Fixed: gf's ramp equals today's within 15% or 2 device px (whichever is larger) at
+every such thread and all four values, in the fill look, and the border look's outline follows the same ramp
+(`&tlk=border`); it follows a live slider move with no reload, awake and asleep; `fl` 0 stays today's crisp
+cut. 4. 4x tiles today | master gf | new gf at both markers at `fl` 0, 0.14 and 1.2, fill and border, looked
+at: smooth, no stairs, bands, ticks or dots. 5. Away from the markers nothing moves: with the same physics
+hash, 0 px against master outside a box of 3 world units around each marker, at `fl` 0.14 and 1.2, both
+looks. 6. `.claude/probes/K1458/dragcheck.mjs` (fill) and `.claude/probes/K1492/dragcheck_b.mjs` (border)
+pass. 7. `npm test` green. 8. The guards.

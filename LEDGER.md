@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1498.
+Next free ID: K1501.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -333,6 +333,13 @@ Next free ID: K1493.
   master; b88a4108 removed them from the tree, so checkouts are clean, but the blobs stay in history (every
   fresh clone downloads them). Dropping them needs a history rewrite and a force-push of master: do it (rebase
   everything after 82405bf9 without them), or leave it?
+- **K1498** · Crossing fade on dense mazes (both renderers): on Levi's link the fade at 1.2 runs about 12
+  device px, not the ~51 the value asks for, because today's fade is held back near junctions
+  (crossing_gaps.ts: FADE_JOINT_FLOOR's clearance scale, and the gap window's end about 43 px from the
+  crossing); with the clearance scale off it reaches 14.5 px, and the window is the harder stop (K1495,
+  .claude/probes/K1495/out/prof_cause.txt). Should a high fade reach further on dense mazes? Picture of
+  today's reach: .claude/probes/K1495/out/sheet_reach.png. Options: keep as it is; loosen the limits (a fade
+  may then run into a neighbouring junction)
 
 ## In progress
 
@@ -757,16 +764,6 @@ Next free ID: K1493.
   - evidence: .claude/probes/K1456/s3/ (ab.ps1, checks.ps1, nogf.mjs, out/), .claude/probes/K1456/s2/ (table.mjs, ctime.mjs, variants.mjs)
   - next: Muse run 26J (queued: cut the compile time of layers()' corner code in gf_glsl.ts, the one program that gates the first composite, 56-123 s under load). Then, on a quiet machine under the perf lock, cold A/B of 955de39d (compile starts 0.8 s after load, not 8-13 s) against master: merge it only if the first composite comes sooner (under load: early 77-93 s, master 74-132 s, no gain; the early compile seems to compete with today's renderer's own compiles). Untried: deferring today's renderer's programs the rest look does not need; gf_split's two passes as two programs. A second worker for the gating program was slower (median 104.5 s) and is dropped
   - brief: `docs/design/K1456_s3_first_visit.md`
-- **K1495** · rp=gf's crossing fade on link A reaches about 11.5 device px at fl 1.2 where the slider asks for
-  about 51 (link B reaches 20.5); the border outline now follows the fill (K1492), so both are short.
-  Suspects, untested: K1458's clearance scales, the gap's window. Number: the fill's 10-90% ramp at fl 1.2 at
-  K1492's eight crossings (.claude/probes/K1492/prof.py, out/t_prof.json) against today's renderer on the same
-  link
-  - owner: agent `ab03fad2cb648ebf8` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 05:51, 2 h cap ~07:51)
-  - branch: `worktree-agent-ab03fad2cb648ebf8`, worktree `.claude/worktrees/agent-ab03fad2cb648ebf8`; last commit: `63d06c9f`
-  - evidence: .claude/probes/K1492/ (prof.py, out/t_prof.json, out/sheet_fade.png); the stage writes .claude/probes/K1495/
-  - next: the stage's report (cap about 08:00 on 2026-11-18): today's against gf ramp table; if a fix, view .claude/probes/K1495/out/sheet_reach.png, merge (gf_look.ts; Muse 26G and 26H edit the same file), CI, live check, show Levi
-  - brief: `docs/design/K1495_fade_reach.md`
 
 ## Next, in order
 
@@ -1138,6 +1135,9 @@ Every other item below waits on the trigger it names.
   fl=1.2: 439/451 sides, 287/299) while its distances match today (p90 |d-today| 0.0001-0.0124 world) - is the
   FAIL its crossing-completeness/dot criterion rather than a distance failure? Seen in Muse batch 26 Run F's
   guards (.claude/probes/K1474/out/26F/guards_fade/summary.txt); not a Run F Done item
+- **K1499** · rp=gf has no fade at the start and exit markers: today's fades the thread away from the marker
+  disc over a long stretch at fl 1.2, gf keeps the crisp fl 0 cut at every value (gf_look.ts has no marker-gap
+  port; K1495 handoff in docs/design/K1495_fade_reach.md). Muse run 26K
 
 ## Residuals (known, not fixed)
 
@@ -2422,11 +2422,18 @@ Every other item below waits on the trigger it names.
 - **K1496** · K1492's outline fade at crossings x75 and x103 on link A reads 2-7 px at fl 1.2 against the
   fill's 11 (the probe may be at fault: the outline runs beside the over thread; not looked at on tiles), and
   at some crossings the outline fades over a longer stretch than the fill (x104: 28 and 21 px against 18).
-  .claude/probes/K1492/out/t_prof.json
+  .claude/probes/K1492/out/t_prof.json. K1495 (2026-11-18): x75 and x103 are real and not a fault (the outline there is the corner of a junction
+  the under thread dives beneath; today's fill cuts within about 3 px at the same edge); what remains is the
+  outline fading over a longer stretch than the fill at x104 and x63
 - **K1497** · K1436 bar tool: a scene's master and candidate captures can settle in different physics states
   after its 4 retries (K1482 s6: g41_user_tw64 c1b63637 against 0d51331b), which makes that pair's finds
   meaningless; the bar should fail the scene, or retry until the hashes match
   (.claude/probes/K1436/k1436_bar.ps1, out/bar/k1482s6/ on branch worktree-agent-ad03e8b65a2afa540)
+- **K1500** · rp=gf fill look, gaps where a thread dives under a junction differ from today's: at fl 0 a dark
+  block, full looped gaps and small triangles where today's draws a thin line; at fl 1.2 straight hard edges
+  and bright slivers across the fade (K1458's stairs and bands). Fill look only; the border look on Levi's
+  link reads clean there. Picture: .claude/probes/K1495/out/sheet_dives.png (four dives, today's | gf at fl 0,
+  0.5, 1.2). Likely the far-reach bake or the junction gap geometry (tables.ts / eval.ts)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2800,6 +2807,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1495** · rp=gf's crossing fade equals today's on Levi's link: both ramp about 12 px at fl 1.2, held there by today's own junction limits, which gf copies (table and sheets: .claude/probes/K1495/out/sheet_reach.png, prof_cause.txt); no src change. Done in 3c27a775 (2026-11-18).
 - **K1492** · rp=gf's border outline fades over the crossing gap's whole ramp and follows the Crossing fade slider; seen on Levi's live link at fl 0.14 and 1.2 (.claude/probes/K1492/live/crop_014_vs_12.png). Done in 3d7acffe (2026-11-18).
 - **K1474** · gf fill matched today: the composite kept destination alpha, so a transparent backdrop added its colour (21,27,40) to every section colour; fill look now writes coverage alpha (border/both keep old blend). Strict interiors max 1/4/0 on ?3/?7/?b, border 0 px outside panel. Done in 5c058f5c (2026-11-18).
 - **K1481** · gf's compile poll waits on a 250 ms timer, so it no longer asks for a full rebuild on every frame while programs compile (251 of 251 rest frames before, 46 per 10 s after); the frames left are the link's own ambient paint, which today's renderer runs at the same rate without gf. The cold wait stays with K1456. Done in 0fc195b8 (2026-11-18).
