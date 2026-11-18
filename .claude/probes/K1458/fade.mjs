@@ -19,11 +19,14 @@ import { join } from "node:path";
 const [, , base, outDir, profileDir, flArg = "0,1.2", varArg = "gf,gfh"] = process.argv;
 if (!base || !outDir || !profileDir) { console.error("usage: fade.mjs <base> <outDir> <profileDir> [fl] [variants]"); process.exit(2); }
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), MINX = +(process.env.MINX ?? 12), PASS = +(process.env.PASS ?? 0.85);
+// K1460: TRIES loads per page until its physics hash equals the reference page's (loads settle in one of two
+// states); DOTS = the most dots (gf-only one-pixel spikes inside the under thread's faded span) a side may have
+const TRIES = +(process.env.TRIES ?? 8), DOTS = +(process.env.DOTS ?? 2);
 const FLS = flArg.split(",").map(Number), VARS = varArg.split(",").filter(Boolean);
 mkdirSync(outDir, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({
-  executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: false, userDataDir: profileDir,
+  executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: false, userDataDir: profileDir, protocolTimeout: 1800000,
   args: ["--use-angle=d3d11", "--no-first-run", "--no-default-browser-check", "--window-position=2200,50", "--window-size=1720,1000",
     "--disable-features=CalculateNativeWinOcclusion", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding"],
 });
@@ -179,6 +182,34 @@ async function measure(geo, ref, shots) {
       row.c = { today: T.c };
       for (const k of Object.keys(S)) if (k !== "today") { const L = levels(S[k]); row[k] = L.lv; row.c[k] = L.c; }
       row.da = g.prof.map((p) => p.da);
+      // K1460: dots. The under thread's footprint (lateral offsets within 0.85 of its half width) where today's
+      // centreline coverage is under 0.5 and outside the over thread's body; a pixel is a dot in a renderer when its
+      // coverage exceeds today's there by 0.2 AND the mean of its four neighbours by 0.12 (a one-pixel spike, not a
+      // ramp placed differently). c12feaf6..854ac158's gf drew a dotted line on the over thread's edge contour there.
+      const seen = new Set(), pix = [];
+      const hd = g.hOver * d.scale * 0.85;
+      for (let i = first; i < g.prof.length - 1; i++) {
+        if (!(T.c[i] < 0.5) || !(g.prof[i].dO > g.hOver + 1.5 / d.scale)) continue;
+        const tx = g.prof[i + 1].x - g.prof[i].x, ty = g.prof[i + 1].y - g.prof[i].y, tl = Math.hypot(tx, ty) || 1;
+        const nx = -ty / tl, ny = tx / tl;
+        for (let o = -hd; o <= hd; o += 0.5) {
+          const x = Math.round(g.prof[i].x + nx * o), y = Math.round(g.prof[i].y + ny * o), k = y * 100000 + x;
+          if (!seen.has(k)) { seen.add(k); pix.push([x, y, i]); }
+        }
+      }
+      const covAt = (D, x, y, i) => { const U = Uat(i), uu = U[0] ** 2 + U[1] ** 2 + U[2] ** 2; const P = px(D, x, y); return ((P[0] - BG[0]) * U[0] + (P[1] - BG[1]) * U[1] + (P[2] - BG[2]) * U[2]) / uu; };
+      row.dots = {}; row.dotAt = {};
+      for (const k of Object.keys(S)) if (k !== "today") {
+        let n = 0; const at = [];
+        for (const [x, y, i] of pix) {
+          const cv = covAt(S[k], x, y, i), ct = covAt(S.today, x, y, i);
+          if (!(cv - ct > 0.2)) continue;
+          const nb = (covAt(S[k], x + 1, y, i) + covAt(S[k], x - 1, y, i) + covAt(S[k], x, y + 1, i) + covAt(S[k], x, y - 1, i)) / 4;
+          if (cv - nb > 0.12) { n++; if (at.length < 6) at.push([x, y]); }
+        }
+        row.dots[k] = n; row.dotAt[k] = at;
+      }
+      row.dotPix = pix.length;
       sides.push(row);
     }
     return { BG, sides };
@@ -196,8 +227,10 @@ try {
   for (const fl of FLS) {
     const shots = {};
     const hashes = {};
-    if (fl === 0) { shots.today = refPng; hashes.today = R.hash; } else { const T = await load("today", fl); shots.today = T.png; hashes.today = T.hash; await T.page.close(); }
-    for (const v of VARS) { const P = await load(v, fl); shots[v] = P.png; hashes[v] = P.hash; await P.page.close(); }
+    // K1460: retry a load until it lands in the reference page's state
+    const same = async (mode) => { let P; for (let t = 0; t < TRIES; t++) { P = await load(mode, fl); if (P.hash === R.hash) break; console.log(`[${mode} fl=${fl}] hash ${P.hash} != ${R.hash}, retry`); if (t < TRIES - 1) await P.page.close(); } return P; };
+    if (fl === 0) { shots.today = refPng; hashes.today = R.hash; } else { const T = await same("today"); shots.today = T.png; hashes.today = T.hash; await T.page.close(); }
+    for (const v of VARS) { const P = await same(v); shots[v] = P.png; hashes[v] = P.hash; await P.page.close(); }
     const sameState = Object.values(hashes).every((h) => h === R.hash);
     const m = await measure(geo, refPng, shots);
     const px1 = 1 / (geo.view.s * DSF);
@@ -218,8 +251,11 @@ try {
       }
       errs.sort((a, b) => a - b);
       const med = errs.length ? errs[errs.length >> 1] : NaN, p90 = errs.length ? errs[Math.floor(errs.length * 0.9)] : NaN;
-      const good = xs.size >= MINX && pass >= PASS * m.sides.length;
+      const dotSides = m.sides.filter((s) => s.dots[v] > DOTS), dotsAll = m.sides.reduce((p, s) => p + s.dots[v], 0);
+      const good = xs.size >= MINX && pass >= PASS * m.sides.length && dotSides.length === 0;
       if (!good || !sameState) failed = true;
+      const ld = `fl=${fl} ${v}: dots ${dotsAll} over ${m.sides.length} sides (${m.sides.reduce((p, s) => p + s.dotPix, 0)} px scanned), sides with more than ${DOTS}: ${dotSides.length}` + (dotSides.length ? ` [${dotSides.slice(0, 8).map((s) => `x${s.ci}${s.side > 0 ? "+" : "-"}@${s.at}:${s.dots[v]}`).join(" ")}]` : "");
+      console.log(ld); summary.push(ld);
       const line = `fl=${fl} ${v}: sides ${m.sides.length} (crossings ${xs.size}), pass ${pass} (crossings with every side passing ${xs.size - xsFail.size}), |d-today| median ${med.toFixed(4)} p90 ${p90.toFixed(4)} world, sameState ${sameState} -> ${good && sameState ? "PASS" : "FAIL"}`;
       console.log(line); summary.push(line);
       // today's three distances, averaged, against this variant's

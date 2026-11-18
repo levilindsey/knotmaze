@@ -1490,7 +1490,7 @@ vec3 lkGwSlot(int c, vec2 q) {
   return P.yzw;
 }
 // K1458: the nearest point to p on chain c within w samples of kept sample s: (distance, segment, fraction)
-vec3 lkNearOn(int c, float s, float w, vec2 p) {
+vec3 lkNearOn(int c, float s, float w, vec2 p, float qx) {
   vec4 C0 = F(uOCh + 3 * c); int cV0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
   int k0 = int(s + 0.5);
   if (!closed && F(uOV + cV0).z < 0.0) k0 += 1;
@@ -1501,11 +1501,20 @@ vec3 lkNearOn(int c, float s, float w, vec2 p) {
     if (i > n) break;
     int q = k0 + i;
     if (closed) q = pmod(q, nseg); else if (q < 0 || q >= nseg) continue;
+    // K1460: a self-crossing (qx >= 0: the under pass's own segment on this chain) searches only the over pass's
+    // half of the chain, or the under thread's own centreline reads as the over pass (a dark tick across a kink loop)
+    if (qx >= 0.0) { int du = abs(q - int(qx)); int dv = abs(q - k0); if (closed) { du = min(du, nseg - du); dv = min(dv, nseg - dv); } if (du <= dv) continue; }
     vec4 A = F(uOV + cV0 + q); vec4 B = F(uOV + cV0 + q + 1);
     vec2 d = B.xy - A.xy; float l2 = dot(d, d);
     float t = l2 > 0.0 ? clamp(dot(p - A.xy, d) / l2, 0.0, 1.0) : 0.0;
     vec2 e = p - A.xy - d * t; float d2 = dot(e, e);
     if (d2 < bd) { bd = d2; bq = vec2(float(q), t); }
+  }
+  // K1460: a self-crossing's nearest point clamped at the excluded half's border is no over pass (a soft smear)
+  if (qx >= 0.0 && bq.x >= 0.0 && (bq.y <= 0.0 || bq.y >= 1.0)) {
+    int q2 = int(bq.x) + (bq.y <= 0.0 ? -1 : 1); if (closed) q2 = pmod(q2, nseg);
+    int du = abs(q2 - int(qx)); int dv = abs(q2 - k0); if (closed) { du = min(du, nseg - du); dv = min(dv, nseg - dv); }
+    if (du <= dv) return vec3(BIG, -1.0, 0.0);
   }
   return vec3(sqrt(bd), bq);
 }
@@ -1846,7 +1855,7 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {
     if (sl.x >= 0.0) {
       int cO = int(sl.x + 0.5);
-      vec3 N = lkNearOn(cO, sl.y, sl.z, p);
+      vec3 N = lkNearOn(cO, sl.y, sl.z, p, cO == cU ? qU.x : -1.0);
       if (N.y >= 0.0) {
         vec2 to = lkTan(cO, N.y);
         float sinT = abs(tu.x * to.y - tu.y * to.x);
@@ -1856,6 +1865,21 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
     }
   }
   return g;
+}
+// K1460: an antialiased fringe pixel has coverage but no label (the label needs d < h), so the site above never
+// cut it, and the composite paints it in a labelled neighbour's colour: along the edge where form B's burial ends
+// the under thread beside an over pass, the uncut fringe drew a dotted line across the faded under thread. Cut the
+// fringe by its lowest covering piece's gap, keeping whatever pieces above that one cover the pixel.
+void lkFringe(vec2 p, inout float ink, inout float cov) {
+  int jU = -1; float kU = BIG;
+  for (int j = 0; j < np; j++) { if (pd[j] < uH + uAA && pkey[j] < kU) { kU = pkey[j]; jU = j; } }
+  if (jU < 0) return;
+  float g = lkGap(kU, p, lookQ(jU, p), PC(jU));
+  if (!(g > 0.0)) return;
+  float aT = 0.0;
+  for (int j = 0; j < np; j++) { if (pkey[j] > kU + uZt) aT = max(aT, ss(-uAA, uAA, uH - pd[j])); }
+  float f = 1.0 - g * (1.0 - aT);
+  ink *= f; cov *= f;
 }
 `;
 const SITES: [string | RegExp, string, number][] = [
@@ -1884,7 +1908,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 
