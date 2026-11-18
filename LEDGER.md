@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1467.
+Next free ID: K1469.
 
 ## Waiting on Levi
 
@@ -629,10 +629,10 @@ Next free ID: K1467.
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
   slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
   docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
-  - owner: nobody since 2026-11-17 15:47 (merged; agent `a7f7245249f11fd90` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `c41b4a3e`
-  - evidence: .claude/probes/K1451/ (out/s3/ sheets: spots14_clip, spots58_clip, finds_0..3, fade0); the v2 scan on the merge against a3a9a6b4 at gfh=1: 156 finds to 126 (tie 60 to 30), 30 gone, none new or grown
-  - next: stage 4 (docs/design/K1451_s4_spots_5_7.md): spots 5 and 7 went back to master's look under the arm clip; owed: GPU census two groups at a time, the v2 scan at fade 0 and 1.2, the bench. Launch it when an agent slot frees (memory: commit charge ran 38 of 46 GB with two agents and Muse). The reach's build time (fat +31% with home on) is Muse run 26E
+  - owner: agent `aa84d5035d75f3084` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 17:05, 2 h cap ~19:05)
+  - branch: `worktree-agent-aa84d5035d75f3084`, worktree `.claude/worktrees/agent-aa84d5035d75f3084`; last commit: `e83fa5a6`
+  - evidence: `.claude/probes/K1451/out/s3/`
+  - next: stage 4: spots 5 and 7 without the in-arm hard edges, pinReach's build time, the owed GPU census, scan and bench
   - brief: `docs/design/K1451_s4_spots_5_7.md`
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
@@ -643,11 +643,22 @@ Next free ID: K1467.
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
   band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
   with it (Handoff K1433)
-  - owner: agent `a98b5a0a1ac3be774` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 15:27, 2 h cap ~17:27)
-  - branch: `worktree-agent-a98b5a0a1ac3be774`, worktree `.claude/worktrees/agent-a98b5a0a1ac3be774`; last commit: `9ee87cdf`
+  - owner: nobody since 2026-11-17 17:05 (merged; agent `a98b5a0a1ac3be774` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `7ca0c064`
   - evidence: .claude/probes/K1436/ (v2 scan, out/prec sheets, out/s2 stage 2)
-  - next: stage 2 running: the scan on GPU captures, k1436_bar.ps1 (one verdict per commit), the residuals
+  - next: stage 3 once K1468 lands (cold captures died to the GPU kills): warm the profile per build, capture the 12 scenes at gfh=1 and off, capture the K1460 link on master and c5fc87d1 (out/s2/jobs_k1460.json) for the tick and the dotted line, run k1436_bar.ps1 end to end, then the 40- and 10-find precision samples; residuals: markers masked by colour (take their positions from the fabric renderer), vdip:ramp false beside white (3 of 9), no spots mode for the def seam notches
   - brief: `docs/design/K1436_s2_gpu_scan.md`
+- **K1468** · rp=gf's cold load hangs the GPU process until Chrome kills it: on a profile without the build's
+  gf shaders, the first draw of each multi-target program burns the GPU main thread for 50-70 s (measured,
+  watchdog off: 53 to 124 s), the watchdog kills the GPU process, the context is lost, gf recompiles and
+  loops; seen on live b4e0a08e, a3a9a6b4 and b423013a, never on a warm profile. Likely Levi's "the entire maze
+  blinks in and out". Fix: one target per program, plus a no-loop guard
+  (docs/design/K1468_gf_cold_load_gpu_hang.md; probes .claude/probes/K1468/)
+  - owner: agent `afd07fccfe473c7f9` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 17:05, 2 h cap ~19:05)
+  - branch: `worktree-agent-afd07fccfe473c7f9`, worktree `.claude/worktrees/agent-afd07fccfe473c7f9`; last commit: `e83fa5a6`
+  - evidence: `.claude/probes/K1468/`
+  - next: prove the draw-time compile, then one target per program; Done 1 is five cold loads per link with the watchdog on
+  - brief: `docs/design/K1468_gf_cold_load_gpu_hang.md`
 
 ## Next, in order
 
@@ -995,6 +1006,10 @@ Every other item below waits on the trigger it names.
 - **K1463** · rp=gf: a small notch where the pink arm meets the blue thread at ?3 (lower right of
   .claude/probes/K1458/live/zoom_a.png): the look's colour/fill, present before K1458, the field is clean
   there (Handoff K1451)
+- **K1467** · a fresh checkout is 0.81 GB and 0.78 GB of it is tracked probe output (.claude/probes: K1435 316
+  MB, K1186 64, K1407 60, K863 56, K1198 43), so each agent worktree costs 0.8 GB (224 worktrees = 123 GB when
+  C: filled on 2026-11-17, claude-config CC156). Stop tracking closed items' sheets (history keeps them) or
+  give agent worktrees a sparse checkout; measured 2026-11-17 with git ls-tree -r -l HEAD
 
 ## Residuals (known, not fixed)
 
