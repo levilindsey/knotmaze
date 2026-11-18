@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1497.
+Next free ID: K1498.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -724,12 +724,21 @@ Next free ID: K1493.
   ticks and dashes (gap terms off: 0-2 px), and with home tables the mirror equals the screen there (stage 4's
   claim came from home-off tables); j58/t23s is chain 43's side stroke inside chain 23 at a T with no corner.
   Delete the local probe branch `k1482-gwoff` once its evidence is no longer needed. Levi 2026-11-17: "I still see
-  plenty of border artifacts". The stub past a crossing is K1477 (Muse 26H)
-  - owner: agent `ad03e8b65a2afa540` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 04:35, 2 h cap ~06:35)
-  - branch: `worktree-agent-ad03e8b65a2afa540`, worktree `.claude/worktrees/agent-ad03e8b65a2afa540`; last commit: `c2c3c5c1`
-  - evidence: .claude/probes/K1482/ (s5/notes.md, out/s5/ sheets; .claude/probes/K1436/out/bar/k1482s5/; scene_tables.ts HOME1=1 = the page with home)
-  - next: stage 6's report (cap about 06:45 on 2026-11-18): cherry-picks 3b2bde03, fixes x154's ragged cut and j25, keeps the tails short and j71's shape, bar STRICT on four scenes against 82405bf9; then the j58/t23s T triangle and a re-read of j2 j22 j29 j64 t65s t80s. View the tiles, merge, CI, live check of Levi's link
-  - brief: `docs/design/K1482_s6_borders.md`
+  plenty of border artifacts". The stub past a crossing is K1477 (Muse 26H). Stage 6 (2026-11-18, stopped at its time limit, nothing
+  landable): the home build is PARKED on branch `worktree-agent-ad03e8b65a2afa540`, last commit 67d8d743 (bc1b986f
+  the build, 8822c9b9 a candidate GF_REACH_K 1.15 -> 1.0; handoff in that branch's docs/design/K1482_s6_borders.md,
+  sheets .claude/probes/K1482/out/s6/). x154's ragged edge is the look's crossing gap shaving chain 23 where home
+  widens chain 30's pin key window (0.81 against 0.658) past the overlap's end; the candidate cuts it from 59 to
+  6 px (teeth remain), j25's step and muse_hash j49's joined tail stay, and on link A home changes 206 small
+  areas (some worse: a Y turned T at 22.2:34.84, a wedge lost at 30.65:19.82; some cleaner). To resume it: clamp
+  the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
+  Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
+  stubs, breaks)
+  - owner: agent `a59d82bf7d4d1b8cf` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 06:08, 2 h cap ~08:08)
+  - branch: `worktree-agent-a59d82bf7d4d1b8cf`, worktree `.claude/worktrees/agent-a59d82bf7d4d1b8cf`; last commit: `0b9913dc`
+  - evidence: .claude/probes/K1482/ (s5/notes.md, out/s3/classes_tip.txt, scene_tables.ts HOME1=2 = master's page); the stage writes .claude/probes/K1482/s7/
+  - next: stage 7's report (cap about 08:15 on 2026-11-18): view its tiles, check the sweep count against 46 and the STRICT bar, merge each confirmed family fix, CI, live check of Levi's link
+  - brief: `docs/design/K1482_s7_borders.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -748,17 +757,6 @@ Next free ID: K1493.
   - evidence: .claude/probes/K1456/s3/ (ab.ps1, checks.ps1, nogf.mjs, out/), .claude/probes/K1456/s2/ (table.mjs, ctime.mjs, variants.mjs)
   - next: Muse run 26J (queued: cut the compile time of layers()' corner code in gf_glsl.ts, the one program that gates the first composite, 56-123 s under load). Then, on a quiet machine under the perf lock, cold A/B of 955de39d (compile starts 0.8 s after load, not 8-13 s) against master: merge it only if the first composite comes sooner (under load: early 77-93 s, master 74-132 s, no gain; the early compile seems to compete with today's renderer's own compiles). Untried: deferring today's renderer's programs the rest look does not need; gf_split's two passes as two programs. A second worker for the gating program was slower (median 104.5 s) and is dropped
   - brief: `docs/design/K1456_s3_first_visit.md`
-- **K1492** · rp=gf's border look does not follow the Crossing fade on Levi's link (his 2026-11-17 report: "I
-  don't see any fading happening, regardless of the slider value"): K1458 fixed and measured the fill look
-  only (its border.mjs crashed, never run); K1482 s5's check (.claude/probes/K1482/out/s5/fade_sheet_wide.png,
-  fade_sheet.png) shows fl 0 to 1.2 only pulls the under thread's outline ends back a few px where 1.2 asks
-  for about 51 device px, on master and with the home build alike. Target: the outline's ramp equals the fill
-  look's at fl 0, 0.14, 0.5, 1.2 and follows a live slider move; the border look is otherwise unchanged
-  - owner: nobody since 2026-11-18 05:50 (merged; agent `aebdeea6fdd0e38c8` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `3d7acffe`
-  - evidence: .claude/probes/K1482/out/s5/fade_sheet_wide.png, fade_sheet.png; .claude/probes/K1458/ (fade.mjs, dragcheck.mjs, border.mjs unrun); the stage writes .claude/probes/K1492/
-  - next: live check of Levi's link at fl 1.2 and the default after CI on 3d7acffe (with K1474's blend change, not yet seen together); show Levi .claude/probes/K1492/out/sheet_fade.png; then K1495 (the fade's reach on link A)
-  - brief: `docs/design/K1492_border_fade.md`
 - **K1495** · rp=gf's crossing fade on link A reaches about 11.5 device px at fl 1.2 where the slider asks for
   about 51 (link B reaches 20.5); the border outline now follows the fill (K1492), so both are short.
   Suspects, untested: K1458's clearance scales, the gap's window. Number: the fill's 10-90% ramp at fl 1.2 at
@@ -2430,6 +2428,10 @@ Every other item below waits on the trigger it names.
   fill's 11 (the probe may be at fault: the outline runs beside the over thread; not looked at on tiles), and
   at some crossings the outline fades over a longer stretch than the fill (x104: 28 and 21 px against 18).
   .claude/probes/K1492/out/t_prof.json
+- **K1497** · K1436 bar tool: a scene's master and candidate captures can settle in different physics states
+  after its 4 retries (K1482 s6: g41_user_tw64 c1b63637 against 0d51331b), which makes that pair's finds
+  meaningless; the bar should fail the scene, or retry until the hashes match
+  (.claude/probes/K1436/k1436_bar.ps1, out/bar/k1482s6/ on branch worktree-agent-ad03e8b65a2afa540)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2803,6 +2805,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1492** · rp=gf's border outline fades over the crossing gap's whole ramp and follows the Crossing fade slider; seen on Levi's live link at fl 0.14 and 1.2 (.claude/probes/K1492/live/crop_014_vs_12.png). Done in 3d7acffe (2026-11-18).
 - **K1481** · gf's compile poll waits on a 250 ms timer, so it no longer asks for a full rebuild on every frame while programs compile (251 of 251 rest frames before, 46 per 10 s after); the frames left are the link's own ambient paint, which today's renderer runs at the same rate without gf. The cold wait stays with K1456. Done in 0fc195b8 (2026-11-18).
 - **K1454** · rp=gf: a pluck ripple (K279) draws over the maze instead of bending the threads (K1450's fix draws the maze to the screen past the ripple's filter); the full fix composites into the filter texture through Pixi's projection, in gf_pass.ts / gf_look.ts composite shaders (Handoff K1450). Done in b01cc37b (2026-11-17).
 - **K1460** · rp=gf crossing-fade leftovers: stages 1-4 fixed the dotted line, the kink-loop tick, the radial bands and the long-fade seams; stage 5 found today's protect term makes no visible difference at 4x at any fade (d23f3473 tried, e25d042f reverted) and junction B matches today once gf's thread colour is mapped to today's (sheets .claude/probes/K1460/out/s5/jb_*.png): the colour goes to K1474. Done in 7fe4b9c6 (2026-11-17).
