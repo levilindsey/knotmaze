@@ -901,7 +901,9 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         if (rmk !== rimKeyV) { rimKeyV = rmk; dirty = true; }
         const gap = lookGap(r);
         const fade = lookFade(r);
-        if (gap !== lkGap || fade !== lkFadeV) { lkGap = gap; lkFadeV = fade; dirty = true; }
+        // K1458: the gap window's bake reads margin and fade (its windows and clearance scales),
+        // so a slider move re-bakes it at once; a sleeping knot installs no build to do it
+        if (gap !== lkGap || fade !== lkFadeV) { lkGap = gap; lkFadeV = fade; gwShow(gwSnap()); dirty = true; }
         // K1395 (24D): the look draws over the reveal form while the reveal runs, shaded by the
         // FX baked above (fxShow per revealing frame); gfLookDraws holds it off only for an A/B's
         // look: false. (K1404 held the look off here: its border interior was clear, so the ribbons
