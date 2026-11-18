@@ -1,17 +1,25 @@
-# K1436 s2: THE BAR. One command that says whether a commit made rp=gf look worse than its base.
+# K1436 s2/s3: THE BAR. One command that says whether a commit made rp=gf look worse than its base.
 #
-# HOW TO RUN (from any checkout of knotmaze, pwsh 7):
-#   pwsh -NoProfile -File .claude/probes/K1436/k1436_bar.ps1 -Ref <commit> [-Base <commit>=master] [-HomeFlag 1|0]
-#        [-Scenes def,ring,...] [-Port 5601] [-Keep]
-#   It prints PASS or FAIL and exits 0 / 1. Output: .claude/probes/K1436/out/bar/<ref>/ (bar.txt: the verdict and, per
+# HOW TO RUN (from any checkout of knotmaze, pwsh 7; what K1436 s3 ran, 2026-11-17):
+#   pwsh -NoProfile -File .claude/probes/K1436/k1436_bar.ps1 -Ref <commit> [-Base <commit>=origin/master] [-HomeFlag 1|0]
+#        [-Scenes def,ring,...] [-Port 5601] [-Tag <out dir name>=<ref sha>] [-Keep]
+#   e.g. -Ref origin/master -Base origin/master -Tag self1 -Keep   (the control: must PASS)
+#        -Ref 17053a36 -Base a3a9a6b4 -HomeFlag 1 -Tag k1451s2     (K1451 stage 2's tip against its base: FAIL)
+#   It prints PASS or FAIL and exits 0 / 1. Output: .claude/probes/K1436/out/bar/<tag>/ (bar.txt: the verdict and, per
 #   scan and kind:class, the NEW finds, the finds that GREW by more than 10% (and 3 px), the finds that went away;
 #   sheet.png + sheet.txt: 4x crops of every new and grown find, base | ref, fill then border capture).
-#   Time: about 2 min of shader compile per new build, then ~1 min per scene batch of 3; 12 scenes, 2 commits: ~20 min.
+#   Time (s3, measured): a cold build+profile costs a vite build (~1 min) and a warm pass of 85-180 s per link (gf's cold
+#   compile); a warm profile captures 12 scenes in ~4 min. -Keep keeps the builds and the warm profiles for the next run.
+#   Profiles: ONE per build, $env:TEMP\k1436s3-profile-<sha>; builds $env:TEMP\k1436s3-prev\<sha> (the layout of
+#   scripts/preview.ps1 -Root $env:TEMP\k1436s3-prev, so a preview build and its src-<sha> worktree are reused).
+#   Builds without fc520c2d (K1468) hang the GPU on a cold gf load: the bar launches their Chrome with
+#   --disable-gpu-watchdog (NOWD=1) and the capture retries a load that lost its WebGL context.
 #
 # WHAT IT DOES, per commit (base, then ref):
-#   1. a detached git worktree at $env:TEMP\k1436s2-src-<sha> (node_modules junctioned to the main checkout's), this
+#   1. a detached git worktree at $env:TEMP\k1436s3-prev\src-<sha> (node_modules junctioned to the main checkout's), this
 #      folder's probe libraries (K1314, K1362, K1433, K1436) copied in, so both scans run THAT commit's src/;
-#   2. a production build at $env:TEMP\k1436s2-prev\<sha> (reused when present), served by vite preview on -Port;
+#   2. a production build at $env:TEMP\k1436s3-prev\<sha> (reused when present), served by vite preview on -Port;
+#   2b. a WARM pass (k1436_screen.mjs WARM=1: every link loaded once in this build's profile, both looks), untimed;
 #   3. the MIRROR scan (k1436_scan.ts: scan v2 on GfEval at 100 px/unit, GF_HOME = -HomeFlag) of each census scene;
 #   4. the SCREEN scan: k1436_screen.mjs captures each scene's frozen K868 state (rp=gf, cs=mono, bg=none, DSF 3:
 #      ~100 device px per world unit, so a 1 css px fault is 3 px) in fill and border looks, and k1436_screen_scan.ts runs
@@ -28,11 +36,12 @@
 #   as one gone plus one new). A ref whose physics hash differs from the base's compares two states: bar.txt says so.
 param(
   [Parameter(Mandatory = $true)][string]$Ref,
-  [string]$Base = "master",
+  [string]$Base = "origin/master",
   [string]$HomeFlag = "1",
   [string[]]$Scenes = @("muse_hash", "g41_def_tw42", "g41_ring_tw64", "user_tw42.lightpaper", "def", "fat", "g41_def_tw64", "g41_user_tw42", "muse_default_tw", "ring", "g41_ring_tw42", "g41_user_tw64"),
   [int]$Port = 5601,
   [int]$Par = 3,
+  [string]$Tag = "",
   [switch]$Keep
 )
 $ErrorActionPreference = "Stop"
@@ -41,8 +50,8 @@ $repoTop = (git -C $probeDir rev-parse --show-toplevel).Trim()
 $mainNm = "C:\Users\lsl\Repositories\knotmaze\node_modules"
 $sceneDir = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes"
 $refSha = (git -C $repoTop rev-parse --short=8 $Ref).Trim(); $baseSha = (git -C $repoTop rev-parse --short=8 $Base).Trim()
-$outRoot = Join-Path $probeDir "out\bar\$refSha"; New-Item -ItemType Directory $outRoot -Force | Out-Null
-$profile1 = Join-Path $env:TEMP "k1436s2-profile"
+$outRoot = Join-Path $probeDir "out\bar\$(if ($Tag) { $Tag } else { $refSha })"; New-Item -ItemType Directory $outRoot -Force | Out-Null
+$buildRoot = Join-Path $env:TEMP "k1436s3-prev"; New-Item -ItemType Directory $buildRoot -Force | Out-Null
 $made = @()
 function Wait-Lock {
   $l = Join-Path $env:TEMP "claude-perf.lock"; $t0 = Get-Date
@@ -63,7 +72,9 @@ function Get-Jobs([string]$suffix) {
   return $jobs
 }
 function Invoke-Commit([string]$sha, [string]$dst) {
-  $src = Join-Path $env:TEMP "k1436s2-src-$sha"; $dist = Join-Path $env:TEMP "k1436s2-prev\$sha"
+  $src = Join-Path $buildRoot "src-$sha"; $dist = Join-Path $buildRoot $sha
+  $profile1 = Join-Path $env:TEMP "k1436s3-profile-$sha"; if (-not (Test-Path $profile1)) { $script:made += $profile1 }
+  git -C $repoTop merge-base --is-ancestor fc520c2d $sha 2>$null; $nowd = $LASTEXITCODE -ne 0
   if (-not (Test-Path $src)) {
     git -C $repoTop worktree add --detach $src $sha | Out-Null
     $script:made += $src
@@ -94,6 +105,10 @@ function Invoke-Commit([string]$sha, [string]$dst) {
     $ok = $false; for ($k = 0; $k -lt 60 -and -not $ok; $k++) { try { $ok = (Invoke-WebRequest "http://localhost:$Port/" -UseBasicParsing -TimeoutSec 2).StatusCode -eq 200 } catch { Start-Sleep 1 } }
     if (-not $ok) { throw "preview on $Port did not start" }
     Wait-Lock
+    $env:NOWD = $(if ($nowd) { "1" } else { "" })
+    $tw = Get-Date; $env:WARM = "1"
+    node (Join-Path $probeDir "k1436_screen.mjs") "http://localhost:$Port" (Join-Path $dst "warm") $profile1 $jobsPath $Par
+    $env:WARM = ""; Write-Host "[$sha] warm pass $([int]((Get-Date) - $tw).TotalSeconds) s$(if ($nowd) { ' (watchdog off)' })"
     $t1 = Get-Date
     node (Join-Path $probeDir "k1436_screen.mjs") "http://localhost:$Port" (Join-Path $dst "cap") $profile1 $jobsPath $Par
     if ($LASTEXITCODE -ne 0) { throw "capture failed ($sha)" }
@@ -122,7 +137,6 @@ try {
       if (Test-Path (Join-Path $p ".git")) { git -C $repoTop worktree remove --force $p } else { [System.IO.Directory]::Delete($p, $true) }
     }
     git -C $repoTop worktree prune
-    if (Test-Path $profile1) { [System.IO.Directory]::Delete($profile1, $true) }
   }
 }
 exit $code
