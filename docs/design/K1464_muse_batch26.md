@@ -86,3 +86,25 @@ today's count and IoU at least 0.6 at each age; on master gf it fails (show the 
 not come back: `hold.mjs` 60/60 on both links with the ripple on and music mode's auto plucks running, and
 `DRAG=1` (Handoff K1450). 3. With no ripple live, 0 px against master gf. 4. 4x crops of the ring at each
 age (today | master gf | new gf). 5. `npm test` green. 6. The guards.
+
+## Run E (26E): K1451, the reach windows' build time (home on)
+
+Added 2026-11-17, after K1451's merge. K1451 gives each pin a key window that follows its reach, with
+`gfh=1` only (`pinReach` and `clipPinWindows` in `tables.ts`; Handoff K1451 s3 in
+`docs/design/K1451_s3_home_on_bar.md`). With home on the tables build got slower: over the 12 census scenes
+166.3 to 182.8 ms (+9.9%), fat 5.44 to 7.11 ms (+30.6%), def +30.9%, user_tw42.lightpaper +37.1%
+(`node scripts/run_node.mjs .claude/probes/K1451/k1451_buildtime.ts 5`). The cost is pinReach's walk plus
+the partner search at every exit step.
+
+For this run the hands-off rule above is lifted for `pinReach` and its callers in `tables.ts`, nothing
+else. A Claude agent (K1451 s4) is changing `clipPinWindows` in the same file: do not change what any window
+comes out as, pull before you start and before each push, and re-take your baseline when a pull moved the
+digest.
+
+Done: 1. The number first, failing on master: the build time per scene, home on and home off, for the 12
+scenes, against a3a9a6b4 (the commit before K1451's merge), alone and under the perf lock, median of at
+least 5. 2. Home on: every scene within 10% of a3a9a6b4's. Home off: within 2%. 3. The output does not
+change: `k1362t2_digest` equal to your starting master's with home on and off, pooled builds equal to cold,
+and every `pinWL` / `pinWR` value bit-equal on the 12 scenes (`.claude/probes/K1451/k1451_wcmp.ts`). 4. One
+GPU capture at `gfh=1` on each of the two links: 0 px against your starting master. 5. `npm test` green
+with no pin re-taken. 6. The guards.

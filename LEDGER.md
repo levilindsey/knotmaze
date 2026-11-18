@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1466.
+Next free ID: K1467.
 
 ## Waiting on Levi
 
@@ -629,11 +629,11 @@ Next free ID: K1466.
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
   slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
   docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
-  - owner: agent `a7f7245249f11fd90` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 13:53, 2 h cap ~15:53)
-  - branch: `worktree-agent-a7f7245249f11fd90`, worktree `.claude/worktrees/agent-a7f7245249f11fd90`; last commit: `91432da8`
-  - evidence: .claude/probes/K1451/ (out/s2/ sheets and bar_home_new.txt on branch worktree-agent-a53218bf2f47c89c2, last commit 17053a36, unmerged: keep that worktree)
-  - next: stage 3 running (started 13:54, cap 15:54): stage 2's windows clear spots 1-8 at gfh=1 but the home-on bar census regressed (7 stray, 11 hard); crop and fix those, fade-0 crescents, spot 7 colour, build time, then GPU census and bench; merge only when the home-on census is no worse than master
-  - brief: `docs/design/K1451_s3_home_on_bar.md`
+  - owner: nobody since 2026-11-17 15:47 (merged; agent `a7f7245249f11fd90` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `c41b4a3e`
+  - evidence: .claude/probes/K1451/ (out/s3/ sheets: spots14_clip, spots58_clip, finds_0..3, fade0); the v2 scan on the merge against a3a9a6b4 at gfh=1: 156 finds to 126 (tie 60 to 30), 30 gone, none new or grown
+  - next: stage 4 (docs/design/K1451_s4_spots_5_7.md): spots 5 and 7 went back to master's look under the arm clip; owed: GPU census two groups at a time, the v2 scan at fade 0 and 1.2, the bench. Launch it when an agent slot frees (memory: commit charge ran 38 of 46 GB with two agents and Muse). The reach's build time (fat +31% with home on) is Muse run 26E
+  - brief: `docs/design/K1451_s4_spots_5_7.md`
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
@@ -2236,6 +2236,9 @@ Every other item below waits on the trigger it names.
 - **K1454** · rp=gf: a pluck ripple (K279) draws over the maze instead of bending the threads (K1450's fix
   draws the maze to the screen past the ripple's filter); the full fix composites into the filter texture
   through Pixi's projection, in gf_pass.ts / gf_look.ts composite shaders (Handoff K1450)
+- **K1466** · the gf census tools (k1407c1_bar.ps1, the GPU census) die with 'Fatal process out of memory:
+  Zone' when six scene groups run at once; two at a time complete. Give them a throttle (Handoff K1451 s3,
+  docs/design/K1451_s3_home_on_bar.md)
 
 ## Approved, to schedule (2026-10-11)
 
