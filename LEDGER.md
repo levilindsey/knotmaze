@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1492.
+Next free ID: K1494.
 
 ## Waiting on Levi
 
@@ -310,11 +310,16 @@ Next free ID: K1492.
 - **K1470** · rp=gf gfh=1, junction j71 (g41_user_tw64 4.981:7.472): since K1451 stage 4 the colour seam
   inside the web is a small trapezoid bump where it was a thin spike (21 px at 4x; pin 278 L's over window
   0.658 -> 0.770). No rule tried fixes spot 7 without changing it. Keep, or go back to the spike and reopen
-  spot 7? Picture: .claude/probes/K1451/out/s4/g_j71.png (columns 3 and 4), m_j71wide.png
+  spot 7? Picture: .claude/probes/K1451/out/s4/g_j71.png (columns 3 and 4), m_j71wide.png. On the
+  page the bump shows only once K1482's home build lands (screen tiles: .claude/probes/K1482/out/s5/spots_5_7_j71.png,
+  bottom row: a pointed stub end on master, a squared end with a bump with home)
 - **K1485** · rp=gf border look, a dead-end tail under the thread it meets: since 0a84d3d1 (K1482 s2) the tail
   stops just short of that thread, like an under pass, where it used to fuse into it (and drew a sliver across
   it). Keep the short stop, or fuse the tail without the sliver? Picture:
-  .claude/probes/K1482/out/s2/sliver_00.png (j3, j61, j76; master | tip | diff), live on Levi's link
+  .claude/probes/K1482/out/s2/sliver_00.png (j3, j61, j76; master | tip | diff), live on Levi's link. With the
+  page's home build (K1482 s5, not landed) three tails join as a clean T or Y (t18e, t50s, muse_hash j49:
+  .claude/probes/K1482/out/s5/fade_sheet_wide.png rows 2-3, columns 1-3 master, 4-6 home); stage 6 keeps them
+  short until Levi answers
 - **K1490** · rp=gf border look at sharp V's (K1482 stage 3): where two threads' outlines converge at a sharp
   angle the ink runs together into a dark wedge, or leaves a light sliver under a pixel wide (wedge sites j15
   j50 j82 j143 j158 t23e t59s t73e t84e, slivers j95 j147 t43s t56s: 13 of the 46 faulted sites). A fault to
@@ -322,6 +327,11 @@ Next free ID: K1492.
   item 0; until then out/s3/hair_00.png rows j95, j147, t43s). Options: keep as it is; fix (the agent then
   owns how). Stage 4: the 9 notch sites are the same family (a T's cut through arm with no corner); rounding
   them with longer corner arms also rounds these V's, so the notches wait on this answer too (22 of 46)
+- **K1493** · d39e363f (2026-11-18, the coordinator's mistake: `git add -f .claude/probes` on the whole
+  directory) pushed 1292 untracked probe output files (362 MB: K1444 660, K1407 546, K1362 62, K1436 24) to
+  master; b88a4108 removed them from the tree, so checkouts are clean, but the blobs stay in history (every
+  fresh clone downloads them). Dropping them needs a history rewrite and a force-push of master: do it (rebase
+  everything after 82405bf9 without them), or leave it?
 
 ## In progress
 
@@ -636,7 +646,7 @@ Next free ID: K1492.
   - owner: nobody since 2026-11-17 18:39 (merged; agent `aa84d5035d75f3084` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `7c739b42`
   - evidence: .claude/probes/K1451/ (k1451_26e_*.ts, out_26e_*; handoff 26E in docs/design/K1464_muse_batch26.md)
-  - next: FIRST: K1482 stage 4 found the page never built with home (gfh=1 only set homeOn at upload), so stage 3/4's pin clip (1329b88d, 97d33ae9: spots 5 and 7) was verified in Node only and has not drawn on screen, and Muse 26E's home-on build time (190.6 against 162.4 ms over 12 scenes, +17%) measured a path the page does not run. K1482 stage 5 item 0 turns the home build on at gfh=1 and looks at spots 5 and 7 on screen; then re-measure the page's build time and decide whether 2 ms a scene matters (the next lever is fewer pins, not a faster pin)
+  - next: FIRST: K1482 stage 4 found the page never built with home (gfh=1 only set homeOn at upload), so stage 3/4's pin clip (1329b88d, 97d33ae9: spots 5 and 7) was verified in Node only and has not drawn on screen, and Muse 26E's home-on build time (190.6 against 162.4 ms over 12 scenes, +17%) measured a path the page does not run. K1482 stage 5 turned the home build on at gfh=1 (3b2bde03, on its branch): spots 5 and 7 are fixed on screen, page tablesMs 15.9 against 19.9 ms median (one load each, spread as large); stage 6 lands it once x154's ragged cut is fixed; then re-measure the page's build time and decide whether 2 ms a scene matters (the next lever is fewer pins, not a faster pin)
   - brief: `docs/design/K1451_s4_spots_5_7.md`
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
@@ -705,13 +715,20 @@ Next free ID: K1492.
   ticks and dashes sit where the look's crossing gap cuts an under thread's border, which eval.ts does not
   model (screen lacks mirror ink at 187 of 327 sites). The page-exact mirror is HOME1=2 in
   .claude/probes/K1482/scene_tables.ts; notes .claude/probes/K1482/s4/notes.md.
+  Stage 5 (probes and handoff on master d39e363f; its src 3b2bde03 held on branch
+  `worktree-agent-a5dca968eeb3d79f3`): the page builds with home at gfh=1 (tables equal Node's home build in all
+  58 arrays; 0 px without gfh=1); link A 45 (t18e's stub gone), spots 5 and 7 fixed on screen; not landed: the
+  STRICT bar fails on g41_user_tw64 x154 (the cut's fill edge turns ragged, 59 px) and j25, and three tails
+  (t18e, t50s, muse_hash j49) join as a T or Y (K1485's question). The look's gap is NOT what leaves the dots,
+  ticks and dashes (gap terms off: 0-2 px), and with home tables the mirror equals the screen there (stage 4's
+  claim came from home-off tables); j58/t23s is chain 43's side stroke inside chain 23 at a T with no corner.
   Delete the local probe branch `k1482-gwoff` once its evidence is no longer needed. Levi 2026-11-17: "I still see
   plenty of border artifacts". The stub past a crossing is K1477 (Muse 26H)
-  - owner: agent `a5dca968eeb3d79f3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 02:53, 2 h cap ~04:53)
-  - branch: `worktree-agent-a5dca968eeb3d79f3`, worktree `.claude/worktrees/agent-a5dca968eeb3d79f3`; last commit: `3f387e71`
-  - evidence: .claude/probes/K1482/ (s4/notes.md, out/s4/ card and sheets, scene_tables.ts HOME1=2 page-exact mirror; out/s3/classes_tip.txt)
-  - next: stage 5's report (cap about 04:55 on 2026-11-18): item 0 the page builds with home at gfh=1 (re-run the sweep, 46 on master; view the changed sites and K1451's spots 5 and 7), item 1 the real lkGap in the mirror then dots/ticks/dashes; view the tiles, check the bar, merge (gf_app.ts: one call, beside K1456 stage 3's edits)
-  - brief: `docs/design/K1482_s5_borders.md`
+  - owner: agent `ad03e8b65a2afa540` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 04:35, 2 h cap ~06:35)
+  - branch: `worktree-agent-ad03e8b65a2afa540`, worktree `.claude/worktrees/agent-ad03e8b65a2afa540`; last commit: `c2c3c5c1`
+  - evidence: .claude/probes/K1482/ (s5/notes.md, out/s5/ sheets; .claude/probes/K1436/out/bar/k1482s5/; scene_tables.ts HOME1=1 = the page with home)
+  - next: stage 6's report (cap about 06:45 on 2026-11-18): cherry-picks 3b2bde03, fixes x154's ragged cut and j25, keeps the tails short and j71's shape, bar STRICT on four scenes against 82405bf9; then the j58/t23s T triangle and a re-read of j2 j22 j29 j64 t65s t80s. View the tiles, merge, CI, live check of Levi's link
+  - brief: `docs/design/K1482_s6_borders.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -730,6 +747,17 @@ Next free ID: K1492.
   - evidence: .claude/probes/K1456/s3/ (ab.ps1, checks.ps1, nogf.mjs, out/), .claude/probes/K1456/s2/ (table.mjs, ctime.mjs, variants.mjs)
   - next: Muse run 26J (queued: cut the compile time of layers()' corner code in gf_glsl.ts, the one program that gates the first composite, 56-123 s under load). Then, on a quiet machine under the perf lock, cold A/B of 955de39d (compile starts 0.8 s after load, not 8-13 s) against master: merge it only if the first composite comes sooner (under load: early 77-93 s, master 74-132 s, no gain; the early compile seems to compete with today's renderer's own compiles). Untried: deferring today's renderer's programs the rest look does not need; gf_split's two passes as two programs. A second worker for the gating program was slower (median 104.5 s) and is dropped
   - brief: `docs/design/K1456_s3_first_visit.md`
+- **K1492** · rp=gf's border look does not follow the Crossing fade on Levi's link (his 2026-11-17 report: "I
+  don't see any fading happening, regardless of the slider value"): K1458 fixed and measured the fill look
+  only (its border.mjs crashed, never run); K1482 s5's check (.claude/probes/K1482/out/s5/fade_sheet_wide.png,
+  fade_sheet.png) shows fl 0 to 1.2 only pulls the under thread's outline ends back a few px where 1.2 asks
+  for about 51 device px, on master and with the home build alike. Target: the outline's ramp equals the fill
+  look's at fl 0, 0.14, 0.5, 1.2 and follows a live slider move; the border look is otherwise unchanged
+  - owner: agent `aebdeea6fdd0e38c8` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 04:35, 2 h cap ~06:35)
+  - branch: `worktree-agent-aebdeea6fdd0e38c8`, worktree `.claude/worktrees/agent-aebdeea6fdd0e38c8`; last commit: `b88a4108`
+  - evidence: .claude/probes/K1482/out/s5/fade_sheet_wide.png, fade_sheet.png; .claude/probes/K1458/ (fade.mjs, dragcheck.mjs, border.mjs unrun); the stage writes .claude/probes/K1492/
+  - next: the stage's report (cap about 06:45 on 2026-11-18): the outline-ramp table on master and tip, sheet .claude/probes/K1492/out/sheet_fade.png; view it, check the sweep at fl 0.14 changes only at under-thread outline ends, merge (gf_look.ts; Muse 26G and 26H edit the same file), CI, live check, show Levi the sheet
+  - brief: `docs/design/K1492_border_fade.md`
 
 ## Next, in order
 
