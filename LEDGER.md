@@ -619,11 +619,11 @@ Next free ID: K1466.
   threads (junction B, ci3 upper right, the blue kink loop at ?3); (3) a dashed dark tick across the kink loop
   at ?3 at every fade; (4) today's protect term (pr) is not ported to gf's gap window; (5) a round blob at
   junction B at fade 0. Next: bake.mjs on those crossings (missing over threads, the +-40-sample scan cap)
-  - owner: nobody since 2026-11-17 13:21 (merged; agent `af9d883f955f02076` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `a61aa3ed`
-  - evidence: .claude/probes/K1458/live/ (coordinator sheets), .claude/probes/K1458/ (tools)
-  - next: stage 2 (docs/design/K1460_s2_fade_bands.md): radial bands and stepped edges on long fades in curved threads (jB 866,138, ci3 580,70, 941,75), the kink loop's fade reaching round its top at 1.2, the jB bite and blob, the protect term, b0707a26's shader init failure, numbers for the bands and the dotted line, dragcheck + gfh sheets
-  - brief: `docs/design/K1460_gf_fade_leftovers.md`
+  - owner: agent `ae13158a4930b03bd` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 13:32, 2 h cap ~15:32)
+  - branch: `worktree-agent-ae13158a4930b03bd`, worktree `.claude/worktrees/agent-ae13158a4930b03bd`; last commit: `da5ee44c`
+  - evidence: .claude/probes/K1460/ (stage 1 sheets in out/), .claude/probes/K1458/
+  - next: stage 2 running: bands and stairs, the loop at 1.2, jB bite and blob, protect, numbers
+  - brief: `docs/design/K1460_s2_fade_bands.md`
 - **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
   wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
