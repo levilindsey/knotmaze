@@ -61,6 +61,30 @@ describe("K1389 look form", () => {
     expect(LOOK_COMP_FS).toContain("vec4 k = texelFetch(uCo, q, 0);");
     expect(LOOK_COMP_FS).toContain("vec3 C = k.a > 0.0 ? k.rgb : uFill;");
   });
+  it("K1492: the border outline fades over the gap's whole ramp (the flag lane carries 1 - lkg)", () => {
+    for (const src of programs) expect(lookForm(src)).toContain("lkHiA *= 1.0 - lkg; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0);");
+    // the composite's border alpha, mirrored on RGBA8 values (both targets round to 1/255)
+    const u8 = (v: number) => Math.round(Math.min(1, Math.max(0, v)) * 255) / 255;
+    const A = (x: number) => Math.min(1, Math.max(0, (x - 0.36) * 3.5));
+    const alpha = (ink0: number, keep: number) => { const m = u8(Math.max(keep, 1 / 255)), ink = u8(ink0 * keep); return A(Math.min(ink / m, 1)) * m; };
+    const was = (ink0: number, keep: number) => A(u8(ink0 * keep));
+    // the band's full ink: the outline follows the gap's factor; the old threshold moved it only within [0.36, 0.65]
+    let span = 0, spanWas = 0;
+    for (let i = 0; i <= 1000; i++) {
+      const keep = i / 1000;
+      expect(Math.abs(alpha(1, keep) - keep)).toBeLessThan(0.006);
+      if (alpha(1, keep) > 0.1 && alpha(1, keep) < 0.9) span++;
+      if (was(1, keep) > 0.1 && was(1, keep) < 0.9) spanWas++;
+    }
+    expect(span / 1000).toBeGreaterThan(0.79);
+    expect(spanWas / 1000).toBeLessThan(0.24);
+    // a partial band (AA, thin threads) keeps its own alpha, scaled by the gap; no gap changes nothing
+    for (const ink0 of [0.3, 0.45, 0.6, 0.8, 1]) {
+      expect(alpha(ink0, 1)).toBeCloseTo(was(ink0, 1), 9);
+      for (const keep of [0.25, 0.5, 0.75]) expect(Math.abs(alpha(ink0, keep) - A(u8(ink0)) * keep)).toBeLessThan(0.02);
+    }
+    expect(alpha(1, 0)).toBe(0);
+  });
   it("K1415/K1417: the gap cut ramps over fadeP at the pixel and the gap clears to the background", () => {
     for (const src of programs) {
       const f = lookForm(src);
@@ -76,7 +100,7 @@ describe("K1389 look form", () => {
     }
     expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0))");
     expect(LOOK_COMP_FS).not.toContain("CASE");
-    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(C * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); }");
+    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float m = k.a > 0.0 ? k.a : 1.0; float a = clamp((min(ink / m, 1.0) - 0.36) * 3.5, 0.0, 1.0) * m; if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(C * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); }");
     expect(LOOK_COMP_FS).toContain("uniform float uRvFx;");
     expect(lookGap({ style: { casingWidth: 0.34, threadWidth: 0.26 } })).toBeCloseTo(0.07, 9);
     expect(lookFade({ fadeLength: 0.14 })).toBe(0.14);

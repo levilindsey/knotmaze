@@ -1,0 +1,10 @@
+[
+ [
+  "lkHiA *= 1.0 - lkg;",
+  "lkHiA *= 1.0 - lkg; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0);"
+ ],
+ [
+  "float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0);",
+  "float m = k.a > 0.0 ? k.a : 1.0; float a = clamp((min(ink / m, 1.0) - 0.36) * 3.5, 0.0, 1.0) * m;"
+ ]
+]
