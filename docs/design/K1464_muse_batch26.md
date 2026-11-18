@@ -304,3 +304,43 @@ master's tip is within 5% of ae2b4dfb's interval on link A, and link B is no slo
 on 24F's state with a route showing (the K1424 bands), or every differing pixel named and looked at.
 5. `npm test` green. 6. The guards. If the bar is not met at the stop line, land what is a real saving with
 0 px moved, and write the table and what each attempt saved.
+
+## Run J (26J): K1456, the look program's compile time (the corner code of `layers()`)
+
+Added 2026-11-18, after K1456 stage 2 (read `### Handoff K1456 s2` in `docs/design/K1456_s2_first_visit.md`
+whole). On a first visit to Levi's link (`?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1`) gf's first composite waits for
+ONE program, the look's full program (78.7k characters), which the compile worker links in 40-96 s; the
+first composite came 55-106 s after the load. A salted single compile (`.claude/probes/K1456/s2/ctime.mjs`,
+`variants.mjs`, results `out/ct1-3.json`) puts the cost in the corner code of `layers()` (`gf_glsl.ts`):
+the full program 143 s, with `layers()` stubbed 18 s, with all the piece / arc / tip loops stubbed 42.6 s,
+with fillBur stubbed 65.4 s, any single loop stubbed 76-91 s; the loop bounds (MAXP / MAXK / MAXS) barely
+matter. So the driver's compiler is slow on this source's shape, not its size.
+
+Scope: the GLSL text of `layers()` and what it calls, in `gf_glsl.ts`. The picture must not change at all:
+this run restructures source, it never changes a value. Candidates, yours to choose and replace: fold the
+piece / arc / tip loops into one loop over a shared record; move fillBur out of the per-entry loop; replace
+branches on uniforms with arithmetic selects; shorten the longest functions so the compiler inlines less;
+find by bisection (the `lvar` variants) which construct the compiler multiplies. The CPU mirror (`eval.ts`)
+stays as it is, since no value changes.
+
+Done: 1. The number first, failing on master, under the perf lock: `ctime.mjs` on the full look program,
+median of three salted compiles, and the same for the two other look programs (idx 1 and 2 in the handoff's
+table). 2. That median cut by at least half on the full program, with no other program slower by more than
+10%. 3. The picture: at rest on `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` and on
+`?3&xp=off&am=instant&rp=gf`, frozen at the same physics hash (`.claude/probes/K1472/restab.mjs`,
+`.claude/probes/K1456/s2/inkbox.py`), 0 px differ between your build and your starting master, with a
+master-against-master control beside it; the same on `?b.FMKB4DIQ&xp=off&am=instant&rp=gf` and at Crossing
+fade (`fl`) 0 and 1.2 on the first link. 4. The K1436 bar (`STRICT=1`, `-Scenes ring,def -HomeFlag 1`, your
+tip against your starting master): no new find. 5. `npm test` green; the shader digests in
+`test/render/gf_home_glsl.test.ts` re-frozen and named in the commit, nothing else re-taken.
+6. `hold.mjs` 60/60 warm on the first link; a cold visit's seconds from load to the first composite before
+and after (one run each is enough, labelled with what else was running).
+
+A partial result lands: each restructuring that keeps Done 3 at 0 px and cuts the median is its own commit.
+If a restructuring changes even one pixel, drop it and say which.
+
+Others at work: a Claude agent on the border faults (K1482) edits the key and composite terms in
+`gf_glsl.ts`, `eval.ts`, `tables.ts`, `gf_keys.ts`: pull before you start and before each push, keep each
+commit small, and if a pull conflicts in `layers()`, redo your change on top of theirs. Another Claude agent
+(K1456 stage 3) has the compile worker and its start (`gf_app.ts`, `gf_pass.ts`, `gf_compile_worker.ts`,
+`gf_split.ts`, `frame_loop.ts`): keep out of those.
