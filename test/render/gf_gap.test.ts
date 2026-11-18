@@ -165,3 +165,22 @@ describe("K1423 GfGapTable", () => {
     expect(V[ent(18) + 1]).toBe(-1);
   });
 });
+describe("K1460 s3: a kink loop's self-crossing window (setupUnder's split and selfEx)", () => {
+  // one open chain: a 45 degree leg up to a small loop and a leg back down across the first, a
+  // right-angle self crossing at (10, 0) whose two passes are 3.7 apart along the chain
+  const chain = samples([[8, -2], [10.6, 0.6], [10.6, 1.0], [9.4, 1.0], [9.4, 0.6], [12, -2]], 0.02);
+  const r2 = Math.SQRT2;
+  const oC = 2 * r2, uC = 2.6 * r2 + 2.0 + 0.6 * r2;
+  const sep = uC - oC;
+  const splitN = Math.max(0.12, sep / 2 - 0.08); // the under side toward the loop; the over side toward it too
+  const selfEx = 2 * H + MARGIN + FADE + 0.05;
+  it("ends like an ordinary right-angle crossing once the chain's own pass is excluded", () => {
+    const [wn, wp] = gapWindow(chain, chain, uC, oC, H, MARGIN, FADE, splitN, 2.5, 1e6, 1e6, 3.4, splitN, selfEx);
+    expect(wn).toBeGreaterThan(0.38); expect(wn).toBeLessThan(0.68);
+    expect(wp).toBeGreaterThan(0.38); expect(wp).toBeLessThan(0.68);
+  });
+  it("without them (stage 2's bake) the over polyline held the under pass and the window ran to its cap", () => {
+    const [wn] = gapWindow(chain, chain, uC, oC, H, MARGIN, FADE, splitN, 2.5);
+    expect(wn).toBeCloseTo(splitN, 5);
+  });
+});

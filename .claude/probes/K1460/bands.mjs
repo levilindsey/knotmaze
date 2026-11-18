@@ -19,7 +19,7 @@
 // footprint where today's coverage is under 0.5 (the faded span), whose coverage exceeds today's by more than 0.35
 // (each against its own full colour): stage 1's dotted line continued the over thread's edge there. REUSE=1 reads
 // shots already in outDir (today's fl=0 still loads, for the geometry).
-import puppeteer from "puppeteer-core";
+import { launch as capLaunch, load as capLoad } from "./cap.mjs";
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 const [, , outDir, profileDir, modeArg, flArg = "0.5,1.2", qArg = "3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none"] = process.argv;
@@ -28,13 +28,17 @@ const MODES = modeArg.split(",").map((s) => { const [tag, base, rp = ""] = s.spl
 const FLS = flArg.split(",").map(Number);
 mkdirSync(outDir, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const browser = await puppeteer.launch({
-  executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: false, userDataDir: profileDir, protocolTimeout: 1800000,
-  args: ["--use-angle=d3d11", "--no-first-run", "--no-default-browser-check", "--window-position=2200,50", "--window-size=1720,1000",
-    "--disable-features=CalculateNativeWinOcclusion", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding"],
-});
+// K1460 s4: Chrome and every load come from cap.mjs (the watchdog off, the EARLY freeze shot.mjs uses: state
+// f9d72040), so REUSE=1 can read shot.mjs's frames.
+const browser = await capLaunch(profileDir);
 const linkOf = (m, fl) => `${m.base}/?${qArg}&fl=${fl}` + (m.rp === "gf" ? "&rp=gf" : m.rp === "gfh" ? "&rp=gf&gfh=1" : "");
 async function load(m, fl) {
+  const r = await capLoad(browser, linkOf(m, fl), { tag: `${m.tag} ${fl}`, gf: !!m.rp, simT: SIMT, dsf: DSF });
+  const png = await r.page.screenshot({ type: "png" });
+  console.log(`[${m.tag} fl=${fl}] hash ${r.hash} ok ${r.ok} lost ${r.lost}`);
+  return { page: r.page, png, hash: r.hash.split(" ")[0] };
+}
+async function loadOld(m, fl) {
   const page = await browser.newPage();
   page.on("pageerror", (e) => console.log(`[${m.tag} ${fl}] pageerror ${e.message}`));
   page.on("console", (c) => { if (c.type() === "error") console.log(`[${m.tag} ${fl}] console ${c.text().slice(0, 600)}`); });
