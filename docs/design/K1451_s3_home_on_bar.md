@@ -75,3 +75,72 @@ wedge, tick, notch, sliver or smear; and nothing drawn that today's renderer doe
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1451 s3` here, commit, and report: what holds, the sheets' paths (each spot named
 fixed, same or open), the numbers, a `Ledger items` list and K1451's handle fields.
+
+### Handoff K1451 s3
+
+Stopped at the 2 h line (13:53 to 15:53, 2026-11-17). Code: 1329b88d (the arm clip `clipPinWindows` in
+`tables.ts`, `GF_NOCLIP=1` turns it off; pinReach's walk starts at `win / GF_REACH_K` and its partner search
+is linear). Sheets: 09599829 and 06ed6c9d. Not rebased on origin/master; the pins were not re-taken.
+
+**The fix.** A pin inside a junction arm's or home's interval keeps `win` on both sides; any other pin's
+reach window stops at the nearest arm interval. That removes stage 2's in-arm hard edges, the j78/j62/x301
+strays and the fade-0 crescents. It also takes spots 5 and 7 back to master; I found no rule that separates
+the two cases.
+
+**Sheets** (`.claude/probes/K1451/out/s3/`, columns today | master gf | this gf, 4x on the GPU):
+- `spots14_clip.png`: spots 1-4 fixed.
+- `spots58_clip.png`: spots 6 and 8 fixed, 5 and 7 same as master (open).
+- `spots58_close.png`: spots 5 and 7 at span 3, 0 px against master. Same as master (open): spot 7's colour
+  wedge is master's.
+- `finds_0.png`:
+  - muse 5.869:8.912 and 22:18.59 are the same as master;
+  - muse 30.52:20.278, muse 21.764:34.337 and ring 19.619:20.254 are fixed (a crisp over-outline where
+    master smudges).
+- `finds_1.png`:
+  - g41_ring 19.773:20.227 and 18.08:20.722 are fixed (master's smudge is gone);
+  - muse_hash 29.189:24.015, 16.796:3.917 and 16.827:4.187 are the same as master (0 px).
+- `finds_2.png`, `finds_3.png`: the muse and g41 tw64 finds, all 0 px against master, so the same as master.
+- `fade0.png` (fade 0): the three fade-0 spots, 0 px against master, so the same as master.
+- `new18_s2.png`: stage 2's look at the 18 finds, for reference.
+
+**Numbers.**
+- Bar census, home on (`k1407c1_bar.ps1 k1451mh k1451s3a`; JSON in
+  `.claude/probes/K1362/out/s1/census_k1451s3a*`):
+
+  | Census | stray | hard | paper | broken | total | excepted |
+  |---|---|---|---|---|---|---|
+  | master | 14 | 0 | 11 | 399 | 424 | 57 |
+  | this | 19 | 0 | 11 | 394 | 424 | 57 |
+
+  The five extra strays are x68/x67 (ring, g41_ring) and j36/j50 (muse). In the crops they are crisp
+  over-outlines where form B and master shade softly, so they read as fixed, but stray stays above master by
+  count. Every master stray is still there with identical px. Home off is equal by construction (the windows
+  sit inside `if (home)`), and the digest confirms it.
+- Digest (`k1362t2_digest`): b0fc8ce3377f..., 5643 lines, 297 pooled builds equal to cold, 0 mismatches.
+- Tables build (`k1451_buildtime.ts 5`, no load): 12 scenes 166.3 to 182.8 ms (+9.9%, inside 10%). Fat 5.44 to
+  7.11 ms (+30.6%), def +30.9% and user_tw42.lightpaper +37.1% are outside it. Under census load the 12 scenes
+  were +19% and fat +55%. Open: the cost is pinReach's walk plus the partner search at every exit step.
+- hold.mjs: 60/60 on both links (`?3&xp=off&am=instant&rp=gf` and the gfh=1 link), on a `preview.ps1` build
+  of 1329b88d. Against the dev server, hold timed out in `waitForFunction`: a CDP protocol timeout while the
+  dev server compiled. The first composite took 129-148 s even on the build.
+- `npm test`: green (251 files, 3120 tests). An earlier run, with 878 MB free on C:, ended with 2 worker errors and 249 files; with the disk freed it passes.
+- GPU against the mirror at the sheet spots: max|ink| 0.9-0.9998 at several muse/g41 spots, identical on
+  master and this build (pre-existing, not from this stage).
+
+**Not run (open).**
+- The GPU census, and why five groups wrote nothing. Inferred, not proven: my first CPU census lost four of
+  six groups to "Fatal process out of memory: Zone" under commit-memory pressure (node 11 GB, Chrome 4.7 GB),
+  and the same may have hit the GPU census groups. Two groups at a time completed.
+- The scan at gfh=1 and at fade 0/1.2 against 1329b88d.
+- The bench (`k1362c1_bench.ps1`).
+- The rebase on origin/master and the re-taken pins.
+
+**Machine.** Disk C: ran full twice (33 MB, then 878 MB free); other agents' Chrome profiles in `%TEMP%` refill
+it. I deleted only K1451's own stale profiles.
+
+**Next.**
+1. Find a discriminator that keeps the spots 5/7 fix without the in-arm hard edges. Candidates: clip only
+   the side of the window that faces the arm, or clip by the arm's z rather than its interval.
+2. Cut pinReach's build time (fat +31%).
+3. Run the GPU census two groups at a time, the scan and the bench.
+4. Rebase, then re-take the pins.
