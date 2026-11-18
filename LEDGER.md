@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1464.
+Next free ID: K1465.
 
 ## Waiting on Levi
 
@@ -637,6 +637,12 @@ Next free ID: K1464.
   - evidence: .claude/probes/K1451/ (k1451_sev.ts variant rck1.15, out/fix_a.png, out/fix_b.png)
   - next: build the per-pin reach window into tables.ts and the field, verify on the GPU
   - brief: `docs/design/K1451_s2_reach_window.md`
+- **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
+  thread, 26C K1424 route bands by fan membership, 26D K1455 border strokes as today draws them (held if Levi
+  keeps gf's look)
+  - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
+  - branch: mainline; last commit: `b7e8e805`
+  - evidence: .claude/probes/K1053/chain.log, done.txt
 
 ## Next, in order
 
