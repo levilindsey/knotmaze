@@ -59,7 +59,7 @@ export interface GfTables {
    * K1451: each pin's KEY depth window on its left (s below the pin) and right side: max(win, GF_REACH_K x the arc
    * over which the crossing's other pass stays within GF_REACH_SEP h of this pass), so the keys' depth hat spans the
    * whole ribbon overlap of a shallow or curved crossing (pinReach). Only the piece keys read it (eval.ts keyDepth,
-   * gf_glsl.ts depth()); membership and the corner depths keep win (depthAt).
+   * gf_glsl.ts depth()); membership and the corner depths keep win (depthAt). Home off: win everywhere (master's keys).
    */
   pinWL: Float64Array; pinWR: Float64Array;
   /** Arms, sorted by chain: root s, direction, span L, cap Lcut (Infinity = none), group. */
@@ -505,9 +505,11 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
   let nPin = 0; for (const p of pinsOf) { p.sort((u, v) => u.s - v.s); nPin += p.length; }
   const pinS = new Float64Array(nPin); const pinZ = new Float64Array(nPin); const pinTheta = new Float64Array(nPin); const cPin0 = new Int32Array(nC); const cPinN = new Int32Array(nC);
   { let q = 0; pinsOf.forEach((P, c) => { cPin0[c] = q; cPinN[c] = P.length; for (const p of P) { pinS[q] = p.s; pinZ[q] = p.z; pinTheta[q] = p.theta; q++; } }); }
-  // K1451: each pin's key window per side, from the reach of its crossing's overlap
-  const pinWL = new Float64Array(nPin); const pinWR = new Float64Array(nPin);
-  {
+  // K1451: each pin's key window per side, from the reach of its crossing's overlap. Home membership only (K1451
+  // s2): with home off (the shipped default) the wider keys raised the bar census's stray ink 16 -> 231 (member()
+  // without home splits a crossing's ribbons into blocks the wider hat re-orders), so home off keeps win.
+  const pinWL = new Float64Array(nPin).fill(win); const pinWR = new Float64Array(nPin).fill(win);
+  if (opts.home ?? GF_HOME) {
     const RW = { cV0, cNV, cClosed, cLen, cS0, vx, vy, vs };
     let q = 0;
     pinsOf.forEach((P, c) => {

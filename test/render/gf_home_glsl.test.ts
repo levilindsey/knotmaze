@@ -59,8 +59,8 @@ describe("K1439 flag off: master's programs and tables", () => {
   });
   it("buildKeys and packTables give master's bytes", () => {
     const pins: Record<string, [string, string]> = {
-      "j_cross.json": ["d183bca5542582429c071ecc4049b3d49d1d7baf88ef7ae0915517dca5b50a92", "5cc487d0f002a38d1533b91cf42704c1221b5d294556edbf130463ad0900b2a4"],
-      "k42.json": ["f3e8f41e0def175a16341ac665b8d32858f0dc9cfe824911e22847a0de2e513a", "d263ed2f1ad7159efb70afe203b22bd964f37fe7bb0a4009375c5eba9d2af5ff"],
+      "j_cross.json": ["d183bca5542582429c071ecc4049b3d49d1d7baf88ef7ae0915517dca5b50a92", "db23c268f8a5d963138ed43d244f1dc0b1a237f1c300fb4276cbf43aa9bd9452"],
+      "k42.json": ["f3e8f41e0def175a16341ac665b8d32858f0dc9cfe824911e22847a0de2e513a", "93cc931fe9d3fc78967549a7c8884c36fc30e35e799ac56c347af989c4a2b983"],
       "y120.json": ["dc0e69a62c26a3ae399746e6c334056327b39137d31c080c9cc6dfc9ad758db1", "244107d2f531e486b59a95c7bdda909ad534f8cf954f3c07fbaa702ebe03ecb4"],
       "x4_throughs.json": ["c19722d95f5fbd7f7dfa2adebc0edbee04a22763065fdf88415ab3aee23489b4", "5b17a70aa18af7d48897168587f0c5330d11a640c433369e3b43db0ef3b6a776"],
     };
