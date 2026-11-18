@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1491.
+Next free ID: K1492.
 
 ## Waiting on Levi
 
@@ -320,7 +320,8 @@ Next free ID: K1491.
   j50 j82 j143 j158 t23e t59s t73e t84e, slivers j95 j147 t43s t56s: 13 of the 46 faulted sites). A fault to
   fix, or how the border look should meet? Picture: .claude/probes/K1482/out/s4/card_sharp_v.png (stage 4's
   item 0; until then out/s3/hair_00.png rows j95, j147, t43s). Options: keep as it is; fix (the agent then
-  owns how)
+  owns how). Stage 4: the 9 notch sites are the same family (a T's cut through arm with no corner); rounding
+  them with longer corner arms also rounds these V's, so the notches wait on this answer too (22 of 46)
 
 ## In progress
 
@@ -635,7 +636,7 @@ Next free ID: K1491.
   - owner: nobody since 2026-11-17 18:39 (merged; agent `aa84d5035d75f3084` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `7c739b42`
   - evidence: .claude/probes/K1451/ (k1451_26e_*.ts, out_26e_*; handoff 26E in docs/design/K1464_muse_batch26.md)
-  - next: Muse 26E (7c739b42, bit-identical pinReach speedup, pin loop 10-25% faster) left the build time 17% over a3a9a6b4 with home membership on (190.6 against 162.4 ms over the 12 scenes; fat +69%); guards pass (hold 60/60 on both links, dragcheck, digests equal). Decide by K1456's first-visit numbers whether 2 ms a scene matters; if it does, the next lever is fewer pins, not a faster pin. Still owed: the original k1362s2_census at gfh=1
+  - next: FIRST: K1482 stage 4 found the page never built with home (gfh=1 only set homeOn at upload), so stage 3/4's pin clip (1329b88d, 97d33ae9: spots 5 and 7) was verified in Node only and has not drawn on screen, and Muse 26E's home-on build time (190.6 against 162.4 ms over 12 scenes, +17%) measured a path the page does not run. K1482 stage 5 item 0 turns the home build on at gfh=1 and looks at spots 5 and 7 on screen; then re-measure the page's build time and decide whether 2 ms a scene matters (the next lever is fewer pins, not a faster pin)
   - brief: `docs/design/K1451_s4_spots_5_7.md`
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
@@ -695,14 +696,22 @@ Next free ID: K1491.
   Stage 3 (merged 3b524da2, fix 059b5a04: the sink tapers over the tail's last half width, so no key step at the
   tip): 46 of 327 (wedge 11, notch 9, sliver 7, dot 6, tick 5, dash 3, stub 3, break 2); ring's block and the
   hairlines at j77/t64e, j102/t62e, t30e gone; the K1436 bar's one new find (def 23.55, 13.09, 3 px) is K1485's
-  look. The wedges and four slivers are two outlines converging at a sharp V: a card for Levi is stage 4's item 0.
+  look. The wedges and four slivers are two outlines converging at a sharp V (K1490, card sent).
+  Stage 4 (merged 9f2c226f, no source change, sweep still 46): on the page gfh=1 builds its tables with home off
+  (`buildTables(scene, { aa })` in gf_app.ts, gf_worker.ts, gf_build.ts; gf_pass.ts only sets homeOn at upload), so
+  K1451 s3/s4's pin clip has never drawn on screen; the notches are a crossing pin cutting a T's through arm to
+  Lcut ~0, the corner solve rejecting the pair and home still joining the arm (longer corner arms, KEXT 1.5,
+  round j14 j47 t58e and the sharp-V sites in the mirror: waits on K1490 and home-keyed corners); the dots,
+  ticks and dashes sit where the look's crossing gap cuts an under thread's border, which eval.ts does not
+  model (screen lacks mirror ink at 187 of 327 sites). The page-exact mirror is HOME1=2 in
+  .claude/probes/K1482/scene_tables.ts; notes .claude/probes/K1482/s4/notes.md.
   Delete the local probe branch `k1482-gwoff` once its evidence is no longer needed. Levi 2026-11-17: "I still see
   plenty of border artifacts". The stub past a crossing is K1477 (Muse 26H)
-  - owner: agent `aaaa3c03e18bd5e10` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 01:32, 2 h cap ~03:32)
-  - branch: `worktree-agent-aaaa3c03e18bd5e10`, worktree `.claude/worktrees/agent-aaaa3c03e18bd5e10`; last commit: `e64d6ea9`
-  - evidence: .claude/probes/K1482/ (out/s3/ sheets and classes_tip.txt; K1436 bar out/bar/k1482s3/)
-  - next: stage 4's report (cap about 03:40 on 2026-11-18): send Levi the sharp-V card (.claude/probes/K1482/out/s4/card_sharp_v.png), view the tiles, check the sweep count (46 on master) and the bar, merge
-  - brief: `docs/design/K1482_s4_borders.md`
+  - owner: agent `a5dca968eeb3d79f3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 02:53, 2 h cap ~04:53)
+  - branch: `worktree-agent-a5dca968eeb3d79f3`, worktree `.claude/worktrees/agent-a5dca968eeb3d79f3`; last commit: `3f387e71`
+  - evidence: .claude/probes/K1482/ (s4/notes.md, out/s4/ card and sheets, scene_tables.ts HOME1=2 page-exact mirror; out/s3/classes_tip.txt)
+  - next: stage 5's report (cap about 04:55 on 2026-11-18): item 0 the page builds with home at gfh=1 (re-run the sweep, 46 on master; view the changed sites and K1451's spots 5 and 7), item 1 the real lkGap in the mirror then dots/ticks/dashes; view the tiles, check the bar, merge (gf_app.ts: one call, beside K1456 stage 3's edits)
+  - brief: `docs/design/K1482_s5_borders.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -2364,6 +2373,11 @@ Every other item below waits on the trigger it names.
   in today's colours. Open: which setting it is, and whether brown on the black border look is the wanted
   colour (a look for Levi once named). Frames: scratchpad only (liveshots.mjs on the live link, times 10-40 s,
   visit 2 or later)
+- **K1491** · rp=gf probe tools that no longer match the page (K1482 stage 4): K1451's `gpu.mjs` live/full
+  variants read all black on lookable passes (harness bug); `mirror_caps.py` and the older K1482 mirror tools
+  build home-off tables, which match the gfh=1 page only until the page builds with home (K1482 stage 5 item
+  0): then they need `HOME1=1`. Fix or retire each when next used (.claude/probes/K1451/gpu.mjs,
+  .claude/probes/K1482/)
 
 ## Approved, to schedule (2026-10-11)
 
