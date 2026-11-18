@@ -643,12 +643,13 @@ export class GfPass {
       gl.activeTexture(gl.TEXTURE9);
       gl.bindTexture(gl.TEXTURE_2D, this.dynTex);
       const view = Dyn.subarray(0, rows * GF_TW * 4);
+      // K1472: RGBA, as the shader's DT() reads it (9b48e44f made this R32F with the FX table below)
       if (rows !== this.dynRows) {
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, GF_TW, rows, 0, gl.RED, gl.FLOAT, view);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, GF_TW, rows, 0, gl.RGBA, gl.FLOAT, view);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         this.dynRows = rows;
-      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RED, gl.FLOAT, view);
+      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RGBA, gl.FLOAT, view);
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE0);
       this.dynVer = dynVer;
@@ -667,12 +668,14 @@ export class GfPass {
       gl.activeTexture(gl.TEXTURE10);
       gl.bindTexture(gl.TEXTURE_2D, this.fxTex);
       const view = Fx.subarray(0, rows * GF_TW * 4);
+      // K1472: RGBA, as the shader's FT() reads it (lkFx's .y is the reveal alpha that scales ink and
+      // coverage). 9b48e44f made this R32F, so .y read 0 and the reveal drew no thread ink at all.
       if (rows !== this.fxRows) {
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, GF_TW, rows, 0, gl.RED, gl.FLOAT, view);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, GF_TW, rows, 0, gl.RGBA, gl.FLOAT, view);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         this.fxRows = rows;
-      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RED, gl.FLOAT, view);
+      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RGBA, gl.FLOAT, view);
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE0);
       this.fxVer = fxVer;
