@@ -1142,10 +1142,13 @@ export class GfComposite {
     gl.colorMask(true, true, true, true);
     gl.enable(gl.BLEND);
     gl.blendEquation(gl.FUNC_ADD);
-    // K1454: on the canvas the destination alpha is the backdrop's (kept); in the ripple filter's
-    // texture it starts at 0 and the filter reads it, so there the composite must write its own.
-    if (dest?.flip) gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    else gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
+    // K1454: in the ripple filter's texture the composite writes its own alpha. K1474: on the canvas
+    // too: with a transparent backdrop (background "none", or intensity 0) keeping the destination
+    // alpha left thread pixels at alpha 0, and the browser composited the page's CSS colour over the
+    // premultiplied thread colour (section colours read exactly the backdrop, (21, 27, 40), too
+    // light). The written coverage alpha is the standard over: over an opaque backdrop the
+    // resulting alpha and colour are the ones keeping it produced, so that frame cannot move.
+    gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     if (look) {
       if (!this.lu.size) for (const n of ["uC", "uCo", "uHi", "uLook", "uBd", "uFill", "uRvFx", "uFlip"]) this.lu.set(n, gl.getUniformLocation(this.lprog!, n));
       const u = (n: string): WebGLUniformLocation | null => this.lu.get(n) ?? null;

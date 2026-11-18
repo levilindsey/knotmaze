@@ -99,11 +99,24 @@ describe("K1454 (26D): the composites can draw into the pluck ripple's filter te
     expect(app).toContain("flip: true");
     expect(app).not.toContain("bindFramebuffer(g.FRAMEBUFFER, null)");
     // in the filter's texture (cleared to alpha 0, and the filter reads the
-    // alpha) the composite writes its own alpha; on the canvas it keeps the
-    // backdrop's, so the no-ripple frame is the old one's texel for texel
+    // alpha) the composite writes its own alpha (K1474: on the canvas too, so
+    // a transparent backdrop cannot lighten the threads; the no-ripple frame
     const { readFileSync: read2 } = await import("node:fs");
     const pass = read2(new URL("../../src/render/gpu_field/gf_pass.ts", import.meta.url), "utf8");
-    expect(pass).toContain("if (dest?.flip) gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);");
+    expect(pass).toContain("gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);");
+  });
+});
+
+describe("K1474 (26F): the composite writes its alpha on the canvas too", () => {
+  it("never keeps the destination alpha (a transparent backdrop lightened every thread by its colour)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const pass = readFileSync(new URL("../../src/render/gpu_field/gf_pass.ts", import.meta.url), "utf8");
+    // GfComposite.draw's one blend call: rgb and alpha both the standard premultiplied over
+    expect(pass).toContain("gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);");
+    expect(pass).not.toContain("gl.ZERO, gl.ONE");
+    // both composite shaders emit the coverage as the alpha the blend writes
+    expect(COMP_FS).toContain("o = vec4(uInk * ink + uFill * cov * (1.0 - ink), ink + (1.0 - ink) * cov);");
+    expect(LOOK_COMP_FS).toContain("if (uLook == 0) o = vec4(C * cov, cov);");
   });
 });
 
