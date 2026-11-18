@@ -451,4 +451,4 @@ async function main(): Promise<void> {
   writeFileSync(join(outDir, `census_${tag}.txt`), lines.join("\n") + "\n");
   console.log(lines.join("\n"));
 }
-if (process.argv[1] && /k1362s2_census/.test(process.argv[1])) void main().finally(() => gpuStop());
+if (process.argv[1] && /k1451_s4_gcensus/.test(process.argv[1])) void main().finally(() => gpuStop());
