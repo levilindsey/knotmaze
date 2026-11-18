@@ -1,0 +1,9 @@
+scan_h1 (GF_HOME=1, ppu 100): wall 66 s, cpu 193 s
+  tie	v1 176	v2 61
+  ramp	v1 192	v2 25
+  thru	v1 4	v2 0
+  plain	v1 2062	v2 71
+  all	v1 2434	v2 157
+  v1: dbreak:tie 23, dstray:plain 2, dstray:tie 24, rbreak:plain 231, rbreak:ramp 2, rbreak:tie 13, rstray:plain 19, rstray:ramp 19, rstray:tie 21, rthin:plain 1810, rthin:ramp 171, rthin:thru 4, rthin:tie 95
+  v2: dstray:plain 2, dstray:tie 24, rstray:plain 19, rstray:ramp 19, rstray:tie 21, vdip:plain 50, vdip:ramp 6, vdip:tie 16
+note: g41_ring_tw42 died out of memory in this parallel run (disk near full); rerun alone: v2 0, v1 33 (rbreak:plain 23, rthin:plain 10). Totals above are unchanged with it (recomputed from the JSONs).

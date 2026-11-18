@@ -1,0 +1,20 @@
+1	def	34.455	13.925	rstray	local: rstray:tie:32
+2	g41_def_tw42	11.194	8.346	rstray	local: rstray:tie:10
+3	g41_def_tw64	11.206	8.275	rstray	local: rstray:tie:90
+4	g41_ring_tw64	19.378	20.109	dstray	local: dstray:tie:104
+5	g41_user_tw42	12.591	13.568	rstray	local: rstray:tie:7
+6	def	13.325	2.693	vwide	local: vwide:ramp:5
+7	g41_def_tw42	12.703	11.699	rstray	local: rstray:ramp:17
+8	g41_def_tw64	25.142	12.091	vdip	local: vdip:ramp:12
+9	g41_ring_tw64	16.675	3.061	vwide	local: vwide:ramp:5
+10	g41_user_tw42	9.387	19.530	vdip	local: vdip:ramp:4 vwide:ramp:5
+11	def	15.357	6.267	vdip	local: vdip:plain:19
+12	fat	10.450	0.708	vwide	local: vwide:plain:4
+13	g41_def_tw42	30.883	27.959	vdip	local: vdip:plain:29
+14	g41_def_tw64	2.031	25.025	vdip	local: vdip:plain:27
+15	g41_ring_tw64	1.744	15.136	vdip	local: vdip:plain:35
+16	muse_default_tw	23.590	25.050	vdip	local: vdip:ramp:4 vwide:ramp:5
+17	def	9.232	6.207	vwide	local: vwide:ramp:4
+18	muse_hash	5.787	4.460	vdip	local: vdip:plain:4
+19	muse_hash	3.883	21.359	vdip	local: vdip:plain:24
+20	g41_user_tw64	2.753	14.429	vdip	local: vdip:plain:34

@@ -38,6 +38,8 @@ export const P = {
   RSM: env("K1436_RSM", 0.5),       // U: the residual's median radius along the edge
   FIT: env("K1436_FIT", 2),         // the level's polynomial degree (1 line, 2 quadratic)
   UPX: env("K1436_UPX", 3),         // px: the least length unit U = max(aa, UPX) (radii in aa shrink below a pixel at 100 px/unit)
+  WIDE: env("K1436_WIDE", 1),       // 0: no vwide finds (the scan: at 100 px/unit 10 of 11 sampled were clean band edges)
+  NOBAND: env("K1436_NOBAND", 0),   // 1: a label change with no band at all flags as a dip (v2 s1 did; 0 of 2 such finds sampled were visible)
   MINPX: env("K1436_MINPX", 4),     // px: the least find length (2-3 px width finds do not repeat between two loads at 100 px/unit)
   DWPX: env("K1436_DWPX", 0),       // px: the least width residual that flags (the sampling noise at coarse px/unit)
 };
@@ -108,7 +110,7 @@ export function bandSites(R: Raster, T: any): Sites {
     S.cut[k] = cut;
     // tOut: the last rise through 0.5 at or before t = aa; tIn: the next fall through 0.5
     let jo = -1; for (let j = 1; j < m; j++) { const t = t0 + j * P.STEP; if (t > aaP) break; if (prof[j - 1] < 0.5 && prof[j] >= 0.5) jo = j; }
-    if (jo < 0) { if (prof[0] < 0.5) { S.wIn[k] = 0; S.core[k] = 0; } continue; } // no band at the edge / ink on both sides
+    if (jo < 0) { if (prof[0] < 0.5 && P.NOBAND) { S.wIn[k] = 0; S.core[k] = 0; } continue; } // no band at the edge (flags only with NOBAND: a label change with no band is mostly a junction's or a section's invisible seam) / ink on both sides // no band at the edge / ink on both sides
     const tOut = t0 + jo * P.STEP - P.STEP * (prof[jo] - 0.5) / Math.max(1e-6, prof[jo] - prof[jo - 1]);
     let ji = -1; for (let j = jo + 1; j < m; j++) if (prof[j] < 0.5) { ji = j; break; }
     const tEnd = ji < 0 ? t0 + (m - 1) * P.STEP : t0 + ji * P.STEP - P.STEP * (0.5 - prof[ji]) / Math.max(1e-6, prof[ji - 1] - prof[ji]);
@@ -157,7 +159,7 @@ export function bandSites(R: Raster, T: any): Sites {
 // finds: v1's finds() over the flagged sites' pixels, split by kind (dip = why 1|2, wide = why 3|4)
 export function bandFinds(R: Raster, T: any, c0: number, r0: number, S: Sites): Find[] {
   const n = R.w * R.h; const dip = new Uint8Array(n), wide = new Uint8Array(n); const pk = new Float32Array(n); const aaP = T.aa * R.ppu;
-  for (let k = 0; k < S.n; k++) if (S.flag[k]) { const i = S.pix[k]; if (S.why[k] <= 2) dip[i] = 1; else wide[i] = 1; const d = S.why[k] === 2 ? 1 - S.core[k] : S.why[k] === 4 ? S.past[k] / aaP : Math.abs(S.res[k]) / aaP; if (d > pk[i]) pk[i] = d; }
+  for (let k = 0; k < S.n; k++) if (S.flag[k]) { const i = S.pix[k]; if (S.why[k] <= 2) dip[i] = 1; else if (P.WIDE) wide[i] = 1; else continue; const d = S.why[k] === 2 ? 1 - S.core[k] : S.why[k] === 4 ? S.past[k] / aaP : Math.abs(S.res[k]) / aaP; if (d > pk[i]) pk[i] = d; }
   const minPx = Math.max(P.MINPX, Math.round(P.MINLEN * Math.max(aaP, P.UPX)));
   return [...finds(dip, R, c0, r0, "vdip", (i) => pk[i], minPx), ...finds(wide, R, c0, r0, "vwide", (i) => pk[i], minPx)];
 }

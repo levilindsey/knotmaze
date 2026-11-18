@@ -40,6 +40,10 @@ const [sfx, nm, ppuS, out] = process.argv.slice(2);
 // the scan's width floor: 0.6 px (two loads at phases 0 and 0.37 px on def and muse_hash at 100 px/unit repeat 84% and
 // 94% of their finds with DWPX 0.6 and MINPX 4; 52% with 0.3 px and 2 px finds, where 2-3 px vwide:plain finds repeat 1 in 4)
 if (process.env.K1436_DWPX === undefined) PAR.DWPX = 0.6;
+// and at that resolution: no vwide (10 of 11 sampled vwide finds were clean band edges or corners; the notches it
+// exists for are 0.15 px there) and band finds of 9 px or more (5 of 5 sampled vdip finds under 9 px were clean corners)
+if (process.env.K1436_WIDE === undefined) PAR.WIDE = 0;
+if (process.env.K1436_MINPX === undefined) PAR.MINPX = 9;
 const ppu = +ppuS; const ev = process.env.K1436_EV ?? "src"; const ph = +(process.env.K1436_PH ?? 0);
 const G = ev === "src" ? (await import("../../../src/render/gpu_field/eval.ts")).GfEval : await loadEval(ev);
 if (ev === "u") G.MODE = "master";

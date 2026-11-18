@@ -1,0 +1,8 @@
+scan_h0 (GF_HOME="", ppu 100): wall 62 s, cpu 189 s
+  tie	v1 1744	v2 1159
+  ramp	v1 53	v2 19
+  thru	v1 4	v2 0
+  plain	v1 2163	v2 43
+  all	v1 3964	v2 1221
+  v1: dbreak:tie 170, dstray:tie 710, rbreak:plain 216, rbreak:ramp 17, rbreak:tie 236, rstray:plain 12, rstray:ramp 16, rstray:tie 336, rthin:plain 1935, rthin:ramp 20, rthin:thru 4, rthin:tie 292
+  v2: dstray:tie 710, rstray:plain 12, rstray:ramp 16, rstray:tie 336, vdip:plain 31, vdip:ramp 3, vdip:tie 113
