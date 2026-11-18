@@ -84,6 +84,11 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   // K1456: true once gf has taken the screen over from today's renderer (attach() has hidden it);
   // until then today's ribbons draw every frame while gf's programs compile.
   let switched = false;
+  // K1456: attach() hides today's ribbons, but the composite's first presentation lags a frame or two
+  // (the RenderContainer's first render), so the hide lands only once composites have presented
+  // (in after()); until then today's last frame stays under the composite.
+  let hidePending = false;
+  let compositesAtSwitch = 0;
   let drawn: (Float32Array | null)[] = [];
   // K1396 (24E): the explore table (gf_explore.ts), rebuilt when the declaration or the installed positions move
   let exTab: GfExploreTable | null = null;
@@ -473,9 +478,14 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       },
     });
     root.addChildAt(rc, Math.min(2, root.children.length));
+    // K1456: un-hide again until the first composites present (see hidePending).
+    hidePending = true;
+    compositesAtSwitch = stats.composites;
+    for (const c of hidden) c.visible = true;
   };
   const detach = (): void => {
     switched = false;
+    hidePending = false;
     for (const c of hidden) c.visible = true;
     hidden = [];
     if (filletsOff) {
@@ -1071,7 +1081,13 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     ctx.app.renderer.resetState();
   };
 
-  const after = (): void => {};
+  const after = (): void => {
+    // K1456: composites have presented since the switch: today's ribbons may go now.
+    if (hidePending && stats.composites > compositesAtSwitch + 1) {
+      hidePending = false;
+      for (const c of hidden) c.visible = false;
+    }
+  };
 
   // K1369 s2: true when this frame's gf work can neither install a build nor
   // start one (worker builds at depth, none waiting): the ribbon's CPU update
