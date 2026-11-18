@@ -255,3 +255,34 @@ under STRICT=1 prints PASS (new 0, grown 0) with the three sites under gone, and
 `-HomeFlag 0`. 4. 4x tiles today | master gf | new gf at the three sites, looked at: the stroke runs
 through as today's does, and the fill still matches. 5. Every other census scene: output unchanged by the
 digests batch 25 defines, or every changed spot named and looked at. 6. `npm test` green. 7. The guards.
+
+## Run I (26I): K1468, link A's frame time on master against ae2b4dfb
+
+Added 2026-11-17. On `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (link A) at rest, master is slower
+than ae2b4dfb: rAF interval 24.5 / 24.8 ms against 18.0 / 17.9 ms and 409 / 405 composites per 10 s against
+561 / 563 (two clean rounds under the perf lock, 2026-11-17 22:16-22:44; Handoff K1468 s2 (second run) in
+`docs/design/K1468_s2_frame_time.md`: read it whole). The time is GPU wait, not CPU submit (0.2-0.4 ms
+everywhere). It is not K1468's packed target: a probe build with the old three RGBA8 targets ran 27.7-28.7 ms.
+The pass programs cost the same in every build (gf:3/2 4.6-5.3 ms). Candidates, unchecked: 158f75be (K1468's
+context-loss guard), e820cadd (K1424's route bands, `gf_look.ts` +203 lines, paid with no route showing?),
+01933aa3 (K1472's RGBA32F table uploads; least likely). Link B (`?3&xp=off&am=instant&rp=gf`) shows no gap.
+
+Tools: `.claude/probes/K1468/s2/attr.ps1` (per-program GPU timers), `rest_gpu.mjs`, `interleave.ps1`,
+`common.ps1`; results so far in `out/run2_base`, `out/run2_attr`. Warm each Chrome profile first with the
+watchdog off and `SEC` of 40 or more: an unwarmed build's look program can take over 10 minutes to compile
+(fc520c2d did), and a frame counts only once gf composes. Per-program timers read 16-19 ms whenever another
+Chrome shares the GPU, so measure only under the perf lock (`$env:TEMP\claude-perf.lock`) and say what else
+was running.
+
+Files: `gf_look.ts`, `gf_pass.ts`, `gf_app.ts`. Hands off the junction field (`tables.ts`, `eval.ts`,
+`gf_keys.ts`, the field evaluation in `gf_glsl.ts`) and the reveal (`gf_reveal.ts`, `lkJCut`, `lkFx`).
+
+Done: 1. The bisect, under the lock: interleaved rounds (three or more) of ae2b4dfb, the candidates' parents
+and children, and master, each build's rAF interval and composites per 10 s on link A; the commit where the
+interval rises by 15% or more is named. 2. The cause named in the code, with the per-program GPU time (or
+the per-frame work) that pays it, on that commit and its parent. 3. Fixed: in the same interleaved rounds
+master's tip is within 5% of ae2b4dfb's interval on link A, and link B is no slower than master by more than
+5%. 4. The picture does not move: 0 px against master gf at rest on both links at the same physics hash, and
+on 24F's state with a route showing (the K1424 bands), or every differing pixel named and looked at.
+5. `npm test` green. 6. The guards. If the bar is not met at the stop line, land what is a real saving with
+0 px moved, and write the table and what each attempt saved.
