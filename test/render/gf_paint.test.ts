@@ -63,6 +63,17 @@ describe("K1405 gf paint table", () => {
     expect([...V.slice(0, 5)]).toEqual([0, 0.25, 0.75, 1, 1]);
   });
 
+  it("drops caps at routed junctions, as writePaintItems does (K1414)", () => {
+    const T = new GfPaintTable();
+    const caps = [{ chain: 0, ctrl: 4, radius: 0.6, p: 1 }];
+    const plain = T.values(src([], caps));
+    expect(plain[4]).toBe(1);
+    const routed = T.values({ ...src([], caps), routedArms: new Set(["0:4"]) });
+    expect(routed[4]).toBe(0);
+    expect(paintKey({ paintSpans: [], paintCaps: caps, routedArms: new Set(["0:4"]) }))
+      .not.toBe(paintKey({ paintSpans: [], paintCaps: caps }));
+  });
+
   it("paintPAt lerps a segment's two samples and clamps to the chain's end", () => {
     const V = new Float32Array([0, 0.25, 0.75, 1, 1]);
     expect(paintPAt(V, 0, 5, false, 1, 0.5)).toBeCloseTo(0.5, 6);
@@ -91,9 +102,14 @@ describe("K1405 gf paint table", () => {
   it("gf_app snapshots the paint with each build and refreshes it when the declaration moves", () => {
     const app = readFileSync(new URL("../../src/render/gpu_field/gf_app.ts", import.meta.url), "utf8");
     expect(app).toContain("new GfPaintTable()");
-    expect(app).toContain("paintKey(r.paintState)");
+    expect(app).toContain("paintKey({ paintSpans: r.paintState.paintSpans, paintCaps: r.paintState.paintCaps, routedArms:");
+    expect(app).toContain("new GfRouteTable()");
+    expect(app).toContain("routeDeclKey(routeSrc(r))");
+    expect(app).toContain("rimUniforms(rimSrc(r))");
     const pass = readFileSync(new URL("../../src/render/gpu_field/gf_pass.ts", import.meta.url), "utf8");
     expect(pass).toContain("uPt");
     expect(pass).toContain("TEXTURE8");
+    expect(pass).toContain("TEXTURE9");
+    expect(pass).toContain("uRimA");
   });
 });

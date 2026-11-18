@@ -31,7 +31,7 @@ import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build"
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
 import { GfExploreTable, gfExploring } from "./gf_explore";
 import { knotUniformValues } from "../paint_model";
-import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, gfJointClear, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfPaintSource, type GfRimSource } from "./gf_look";
+import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, gfJointClear, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfPaintSource, type GfRimSource, GfRouteTable, routeDeclKey, type GfRouteSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
@@ -117,6 +117,12 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let dynVer = 0;
   let dynKeyV = -1;
   const dynPool: Float32Array[] = [];
+  // K1414: the route bands (gf_look.ts GfRouteTable), snapshotted like the paint
+  let rtTab: GfRouteTable | null = null;
+  let rtCur: { data: Float32Array; rows: number } | null = null;
+  let rtVer = 0;
+  let rtKey = -1;
+  const rtPool: Float32Array[] = [];
   let teleAtU = 0;
   // K1395 (24D): the baked reveal FX (gf_look.ts GfFxTable), re-baked every revealing frame
   let fxTab: GfFxTable | null = null;
@@ -142,6 +148,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     exMs: [] as number[], exKnots: [] as number[],
     // K1414 part 2 (24C): the dyn table's CPU bakes per snapshot (ms)
     dynMs: [] as number[],
+    rtMs: [] as number[],
     // c1: where builds ran, main's share per rebuild (gather + post, then
     // pack + upload; in-thread builds add the export and tables), the
     // worker's whole build and the post-to-arrival latency.
@@ -166,10 +173,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let ready = false;
   // K1369 s2: the builds in flight (id -> its generation, post time and
   // main's share), up to `depth` at once; the worker queues them in order.
-  const flights = new Map<number, { gen: number; t0: number; main: number; lk: Float32Array | null; pt: Float32Array | null; dyn: Float32Array | null }>();
+  const flights = new Map<number, { gen: number; t0: number; main: number; lk: Float32Array | null; pt: Float32Array | null; dyn: Float32Array | null; rt: { data: Float32Array; rows: number } | null }>();
   let flightId = 0;
   let gen = 0;
-  let pending: { T: GfTables; main: number; t0: number; samples?: SplineSamples[]; lk?: Float32Array | null; pt?: Float32Array | null; dyn?: Float32Array | null } | null = null;
+  let pending: { T: GfTables; main: number; t0: number; samples?: SplineSamples[]; lk?: Float32Array | null; pt?: Float32Array | null; dyn?: Float32Array | null; rt?: { data: Float32Array; rows: number } | null } | null = null;
   // K1369 s4: THE SNAPSHOT CHANNEL (`__knotGfOpts.chan`, off by default).
   // Once the first tables exist, gf_app asks the physics host for a port to
   // the physics worker (worker_host.ts gfPort) and hands it to the gf
@@ -311,7 +318,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       if (ref) check(d.T, ref);
       // Replies come in post order: a newer one replaces a pending older one.
       if (pending) stats.superseded++;
-      pending = { T: d.T, main: fl.main, t0: fl.t0, lk: fl.lk, pt: fl.pt, dyn: fl.dyn };
+      pending = { T: d.T, main: fl.main, t0: fl.t0, lk: fl.lk, pt: fl.pt, dyn: fl.dyn, rt: fl.rt };
       requestFrame();
     };
   };
@@ -516,7 +523,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     const t0 = performance.now();
     const ps = (r as unknown as { paintState: { paintSpans: GfPaintSource["paintSpans"]; paintCaps: GfPaintSource["paintCaps"] } }).paintState;
     const src = r as unknown as GfPaintSource;
-    const P = ptTab.values({ kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples, paintSpans: ps.paintSpans, paintCaps: ps.paintCaps }, ptPool.pop());
+    const P = ptTab.values({ kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples, paintSpans: ps.paintSpans, paintCaps: ps.paintCaps, routedArms: (r as unknown as { routedArms: Set<string> }).routedArms }, ptPool.pop());
     stats.ptMs.push(performance.now() - t0);
     return P;
   };
@@ -616,7 +623,52 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     };
   };
   // K1414: this frame's route bands, snapshotted like the paint (they follow the samples' arcs)
-  const install = (next: GfTables, mainSoFar: number, lkNext?: Float32Array | null, ptNext?: Float32Array | null, dynNext?: Float32Array | null): void => {
+  const routeSrc = (r: NonNullable<typeof ctx.scene.renderer>): GfRouteSource => {
+    const x = r as unknown as GfRouteSource & { armNextJointCtrl: (jn: number, a: { chain: number; slot: number; dir: 1 | -1 }) => number | null };
+    // K1414 (24F): the fan's own bands (joinery's records, via the renderer's
+    // fieldProbe) - gf's bands/discs exist exactly where the fan's do, with its d/m.
+    let fanBands: GfRouteSource["fanBands"];
+    try {
+      const fp = (r as unknown as { fieldProbe?: { record: (ji: number) => number; arms: (ji: number) => ReadonlyArray<{ chain: number; slot: number; dir: number }>; routes: (ji: number) => ReadonlyArray<{ ia: number; ib: number; d: number; m: number }> } }).fieldProbe;
+      if (fp) {
+        const map = new Map<number, { a: { chain: number; slot: number; dir: 1 | -1 }; b: { chain: number; slot: number; dir: 1 | -1 } | null; d: number; m: number }[]>();
+        for (const ji of x.routesByJn.keys()) {
+          if (fp.record(ji) < 0) continue;
+          const arms = fp.arms(ji);
+          const list: { a: { chain: number; slot: number; dir: 1 | -1 }; b: { chain: number; slot: number; dir: 1 | -1 } | null; d: number; m: number }[] = [];
+          for (const rt of fp.routes(ji)) {
+            const A = arms[rt.ia];
+            if (!A) continue;
+            const B = rt.ib >= 0 ? arms[rt.ib] : null;
+            list.push({ a: { chain: A.chain, slot: A.slot, dir: A.dir as 1 | -1 }, b: B ? { chain: B.chain, slot: B.slot, dir: B.dir as 1 | -1 } : null, d: rt.d, m: rt.m });
+          }
+          if (list.length) map.set(ji, list);
+        }
+        fanBands = map;
+      }
+    } catch { fanBands = undefined; }
+    return {
+      kd: x.kd, kcv: x.kcv, chainSamples: x.chainSamples,
+      style: x.style, cuspRadius: x.cuspRadius, junctionArms: x.junctionArms,
+      routesByJn: x.routesByJn, fullJn: x.fullJn, fanBands,
+      armNextJointCtrl: (jn, a) => x.armNextJointCtrl(jn, a),
+    };
+  };
+  const rtSnap = (): { data: Float32Array; rows: number } | null => {
+    const r = ctx.scene.renderer;
+    if (!r || !rtTab || lkKey < 0 || !pass?.lookable || opts().look === false) return null;
+    const S = rtTab.snapshot(routeSrc(r), rtPool.pop());
+    stats.rtMs.push(rtTab.ms);
+    return S;
+  };
+  const rtShow = (S: { data: Float32Array; rows: number } | null): void => {
+    if (!S) return;
+    if (rtCur && rtCur.data !== S.data && rtPool.length < 4) rtPool.push(rtCur.data);
+    rtCur = S;
+    rtVer++;
+  };
+
+  const install = (next: GfTables, mainSoFar: number, lkNext?: Float32Array | null, ptNext?: Float32Array | null, dynNext?: Float32Array | null, rtNext?: { data: Float32Array; rows: number } | null): void => {
     const t0 = performance.now();
     T = next;
     // K1389 s2: the positions gathered with this build (else this frame's: an in-thread or channel build)
@@ -624,6 +676,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     ptShow(ptNext ?? ptSnap());
     gwShow(gwSnap());
     dynShow(dynNext ?? dynSnap());
+    rtShow(rtNext ?? rtSnap());
     pass!.upload(T);
     stats.packMs.push(pass!.packMs);
     stats.uploadMs.push(pass!.uploadMs);
@@ -647,7 +700,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       flightId++;
       worker!.postMessage({ id: flightId, input, aa, pool: opts().pool !== false }, transfer);
       const main = performance.now() - t0;
-      flights.set(flightId, { gen, t0, main, lk: lkSnap(), pt: ptSnap(), dyn: dynSnap() });
+      flights.set(flightId, { gen, t0, main, lk: lkSnap(), pt: ptSnap(), dyn: dynSnap(), rt: rtSnap() });
       stats.gatherMs.push(main);
       // The reference reads the same state now (outside main's share).
       if (verifying()) refs.set(flightId, reference(aa));
@@ -801,7 +854,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
           stats.chanBuilds++;
           worker?.postMessage({ chan: "ack", done: chanDone, depth: depth() });
         }
-        install(p.T, p.main, p.lk, p.pt, p.dyn);
+        install(p.T, p.main, p.lk, p.pt, p.dyn, p.rt);
         const now = performance.now();
         stats.showMs.push(now - p.t0);
         stats.showAt.push(p.t0, now);
@@ -848,6 +901,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         ptTab ??= new GfPaintTable();
         gwTab ??= new GfGapTable();
         dynTab ??= new GfDynTable();
+        rtTab ??= new GfRouteTable();
         fxTab ??= new GfFxTable();
         if (lkGate.changed(r)) {
           stats.lkKeys++;
@@ -888,12 +942,15 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         }
         // K1405: a moved paint declaration (a walk, a trail shift) re-bakes and redraws at once,
         // even at rest, when no tables build follows it
-        const pk = paintKey(r.paintState);
+        const pk = paintKey({ paintSpans: r.paintState.paintSpans, paintCaps: r.paintState.paintCaps, routedArms: (r as unknown as { routedArms: Set<string> }).routedArms });
         if (pk !== ptKey) { ptKey = pk; ptShow(ptSnap()); dirty = true; }
         // K1414 part 2 (24C): a moved pulse/telegraph declaration re-bakes at once; live pulses
         // (their clocks) and a riding telegraph end redraw every frame, as today's paint tick does
         const dk = dynKey({ paintPulses: r.paintState.paintPulses, paintTele: r.paintState.paintTele, teleGap: r.paintState.rimGap() });
         if (dk !== dynKeyV) { dynKeyV = dk; dynShow(dynSnap()); dirty = true; }
+        if (!rtCur) rtShow(rtSnap());
+        const rk = routeDeclKey(routeSrc(r));
+        if (rk !== rtKey) { rtKey = rk; rtShow(rtSnap()); dirty = true; }
         if (r.paintState.paintPulses.length > 0) dirty = true;
         const atU = dynTeleAtU();
         if (atU !== teleAtU) { teleAtU = atU; dirty = true; }
@@ -913,7 +970,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         } else {
           const up = pass.lkPMs;
           if (rvDrawn) fxShow(fxSnap());
-          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn, rimUniforms(rimSrc(r)), gwP, gwVer);
+          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn, rimUniforms(rimSrc(r)), gwP, gwVer, rtCur, rtVer);
           if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
         }
       } else if (lkGap >= 0) {
@@ -922,6 +979,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         lkFadeV = -1;
         ptKey = -1;
         dynKeyV = -1;
+        rtKey = -1;
         rimKeyV = -1;
         dirty = true;
       }

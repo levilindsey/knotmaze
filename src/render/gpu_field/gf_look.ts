@@ -47,12 +47,16 @@
  * composite's border branch draws in the cleared interior under the stroke; fill and both never
  * read it, so the fill look is unchanged. K1447: the pulse hi is gated by lkFanWin (no pulse
  * inside a junction fan, where today's fan fills dark).
+ * K1414: lkRoute draws the K81 route bands over that (GfRouteTable polylines, uRt unit 13) and suppresses gold in a routed web outside its bands.
  */
 import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, kSampleArc, kWall, kWrap, knotSection, type KChain, type KData, type KIgn } from "../paint_math";
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
 import { kStatic, knotUniformValues } from "../paint_model";
 import { EXPLORE_DOT_AT, EXPLORE_DOT_R, EXPLORE_DOTS_SPAN } from "../explore_glsl";
 import { kRimScale } from "../paint_math";
+import { routeCorner, routeCubic } from "../junction_routes";
+import { normArc, paintArcAt, sampleAtSafe } from "../ribbon/sampling";
+import type { SplineSamples } from "../../geometry/spline_generator";
 import { CUT_BIAS } from "../ribbon/crossing_gaps";
 import { GF_TW } from "./gf_pack";
 
@@ -252,6 +256,9 @@ export interface GfPaintCap { chain: number; ctrl: number; radius: number; p?: n
 export interface GfPaintSource extends GfLookSource {
   paintSpans: readonly GfPaintSpan[];
   paintCaps: readonly GfPaintCap[];
+  // K1414: the arms of routed junctions ("chain:slot", paint_state's routedArms):
+  // their caps are dropped, as writePaintItems drops them (the band decides).
+  routedArms?: ReadonlySet<string>;
 }
 
 // paint_math's goldUOf and ringDist, mirrored (ordering only, as there).
@@ -265,12 +272,13 @@ function paintRingDist(a: number, b: number, total: number, closed: boolean): nu
 }
 
 /** A hash of the paint declaration the table bakes (spans, then caps, in declaration order). */
-export function paintKey(r: { paintSpans: readonly GfPaintSpan[]; paintCaps: readonly GfPaintCap[] }): number {
+export function paintKey(r: { paintSpans: readonly GfPaintSpan[]; paintCaps: readonly GfPaintCap[]; routedArms?: ReadonlySet<string> }): number {
   let h = 2166136261;
   const mix = (v: number): void => { keyF[0] = v; h = Math.imul(h ^ keyU[0], 16777619); };
   mix(r.paintSpans.length); mix(r.paintCaps.length);
   for (const s of r.paintSpans) { mix(s.chain); mix(s.c0); mix(s.c1); mix(s.p0 ?? 1); mix(s.p1 ?? 1); }
   for (const c of r.paintCaps) { mix(c.chain); mix(c.ctrl); mix(c.radius); mix(c.p ?? 1); }
+  if (r.routedArms) { mix(r.routedArms.size); for (const a of r.routedArms) { const i = a.indexOf(":"); mix(Number(a.slice(0, i))); mix(Number(a.slice(i + 1))); } }
   return h >>> 0;
 }
 
@@ -324,6 +332,7 @@ export class GfPaintTable {
       const tmp = this.tmp;
       const ss = spans[ch];
       const cc = caps[ch];
+      const routed = r.routedArms;
       for (let k = 0; k < count; k++) {
         const arc = k * arcPer;
         let p = 0;
@@ -343,6 +352,8 @@ export class GfPaintTable {
           } else p = 1;
         }
         for (const cap of cc) {
+          // K1414: a routed junction's caps are dropped (writePaintItems); its band decides
+          if (routed && routed.has(cap.chain + ":" + paintSlot(c, cap.ctrl))) continue;
           const pc = cap.p ?? 1;
           if (!(paintGoldU(pc) > paintGoldU(p))) continue;
           const d = paintRingDist(arc, kArcOfCtrl(D, c, cap.ctrl), total, c.closed);
@@ -1080,6 +1091,255 @@ export function rimKey(r: GfRimSource): number {
   return h >>> 0;
 }
 
+export interface GfRouteArmRef { chain: number; slot: number; dir: 1 | -1 }
+
+export interface GfRouteSource extends GfLookSource {
+  style: { threadWidth: number; casingWidth: number };
+  cuspRadius: number;
+  junctionArms: ReadonlyArray<{ arms: ReadonlyArray<GfRouteArmRef> }>;
+  routesByJn: ReadonlyMap<number, ReadonlyArray<{ a: GfRouteArmRef; b: GfRouteArmRef | null }>>;
+  // K1414 (24F): the fan's own resolved bands per junction (joinery's records via the
+  // renderer's fieldProbe: arm refs plus the turn's d/m, turn-fit bisection included).
+  // When present, bands and discs are built ONLY for these junctions and routes -
+  // the fan draws nothing at a junction it has no record for, and its d is the shrunk one.
+  fanBands?: ReadonlyMap<number, ReadonlyArray<{ a: GfRouteArmRef; b: GfRouteArmRef | null; d: number; m: number }>>;
+  fullJn: ReadonlySet<number>;
+  armNextJointCtrl: (jn: number, a: GfRouteArmRef) => number | null;
+}
+
+export interface GfRouteBandInfo {
+  chainA: number; chainB: number; nv: number; tau0: number; tau1: number;
+  verts: [number, number, number][];
+}
+
+/** A hash of the route declaration and the band geometry's params (gf_app's rebuild key). */
+export function routeDeclKey(r: GfRouteSource): number {
+  let h = 2166136261;
+  const mix = (v: number): void => { keyF[0] = v; h = Math.imul(h ^ keyU[0], 16777619); };
+  mix(r.cuspRadius); mix(r.style.threadWidth); mix(r.style.casingWidth); mix(r.junctionArms.length); mix(r.routesByJn.size); mix(r.fullJn.size);
+  for (const [ji, list] of r.routesByJn) {
+    mix(ji); mix(list.length);
+    for (const rt of list) {
+      mix(rt.a.chain); mix(rt.a.slot); mix(rt.a.dir);
+      mix(rt.b ? rt.b.chain : -1); mix(rt.b ? rt.b.slot : 0); mix(rt.b ? rt.b.dir : 0);
+    }
+  }
+  for (const ji of r.fullJn) mix(ji + 1000003);
+  if (r.fanBands) for (const [ji, list] of r.fanBands) { mix(ji + 2000003); mix(list.length); for (const rt of list) { mix(Math.round(rt.d * 4096)); mix(Math.round(rt.m * 4096)); } }
+  for (let ch = 0; ch < r.chainSamples.length; ch++) mix(r.chainSamples[ch]?.count ?? -1);
+  return h >>> 0;
+}
+
+interface GfArmLite {
+  chain: number; slot: number; dir: number; ok: boolean;
+  arc0: number; total: number; closed: boolean; dx: number; dy: number;
+  domain: number; toEnd: number; sample0: number; step: number;
+}
+
+/**
+ * K1414: the K81 route bands for the look form, packed beside the look tables (the K1362 digest
+ * never sees them). The centreline of each resolved route (paint_state's routesByJn against the
+ * renderer's junctionArms) is built as joinery builds it (its `along` + routeCubic turn, d from
+ * routeCorner; the under-gap cap and the turn-fit bisection are the two omissions: under gf's lean
+ * the under windows are empty, so the gap cap is infinite, and a turn that leaves the web only
+ * recolours field pixels the web already covers). Layout, texels of a GF_TW-wide RGBA32F texture:
+ * texel 0 = (band count, disc count, disc base, texels); per band 5 header texels then, after the
+ * discs (3 texels each: centre/radius/full, chain count + chains), every band's vertices (x, y, tau).
+ * A disc per routed junction suppresses the gold in its web outside the bands (today's untraveled
+ * base); a fully traveled junction's disc is flagged and suppresses nothing.
+ */
+export class GfRouteTable {
+  nBands = 0;
+  nDiscs = 0;
+  rows = 0;
+  ms = 0;
+  bands: GfRouteBandInfo[] = [];
+  private scratch = new Float32Array(8);
+
+  /** Build the packed table from the renderer's current samples and route declaration. */
+  snapshot(r: GfRouteSource, out?: Float32Array): { data: Float32Array; rows: number } {
+    const t0 = performance.now();
+    const fh = r.style.threadWidth / 2;
+    const casingGap = Math.max(0, (r.style.casingWidth - r.style.threadWidth) / 2);
+    const L = fh * 1.25 * r.cuspRadius; // joinery FILLET_REACH_PER_HALF
+    const drawWedges = r.cuspRadius > 0.05 && L > r.style.threadWidth * 0.3;
+    const fieldReach = Math.max(L, fh * 2) + 0.25;
+    const webR = fieldReach;
+    const bandEndBase = Math.max(L, fh * 2) + fh;
+    const S = this.scratch;
+    const armAt = (arm: GfArmLite, s: number, o: number): void => {
+      const smp = r.chainSamples[arm.chain] as unknown as SplineSamples;
+      sampleAtSafe(smp, normArc(arm.arc0 + arm.dir * s, arm.total, arm.closed), arm.closed, S, 0);
+      let tx = S[2] * arm.dir;
+      let ty = S[3] * arm.dir;
+      const tl = Math.hypot(tx, ty);
+      if (tl > 1e-6) { tx /= tl; ty /= tl; } else { tx = arm.dx; ty = arm.dy; }
+      S[o] = S[0]; S[o + 1] = S[1]; S[o + 2] = tx; S[o + 3] = ty;
+      // (o is always 0 here: S then holds the point and the outward tangent)
+    };
+    const heads: number[] = [];
+    const discs: { x: number; y: number; r: number; full: number; arms: { chain: number; sample: number; step: number }[] }[] = [];
+    const vertsAll: number[] = [];
+    const bands: GfRouteBandInfo[] = [];
+    for (const [ji, list] of (r.fanBands ?? r.routesByJn)) {
+      if (!list || list.length === 0) continue;
+      const jn = r.junctionArms[ji];
+      if (!jn) continue;
+      // the junction centre: the mean of the arms' joint points (joinery's flank centre)
+      let jx = 0; let jy = 0; let nP = 0;
+      const lites: GfArmLite[] = [];
+      for (const a of jn.arms) {
+        const smp = r.chainSamples[a.chain] as unknown as SplineSamples | null;
+        const kc = r.kcv[a.chain];
+        if (!smp || !kc) { lites.push({ chain: a.chain, slot: a.slot, dir: a.dir, ok: false, arc0: 0, total: 0, closed: false, dx: 1, dy: 0, domain: 0, toEnd: 0, sample0: 0, step: 0 }); continue; }
+        const closed = kc.closed;
+        const total = smp.totalLength;
+        const arc0 = paintArcAt(smp, a.slot, closed);
+        sampleAtSafe(smp, normArc(arc0, total, closed), closed, S, 0);
+        jx += S[0]; jy += S[1]; nP++;
+        lites.push({ chain: a.chain, slot: a.slot, dir: a.dir, ok: true, arc0, total, closed, dx: 1, dy: 0, domain: 0, toEnd: 0, sample0: 0, step: 0 });
+      }
+      if (nP === 0) continue;
+      jx /= nP; jy /= nP;
+      for (let i = 0; i < jn.arms.length; i++) {
+        const arm = lites[i];
+        if (!arm.ok) continue;
+        const a = jn.arms[i];
+        const smp = r.chainSamples[a.chain] as unknown as SplineSamples;
+        sampleAtSafe(smp, paintArcAt(smp, a.slot + a.dir * 0.8, arm.closed), arm.closed, S, 0);
+        let dx = S[0] - jx;
+        let dy = S[1] - jy;
+        const len = Math.hypot(dx, dy);
+        if (len < 0.15) { arm.ok = false; continue; }
+        dx /= len; dy /= len;
+        arm.dx = dx; arm.dy = dy;
+        const nextCtrl = r.armNextJointCtrl(ji, a);
+        let nextJ = Infinity;
+        if (nextCtrl !== null) {
+          nextJ = (paintArcAt(smp, nextCtrl, arm.closed) - arm.arc0) * a.dir;
+          if (arm.closed && arm.total > 0) { nextJ = ((nextJ % arm.total) + arm.total) % arm.total; }
+          if (nextJ <= 1e-3) nextJ = Infinity;
+        }
+        arm.toEnd = arm.closed ? Infinity : a.dir > 0 ? arm.total - arm.arc0 : arm.arc0;
+        arm.domain = Math.min(nextJ / 2, arm.toEnd);
+        const arcPer = Math.max(1e-9, r.kd.geom[r.kcv[a.chain].geom * 4 + 1]);
+        arm.sample0 = arm.arc0 / arcPer;
+        arm.step = a.dir / arcPer;
+      }
+      const discArms: { chain: number; sample: number; step: number }[] = [];
+      for (let i = 0; i < jn.arms.length; i++) if (lites[i].ok) discArms.push({ chain: jn.arms[i].chain, sample: lites[i].sample0, step: Math.abs(lites[i].step) });
+      discs.push({ x: jx, y: jy, r: webR, full: r.fullJn.has(ji) ? 1 : 0, arms: discArms });
+      const armReach = (arm: GfArmLite): number => Math.min(L, Math.max(0.3 * L, arm.domain));
+      const coverCap = (arm: GfArmLite): number => Math.min(arm.domain, Math.max(fh + casingGap + 2 * CUT_BIAS, drawWedges ? L : 0));
+      const bandEnd = (arm: GfArmLite): number => Math.min(arm.toEnd, bandEndBase);
+      const along = (arm: GfArmLite, s0: number, s1: number, sign: number, cap: number, incStart: boolean, incEnd: boolean, out: [number, number, number][]): void => {
+        const len = Math.abs(s1 - s0);
+        const segs = len < 1e-4 ? 0 : Math.min(cap, Math.max(1, Math.ceil(len / 0.08)));
+        const k0 = incStart ? 0 : 1;
+        const k1 = incEnd ? segs : segs - 1;
+        for (let k = k0; k <= k1; k++) {
+          const s = segs > 0 ? s0 + ((s1 - s0) * k) / segs : s1;
+          armAt(arm, s, 0);
+          out.push([S[0], S[1], sign * s]);
+        }
+      };
+      const find = (x: GfRouteArmRef): number => lites.findIndex((_arm, i) => jn.arms[i].chain === x.chain && jn.arms[i].slot === x.slot && jn.arms[i].dir === x.dir);
+      for (const rt of list) {
+        const ia = find(rt.a);
+        const ib = rt.b ? find(rt.b) : -1;
+        if (ia < 0 || (rt.b && ib < 0)) continue;
+        const A = lites[ia];
+        const B = ib >= 0 ? lites[ib] : null;
+        if (!A.ok || (B && !B.ok)) continue;
+        let d = 0;
+        let m = 0.5 * fh;
+        const verts: [number, number, number][] = [];
+        if (!B) {
+          along(A, bandEnd(A), 0, -1, 40, true, true, verts);
+        } else {
+          const alpha = Math.acos(Math.max(-1, Math.min(1, A.dx * B.dx + A.dy * B.dy)));
+          const reach = drawWedges ? Math.min(armReach(A), armReach(B)) : fh;
+          d = routeCorner(alpha, reach, fh, coverCap(A), coverCap(B)).d;
+          m = Math.max(d, 0.5 * fh);
+          const fanRt = rt as { d?: number; m?: number };
+          if (fanRt.d !== undefined) { d = fanRt.d; m = fanRt.m ?? Math.max(d, 0.5 * fh); }
+          along(A, Math.max(bandEnd(A), d), d, -1, 24, true, false, verts);
+          // the turn: arm frames at arc d, then routeCubic's points
+          armAt(A, d, 0);
+          const ax = S[0]; const ay = S[1]; const atx = S[2]; const aty = S[3];
+          armAt(B, d, 0);
+          const cubic: number[] = [];
+          routeCubic(ax, ay, atx, aty, S[0], S[1], S[2], S[3], d, d > 1e-6 ? 14 : 1, cubic);
+          for (let k = 0; k + 2 < cubic.length; k += 3) verts.push([cubic[k], cubic[k + 1], cubic[k + 2]]);
+          along(B, d, Math.max(bandEnd(B), d), 1, 24, false, true, verts);
+        }
+        if (verts.length < 2) continue;
+        if (verts.length > 64) verts.length = 64;
+        // the turn's mid direction and wedge adjacency (the fan's inside-turn fill)
+        let mid: [number, number, number] = verts[0];
+        for (const v of verts) if (Math.abs(v[2]) < Math.abs(mid[2])) mid = v;
+        let mdx = mid[0] - jx;
+        let mdy = mid[1] - jy;
+        const ml = Math.hypot(mdx, mdy);
+        if (ml > 1e-9) { mdx /= ml; mdy /= ml; } else { mdx = A.dx; mdy = A.dy; }
+        let inT = 0;
+        if (B) {
+          const order = lites.map((arm, i) => ({ i, ang: Math.atan2(arm.dy, arm.dx) })).sort((p, q) => p.ang - q.ang);
+          const pa = order.findIndex((e) => e.i === ia);
+          const pb = order.findIndex((e) => e.i === ib);
+          const adjacent = pa >= 0 && pb >= 0 && ((pa + 1) % order.length === pb || (pb + 1) % order.length === pa);
+          const cosA = Math.max(-1, Math.min(1, A.dx * B.dx + A.dy * B.dy));
+          const between = A.dx * mdx + A.dy * mdy + (B.dx * mdx + B.dy * mdy) > 0;
+          if (adjacent && Math.acos(cosA) < Math.PI - 1e-3 && between) inT = 1;
+        }
+        let boundR = webR;
+        for (const v of verts) boundR = Math.max(boundR, Math.hypot(v[0] - jx, v[1] - jy) + fh);
+        heads.push(verts.length, A.chain, B ? B.chain : -1, m, A.sample0, B ? B.sample0 : 0, A.step, B ? B.step : 0, jx, jy, webR, boundR, A.dx, A.dy, B ? B.dx : 0, B ? B.dy : 0, mdx, mdy, inT);
+        bands.push({ chainA: A.chain, chainB: B ? B.chain : -1, nv: verts.length, tau0: verts[0][2], tau1: verts[verts.length - 1][2], verts });
+        for (const v of verts) vertsAll.push(v[0], v[1], v[2], 0);
+      }
+    }
+    this.bands = bands;
+    this.nBands = bands.length;
+    this.nDiscs = discs.length;
+    const nTex = 1 + 5 * bands.length + 4 * discs.length + vertsAll.length / 4;
+    const rows = Math.max(1, Math.ceil(nTex / GF_TW));
+    const len = rows * GF_TW * 4;
+    const data = out && out.length >= len ? out : new Float32Array(len);
+    data.fill(0, 0, len);
+    data[0] = bands.length; data[1] = discs.length; data[2] = 1 + 5 * bands.length; data[3] = nTex;
+    let vo = 1 + 5 * bands.length + 4 * discs.length;
+    for (let bi = 0; bi < bands.length; bi++) {
+      const h = heads.slice(bi * 19, bi * 19 + 19);
+      const o = (1 + 5 * bi) * 4;
+      data[o] = vo; data[o + 1] = h[0]; data[o + 2] = h[1]; data[o + 3] = h[2];
+      data[o + 4] = h[3]; data[o + 5] = h[4]; data[o + 6] = h[5]; data[o + 7] = h[6];
+      // H2 = (jx, jy, webR, boundR)
+      // H2 = (jx, jy, webR, boundR): heads[8..11]
+      data[o + 8] = h[8]; data[o + 9] = h[9]; data[o + 10] = h[10]; data[o + 11] = h[11];
+      data[o + 12] = h[12]; data[o + 13] = h[13]; data[o + 14] = h[14]; data[o + 15] = h[15];
+      // H4 = (stepB, mid dir x, mid dir y, inside-turn flag)
+      data[o + 16] = h[7]; data[o + 17] = h[16]; data[o + 18] = h[17]; data[o + 19] = h[18];
+      vo += bands[bi].nv;
+    }
+    for (let di = 0; di < discs.length; di++) {
+      const o = (1 + 5 * bands.length + 4 * di) * 4;
+      const D = discs[di];
+      data[o] = D.x; data[o + 1] = D.y; data[o + 2] = D.r; data[o + 3] = D.full;
+      for (let ai = 0; ai < 4; ai++) {
+        const A = D.arms[ai];
+        data[o + 4 + ai * 2] = A ? A.chain : -1; data[o + 5 + ai * 2] = A ? A.sample : 0;
+        data[o + 12 + ai] = A ? A.step : 0;
+      }
+    }
+    const vBase = (1 + 5 * bands.length + 4 * discs.length) * 4;
+    for (let i = 0; i < vertsAll.length; i++) data[vBase + i] = vertsAll[i];
+    this.rows = rows;
+    this.ms = performance.now() - t0;
+    return { data, rows };
+  }
+}
+
 /** Today's crossing gap beyond the over thread's edge (world units): the casing's margin plus crossing_gaps' CUT_BIAS. */
 export function lookGap(r: { style: { casingWidth: number; threadWidth: number } }): number {
   return Math.max(0, (r.style.casingWidth - r.style.threadWidth) / 2) + CUT_BIAS;
@@ -1128,6 +1388,7 @@ const M_LOOK = `
 uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG; uniform float uLkF;
 uniform highp sampler2D uPt; uniform vec3 uGold;
 uniform highp sampler2D uGw; uniform float uGwLive;
+uniform highp sampler2D uRt;
 uniform vec4 uRimA; uniform vec4 uRimB; uniform vec4 uRimC; uniform vec3 uHov;
 vec4 LKT(int i) { return texelFetch(uLk, ivec2(i & TWM, i >> LOG), 0); }
 float LKP(int i) { return texelFetch(uLkP, ivec2(i & TWM, i >> LOG), 0).x; }
@@ -1392,6 +1653,17 @@ float lkExploreLook(int look, float v, float u, float s, float lf, float la, flo
   float dd = lkExDotsSd(s, la, lf);
   return clamp(-dd / pxW + 0.5, 0.0, 1.0) * (uExOn > 1.5 ? 1.0 : 1.0 - 0.55 * u * u);
 }
+vec4 RT(int i) { return texelFetch(uRt, ivec2(i & TWM, i >> LOG), 0); }
+// K1414: a band arm's material at sample sf (a segment+fraction position): its section colour mixed to gold
+vec3 lkMat(int c, float sf) {
+  vec4 H = LKT(c);
+  if (H.z < 1.0) return vec3(0.0);
+  bool closed = H.w > 0.5;
+  float s = closed ? mod(sf, H.z) : clamp(sf, 0.0, max(H.z - 1.0, 0.0));
+  vec2 q = vec2(floor(s), fract(s));
+  vec4 col = lkColour(c, q);
+  return mix(col.rgb, uGold, lkPaint(c, q));
+}
 // K1414: the label foot's sample float and the pixel's distance from the foot point (the rim's across)
 vec2 lkFoot(int c, vec2 q, vec2 p) {
   vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q.x);
@@ -1399,6 +1671,104 @@ vec2 lkFoot(int c, vec2 q, vec2 p) {
   float sf = q.x + q.y;
   if (!(C0.z > 0.5) && F(uOV + int(C0.x)).z < 0.0) sf -= 1.0;
   return vec2(sf, length(p - mix(A.xy, B.xy, q.y)));
+}
+// K1414: the K81 route bands over the label's colour (junction_field's junctionField, band part):
+// a routed junction's web outside its bands reads the untraveled material (its disc), inside a band
+// the two arms' composed material blended over tau in [-m, m], oldest band first. ROUTE_BAND_RAMP
+// 2.5 px centred on the thread half-width (uH); inside the turn the whole wedge takes the band.
+vec3 lkRoute(vec3 col, int lab, vec2 lq, vec2 p, bool web) {
+  vec4 hd = RT(0);
+  int nB = int(hd.x + 0.5); int nD = int(hd.y + 0.5); int dBase = int(hd.z + 0.5);
+  if (nB <= 0 && nD <= 0) return col;
+  vec3 outc = col;
+  float ls = lq.x + lq.y; bool hasWeb = false; vec2 webC = vec2(0.0);
+  for (int di = 0; di < 128; di++) {
+    if (di >= nD) break;
+    vec4 D0 = RT(dBase + 4 * di);
+    if (length(p - D0.xy) >= D0.z) continue;
+    vec4 D1 = RT(dBase + 4 * di + 1); vec4 D2 = RT(dBase + 4 * di + 2); vec4 D3 = RT(dBase + 4 * di + 3);
+    bool mine = false;
+    for (int ai = 0; ai < 4; ai++) {
+      float ac = ai == 0 ? D1.x : ai == 1 ? D1.z : ai == 2 ? D2.x : D2.z;
+      float asf = ai == 0 ? D1.y : ai == 1 ? D1.w : ai == 2 ? D2.y : D2.w;
+      float ast = ai == 0 ? D3.x : ai == 1 ? D3.y : ai == 2 ? D3.z : D3.w;
+      if (int(ac + 0.5) != lab || !(ast > 0.0)) continue;
+      vec4 LH = LKT(lab);
+      float dd = abs(ls - asf);
+      if (LH.w > 0.5 && LH.z > 1.0) dd = min(dd, abs(LH.z - dd));
+      if (dd / ast < D0.z) { mine = true; break; }
+    }
+    if (mine) { hasWeb = true; webC = D0.xy; if (web && !(D0.w > 0.5)) outc = lkColour(lab, lq).rgb; break; }
+  }
+  float rw = 1.25 * 2.0 * uAA;
+  for (int bi = 0; bi < 256; bi++) {
+    if (bi >= nB) break;
+    vec4 H0 = RT(1 + 5 * bi); vec4 H1 = RT(2 + 5 * bi); vec4 H2 = RT(3 + 5 * bi); vec4 H3 = RT(4 + 5 * bi); vec4 H4 = RT(5 + 5 * bi);
+    if (length(p - H2.xy) > H2.w) continue;
+    int nv = int(H0.y + 0.5); int cA = int(H0.z + 0.5); int cB = int(H0.w + 0.5); int vo = int(H0.x + 0.5);
+    vec2 bA = vec2(1e20, 0.0); vec2 bB = vec2(1e20, 0.0);
+    vec4 q0 = RT(vo);
+    for (int k = 0; k < 63; k++) {
+      if (k + 1 >= nv) break;
+      vec4 q1 = RT(vo + 1 + k);
+      vec2 d = q1.xy - q0.xy;
+      vec2 w = p - q0.xy;
+      float l2 = dot(d, d);
+      float u = l2 > 1e-12 ? clamp(dot(w, d) / l2, 0.0, 1.0) : 0.0;
+      float dz = q1.z - q0.z;
+      float uz = dz > 1e-9 ? clamp(-q0.z / dz, 0.0, 1.0) : step(q0.z, 0.0);
+      if (q0.z <= 0.0) {
+        float ua = min(u, uz);
+        vec2 oa = w - d * ua;
+        float da = dot(oa, oa);
+        if (da < bA.x) bA = vec2(da, mix(q0.z, q1.z, ua));
+      }
+      if (q1.z >= 0.0) {
+        float ub = max(u, uz);
+        vec2 ob = w - d * ub;
+        float db = dot(ob, ob);
+        if (db < bB.x) bB = vec2(db, mix(q0.z, q1.z, ub));
+      }
+      q0 = q1;
+    }
+    bool nearA = bA.x <= bB.x;
+    float bd = sqrt(nearA ? bA.x : bB.x);
+    float cov = 1.0 - ss(uH - rw, uH + rw, bd);
+    bool inT = false;
+    if (H4.w > 0.5 && cB >= 0) {
+      vec2 v = p - H2.xy; float lv = length(v);
+      if (lv < H2.z && lv > 1e-6) {
+        vec2 vn = v / lv; vec2 dirA = H3.xy; vec2 dirB = H3.zw; vec2 md = H4.yz;
+        float cAm = dirA.x * md.y - dirA.y * md.x;
+        float cmB = md.x * dirB.y - md.y * dirB.x;
+        float cAv = dirA.x * vn.y - dirA.y * vn.x;
+        float cvB = vn.x * dirB.y - vn.y * dirB.x;
+        inT = cAv * cAm >= -1e-4 && cvB * cmB >= -1e-4;
+      }
+    }
+    if (inT) cov = 1.0;
+    if (cov > 0.0 && (lab == cA || lab == cB || inT || (hasWeb && webC == H2.xy))) {
+      float wB = nearA ? 0.0 : 1.0;
+      if (inT) { float da = sqrt(bA.x); float db = sqrt(bB.x); float s = max(0.5 * min(da, db), 1e-6); wB = ss(-s, s, da - db); }
+      vec3 bm = vec3(0.0); float wsum = 0.0;
+      for (int sd = 0; sd < 2; sd++) {
+        float ws = sd == 0 ? 1.0 - wB : wB;
+        if (ws <= 0.0) continue;
+        float tau = sd == 0 ? bA.y : bB.y;
+        float sArm = sd == 0 ? H1.y + H1.w * max(-tau, 0.0) : H1.z + H4.x * max(tau, 0.0);
+        float stp = abs(sd == 0 ? H1.w : H4.x);
+        vec4 AH = LKT(sd == 0 ? cA : cB);
+        float ad = abs(ls - sArm);
+        if (AH.w > 0.5 && AH.z > 1.0) ad = min(ad, abs(AH.z - ad));
+        if (!(stp > 0.0) || ad / stp > 1.25) continue;
+        vec3 sm = lkMat(cA, H1.y + H1.w * max(-tau, 0.0));
+        if (cB >= 0) sm = mix(sm, lkMat(cB, H1.z + H4.x * max(tau, 0.0)), ss(-H1.x, H1.x, tau));
+        bm += ws * sm; wsum += ws;
+      }
+      if (wsum > 0.0) outc = mix(outc, bm / wsum, cov);
+    }
+  }
+  return outc;
 }
 // K1414: the hover rim over the label's colour (paint_math kPaintAt's RIM along the run, shaped
 // across by kRimAcross from the foot distance; kRimOver's whitening). uRimA = (chain, run start,
@@ -1514,7 +1884,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 
