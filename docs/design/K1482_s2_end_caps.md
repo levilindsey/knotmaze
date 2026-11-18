@@ -125,9 +125,15 @@ FAIL, new 3, grown 0, gone 9** (`.claude/probes/K1436/out/bar/k1482s2/bar.txt`, 
   with a round end (fill look); the border look's stray is shorter. Better, relabelled, not a regression.
 - **ring (1.77, 15.26) 17 px, `rstray:ramp`: a REGRESSION in the fill look.** Base had a soft dark band across the
   thread there (a gone `vdip:plain`, 15 px); the tip shows a hard-edged rectangle of background cut into the thread's
-  fill. The border look is the same on both. Untraced at the stop line (no time left for a fix and the reruns):
-  next, trace it in the mirror (which piece wins those pixels on base and tip, and whether the sunk end piece's
-  casing or gap now cuts the over thread's fill), and fix before merging, or merge with it named.
+  fill. The border look is the same on both. Traced as far as the stop line allowed (`ring_cut.ts`, GfEval with and
+  without tipSink on the census `ring` tables, GF_HOME=1): coverage does NOT change (no hole in the mirror); the
+  tail (chain 6) used to run up through chain 2 as a band of its own, and with the sink chain 2 covers it, while
+  the tail's last few pixels at the find's centre still win. So the dark block is shading, not a cut. Inferred, not
+  checked: the composite blends two surfaces only while their key gap is under zt (`if (!(gap < zt)) continue`
+  near gf_glsl.ts:1354); the sink pushes the gap past zt in one step, so base's soft band becomes a hard edge.
+  Next: print the composite's layers and gap at that pixel on both, then either taper the sink in over the end
+  piece's last stretch (so the gap grows smoothly) or leave the gap test on the unsunk key; rerun the gate, the
+  tiles' changed sites and the bar. Fix before merging, or merge with it named.
 
 **Look question for Levi.** Where a tail used to fuse into the thread it meets, its border now stops just short of
 that thread, like an ordinary under pass (j76, j3, t25e, t26s). That is what the fix is, but it changes how a
