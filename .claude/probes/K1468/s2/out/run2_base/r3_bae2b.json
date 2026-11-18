@@ -1,0 +1,127 @@
+{
+ "when": "2026-11-18T05:50:54.498Z",
+ "SEC": 10,
+ "REDRAW": true,
+ "summary": {
+  "http://localhost:5661/?3&xp=off&am=instant&rp=gf&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill": {
+   "runs": 1,
+   "frameP50": [
+    16.1
+   ],
+   "frameP50med": 16.1,
+   "intervalP50": [
+    23.3
+   ]
+  },
+  "http://localhost:5661/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill": {
+   "runs": 1,
+   "frameP50": [
+    11.1
+   ],
+   "frameP50med": 11.1,
+   "intervalP50": [
+    17.5
+   ]
+  }
+ },
+ "runs": [
+  {
+   "round": 0,
+   "url": "http://localhost:5661/?3&xp=off&am=instant&rp=gf&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill",
+   "restMs": 20113,
+   "composites": 427,
+   "fallback": "",
+   "frameMs": {
+    "n": 426,
+    "mean": 16.208,
+    "p50": 16.1,
+    "p90": 16.9,
+    "p95": 17.5,
+    "max": 18.9
+   },
+   "submitMs": {
+    "n": 426,
+    "mean": 0.2,
+    "p50": 0.2,
+    "p90": 0.3,
+    "p95": 0.3,
+    "max": 0.7
+   },
+   "finishMs": {
+    "n": 426,
+    "mean": 16.008,
+    "p50": 15.9,
+    "p90": 16.7,
+    "p95": 17.2,
+    "max": 18.5
+   },
+   "intervalMs": {
+    "n": 424,
+    "mean": 23.464,
+    "p50": 23.3,
+    "p90": 24.6,
+    "p95": 25.8,
+    "max": 29.9
+   },
+   "framesDrawn": 426,
+   "rafFrames": 426,
+   "drawsPerFrame": 9,
+   "updateMsPerCall": 4.882,
+   "updateCalls": 427,
+   "perf": {
+    "state": "live",
+    "asleep": true
+   },
+   "contextLost": 0
+  },
+  {
+   "round": 0,
+   "url": "http://localhost:5661/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill",
+   "restMs": 32707,
+   "composites": 570,
+   "fallback": "",
+   "frameMs": {
+    "n": 569,
+    "mean": 12.747,
+    "p50": 11.1,
+    "p90": 19.7,
+    "p95": 20.1,
+    "max": 20.9
+   },
+   "submitMs": {
+    "n": 569,
+    "mean": 0.12,
+    "p50": 0.1,
+    "p90": 0.2,
+    "p95": 0.2,
+    "max": 0.3
+   },
+   "finishMs": {
+    "n": 569,
+    "mean": 12.628,
+    "p50": 11,
+    "p90": 19.6,
+    "p95": 20,
+    "max": 20.7
+   },
+   "intervalMs": {
+    "n": 567,
+    "mean": 17.556,
+    "p50": 17.5,
+    "p90": 21.2,
+    "p95": 21.7,
+    "max": 23.1
+   },
+   "framesDrawn": 569,
+   "rafFrames": 569,
+   "drawsPerFrame": 9,
+   "updateMsPerCall": null,
+   "updateCalls": 0,
+   "perf": {
+    "state": "live",
+    "asleep": true
+   },
+   "contextLost": 0
+  }
+ ]
+}

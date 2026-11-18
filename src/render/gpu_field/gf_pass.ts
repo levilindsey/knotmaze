@@ -1044,12 +1044,27 @@ const GF_U8 = `const float GF_U8[256] = float[256](${Array.from({ length: 256 },
 vec4 gfU8(highp uint w) { return vec4(GF_U8[w & 255u], GF_U8[(w >> 8) & 255u], GF_U8[(w >> 16) & 255u], GF_U8[w >> 24]); }
 `;
 
+/** K1468 s2: gf_look.ts LOOK_COMP_FS's fringe search after the generic rewrite, and its lazy form. */
+const FRINGE: [string, string][] = [
+  ["vec4 j = gfU8(texelFetch(uC, r, 0).y);", "highp uint jw = texelFetch(uC, r, 0).y;"],
+  ["float bd = 1e9;", "float bd = 1e9; ivec2 rb = q;"],
+  ["if (j.a > 0.0 && dd < bd) { bd = dd; k = j; hh = gfU8(texelFetch(uC, r, 0).z); }\n    }\n",
+    "if ((jw >> 24) != 0u && dd < bd) { bd = dd; rb = r; }\n    }\n    if (bd < 1e9) { highp uvec2 wb = texelFetch(uC, rb, 0).yz; k = gfU8(wb.x); hh = gfU8(wb.y); }\n"],
+];
+
 /** K1468: a composite over the RGBA8 targets uC (o0), uCo (o1) and uHi (o2) made to read packForm's one uint target uC. */
 export function packComp(fs: string): string {
   const lane: Record<string, string> = { uC: "x", uCo: "y", uHi: "z" };
   let out = fs.replace("uniform sampler2D uC;\n", "uniform highp usampler2D uC;\n" + GF_U8).replace("uniform sampler2D uCo;\n", "").replace("uniform sampler2D uHi;\n", "");
   out = out.replace(/texelFetch\((uC|uCo|uHi), ((?:[^(),]|\([^()]*\))+), 0\)/g, (_m, s: string, at: string) => `gfU8(texelFetch(uC, ${at}, 0).${lane[s]})`);
   out = out.replace(/textureSize\((uCo|uHi), 0\)/g, "textureSize(uC, 0)");
+  // K1468 s2: the look composite's 5x5 fringe search tests each tap's label alpha only. Converting all four
+  // bytes of 25 taps through GF_U8 doubled the composite's GPU time (0.25 vs 0.13 ms on link A, the RGBA8
+  // targets' figure); the search now tests the alpha byte and converts the chosen texel once, same output.
+  if (out.includes(FRINGE[0][0])) for (const [a, b] of FRINGE) {
+    if (!out.includes(a)) throw new Error(`packComp: the fringe search changed (${a})`);
+    out = out.replace(a, b);
+  }
   if (!out.includes("usampler2D uC;") || /\buCo\b|\buHi\b|sampler2D uC;/.test(out.replace("usampler2D uC;", ""))) throw new Error("packComp: a target read was not converted");
   return out;
 }

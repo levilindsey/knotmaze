@@ -61,6 +61,11 @@ describe("K1468 packComp", () => {
     expect(comp).toContain("vec4 k = gfU8(texelFetch(uC, q, 0).y);");
     expect(comp).toContain("vec4 hh = gfU8(texelFetch(uC, q, 0).z);");
     expect(comp).toContain("ivec2 sz = textureSize(uC, 0);");
+    // K1468 s2: the fringe search tests each tap's alpha byte and converts only the chosen texel
+    expect(comp).toContain("highp uint jw = texelFetch(uC, r, 0).y;");
+    expect(comp).toContain("if ((jw >> 24) != 0u && dd < bd) { bd = dd; rb = r; }");
+    expect(comp).toContain("if (bd < 1e9) { highp uvec2 wb = texelFetch(uC, rb, 0).yz; k = gfU8(wb.x); hh = gfU8(wb.y); }");
+    expect(comp).not.toMatch(/\bj\.a\b|k = j;/);
     // the table is k / 255 rounded to float, the RGBA8 fetch's value
     const m = /const float GF_U8\[256\] = float\[256\]\(([^)]*)\);/.exec(comp)!;
     const v = m[1].split(", ").map(Number);

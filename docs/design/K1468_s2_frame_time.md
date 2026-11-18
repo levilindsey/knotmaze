@@ -118,3 +118,46 @@ That is still under the 5 GB line, so no measurement ran.
   5. If the table read is the gap, the candidate fixes are: the exact ALU form; or reading only the
      chosen texel's bytes after the fringe loop (keep the uint word and test `(w >> 24) != 0u`); or a
      256x1 R32F lookup texture. Done 2-4 follow as the brief says.
+
+### Handoff K1468 s2 (second run), 2026-11-17
+
+Agent: claude session https://claude.ai/code/session_01SUPGULDxvE5gKXozfaFaFG, branch
+`worktree-agent-ad4db178a3a26c189`, rebased on origin/master b01cc37b. Stopped at the 2 h cap. Item 3 was not
+in scope; item 2 (pixel A/B) was not reached. Every number below was taken with another agent's Chrome on
+ports 5640-5659 sharing the GPU (rAF intervals 18-35 ms, never a quiet machine); Muse did not hold the lock.
+
+**Interleaved table** (out/run2_base, 9:31-9:52 PM, under the lock, four ABC rounds, link A = gfh=1, B = plain;
+frame p50 ms per round / comp/s per round): 8711ef35 A 19.6 22.3 17.5 16.9 (med 18.55) / 35-57 (38.2);
+B 16.3 16.0 17.1 16.6 (16.45) / (41.5). ae2b4dfb A 17.3 19.4 17.5 11.1 (17.40) / (40.5); B 17.1 16.5 19.4 16.1
+(16.80) / (40.8). dc335eab (origin/master then) A 18.2 19.3 18.3 19.2 (18.75) / (37.9); B 18.6 19.1 16.6 15.6
+(17.60) / (38.7). Round 3 had a quiet stretch: link A reached vsync on 8711 and ae2b (57 comp/s), master stayed
+at 36.
+
+**K1451 verdict**: ae2b4dfb is not slower than 8711ef35 (A -6.2% frame / +6% comp/s, B +2.1% / -1.7%): within
+the 5% bar, under contention. **K1451 build time** (`k1451_buildtime.ts 5`, under the lock): e83fa5a6 184.0 ms,
+dc335eab 197.1 ms, +7.1% (per scene -9% to +29%; a dry run outside the lock gave +5.2%).
+
+**Attribution** (out/run2_attr, rest_gpu.mjs: EXT_disjoint_timer_query GPU ms per program, under the lock,
+10:16-10:27 PM; rounds r0 and r1 clean, r2's ae2b/master runs overlapped my own warm Chrome and are dropped):
+- link A, interval p50 / composites per 10 s: ae2b4dfb 18.0, 17.9 / 561, 563; dc335eab 24.5, 24.8 / 409, 405.
+  The gap is real and large on link A (~35%), and it sits in the readPixels finish (GPU wait), not the CPU
+  submit (0.2-0.4 ms everywhere).
+- **It is not K1468's packing.** On a master-based probe build (82d7f191) the pre-K1468 RGBA8 targets
+  (`#k1468p=nopack`) ran 28.7, 28.7, 27.7 ms (346-360 comp) - as slow as the packed read (24.4, 29.0, 24.2).
+- Per program: the pass programs cost the same packed and unpacked (gf:8/6 0.15-0.20 ms; gf:3/2 4.6-5.3 ms,
+  with 16-19 ms p50s in every build from the shared GPU). The one packed cost is the look composite:
+  comp:look 0.25-0.29 ms packed vs 0.13-0.15 unpacked (ae2b4dfb, nopack) - its 5x5 fringe search ran 25
+  four-byte GF_U8 conversions. **Removed** (98af55ce): the packed search tests each
+  tap's alpha byte and converts only the chosen texel; `#k1468p=lazy` (same text) measured 0.168, 0.127,
+  0.143 ms. Same output by construction (the chosen texel and the fallback are unchanged); gf_packout.test.ts
+  pins the text.
+- So the link-A frame gap lies in what master added after ae2b4dfb besides the packing: 158f75be (K1468's
+  context-loss guard), e820cadd (K1424 route bands by fan membership, gf_look.ts +203) or 01933aa3 (K1472's
+  RGBA32F table uploads; ae2b4dfb already uploaded those as RGBA32F, so least likely). It is GPU time outside
+  the timed programs or contention-coupled, not inferred further.
+
+**Next**: bisect on link A with rest_gpu.mjs: fc520c2d (K1468 merged, before K1424) against ae2b4dfb and
+origin/master (`attr.ps1 -Jobs "bfc52=5660= bae2b=5661= bmaster=5662="`; warm each profile first with
+`--disable-gpu-watchdog` and SEC>=40 - fc520c2d's look program had not compiled after 10 min here). Then the
+same for e820cadd. Then item 2 (pixel A/B).
+Probe tools: `.claude/probes/K1468/s2/` (attr.ps1, rest_gpu.mjs, interleave.ps1, common.ps1, summarize.mjs).
