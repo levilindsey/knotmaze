@@ -1,0 +1,5 @@
+today fade 0.02 vs 1.18: 4012  vs today s0: 0
+m_pre fade 0.02 vs 1.18: 49  vs today s0: 45881
+w_pre fade 0.02 vs 1.18: 4081  vs today s0: 423
+wt2 fade 0.02 vs 1.18: 15966  vs today s0: 117390
+m fade 0.02 vs 1.18: 15998  vs today s0: 117384

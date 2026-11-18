@@ -1,0 +1,40 @@
+switched + reveal done after 6.8 s
+track {"x":1222,"y":589.4166870117188,"w":92,"h":20,"kx":1227.364583492279,"box":"0.14"} state {"fl":0.14,"rfl":0.14,"sw":false,"fb":null}
+f0 to 0 step 1 {"fl":0.06000000000000001,"rfl":0.06000000000000001,"sw":false,"fb":null}
+f1 to 0 step 2 {"fl":0.06000000000000001,"rfl":0.06000000000000001,"sw":false,"fb":null}
+f2 to 0 step 3 {"fl":0.06000000000000001,"rfl":0.06000000000000001,"sw":false,"fb":null}
+f3 to 0 step 4 {"fl":0.04000000000000001,"rfl":0.04000000000000001,"sw":false,"fb":null}
+f4 to 0 step 5 {"fl":0.04000000000000001,"rfl":0.04000000000000001,"sw":false,"fb":null}
+f5 to 0 step 6 {"fl":0.04000000000000001,"rfl":0.04000000000000001,"sw":false,"fb":null}
+f6 to 0 step 7 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f7 to 0 step 8 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f8 to 0 step 9 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f9 to 0 step 10 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f10 to 0 step 11 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f11 to 0 step 12 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f12 held at 0 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f13 held at 0 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f14 held at 0 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f15 held at 0 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f16 held at 0 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f17 held at 0 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+stop 0 box 0.02 {"fl":0.02000000000000001,"rfl":0.02000000000000001,"sw":false,"fb":null}
+f18 to 1.2 step 1 {"fl":0.10000000000000002,"rfl":0.10000000000000002,"sw":false,"fb":null}
+f19 to 1.2 step 2 {"fl":0.2,"rfl":0.2,"sw":false,"fb":null}
+f20 to 1.2 step 3 {"fl":0.3,"rfl":0.3,"sw":false,"fb":null}
+f21 to 1.2 step 4 {"fl":0.4,"rfl":0.4,"sw":false,"fb":null}
+f22 to 1.2 step 5 {"fl":0.5,"rfl":0.5,"sw":false,"fb":null}
+f23 to 1.2 step 6 {"fl":0.58,"rfl":0.58,"sw":false,"fb":null}
+f24 to 1.2 step 7 {"fl":0.7000000000000001,"rfl":0.7000000000000001,"sw":false,"fb":null}
+f25 to 1.2 step 8 {"fl":0.78,"rfl":0.78,"sw":false,"fb":null}
+f26 to 1.2 step 9 {"fl":0.88,"rfl":0.88,"sw":false,"fb":null}
+f27 to 1.2 step 10 {"fl":0.98,"rfl":0.98,"sw":false,"fb":null}
+f28 to 1.2 step 11 {"fl":1.08,"rfl":1.08,"sw":false,"fb":null}
+f29 to 1.2 step 12 {"fl":1.18,"rfl":1.18,"sw":false,"fb":null}
+f30 held at 1.2 {"fl":1.18,"rfl":1.18,"sw":false,"fb":null}
+f31 held at 1.2 {"fl":1.18,"rfl":1.18,"sw":false,"fb":null}
+f32 held at 1.2 {"fl":1.18,"rfl":1.18,"sw":false,"fb":null}
+f33 held at 1.2 {"fl":1.18,"rfl":1.18,"sw":false,"fb":null}
+f34 held at 1.2 {"fl":1.18,"rfl":1.18,"sw":false,"fb":null}
+f35 held at 1.2 {"fl":1.18,"rfl":1.18,"sw":false,"fb":null}
+stop 1.2 box 1.18 {"fl":1.18,"rfl":1.18,"sw":false,"fb":null}
