@@ -1,0 +1,19 @@
+== loopgeo
+hash f9d72040 crossing 347 loop 4.078 dist 28.8 css, 648 stations
+== dragcheck gf
+[gf] dragged page state f9d72040
+  fresh fl=0: state f9d72040
+[gf] stop 0: fadeLength 1.0408340855860843e-17 search ?3.FCAmHw8kPRcGkc&rp=gf | 0 of 4357572 px differ > 24 from the fresh load -> PASS
+  fresh fl=0.5: state 49c20566
+  fresh fl=0.5: state f9d72040
+[gf] stop 0.5: fadeLength 0.5 search ?3.FCAnS_DyQ9FwaRw&rp=gf | 75 of 4357572 px differ > 24 from the fresh load -> PASS
+  fresh fl=1.2: state 49c20566
+  fresh fl=1.2: state 49c20566
+  fresh fl=1.2: state 49c20566
+  fresh fl=1.2: state 49c20566
+[gf] stop 1.2: no fresh load reached state f9d72040 (last 49c20566)
+  fresh fl=0.14: state 49c20566
+  fresh fl=0.14: state f9d72040
+[gf] stop 0.14: fadeLength 0.14 search ?3.FHCgeSHouDSO&rp=gf | 0 of 4357572 px differ > 24 from the fresh load -> PASS
+DRAG CHECK: FAIL
+== done

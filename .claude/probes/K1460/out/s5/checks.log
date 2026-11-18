@@ -1,0 +1,55 @@
+== dragcheck gf
+  fresh fl=1.2: state 49c20566
+  fresh fl=1.2: state 49c20566
+  fresh fl=1.2: state 49c20566
+  fresh fl=1.2: state 49c20566
+[gf] stop 1.2: no fresh load reached state f9d72040 (last 49c20566)
+  fresh fl=0.14: state f9d72040
+[gf] stop 0.14: fadeLength 0.14 search ?3.FHCgeSHouDSO&rp=gf | 0 of 4357572 px differ > 24 from the fresh load -> PASS
+DRAG CHECK: FAIL
+== dragcheck gfh
+  fresh fl=0.5: state f9d72040
+  fresh fl=0.5: state 49c20566
+[gfh] stop 0.5: fadeLength 0.5 search ?3.FCAnS_DyQ9FwaRw&rp=gf&gfh=1 | 0 of 4357572 px differ > 24 from the fresh load -> PASS
+  fresh fl=1.2: state 49c20566
+[gfh] stop 1.2: fadeLength 1.2 search ?3.FCAmNF8PJD0XBpHA&rp=gf&gfh=1 | 0 of 4357572 px differ > 24 from the fresh load -> PASS
+  fresh fl=0.14: state 49c20566
+[gfh] stop 0.14: fadeLength 0.14 search ?3.FHCgeSHouDSO&rp=gf&gfh=1 | 0 of 4357572 px differ > 24 from the fresh load -> PASS
+DRAG CHECK: PASS
+== hold gf
+gf first composite at 43159 ms
+{"url":"http://localhost:5580/?3&xp=off&am=instant&rp=gf","frames":60,"gapMs":250,"drag":false,"edge":16,"xmax":0.78,"max":104371,"min":102960,"minFrame":41,"bad":[],"edges":"103329 103249 103470 103292 103262 103449 103287 103245 103360 103107 103098 103053 103353 103274 103329 103256 103318 103438 103364 103282 104371 103837 103249 103266 103660 103721 104094 103306 103307 103609 103537 103402 103442 103546 103884 103383 103185 103103 103172 103278 103215 102960 103187 103110 103432 103260 103449 103396 104300 103696 103237 103098 103414 103546 104104 103555 103155 103115 103448 103499","gf":{"passes":1307,"composites":1307,"rebuilds":2307,"fallback":""},"logs":[]}
+PASS: all 60 frames show the maze
+== hold gfh
+gf first composite at 1222 ms
+{"url":"http://localhost:5580/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1","frames":60,"gapMs":250,"drag":false,"edge":16,"xmax":0.78,"max":9559,"min":7637,"minFrame":22,"bad":[],"edges":"8319 7771 7862 8627 7666 7763 7819 7693 7685 7642 7971 8024 7725 7782 7671 8303 7914 7816 7694 8379 8275 8614 7637 7791 7815 8051 8745 7912 7757 7727 8152 8150 7770 7827 7696 7720 7811 7914 7846 7758 7793 7654 7829 7889 7837 8407 8737 8501 7643 7772 8143 7995 9559 8045 7731 7779 7810 7939 7922 7654","gf":{"passes":1820,"composites":1820,"rebuilds":309,"fallback":""},"logs":[]}
+PASS: all 60 frames show the maze
+== cold http://localhost:5580/?3&xp=off&am=instant&rp=gf
+   0.6 console.log CTXLOST
+   1.6 {"app":1,"c":0,"p":0,"r":0,"f":"","q":null,"keys":"composites=0 compileIssued=0 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+   9.9 {"app":1,"c":0,"p":0,"r":1,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+  11.0 {"app":1,"c":0,"p":0,"r":7,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+  12.0 {"app":1,"c":0,"p":0,"r":22,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+  13.1 {"app":1,"c":0,"p":0,"r":39,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+  14.1 {"app":1,"c":0,"p":0,"r":56,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+  15.2 {"app":1,"c":0,"p":0,"r":72,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+  16.2 {"app":1,"c":0,"p":0,"r":87,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+  17.2 {"app":1,"c":0,"p":0,"r":103,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+  18.2 {"app":1,"c":0,"p":0,"r":117,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+  19.2 {"app":1,"c":0,"p":0,"r":131,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FIG0&rp=gf"}
+crashpad: 0
+== cold http://localhost:5580/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1
+   0.4 console.log CTXLOST
+   1.4 {"app":1,"c":0,"p":0,"r":0,"f":"","q":null,"keys":"composites=0 compileIssued=0 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  10.6 {"app":1,"c":0,"p":0,"r":1,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  11.7 {"app":1,"c":0,"p":0,"r":10,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  12.7 {"app":1,"c":0,"p":0,"r":24,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  13.8 {"app":1,"c":0,"p":0,"r":39,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  14.8 {"app":1,"c":0,"p":0,"r":53,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  15.8 {"app":1,"c":0,"p":0,"r":67,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  16.9 {"app":1,"c":0,"p":0,"r":80,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  17.9 {"app":1,"c":0,"p":0,"r":94,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  18.9 {"app":1,"c":0,"p":0,"r":107,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+  20.0 {"app":1,"c":0,"p":0,"r":122,"f":"","q":null,"keys":"composites=0 compileIssued=1 compileReady=0 compileFirstMs=-1 compileWorker=\"\" compileWarmed=0","search":"?3.FHH1HtvQeCKFubp7gEgg&rp=gf&gfh=1"}
+crashpad: 0
+== done
