@@ -66,7 +66,9 @@ describe("K1389 look form", () => {
       const f = lookForm(src);
       expect(f).toContain("uniform float uLkF;");
       expect(f).toContain("float lkGap(float key, vec2 p, vec2 qU, int cU)");
-      expect(f).toContain("float fw = max(uLkF * max(sinT, 0.2), 2.0 * uAA);");
+      // K1458: sc = the side's joint clearance scales (margin, fade), 1 away from a fused joint
+      expect(f).toContain("float fw = max(uLkF * sc.y * max(sinT, 0.2), 2.0 * uAA);");
+      expect(f).toContain("float e = d - uH - uLkG * sc.x;");
       expect(f).toContain("float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);");
       expect(f).toContain("float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;");
       expect(f).not.toContain("CASE");

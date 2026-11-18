@@ -154,7 +154,11 @@ async function measure(geo, ref, shots) {
       const first = g.prof.findIndex((p) => p.dO > g.hOver + 0.5 / d.scale);
       if (first < 0) continue;
       const levels = (D) => {
-        const c = g.prof.map((_, i) => cov(D, i));
+        const c0 = g.prof.map((_, i) => cov(D, i));
+        // each renderer's levels against its OWN full thread (the walk's far end): gf's under colour differs from
+        // today's by a few levels, which moved a 0.9 crossing by a whole ramp on a shallow fade
+        const full = c0[c0.length - 1];
+        const c = full > 0.5 ? c0.map((v) => v / full) : c0;
         const outv = {};
         for (const L of [0.9, 0.5, 0.1]) {
           let t = null;

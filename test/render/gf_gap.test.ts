@@ -70,6 +70,32 @@ describe("K1423 gapWindow (marchUnder's perp window on polylines)", () => {
     expect(wp).toBeGreaterThan(0.7);
     expect(wp).toBeLessThan(0.95);
   });
+  it("K1458: a fused joint's room caps the window past the all-lanes exit (crossing_gaps.ts K1218 S3)", () => {
+    const under = straight(0, 0, 30, 0);
+    const s = 0.1, c = Math.sqrt(1 - s * s);
+    const over = samples([[10 - 12 * c, -12 * s], [10 + 12 * c, 12 * s]]);
+    // no joint: the eye-wall limit near 4.0 (above); a joint whose room ends at 3.5 caps the positive side there
+    const [wn, wp] = gapWindow(under, over, 10, 12, H, MARGIN, FADE, 4.5, 4.5, 1e6, 3.5);
+    expect(wp).toBeCloseTo(3.5, 5);
+    expect(wn).toBeGreaterThan(3.7);
+    // a window never ends before its all-lanes exit (~3.3), however close the joint
+    const [, wp2] = gapWindow(under, over, 10, 12, H, MARGIN, FADE, 4.5, 4.5, 1e6, 0.5);
+    expect(wp2).toBeGreaterThan(3.2);
+    expect(wp2).toBeLessThan(3.5);
+  });
+  it("K1458: the joint's clearance scales (crossing_gaps.ts clearScales): margin then fade, to their floors", () => {
+    const under = straight(0, 0, 20, 0);
+    const over = straight(10, -10, 10, 10);
+    // steep: sil = h = 0.13, cut = h + margin = 0.2; room 0.3 leaves the margin whole and the fade 0.1/0.14
+    const r1 = gapWindow(under, over, 10, 10, H, MARGIN, FADE, 4.5, 4.5, 1e6, 0.3);
+    expect(r1[2]).toBe(1); expect(r1[3]).toBe(1); // no joint on the negative side
+    expect(r1[4]).toBe(1);
+    expect(r1[5]).toBeCloseTo(0.1 / FADE, 1);
+    // room 0.15: the margin shrinks to (0.15 - 0.13) / 0.07, below its floor 0.5; the fade sits on its floor 0.45
+    const r2 = gapWindow(under, over, 10, 10, H, MARGIN, FADE, 4.5, 4.5, 1e6, 0.15);
+    expect(r2[4]).toBe(0.5);
+    expect(r2[5]).toBe(0.45);
+  });
 });
 
 describe("K1423 GfGapTable", () => {
