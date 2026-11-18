@@ -3,8 +3,10 @@
 # HOW TO RUN (from any checkout of knotmaze, pwsh 7; what K1436 s3 ran, 2026-11-17):
 #   pwsh -NoProfile -File .claude/probes/K1436/k1436_bar.ps1 -Ref <commit> [-Base <commit>=origin/master] [-HomeFlag 1|0]
 #        [-Scenes def,ring,...] [-Port 5601] [-Tag <out dir name>=<ref sha>] [-Keep]
-#   e.g. -Ref origin/master -Base origin/master -Tag self1 -Keep   (the control: must PASS)
-#        -Ref 17053a36 -Base a3a9a6b4 -HomeFlag 1 -Tag k1451s2     (K1451 stage 2's tip against its base: FAIL)
+#   RAN (s3): -Ref cc1ee890 -Base cc1ee890 -Scenes ring,def -Port 5603 -Par 2 -Tag self1 -Keep   -> PASS (new 0 grown 0
+#        gone 0); ~16 min with a cold profile (base warm 117 s, captures 270 s; ref warm 14 s, captures 80 s) plus a
+#        30 min wait on another owner's perf lock. ring's two loads froze on DIFFERENT hashes: set STRICT=1 for real runs.
+#   NOT YET RUN: -Ref 17053a36 -Base a3a9a6b4 -HomeFlag 1 -Tag k1451s2   (K1451 stage 2's tip against its base: must FAIL)
 #   It prints PASS or FAIL and exits 0 / 1. Output: .claude/probes/K1436/out/bar/<tag>/ (bar.txt: the verdict and, per
 #   scan and kind:class, the NEW finds, the finds that GREW by more than 10% (and 3 px), the finds that went away;
 #   sheet.png + sheet.txt: 4x crops of every new and grown find, base | ref, fill then border capture).

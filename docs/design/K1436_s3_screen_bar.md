@@ -108,8 +108,14 @@ counts.
 - **Item 4 (partial):**
   - The bar's control `-Ref cc1ee890 -Base cc1ee890 -Scenes ring,def -Port 5603 -Par 2 -Tag self1 -Keep`
     ran its base pass: mirror 24 s, warm 117 s, captures 270 s, screen scans 30 s, mirror scans 32 s.
-  - Its ref pass then sat behind another owner's perf lock (Muse, 20:29). The verdict is in the report.
-  - The bar now logs that wait.
+  - Its ref pass then sat behind another owner's perf lock (Muse, 20:29) until the lock went stale. The bar
+    now logs that wait.
+  - The ref pass ran warm 14 s, captures 80 s, scans 26 s.
+  - **Verdict: PASS (new 0, grown 0, gone 0).** But ring's two loads of one build froze on different
+    physics hashes: base 50dd4ffd, ref 0a0ee15e. So "a mismatch is deterministic, keep it" is FALSE.
+  - The bar should run STRICT=1, retrying until the hash matches the K868 diag, and should fail a pair
+    whose hashes differ.
+  - Self-run 2 was not run.
   - The 17053a36-against-a3a9a6b4 FAIL run was not run. It needs two more cold builds, about 25 min with
     the warm passes.
   - Fixed this stage: `-Scenes ring,def` through `pwsh -File` arrived as one string, so the bar looked for
@@ -168,7 +174,9 @@ K1436 s3 (2026-11-17), THE SCREEN SCAN ON MASTER:
 - Loads hang under load. Cold gf loads took 85-270 s, and some hung past 15 min with a lost context
   (g41_def_tw64). Cap each load (JOBMS) and retry. Close only the hung page: closing every page kills the
   parallel loads. Builds before fc520c2d also need `--disable-gpu-watchdog`.
-- Two K868 diag hashes are stale. g41_user_tw42 freezes on user_tw42.lightpaper's state on every build
-  tried, so its finds duplicate lightpaper's. The capture keeps a hash mismatch (deterministic per build)
-  unless STRICT=1.
-- The bar's control and its known-FAIL pair are not yet confirmed. See the K1436 s3 handoff.
+- The frozen state is NOT always one state per build. In the bar's control, ring froze on 50dd4ffd in one
+  load and on 0a0ee15e in the next.
+- g41_user_tw42 froze on user_tw42.lightpaper's state, so its finds duplicate lightpaper's.
+- The capture keeps a hash mismatch unless STRICT=1. A bar comparison needs STRICT=1, plus equal hashes
+  across the pair.
+- The bar's control PASSED once, on def and ring. The known-FAIL pair has not been run.

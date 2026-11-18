@@ -1,0 +1,2 @@
+PASS  new 0  grown 0  gone 0  (match radius 0.3, grow > 10% and >= 3 px)
+NOTE ring: physics hash base 50dd4ffd ref 0a0ee15e (not one state: every screen find may move)
