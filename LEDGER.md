@@ -623,11 +623,11 @@ Next free ID: K1472.
   threads (junction B, ci3 upper right, the blue kink loop at ?3); (3) a dashed dark tick across the kink loop
   at ?3 at every fade; (4) today's protect term (pr) is not ported to gf's gap window; (5) a round blob at
   junction B at fade 0. Next: bake.mjs on those crossings (missing over threads, the +-40-sample scan cap)
-  - owner: nobody since 2026-11-17 18:37 (merged; agent `a3840a23f835d4829` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `8711ef35`
-  - evidence: .claude/probes/K1460/ (stage 3's WIP and handoff: branch worktree-agent-a2d11c7ef2d27e635, tip bf05e69f, not merged: 236f8f4e tested on four spots, e1a4fea0 unverified)
-  - next: the protect term restricted to today's interval (brief item 5): needs a per-crossing protect-interval row (two floats) in gf's tables (tables.ts, gf_pack.ts: after K1451 s4 merges), applied in gf_look with no loop, cold-compiled with cap.mjs before the look is judged; hold.mjs should take EXTRA Chrome args like dragcheck.mjs; 236f8f4e is confirmed on screen only at 1068,615
-  - brief: `docs/design/K1460_s4_fade_loop.md`
+  - owner: agent `a5b5b3f6d71b848f1` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:08, 2 h cap ~21:08)
+  - branch: `worktree-agent-a5b5b3f6d71b848f1`, worktree `.claude/worktrees/agent-a5b5b3f6d71b848f1`; last commit: `6ae3e994`
+  - evidence: .claude/probes/K1460/ (out/s4 sheets; out/s5 on the agent's branch)
+  - next: stage 5 running: today's protect term as a per-crossing interval row (only if a site shows it at 4x), junction B's line, fade end and notch
+  - brief: `docs/design/K1460_s5_protect.md`
 - **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
   wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
@@ -647,22 +647,34 @@ Next free ID: K1472.
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
   band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
   with it (Handoff K1433)
-  - owner: nobody since 2026-11-17 17:05 (merged; agent `a98b5a0a1ac3be774` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `7ca0c064`
-  - evidence: .claude/probes/K1436/ (v2 scan, out/prec sheets, out/s2 stage 2)
-  - next: stage 3 once K1468 lands (cold captures died to the GPU kills): warm the profile per build, capture the 12 scenes at gfh=1 and off, capture the K1460 link on master and c5fc87d1 (out/s2/jobs_k1460.json) for the tick and the dotted line, run k1436_bar.ps1 end to end, then the 40- and 10-find precision samples; residuals: markers masked by colour (take their positions from the fabric renderer), vdip:ramp false beside white (3 of 9), no spots mode for the def seam notches
-  - brief: `docs/design/K1436_s2_gpu_scan.md`
+  - owner: agent `a383f38542edaf5e1` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:08, 2 h cap ~21:08)
+  - branch: `worktree-agent-a383f38542edaf5e1`, worktree `.claude/worktrees/agent-a383f38542edaf5e1`; last commit: `6ae3e994`
+  - evidence: .claude/probes/K1436/ (v2 scan, out/prec, out/s2; out/s3 on the agent's branch)
+  - next: stage 3 running: the 12-scene screen table, the twenty largest screen finds at gfh=1 and flag off (the junction lane's work list), the bar run end to end, precision samples
+  - brief: `docs/design/K1436_s3_screen_bar.md`
 - **K1468** · rp=gf's cold load hangs the GPU process until Chrome kills it: on a profile without the build's
   gf shaders, the first draw of each multi-target program burns the GPU main thread for 50-70 s (measured,
   watchdog off: 53 to 124 s), the watchdog kills the GPU process, the context is lost, gf recompiles and
   loops; seen on live b4e0a08e, a3a9a6b4 and b423013a, never on a warm profile. Likely Levi's "the entire maze
   blinks in and out". Fix: one target per program, plus a no-loop guard
   (docs/design/K1468_gf_cold_load_gpu_hang.md; probes .claude/probes/K1468/)
-  - owner: nobody since 2026-11-17 19:04 (merged; agent `afd07fccfe473c7f9` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `fc520c2d`
-  - evidence: `.claude/probes/K1468/`
-  - next: stage 2: (1) the frame time on the gfh=1 link (packed build 17.3-19.0 ms and 41-46 composites/s against master's 9.6-15.8 ms and 56/s; the plain gf link is within 1%): interleaved rounds under the perf lock, then attribute it (the packed write, the k/255 table read in the composite, or a lighter program set on master); (2) the pixel A/B (Done 3): the freeze lands on one of two physics hashes per link and thread edges drift at one hash, so make it repeatable and rerun the 8 pairs with 0 px controls; (3) the cold compile (84-178 s to gf's first composite, one D3DCompile of 70-90 s). Brief: Handoff K1468 in docs/design/K1468_gf_cold_load_gpu_hang.md; probes .claude/probes/K1468/ (rest.mjs, ab.mjs, cold.ps1, exact.mjs, reload.mjs)
-  - brief: `docs/design/K1468_gf_cold_load_gpu_hang.md`
+  - owner: agent `a517b983b5550575b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:08, 2 h cap ~21:08)
+  - branch: `worktree-agent-a517b983b5550575b`, worktree `.claude/worktrees/agent-a517b983b5550575b`; last commit: `6ae3e994`
+  - evidence: .claude/probes/K1468/ (rest.mjs, ab.mjs, cold.ps1, exact.mjs, reload.mjs, runs/)
+  - next: stage 2 running: the interleaved frame-time table on three builds (also K1451's owed bench and build time), the gap on the gfh=1 link, the pixel A/B, the cold compile
+  - brief: `docs/design/K1468_s2_frame_time.md`
+- **K1469** · Verify Muse 26B's K1459 fix on screen (01c72dfc, live in aad94eb7: the reveal's interior cut at
+  junctions by today's own cuts, lkJCut): only its unit test and a rest frame were checked, because pinned gf
+  reveal frames came out blank or frontier-glow only (gf's stats resetting between polls on master too:
+  K1468's context loss, or a pin and async-compile interaction since 26A, not established). Once K1468 lands:
+  k1459_cap + k1459_guard2, k1431_inkcmp counts and ghost, an instant sheet pair and the two 4x crops (today |
+  master gf | new gf) under .claude/probes/K1395/out/26B/; look at the lateral sign of lkJCut by eye; then
+  close K1459 or revert (Handoff 26B, docs/design/K1464_muse_batch26.md)
+  - owner: agent `ab2cc2513ac20a475` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-17 19:08, 1 h cap ~20:08)
+  - branch: `worktree-agent-ab2cc2513ac20a475`, worktree `.claude/worktrees/agent-ab2cc2513ac20a475`; last commit: `6ae3e994`
+  - evidence: .claude/probes/K1395/out/26B/ on the agent's branch; Muse's probes .claude/probes/K1459/ in the main checkout
+  - next: captures running: pinned reveal frames today | gf before 01c72dfc | gf now at eight junctions, the handoff's counts; then the coordinator looks and closes K1459 or reverts
+  - brief: `docs/design/K1469_reveal_cut_check.md`
 
 ## Next, in order
 
@@ -1014,13 +1026,6 @@ Every other item below waits on the trigger it names.
   MB, K1186 64, K1407 60, K863 56, K1198 43), so each agent worktree costs 0.8 GB (224 worktrees = 123 GB when
   C: filled on 2026-11-17, claude-config CC156). Stop tracking closed items' sheets (history keeps them) or
   give agent worktrees a sparse checkout; measured 2026-11-17 with git ls-tree -r -l HEAD
-- **K1469** · Verify Muse 26B's K1459 fix on screen (01c72dfc, live in aad94eb7: the reveal's interior cut at
-  junctions by today's own cuts, lkJCut): only its unit test and a rest frame were checked, because pinned gf
-  reveal frames came out blank or frontier-glow only (gf's stats resetting between polls on master too:
-  K1468's context loss, or a pin and async-compile interaction since 26A, not established). Once K1468 lands:
-  k1459_cap + k1459_guard2, k1431_inkcmp counts and ghost, an instant sheet pair and the two 4x crops (today |
-  master gf | new gf) under .claude/probes/K1395/out/26B/; look at the lateral sign of lkJCut by eye; then
-  close K1459 or revert (Handoff 26B, docs/design/K1464_muse_batch26.md)
 
 ## Residuals (known, not fixed)
 
