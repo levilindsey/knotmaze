@@ -629,11 +629,11 @@ Next free ID: K1466.
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
   slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
   docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
-  - owner: agent `a53218bf2f47c89c2` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 12:04, 2 h cap ~14:04)
-  - branch: `worktree-agent-a53218bf2f47c89c2`, worktree `.claude/worktrees/agent-a53218bf2f47c89c2`; last commit: `ae9362e3`
-  - evidence: .claude/probes/K1451/ (k1451_sev.ts variant rck1.15, out/fix_a.png, out/fix_b.png)
-  - next: build the per-pin reach window into tables.ts and the field, verify on the GPU
-  - brief: `docs/design/K1451_s2_reach_window.md`
+  - owner: agent `a7f7245249f11fd90` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 13:53, 2 h cap ~15:53)
+  - branch: `worktree-agent-a7f7245249f11fd90`, worktree `.claude/worktrees/agent-a7f7245249f11fd90`; last commit: `91432da8`
+  - evidence: .claude/probes/K1451/ (out/s2/ sheets and bar_home_new.txt on branch worktree-agent-a53218bf2f47c89c2, last commit 17053a36, unmerged: keep that worktree)
+  - next: stage 3 running (started 13:54, cap 15:54): stage 2's windows clear spots 1-8 at gfh=1 but the home-on bar census regressed (7 stray, 11 hard); crop and fix those, fade-0 crescents, spot 7 colour, build time, then GPU census and bench; merge only when the home-on census is no worse than master
+  - brief: `docs/design/K1451_s3_home_on_bar.md`
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
