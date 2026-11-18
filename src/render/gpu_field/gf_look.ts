@@ -48,6 +48,13 @@
  * read it, so the fill look is unchanged. K1447: the pulse hi is gated by lkFanWin (no pulse
  * inside a junction fan, where today's fan fills dark).
  * K1414: lkRoute draws the K81 route bands over that (GfRouteTable polylines, uRt unit 13) and suppresses gold in a routed web outside its bands.
+ * K1459 (26B): while the reveal runs, the interior solidity is cut at junctions by today's own two
+ * cuts (fabric_sdf kJunctionCut / kJunctionSideCut, border look): the FX texel 1's free pair carries
+ * each sample's per-side cut margins (world; lkJCut ramps them over one pixel), baked by GfFxTable
+ * from the renderer's fused caps and junction side-cut entries. 25B windowed the fill by distance
+ * to the nearest junction on every chain and deleted partly revealed runs; these margins are
+ * today's cuts exactly (fused ends only, wedge-facing sides only), so a run today draws keeps its
+ * stroke and only the fan's share of the interior goes.
  */
 import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, kSampleArc, kWall, kWrap, knotSection, type KChain, type KData, type KIgn } from "../paint_math";
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
@@ -921,7 +928,7 @@ export class GfDynTable {
  * K1395 (24D): the appearance reveal's colours under the look. GfFxTable bakes, per kept sample in
  * GfLookTable.positions' layout (two RGBA texels a sample), what paint_math's kFxColor / kGlow give
  * today's shader at that sample this frame: texel 0 = (rainbow progress, materialize alpha, burn age,
- * interior solidity), texel 1 = (sample index, frontier glow, 0, 0). The burn age rides to the shader,
+ * interior solidity), texel 1 = (sample index, frontier glow, left cut margin, right cut margin). The burn age rides to the shader,
  * which runs kBurn's envelope over the label's section colour with the live flicker phases (uFxPh);
  * the rainbow's stripes and white wash run there too (their across coordinate is the pixel's own).
  * Interior solidity (kComposePaint's hiA over an empty base: the stronger of the glow and, while the
@@ -937,9 +944,12 @@ export class GfFxTable {
   private ign: KIgn = { hit: false, tA: 0, cFrom: 0, dir: 1, t0: 0, rate: 1, tEnd: 0, span: 0 };
   private rgb = [0, 0, 0];
   private pOut = { pRain: 0, alpha: 1 };
+  private sScr = new Float64Array(0);
 
-  /** Each kept sample's FX fields from the renderer's reveal state, in GfLookTable.positions' layout. */
-  values(r: GfLookSource, out?: Float32Array): Float32Array {
+  /** Each kept sample's FX fields from the renderer's reveal state, in GfLookTable.positions' layout.
+   * `jn` (K1459) adds today's junction cuts: L = the junction-cut reach (paint_state's formula),
+   * caps = the renderer's g3Caps (+4 at a fused end), entries = its junctionCutEntries. */
+  values(r: GfLookSource, out?: Float32Array, jn?: { L: number; caps: ArrayLike<number> | null; entries: ReadonlyArray<{ chain: number; center: number; lo: number; hi: number; left: boolean; right: boolean }> | null } | null): Float32Array {
     const t0 = performance.now();
     const U = knotUniformValues();
     const D = r.kd;
@@ -961,6 +971,33 @@ export class GfFxTable {
       const tmp = this.tmp;
       tmp.fill(0, 0, count * 8);
       const fxHere = U.uKFx[3] > 0.5 && st > 0 && U.uKFx[2] < c.fxDone;
+      // K1459: this chain's drawn arcs, and each sample's junction cut margins (max of the
+      // fused-end margin and the covering side entries' margins, per side; -1e9 = no cut)
+      const xyJ = r.chainSamples[ch]!.positions;
+      if (this.sScr.length < count + 1) this.sScr = new Float64Array((count + 1) * 2);
+      const SJ = this.sScr;
+      SJ[0] = 0;
+      for (let k = 1; k < count; k++) { const dx = xyJ[2 * k] - xyJ[2 * k - 2]; const dy = xyJ[2 * k + 1] - xyJ[2 * k - 1]; SJ[k] = SJ[k - 1] + Math.hypot(dx, dy); }
+      let jRing = 0;
+      if (c.closed && count > 1) jRing = SJ[count - 1] + Math.hypot(xyJ[0] - xyJ[2 * count - 2], xyJ[1] - xyJ[2 * count - 1]);
+      const jEntries = jn && jn.L > 0 && jn.entries ? jn.entries.filter((e) => e.chain === ch) : [];
+      const fusedS = !!(jn && jn.L > 0 && jn.caps && jn.caps[2 * ch] >= 4);
+      const fusedE = !!(jn && jn.L > 0 && jn.caps && jn.caps[2 * ch + 1] >= 4);
+      const jMargin = (k: number, left: boolean): number => {
+        if (!jn || !(jn.L > 0)) return -1e9;
+        let m = -1e9;
+        const a = SJ[k];
+        if (fusedS) m = Math.max(m, jn.L - a);
+        if (fusedE) m = Math.max(m, jn.L - (SJ[count - 1] - a));
+        for (const e of jEntries) {
+          if (left ? !e.left : !e.right) continue;
+          let rel = a - e.center;
+          if (jRing > 0) rel -= jRing * Math.floor(rel / jRing + 0.5);
+          if (rel < e.lo || rel > e.hi) continue;
+          m = Math.max(m, Math.max(Math.abs(e.lo), Math.abs(e.hi)) - Math.abs(rel));
+        }
+        return m;
+      };
       let slot = 0;
       for (let k = 0; k < count; k++) {
         const a = kSampleArc(c, k);
@@ -992,6 +1029,8 @@ export class GfFxTable {
         tmp[o + 3] = Math.max(glow, fxHere ? this.pOut.alpha : 0);
         tmp[o + 4] = k;
         tmp[o + 5] = glow;
+        tmp[o + 6] = jMargin(k, true);
+        tmp[o + 7] = jMargin(k, false);
       }
       // compact to the kept samples and pad the tail, exactly as positions() does
       const xy = r.chainSamples[ch]!.positions;
@@ -1020,13 +1059,13 @@ export class GfFxTable {
   }
 }
 
-/** CPU twin of the look shader's lkFx over one baked sample (segment k, fraction u): (pRain, alpha, burnAge, hiA, kSample, glow). */
+/** CPU twin of the look shader's lkFx over one baked sample (segment k, fraction u): (pRain, alpha, burnAge, hiA, kSample, glow, cutMarginL, cutMarginR). */
 export function fxAt(V: ArrayLike<number>, b: number, n: number, closed: boolean, k: number, u: number): number[] {
   const last = closed ? n : n - 1;
   if (k < 0) { k = 0; u = 0; }
   if (k >= last) { k = last; u = 0; }
   const out: number[] = [];
-  for (let j = 0; j < 6; j++) {
+  for (let j = 0; j < 8; j++) {
     const A = V[(b + k) * 8 + j];
     const B = V[(b + Math.min(k + 1, last)) * 8 + j];
     out.push(A + (B - A) * u);
@@ -1580,7 +1619,7 @@ vec4 FT(int i) { return texelFetch(uFx, ivec2(i & TWM, i >> LOG), 0); }
 // K1395: chain c's baked FX at segment q (gf_look.ts GfFxTable / fxAt, lkDyn's walk over the 2-texel groups)
 vec4 lkFx(int c, vec2 q, int sub) {
   vec4 H = LKT(c);
-  if (H.z < 1.0) return sub == 0 ? vec4(0.0, 1.0, 9.0, 0.0) : vec4(0.0);
+  if (H.z < 1.0) return sub == 0 ? vec4(0.0, 1.0, 9.0, 0.0) : vec4(0.0, 0.0, -1e9, -1e9);
   bool closed = H.w > 0.5;
   int k = int(q.x); float u = q.y;
   if (!closed && F(uOV + int(F(uOCh + 3 * c).x)).z < 0.0) k -= 1;
@@ -1829,6 +1868,17 @@ vec2 lkTanS(int c, vec2 q) {
   vec2 t = mix(ta, tb, q.y); float l = length(t);
   return l > 1e-6 ? t / l : lkTan(c, q.x);
 }
+// K1459: today's junction cuts over the baked per-side margins (fabric_sdf kJunctionCut /
+// kJunctionSideCut): 1 outside, 0 deep inside the fan's share, a one-pixel ramp at the edge.
+// The pixel's side is the sign of its lateral offset from the label's centreline, as the
+// ribbon mesh's vUV.y side is (left = the entry's left, chain terms).
+float lkJCut(int c, vec2 q, vec2 p, vec4 f1) {
+  vec2 tn = lkTan(c, q.x);
+  float sd = dot(p - lkFoot(c, q), vec2(-tn.y, tn.x));
+  float mg = sd < 0.0 ? f1.z : f1.w;
+  if (mg < -1e8) return 1.0;
+  return 1.0 - clamp(mg / max(2.0 * uAA, 1e-5) + 0.5, 0.0, 1.0);
+}
 // the cut at distance d from an over centreline (gap_mask.ts gapKeepAt's ramp), inside today's window
 // (K1423: the cut lives only inside the window marched along the under thread, and its fade part
 // dissolves over the window's last half fade of arc)
@@ -1922,7 +1972,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 

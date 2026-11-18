@@ -89,6 +89,28 @@ describe("K1395 gf FX table", () => {
     expect(fxAt(V, 0, N, false, 4, 0)[1]).toBe(0);
     expect(fxAt(V, 0, N, false, 4, 0)[3]).toBe(0);
   });
+  it("K1459: the FX bake carries today's junction cut margins (fused ends, wedge sides)", () => {
+    setU(4, 1.2, 1.2);
+    // no junction data: no cut anywhere
+    let V = new GfFxTable().values(rSrc);
+    for (let k = 0; k < N; k++) { expect(fxAt(V, 0, N, false, k, 0)[6]).toBe(-1e9); expect(fxAt(V, 0, N, false, k, 0)[7]).toBe(-1e9); }
+    // start fused (cap +4), reach 1: margin = 1 - arc at the start, on both sides
+    const caps = new Int32Array([4, 0]);
+    V = new GfFxTable().values(rSrc, undefined, { L: 1, caps, entries: [] });
+    expect(fxAt(V, 0, N, false, 0, 0)[6]).toBeCloseTo(1, 5);
+    expect(fxAt(V, 0, N, false, 0, 0)[7]).toBeCloseTo(1, 5);
+    expect(fxAt(V, 0, N, false, 2, 0)[6]).toBeCloseTo(-1, 5);
+    // a left-only side entry at arc 2, window [0, 1]: left margin peaks at the centre, right keeps the end margin
+    V = new GfFxTable().values(rSrc, undefined, { L: 1, caps, entries: [{ chain: 0, center: 2, lo: 0, hi: 1, left: true, right: false }] });
+    expect(fxAt(V, 0, N, false, 2, 0)[6]).toBeCloseTo(1, 5);
+    expect(fxAt(V, 0, N, false, 3, 0)[6]).toBeCloseTo(0, 5);
+    expect(fxAt(V, 0, N, false, 2, 0)[7]).toBeCloseTo(-1, 5);
+    expect(fxAt(V, 0, N, false, 4, 0)[6]).toBeCloseTo(-3, 5);
+    // the shader cuts the interior solidity by the pixel-side margin, and only under the reveal
+    const rf = lookForm(revealForm(gfFs(false, true)));
+    expect(rf).toContain("float lkJCut(int c, vec2 q, vec2 p, vec4 f1)");
+    expect(rf).toContain("lkHi = f0.w * lkJCut(lab, lq, p, f1);");
+  });
   it("the reveal table's width is the mask times the rainbow swell; its mask is untouched", () => {
     setU(1, 1.2, 1.2);
     const T = new GfRevealTable();
@@ -119,7 +141,7 @@ describe("K1395 gf FX table", () => {
       expect(f).toContain("uniform highp sampler2D uFx;");
       expect(f).toContain("lkBurn(lkCo.rgb");
       expect(f).toContain("lkRainbow(lkCo.rgb");
-      expect(f).toContain("lkHi = f0.w;");
+      expect(f).toContain("lkHi = f0.w * lkJCut(lab, lq, p, f1);");
       expect(s).not.toContain("uFx");
     }
     expect(LOOK_COMP_FS).toContain("uniform float uRvFx;");
@@ -129,7 +151,7 @@ describe("K1395 gf FX table", () => {
     const rf = lookForm(revealForm(gfFs(false, true)));
     // The baked word is (pRain, alpha, burnAge, solidity): alpha (f0.y) scales ink/cov,
     // burn reads the age (f0.z), solidity rides f0.w.
-    expect(rf).toContain("ink *= f0.y; cov *= f0.y; lkHi = f0.w;");
+    expect(rf).toContain("ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1);");
     expect(rf).toContain("lkBurn(lkCo.rgb, f0.z, f1.x");
     expect(rf).toContain("max(rvM(lab, lkArc(lab, lq)), 1e-6)");
     expect(lookForm(gfFs(false, true))).not.toContain("rvM(lab, lkArc");

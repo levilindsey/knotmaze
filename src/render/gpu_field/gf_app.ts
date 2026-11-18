@@ -625,7 +625,13 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     const r = ctx.scene.renderer;
     if (!r || !fxTab || lkKey < 0 || !pass?.lookable || opts().look === false) return null;
     const src = r as unknown as GfPaintSource;
-    return fxTab.values({ kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples }, fxPool.pop());
+    // K1459: today's junction cuts for the FX bake (paint_state's reach formula over the
+    // renderer's live style; the caps and side entries ride the same renderer)
+    const xr = r as unknown as { style: { threadWidth: number }; cuspRadius: number; FILLET_REACH_PER_HALF: number; g3Caps?: ArrayLike<number>; junctionCutEntries?: ReadonlyArray<{ chain: number; center: number; lo: number; hi: number; left: boolean; right: boolean }> };
+    const jfh = xr.style.threadWidth / 2;
+    const jL = jfh * xr.FILLET_REACH_PER_HALF * xr.cuspRadius;
+    const jn = xr.cuspRadius > 0.05 && jL > jfh * 0.97 * 0.3 ? { L: jL, caps: xr.g3Caps ?? null, entries: xr.junctionCutEntries ?? null } : null;
+    return fxTab.values({ kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples }, fxPool.pop(), jn);
   };
   const fxShow = (P: Float32Array | null): void => {
     if (!P) return;
