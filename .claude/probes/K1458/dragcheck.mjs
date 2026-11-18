@@ -24,17 +24,41 @@ try {
   await page.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; });
   await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
   const link = `${base}/?3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&fl=${start}&rp=gf${mode === "gfh" ? "&gfh=1" : ""}`;
-  await page.goto(link, { waitUntil: "load", timeout: 900000 });
-  await page.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
-  await page.waitForFunction(() => (globalThis.__knotGf?.stats?.composites ?? 0) > 0, { timeout: 900000, polling: 300 });
-  await page.evaluate(async (t) => {
-    await window.__knotPhysFreeze(true);
-    await window.__knotStepUntil(t);
-    const r = window.__knotRenderer();
-    r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0;
-    window.__knotLoop?.({ continuous: true });
-  }, SIMT);
-  await sleep(2500);
+  // two loads of one link can settle in different states (fade.mjs's shots alternate between two hashes),
+  // so each stop's reference is a fresh load at that fade in the dragged page's state, retried until it matches
+  const prep = async (pg, url) => {
+    await pg.goto(url, { waitUntil: "load", timeout: 900000 });
+    await pg.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
+    await pg.waitForFunction(() => (globalThis.__knotGf?.stats?.composites ?? 0) > 0, { timeout: 900000, polling: 300 });
+    const h = await pg.evaluate(async (t) => {
+      await window.__knotPhysFreeze(true);
+      await window.__knotStepUntil(t);
+      const r = window.__knotRenderer();
+      r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0;
+      window.__knotLoop?.({ continuous: true });
+      const d = await window.__knotPhysDump();
+      const hh = d?.hashes ?? d; return String(hh?.all ?? JSON.stringify(hh).slice(0, 80));
+    }, SIMT);
+    await sleep(2500);
+    return h;
+  };
+  const linkAt = (fl) => `${base}/?3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&fl=${fl}&rp=gf${mode === "gfh" ? "&gfh=1" : ""}`;
+  const dragHash = await prep(page, link);
+  console.log(`[${mode}] dragged page state ${dragHash}`);
+  const fresh = async (fl) => {
+    const p2 = await browser.newPage();
+    try {
+      await p2.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; });
+      await p2.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
+      const hash = await prep(p2, linkAt(fl));
+      const c0 = await p2.evaluate(() => { globalThis.__knotGfOpts = { ...(globalThis.__knotGfOpts ?? {}), redraw: true }; return globalThis.__knotGf.stats.composites; });
+      await p2.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 60000, polling: 100 }, c0);
+      await p2.mouse.move(5, 5); await sleep(600);
+      const png = await p2.screenshot({ type: "png" });
+      console.log(`  fresh fl=${fl}: state ${hash}`);
+      return { hash, png };
+    } finally { await p2.close(); await page.bringToFront(); }
+  };
   const rect = async () => page.evaluate(() => {
     const lab = [...document.querySelectorAll(".tp-lblv_l")].find((e) => e.textContent.startsWith("Crossing fade"));
     if (!lab) return null;
@@ -66,8 +90,14 @@ try {
     });
     const png = await page.screenshot({ type: "png" });
     writeFileSync(join(fadeDir, `drag_${mode}_${v}.png`), png);
-    let refB64;
-    try { refB64 = readFileSync(join(fadeDir, `shot_${mode}_${v}.png`)).toString("base64"); } catch { console.log(`no shot_${mode}_${v}.png in ${fadeDir}`); failed = true; continue; }
+    let refB64 = null, refHash = null;
+    for (let tr = 0; tr < 4 && refB64 === null; tr++) {
+      const f = await fresh(v);
+      refHash = f.hash;
+      if (f.hash === dragHash) refB64 = f.png.toString("base64");
+    }
+    if (refB64 === null) { console.log(`[${mode}] stop ${v}: no fresh load reached state ${dragHash} (last ${refHash})`); failed = true; continue; }
+    writeFileSync(join(fadeDir, `dragref_${mode}_${v}.png`), Buffer.from(refB64, "base64"));
     const cmp = await page.evaluate(async (a, b, panel, dsf, tol) => {
       const load = (b64) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = "data:image/png;base64," + b64; });
       const img = async (b64) => { const im = await load(b64); const cv = document.createElement("canvas"); cv.width = im.width; cv.height = im.height; const cx = cv.getContext("2d", { willReadFrequently: true }); cx.drawImage(im, 0, 0); return cx.getImageData(0, 0, im.width, im.height); };

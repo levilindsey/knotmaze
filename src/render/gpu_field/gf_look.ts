@@ -612,7 +612,7 @@ export class GfGapTable {
           const off = offOf(k);
           const v = (off >= 0 ? wp : wn) - Math.abs(off);
           if (!(v > -GAP_SLOT_OUT)) break;
-          if (v < tmp[k]) continue;
+          if (Math.fround(v) < tmp[k]) continue; // tmp is float32: its own window rounded up must still win
           const ux = su.positions[2 * k], uy = su.positions[2 * k + 1];
           const d2 = (s: number): number => {
             gapPointAt(so, so.closed ? ((s % so.total) + so.total) % so.total : s, gpt);
