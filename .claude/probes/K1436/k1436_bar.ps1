@@ -45,6 +45,8 @@ param(
   [switch]$Keep
 )
 $ErrorActionPreference = "Stop"
+# pwsh -File passes "-Scenes ring,def" as ONE string: split it
+$Scenes = @($Scenes | ForEach-Object { $_ -split "," } | Where-Object { $_ })
 $probeDir = $PSScriptRoot
 $repoTop = (git -C $probeDir rev-parse --show-toplevel).Trim()
 $mainNm = "C:\Users\lsl\Repositories\knotmaze\node_modules"

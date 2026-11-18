@@ -1,0 +1,10 @@
+n	sheet	row	scene	kind:cls	x	y	site	px
+1	1	1	g41_user_tw64_h0	rstray:tie	8.474	13.587	j74	21
+2	1	2	g41_def_tw42_h1	rstray:ramp	12.690	11.699	j166	18
+3	1	3	g41_def_tw42_h0	rstray:ramp	12.690	11.699	j166	18
+4	1	4	user_tw42.lightpaper_h0	rstray:tie	5.774	2.940	j29	49
+5	1	5	user_tw42.lightpaper_h0	rstray:ramp	16.699	5.616	j1	15
+6	1	6	user_tw42.lightpaper_h1	rstray:ramp	16.699	5.616	j1	15
+7	1	7	user_tw42.lightpaper_h1	rstray:tie	5.774	2.940	j29	49
+8	1	8	muse_hash_h0	rstray:tie	30.130	11.834	j115	8
+9	2	1	g41_user_tw64_h0	rstray:tie	18.973	10.378	j46	19
