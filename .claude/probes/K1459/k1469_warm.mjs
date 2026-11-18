@@ -10,7 +10,7 @@ try {
   const t0 = Date.now(); let last = "", stable = 0;
   while ((Date.now() - t0) / 1000 < +maxS) {
     const s = await page.evaluate(() => { const g = globalThis.__knotGf?.stats; return g ? { i: g.compileIssued, r: g.compileReady, c: g.composites, first: g.compileFirstMs, sw: g.switchedMs, fb: g.fallback, lost: window.__lost, rv: window.__knotReveal?.()?.clock ?? null } : null; });
-    if (s && s.i === s.r) { if (++stable >= 6) break; } else stable = 0; const j = JSON.stringify(s); if (j !== last) console.log(Math.round((Date.now() - t0) / 1000), j); last = j;
+    if (s && s.i === s.r && s.i >= 6) { if (++stable >= 6) break; } else stable = 0; const j = JSON.stringify(s); if (j !== last) console.log(Math.round((Date.now() - t0) / 1000), j); last = j;
     await new Promise((r) => setTimeout(r, 2000));
   }
 } finally { await browser.close(); }

@@ -38,7 +38,7 @@ try {
     const url = `${base}/?${link}${am ? `&am=${am}` : ""}&snd=none&phw=0&fw=0${mode === "gf" ? "&rp=gf" : ""}`;
     await page.goto(url, { waitUntil: "load", timeout: 60000 });
     await page.bringToFront();
-    if (mode === "gf") {
+    if (mode === "gf" && !process.env.NOWARM) {
       const tw = Date.now();
       await page.waitForFunction(() => (globalThis.__knotGf?.stats?.composites ?? 0) > 0, { timeout: 900000, polling: 500 });
       console.log(`${tag} gf first composite (load 1) after ${((Date.now() - tw) / 1000).toFixed(0)} s, lost ${await page.evaluate(() => window.__lost)}`);
@@ -57,7 +57,7 @@ try {
         const step = () => {
           const rv = window.__knotReveal();
           if (!rv || rv.done) return res({ ok: false, clock: rv?.clock ?? null });
-          if (rv.clock >= t - 1e-6 || t === 0) return res({ ok: window.__knotRenderer().revealPin(Math.max(t, 1e-4)), clock: rv.clock });
+          if (true) return res({ ok: window.__knotRenderer().revealPin(Math.max(t, 1e-4)), clock: rv.clock });
           requestAnimationFrame(step);
         };
         step();
@@ -65,12 +65,12 @@ try {
       await sleep(t === 0 ? 900 : 700);
       let gst = null;
       if (mode === "gf") {
-        for (let k = 0; k < 120; k++) {
+        for (let k = 0; k < 500; k++) {
           const a = await page.evaluate(() => { const g = globalThis.__knotGf?.stats; return { c: g?.composites ?? 0, i: g?.compileIssued ?? 0, r: g?.compileReady ?? 0, rv: g?.rvPasses ?? 0 }; });
           await sleep(400);
           const b = await page.evaluate(() => { const g = globalThis.__knotGf?.stats; return { c: g?.composites ?? 0, i: g?.compileIssued ?? 0, r: g?.compileReady ?? 0, rv: g?.rvPasses ?? 0 }; });
           gst = { ...b, dc: b.c - a.c, drv: b.rv - a.rv, waitS: +(k * 0.4).toFixed(1) };
-          if (b.c > a.c && b.i - b.r <= 1 && k >= 3) break;
+          if (b.c > a.c && b.r >= 2 && k >= 3) break;
         }
         await sleep(500);
       }
