@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1459.
+Next free ID: K1460.
 
 ## Waiting on Levi
 
@@ -958,6 +958,11 @@ Every other item below waits on the trigger it names.
 - **K1457** · every gf brief's Done list (Muse and agents) runs the ordinary-load guard: node
   .claude/probes/K1450/hold.mjs <url> <outDir> <profileDir> 60 250 5000 on ?3&xp=off&am=instant&rp=gf and the
   border link, no prp=off / snd=none; forced-frame probes missed a blink that stood since 2026-11-12
+- **K1459** · K1431 follow-up: 25B's junction window (b42188db) is reverted in 0a4482e9: it met the ink count
+  by dropping thread runs today's reveal draws as thin strokes (crop_def_f5_new.png, crop_jn_f4_new.png under
+  .claude/probes/K1395/out/25B/). The next run's bar is per-thread, not a pixel count: each partly revealed
+  run gf draws has today's stroke width within 1 px and no run today draws is missing; Handoff 25B's mechanism
+  (today hands the fill to the fan rim inside the junction cut) stands
 
 ## Residuals (known, not fixed)
 
