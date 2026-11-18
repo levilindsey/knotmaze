@@ -670,10 +670,10 @@ Next free ID: K1473.
   k1459_cap + k1459_guard2, k1431_inkcmp counts and ghost, an instant sheet pair and the two 4x crops (today |
   master gf | new gf) under .claude/probes/K1395/out/26B/; look at the lateral sign of lkJCut by eye; then
   close K1459 or revert (Handoff 26B, docs/design/K1464_muse_batch26.md)
-  - owner: agent `ab2cc2513ac20a475` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-17 19:08, 1 h cap ~20:08)
-  - branch: `worktree-agent-ab2cc2513ac20a475`, worktree `.claude/worktrees/agent-ab2cc2513ac20a475`; last commit: `6ae3e994`
-  - evidence: .claude/probes/K1395/out/26B/ on the agent's branch; Muse's probes .claude/probes/K1459/ in the main checkout
-  - next: captures running: pinned reveal frames today | gf before 01c72dfc | gf now at eight junctions, the handoff's counts; then the coordinator looks and closes K1459 or reverts
+  - owner: nobody since 2026-11-17 19:56 (agent `ab2cc2513ac20a475` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-17 19:08, 1 h cap ~20:08); stopped at its 1 h cap about 20:00: gf's reveal draws no thread ink on master (pinned and live, all programs ready, link b.FMKB4DIQ), so the cut cannot be judged)
+  - branch: `worktree-agent-ab2cc2513ac20a475`, worktree `.claude/worktrees/agent-ab2cc2513ac20a475`; last commit: `b1118def`
+  - evidence: .claude/probes/K1395/out/26B/ (M_def_f4_whole.png, pw_live.png), .claude/probes/K1459/k1469_pinwatch.mjs, k1469_live.mjs
+  - next: after K1472 restores the reveal's ink: rerun the brief's three-way captures (today | 01c72dfc~1 | master), the k1459_cap / k1459_guard2 / k1431_inkcmp counts and the per-spot verdicts; then close K1459 or revert 01c72dfc
   - brief: `docs/design/K1469_reveal_cut_check.md`
 - **K1472** · rp=gf on Levi's own link (`?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1`: the trace/burn reveal plays,
   unlike every checked link). Live fc520c2d: no blink, but gf needs two programs before it composes (cold
@@ -682,7 +682,7 @@ Next free ID: K1473.
   - owner: agent `a2e3c83320287ebff` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:53, 2 h cap ~21:53)
   - branch: `worktree-agent-a2e3c83320287ebff`, worktree `.claude/worktrees/agent-a2e3c83320287ebff`; last commit: `e820cadd`
   - evidence: .claude/probes/K1472/, .claude/probes/K1468/gfshots.mjs
-  - next: the brief's Do 1-4: today's renderer on the link as the bar, gf beside it at matched reveal times, fix what is gf's, the two-program wait
+  - next: first: rp=gf's reveal draws no thread ink on master on any link (K1469's sheets; Muse says b42188db, before K1456's async compile, draws it): bisect, fix, show today | master gf | fixed gf at pinned reveal times; then the brief's Do 1-4
   - brief: `docs/design/K1472_gf_levis_link.md`
 
 ## Next, in order
