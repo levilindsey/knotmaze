@@ -136,9 +136,28 @@ export const GF_REACH_CAP = 10;
  * the walk returns gap). An open chain's walk holds its end point past the end (chainAt clamps), as the probe did.
  * Returns the last arc still inside (0 = the first step is out).
  */
-export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0" | "vx" | "vy" | "vs">, c: number, s0: number, dir: number, p: number, sp: number, h: number, gap: number, from = 0): number {
+export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0" | "vx" | "vy" | "vs">, c: number, s0: number, dir: number, p: number, sp: number, h: number, gap: number, from = 0, prep?: Map<number, { mx: Float64Array; my: Float64Array; hl: Float64Array }>): number {
   const step = GF_REACH_STEP * h; const cap = GF_REACH_CAP * h; const sep = GF_REACH_SEP * h; const sep2 = sep * sep;
+  const vx = T.vx; const vy = T.vy; const vs = T.vs;
   const v0 = T.cV0[p]; const nseg = T.cNV[p] - 1; const closed = T.cClosed[p] === 1;
+  // K1451 26E: with a prep map (one per build, from the caller), each partner chain's segment midpoints and
+  // half-lengths are built once and reused by every walk on that chain; the stretch search rejects a segment
+  // whose midpoint is already too far for it to beat the best distance (|Q - mid| - halfLen lower-bounds the
+  // segment distance; the 1e-9 margin sits far above the computations' rounding). Rejected segments keep
+  // dd = Infinity, so d and kp - which update only on dd < d, in scan order - are bit-identical.
+  let smx: Float64Array | null = null; let smy: Float64Array | null = null; let shl: Float64Array | null = null;
+  if (prep) {
+    const got = prep.get(p);
+    if (got) { smx = got.mx; smy = got.my; shl = got.hl; }
+    else {
+      smx = new Float64Array(nseg); smy = new Float64Array(nseg); shl = new Float64Array(nseg);
+      for (let k = 0; k < nseg; k++) {
+        const v = v0 + k; const dx = vx[v + 1] - vx[v]; const dy = vy[v + 1] - vy[v];
+        smx[k] = vx[v] + dx / 2; smy[k] = vy[v] + dy / 2; shl[k] = 0.5 * Math.sqrt(dx * dx + dy * dy);
+      }
+      prep.set(p, { mx: smx, my: smy, hl: shl });
+    }
+  }
   if (nseg < 1) return 0;
   // the partner's segment holding sp
   let u = sp;
@@ -149,9 +168,32 @@ export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | 
   let kp = lo - v0;
   const Q = { x: 0, y: 0, tx: 0, ty: 0 };
   const segD2 = (k: number): number => {
-    const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
+    const v = v0 + k; const ax = vx[v]; const ay = vy[v]; const dx = vx[v + 1] - ax; const dy = vy[v + 1] - ay;
     const l2 = dx * dx + dy * dy; const t = l2 > 0 ? Math.min(1, Math.max(0, ((Q.x - ax) * dx + (Q.y - ay) * dy) / l2)) : 0;
     const ex = ax + dx * t - Q.x; const ey = ay + dy * t - Q.y; return ex * ex + ey * ey;
+  };
+  // K1451 26E: Q's point on chain c, walked segment by segment instead of chainAtInto's binary search per step.
+  // The walk keeps the segment chainAtInto would find (vs is non-decreasing; a wrap re-searches), then applies
+  // its own interpolation, so Q is bit-identical; only its unused tangent is not recomputed.
+  const cv0 = T.cV0[c]; const cnv = T.cNV[c]; const cClosed = T.cClosed[c] === 1; const cLen = T.cLen[c]; const cs0 = T.cS0[c];
+  const lastV = cv0 + cnv - 1;
+  let kc = -1; let prevU = NaN;
+  const setQ = (t: number): void => {
+    let uu = s0 + dir * t;
+    if (cClosed) { uu = (uu - cs0) % cLen; if (uu < 0) uu += cLen; uu += cs0; }
+    if (kc < 0 || Math.abs(uu - prevU) > 2 * step) {
+      let l = cv0; let hh = lastV;
+      if (uu <= vs[l]) hh = l + 1; else if (uu >= vs[hh]) l = hh - 1;
+      else while (hh - l > 1) { const m = (l + hh) >> 1; if (vs[m] <= uu) l = m; else hh = m; }
+      kc = l;
+    } else if (uu <= vs[cv0]) kc = cv0;
+    else if (uu >= vs[lastV]) kc = lastV - 1;
+    else { while (kc + 1 < lastV && vs[kc + 1] <= uu) kc++; while (vs[kc] > uu) kc--; }
+    prevU = uu;
+    const ax = vx[kc]; const ay = vy[kc]; const dx = vx[kc + 1] - ax; const dy = vy[kc + 1] - ay;
+    const L = vs[kc + 1] - vs[kc];
+    const tt = L > 0 ? Math.min(1, Math.max(0, (uu - vs[kc]) / L)) : 0;
+    Q.x = ax + dx * tt; Q.y = ay + dy * tt;
   };
   const prev = (k: number): number => (k > 0 ? k - 1 : closed ? nseg - 1 : -1);
   const next = (k: number): number => (k + 1 < nseg ? k + 1 : closed ? 0 : -1);
@@ -165,7 +207,7 @@ export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | 
   for (let i = i0; ; i++) {
     const t = i * step;
     if (t > lim) return lim < cap ? gap : r;
-    chainAtInto(T, c, s0 + dir * t, Q);
+    setQ(t);
     let d = segD2(kp);
     for (let guard = 0; guard < nseg; guard++) {
       const km = prev(kp); const kn = next(kp);
@@ -186,17 +228,37 @@ export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | 
       let a = v0; let z = v0 + nseg;
       if (w <= T.vs[a]) z = a + 1; else if (w >= T.vs[z]) a = z - 1;
       else while (z - a > 1) { const m = (a + z) >> 1; if (T.vs[m] <= w) a = m; else z = m; }
-      for (let guard = 0; guard <= nseg; guard++) {
-        const s0a = T.vs[a] + off; if (s0a >= ue) break;
-        const L = T.vs[a + 1] - T.vs[a];
-        const ta = L > 0 ? Math.max(0, (ub - s0a) / L) : 0; const tb = L > 0 ? Math.min(1, (ue - s0a) / L) : 1;
-        const ax = T.vx[a]; const ay = T.vy[a]; const dx = T.vx[a + 1] - ax; const dy = T.vy[a + 1] - ay; const l2 = dx * dx + dy * dy;
-        const tt = l2 > 0 ? Math.min(tb, Math.max(ta, ((Q.x - ax) * dx + (Q.y - ay) * dy) / l2)) : 0;
-        const ex = ax + dx * tt - Q.x; const ey = ay + dy * tt - Q.y; const dd = ex * ex + ey * ey;
-        if (dd < d) { d = dd; kp = a - v0; }
-        if (a + 1 < v0 + nseg) a++;
-        else if (closed) { a = v0; off += T.cLen[p]; }
-        else break;
+      {
+        let firstSeg = true;
+        let sqrtD = Math.sqrt(d);
+        let kk = a - v0;
+        for (let guard = 0; guard <= nseg; guard++) {
+          const s0a = vs[a] + off; if (s0a >= ue) break;
+          let dd: number;
+          if (smx && smy && shl) {
+            const hl = shl[kk]; const dmx = Q.x - smx[kk]; const dmy = Q.y - smy[kk];
+            if (dmx * dmx + dmy * dmy > (d + hl * (2 * sqrtD + hl)) * (1 + 1e-9)) dd = Infinity;
+            else {
+              const L = vs[a + 1] - vs[a];
+              const ax = vx[a]; const ay = vy[a]; const dx = vx[a + 1] - ax; const dy = vy[a + 1] - ay;
+              const ta = firstSeg && L > 0 ? Math.max(0, (ub - s0a) / L) : 0; const tb = L > 0 ? Math.min(1, (ue - s0a) / L) : 1;
+              const l2 = dx * dx + dy * dy;
+              const tt = l2 > 0 ? Math.min(tb, Math.max(ta, ((Q.x - ax) * dx + (Q.y - ay) * dy) / l2)) : 0;
+              const ex = ax + dx * tt - Q.x; const ey = ay + dy * tt - Q.y; dd = ex * ex + ey * ey;
+            }
+          } else {
+            const L = vs[a + 1] - vs[a];
+            const ta = firstSeg && L > 0 ? Math.max(0, (ub - s0a) / L) : 0; const tb = L > 0 ? Math.min(1, (ue - s0a) / L) : 1;
+            const ax = vx[a]; const ay = vy[a]; const dx = vx[a + 1] - ax; const dy = vy[a + 1] - ay; const l2 = dx * dx + dy * dy;
+            const tt = l2 > 0 ? Math.min(tb, Math.max(ta, ((Q.x - ax) * dx + (Q.y - ay) * dy) / l2)) : 0;
+            const ex = ax + dx * tt - Q.x; const ey = ay + dy * tt - Q.y; dd = ex * ex + ey * ey;
+          }
+          firstSeg = false;
+          if (dd < d) { d = dd; kp = kk; sqrtD = Math.sqrt(d); }
+          if (a + 1 < v0 + nseg) { a++; kk++; }
+          else if (closed) { a = v0; kk = 0; off += T.cLen[p]; }
+          else break;
+        }
       }
     }    if (d > sep2) return r;
     r = t;
@@ -519,6 +581,7 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
   const pinWL = new Float64Array(nPin).fill(win); const pinWR = new Float64Array(nPin).fill(win);
   if (opts.home ?? GF_HOME) {
     const RW = { cV0, cNV, cClosed, cLen, cS0, vx, vy, vs };
+    const reachPrep = new Map<number, { mx: Float64Array; my: Float64Array; hl: Float64Array }>();
     let q = 0;
     pinsOf.forEach((P, c) => {
       const n = P.length;
@@ -528,8 +591,8 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
         let gL = Infinity; let gR = Infinity;
         if (cClosed[c]) { gL = n > 1 ? p.s - P[(i + n - 1) % n].s : cLen[c]; if (gL <= 0) gL += cLen[c]; gR = n > 1 ? P[(i + 1) % n].s - p.s : cLen[c]; if (gR <= 0) gR += cLen[c]; }
         else { if (i > 0) gL = p.s - P[i - 1].s; if (i + 1 < n) gR = P[i + 1].s - p.s; }
-        pinWL[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, -1, p.pc, p.ps, h, gL, win / GF_REACH_K));
-        pinWR[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, 1, p.pc, p.ps, h, gR, win / GF_REACH_K));
+        pinWL[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, -1, p.pc, p.ps, h, gL, win / GF_REACH_K, reachPrep));
+        pinWR[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, 1, p.pc, p.ps, h, gR, win / GF_REACH_K, reachPrep));
       }
     });
   }
