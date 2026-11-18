@@ -1011,7 +1011,17 @@ export function packForm(src: string): string {
   return src.slice(0, head) + PACK_DECL + src.slice(b).replace(PACK_END, PACK_WRITE + PACK_END);
 }
 
-const GF_U8 = `const float GF_U8[256] = float[256](${Array.from({ length: 256 }, (_, k) => { const s = Math.fround(k / 255).toPrecision(9); return /[.e]/.test(s) ? s : `${s}.0`; }).join(", ")});
+const K1468P = (globalThis as { __k1468p?: string }).__k1468p ?? ""; // PROBE (revert)
+const GF_U8 = K1468P === "div" ? `vec4 gfU8(highp uint w) { return vec4(uvec4(w & 255u, (w >> 8) & 255u, (w >> 16) & 255u, w >> 24)) / 255.0; }
+` : K1468P === "alu" ? `highp float gfK(highp uint k) {
+  if (k == 0u) return 0.0;
+  if (k == 255u) return 1.0;
+  int e = findMSB(k) - 8;
+  highp uint m = ((k << uint(23 - e)) + 127u) / 255u;
+  return uintBitsToFloat((uint(127 + e) << 23) + m - 0x800000u);
+}
+vec4 gfU8(highp uint w) { return vec4(gfK(w & 255u), gfK((w >> 8) & 255u), gfK((w >> 16) & 255u), gfK(w >> 24)); }
+` : `const float GF_U8[256] = float[256](${Array.from({ length: 256 }, (_, k) => { const s = Math.fround(k / 255).toPrecision(9); return /[.e]/.test(s) ? s : `${s}.0`; }).join(", ")});
 vec4 gfU8(highp uint w) { return vec4(GF_U8[w & 255u], GF_U8[(w >> 8) & 255u], GF_U8[(w >> 16) & 255u], GF_U8[w >> 24]); }
 `;
 
