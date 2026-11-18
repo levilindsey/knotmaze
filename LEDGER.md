@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1472.
+Next free ID: K1473.
 
 ## Waiting on Levi
 
@@ -658,10 +658,10 @@ Next free ID: K1472.
   loops; seen on live b4e0a08e, a3a9a6b4 and b423013a, never on a warm profile. Likely Levi's "the entire maze
   blinks in and out". Fix: one target per program, plus a no-loop guard
   (docs/design/K1468_gf_cold_load_gpu_hang.md; probes .claude/probes/K1468/)
-  - owner: agent `a517b983b5550575b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:08, 2 h cap ~21:08)
-  - branch: `worktree-agent-a517b983b5550575b`, worktree `.claude/worktrees/agent-a517b983b5550575b`; last commit: `6ae3e994`
-  - evidence: .claude/probes/K1468/ (rest.mjs, ab.mjs, cold.ps1, exact.mjs, reload.mjs, runs/)
-  - next: stage 2 running: the interleaved frame-time table on three builds (also K1451's owed bench and build time), the gap on the gfh=1 link, the pixel A/B, the cold compile
+  - owner: nobody since 2026-11-17 19:53 (agent `a517b983b5550575b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:08, 2 h cap ~21:08); stage 2 stopped 19:44 on the disk rule (C: 0.88 GB free as the pagefile grew) before any measurement; C: back to 16 GB at 19:50)
+  - branch: `worktree-agent-a517b983b5550575b`, worktree `.claude/worktrees/agent-a517b983b5550575b`; last commit: `2e206394`
+  - evidence: .claude/probes/K1468/s2/ (warm.ps1, interleave.ps1, summarize.mjs), rest.mjs, probe build 182fb101 (#k1468p=div|alu)
+  - next: relaunch stage 2 from docs/design/K1468_s2_frame_time.md (Handoff K1468 s2) once at most one other Chrome agent runs: builds 8711ef35, ae2b4dfb, origin/master on 5660-5662, warm.ps1 each, interleave.ps1 -Rounds 4 -BuildTime, summarize.mjs, then 182fb101's div/alu reads on link A
   - brief: `docs/design/K1468_s2_frame_time.md`
 - **K1469** · Verify Muse 26B's K1459 fix on screen (01c72dfc, live in aad94eb7: the reveal's interior cut at
   junctions by today's own cuts, lkJCut): only its unit test and a rest frame were checked, because pinned gf
@@ -675,6 +675,15 @@ Next free ID: K1472.
   - evidence: .claude/probes/K1395/out/26B/ on the agent's branch; Muse's probes .claude/probes/K1459/ in the main checkout
   - next: captures running: pinned reveal frames today | gf before 01c72dfc | gf now at eight junctions, the handoff's counts; then the coordinator looks and closes K1459 or reverts
   - brief: `docs/design/K1469_reveal_cut_check.md`
+- **K1472** · rp=gf on Levi's own link (`?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1`: the trace/burn reveal plays,
+  unlike every checked link). Live fc520c2d: no blink, but gf needs two programs before it composes (cold
+  151-282 s under load), shows only fragments meanwhile and stray dashes and outlines after; today's reveal
+  also barely moves in the probe (page or probe not yet told apart)
+  - owner: agent `a2e3c83320287ebff` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:53, 2 h cap ~21:53)
+  - branch: `worktree-agent-a2e3c83320287ebff`, worktree `.claude/worktrees/agent-a2e3c83320287ebff`; last commit: `e820cadd`
+  - evidence: .claude/probes/K1472/, .claude/probes/K1468/gfshots.mjs
+  - next: the brief's Do 1-4: today's renderer on the link as the bar, gf beside it at matched reveal times, fix what is gf's, the two-program wait
+  - brief: `docs/design/K1472_gf_levis_link.md`
 
 ## Next, in order
 
