@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1480.
+Next free ID: K1483.
 
 ## Waiting on Levi
 
@@ -668,11 +668,20 @@ Next free ID: K1480.
   unlike every checked link). Live fc520c2d: no blink, but gf needs two programs before it composes (cold
   151-282 s under load), shows only fragments meanwhile and stray dashes and outlines after; today's reveal
   also barely moves in the probe (page or probe not yet told apart)
-  - owner: agent `afc6826ee5adb2d40` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 20:45, 2 h cap ~22:45)
-  - branch: `worktree-agent-afc6826ee5adb2d40`, worktree `.claude/worktrees/agent-afc6826ee5adb2d40`; last commit: `cfabf14f`
+  - owner: nobody since 2026-11-17 22:00: stage 2 merged; stage 3 briefed, waits for a free agent slot (two Chrome agents at most beside Muse)
+  - branch: mainline; last commit: `2b0fe219`
   - evidence: .claude/probes/K1472/ (liveshots.mjs, pinsheet.mjs, progs.mjs; out/pin sheets; out/s2 on the agent's branch)
-  - next: stage 2 running: the reveal's ink missing before gf's switch (live 998be57: smoke only at 3 s and 5 s), the 107-208 s wait and cold repeat visits, Levi's blink and no-fade complaints on a warm page, then reveal parity with today
-  - brief: `docs/design/K1472_s2_reveal_parity.md`
+  - next: stage 3 (docs/design/K1472_s3_reveal_parity.md): the reveal's differences from today's renderer on Levi's link, largest first: gf brings strands in whole where today's come in as broken pieces (1.2-2.5k px a spot), staircase cut ends, hard dark seams at crossings where today fades, the start marker's glint missing during the reveal; then the verdict on 01c72dfc's lkJCut (a build with it reverted) and the two other links
+  - brief: `docs/design/K1472_s3_reveal_parity.md`
+- **K1482** · rp=gf's border look on Levi's own link at rest (3.FGH1HtvQeDjm6e4BII, gfh=1), junction by
+  junction against his approved look: sweep every junction and under-tail end at 4x, class each fault (break,
+  stub, wedge, tick, notch, sliver, dot, stray dash), fix the largest classes. Levi 2026-11-17: "I still see
+  plenty of border artifacts". The stub past a crossing is K1477 (Muse 26H)
+  - owner: agent `a9a536be366802d97` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 22:04, 2 h cap ~00:04)
+  - branch: `worktree-agent-a9a536be366802d97`, worktree `.claude/worktrees/agent-a9a536be366802d97`; last commit: `0cd730f2`
+  - evidence: `.claude/probes/K1482/`
+  - next: the agent's report (cap about 00:10 on 2026-11-18): view its tiles, merge, verify on the live link
+  - brief: `docs/design/K1482_levi_link_borders.md`
 
 ## Next, in order
 
@@ -2230,14 +2239,13 @@ Every other item below waits on the trigger it names.
   / 2,398 pass; 2830d103 0.14): dashes gone, outline faint; centre-sampled field ink speckles against today's
   MSAA mesh coverage, so 0.5 likely needs area-averaged sampling (wider outline sample, MSAA chain), not
   another threshold (.claude/probes/K1417/out/24A/)
-- **K1424** · K1414 bands: 25C landed the bands (5e3b6944) but the same-state mask still misses the bar
-  (gf 634 px vs today 747, ratio 0.849, IoU 0.378; floor 1.000; seed 7 walk, out/25C; Handoff 25C in
-  K1448s brief). The ji80 arm clusters are gone and ji169 passes (75/84, IoU 0.674); left: ji80 80/25 and
-  ji156 231/67 under-draw (turn centres won by a non-route arms piece/corner, whose arc lives on its own
-  chain - the missing discriminator is fan membership, not labels/arcs), ji0 110/184 over-draw (gf shades
-  the whole fan disc; todays inside-turn fill is per-pixel by the bracketing arms). Next: bake junction
-  identity beside the tables (as GfExploreTable bakes pieces) so suppression and bands act on fan pixels
-  exactly, then re-measure per junction
+- **K1424** · K1414 route bands under rp=gf: Muse 26C baked fan membership and landed the bands on it
+  (e820cadd), bars still unmet on the seed 7 walk: gf 721 px vs today 747 (ratio 0.965), IoU 0.366 against
+  0.7, Done 2 fails at every junction. Coordinator's read of .claude/probes/K1414/out/26C/crop_ji*.png
+  (today | master gf | new gf): ji80 closer to today, ji156 unchanged (a hard seam breaks the band), ji0 and
+  ji157 show a new dull patch on the band. Next: off the route, gf reads its nearer arm only where today
+  blends the two bracketing arms by angle; teach lkRoute that blend, then re-measure per junction and look
+  at ji0 and ji157 first (Handoff 26C, docs/design/K1464_muse_batch26.md)
 - **K1425** · rp=gf in the border look (tlk=border) does not draw the pulse/telegraph indications in the
   cleared interior: today's border branch composes them over an empty base with their own coverage
   (ribbon_shader hiRgb/hiA), while gf's LOOK_COMP_FS border draws only the stroke over form B ink, and o1
@@ -2300,6 +2308,13 @@ Every other item below waits on the trigger it names.
 - **K1475** · Probe: .claude/probes/K1458/dragcheck.mjs for gf at fade 1.2 sometimes finds no fresh load in
   state f9d72040 within 4 tries, so the stop compares nothing (2 of 3 runs in K1460 s5; K550's worker
   nondeterminism suspected, untested). Fix: more tries or phw=0
+- **K1480** · rp=gf: programs linked by the compile worker (62964f14) change 169 px at rest by at most 17
+  levels against the app's own links (scattered single pixels; 0 px with the worker blocked). Cause not found;
+  candidate: the worker's GL context at link time differs from the app's (no float-colour extension, default
+  attributes). .claude/probes/K1472/restab.mjs, out/s2/rest/
+- **K1481** · rp=gf keeps composing about 56 frames a second at rest while compiles are pending (K1472 s2),
+  and a cold first visit to Levi's link still waits about 85 s before gf takes over (121 s before 62964f14;
+  K1456 is the cold-load item)
 
 ## Approved, to schedule (2026-10-11)
 
