@@ -619,10 +619,10 @@ Next free ID: K1470.
   threads (junction B, ci3 upper right, the blue kink loop at ?3); (3) a dashed dark tick across the kink loop
   at ?3 at every fade; (4) today's protect term (pr) is not ported to gf's gap window; (5) a round blob at
   junction B at fade 0. Next: bake.mjs on those crossings (missing over threads, the +-40-sample scan cap)
-  - owner: agent `a3840a23f835d4829` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 17:16, 2 h cap ~19:16)
-  - branch: `worktree-agent-a3840a23f835d4829`, worktree `.claude/worktrees/agent-a3840a23f835d4829`; last commit: `1e20f0f4`
+  - owner: nobody since 2026-11-17 18:37 (merged; agent `a3840a23f835d4829` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `8711ef35`
   - evidence: .claude/probes/K1460/ (stage 3's WIP and handoff: branch worktree-agent-a2d11c7ef2d27e635, tip bf05e69f, not merged: 236f8f4e tested on four spots, e1a4fea0 unverified)
-  - next: stage 4: captures with the watchdog off and a warm profile, judge 236f8f4e and e1a4fea0 on sheets, then the kink loop's edge, junction B and protect
+  - next: the protect term restricted to today's interval (brief item 5): needs a per-crossing protect-interval row (two floats) in gf's tables (tables.ts, gf_pack.ts: after K1451 s4 merges), applied in gf_look with no loop, cold-compiled with cap.mjs before the look is judged; hold.mjs should take EXTRA Chrome args like dragcheck.mjs; 236f8f4e is confirmed on screen only at 1068,615
   - brief: `docs/design/K1460_s4_fade_loop.md`
 - **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
   wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
