@@ -1815,6 +1815,20 @@ vec2 lkTan(int c, float q) {
   vec2 t = B.xy - A.xy; float l = length(t);
   return l > 0.0 ? t / l : vec2(1.0, 0.0);
 }
+// K1460: chain c's tangent at segment q.x, fraction q.y: central-difference tangents at the segment's ends blended
+// by q.y (today's gap shader: its under tangent is the ribbon's per-vertex tangent, interpolated; its over tangent
+// is blended so). lkTan's per-segment direction steps at every vertex, and the fade's width (fade * sin) with it:
+// wedge-shaped bands and a stepped edge on a long fade along a curved thread.
+vec2 lkTanS(int c, vec2 q) {
+  vec4 C0 = F(uOCh + 3 * c); int v0 = int(C0.x); int nv = int(C0.y); bool closed = C0.z > 0.5;
+  int k = int(q.x); int n = closed ? nv - 1 : nv;
+  int im = closed ? pmod(k - 1, n) : max(k - 1, 0); int i0 = closed ? pmod(k, n) : k;
+  int i1 = closed ? pmod(k + 1, n) : min(k + 1, nv - 1); int i2 = closed ? pmod(k + 2, n) : min(k + 2, nv - 1);
+  vec2 ta = F(uOV + v0 + i1).xy - F(uOV + v0 + im).xy; vec2 tb = F(uOV + v0 + i2).xy - F(uOV + v0 + i0).xy;
+  ta /= max(length(ta), 1e-6); tb /= max(length(tb), 1e-6);
+  vec2 t = mix(ta, tb, q.y); float l = length(t);
+  return l > 1e-6 ? t / l : lkTan(c, q.x);
+}
 // the cut at distance d from an over centreline (gap_mask.ts gapKeepAt's ramp), inside today's window
 // (K1423: the cut lives only inside the window marched along the under thread, and its fade part
 // dissolves over the window's last half fade of arc)
@@ -1834,7 +1848,7 @@ float lkCut(float d, float sinT, float exg, float wm, float pxw, vec2 sc) {
 }
 float lkGap(float key, vec2 p, vec2 qU, int cU) {
   float g = 0.0;
-  vec2 tu = lkTan(cU, qU.x);
+  vec2 tu = lkTanS(cU, qU);
   float wm = uGwLive > 0.5 ? lkWinM(cU, qU) : 1e3;
   float pxw = 2.0 * uAA;
   vec3 sl = uGwLive > 0.5 && wm > -pxw ? lkGwSlot(cU, qU) : vec3(-1.0, 0.0, 0.0);
@@ -1842,9 +1856,9 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
-    vec2 to = lkTan(PC(j), lookQ(j, p).x);
+    vec2 qO = lookQ(j, p); vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
-    float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), lookQ(j, p))).x : 1.0;
+    float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
     g = max(g, lkCut(pd[j], sinT, exg, wm, pxw, sc));
     // K1417: no casing term (the composite clears the gap to the background in every look).
   }
@@ -1857,7 +1871,7 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
       int cO = int(sl.x + 0.5);
       vec3 N = lkNearOn(cO, sl.y, sl.z, p, cO == cU ? qU.x : -1.0);
       if (N.y >= 0.0) {
-        vec2 to = lkTan(cO, N.y);
+        vec2 to = lkTanS(cO, N.yz);
         float sinT = abs(tu.x * to.y - tu.y * to.x);
         float exg = uExLive > 0.5 ? exAt(cO, lkArc(cO, N.yz)).x : 1.0;
         g = max(g, lkCut(N.x, sinT, exg, wm, pxw, sc));
