@@ -668,11 +668,11 @@ Next free ID: K1476.
   unlike every checked link). Live fc520c2d: no blink, but gf needs two programs before it composes (cold
   151-282 s under load), shows only fragments meanwhile and stray dashes and outlines after; today's reveal
   also barely moves in the probe (page or probe not yet told apart)
-  - owner: nobody since 2026-11-17 20:22 (merged; agent `a2e3c83320287ebff` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `998be573`
-  - evidence: .claude/probes/K1472/, .claude/probes/K1468/gfshots.mjs
-  - next: ink fix merged (998be573, sheets .claude/probes/K1472/out/pin/levi_sheet_whole.png). Left: progs.mjs cold on Levi's link (which program compiles first; the two-program wait), hold.mjs warm, unpinned live frames, the link ?b.FMKB4DIQ, the thread-end cut at 8x (today notched, gf a straight diagonal with stray pixels: levi_f6_zoom8.png), whether a slider edit replays the reveal
-  - brief: `docs/design/K1472_gf_levis_link.md`
+  - owner: agent `afc6826ee5adb2d40` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 20:45, 2 h cap ~22:45)
+  - branch: `worktree-agent-afc6826ee5adb2d40`, worktree `.claude/worktrees/agent-afc6826ee5adb2d40`; last commit: `cfabf14f`
+  - evidence: .claude/probes/K1472/ (liveshots.mjs, pinsheet.mjs, progs.mjs; out/pin sheets; out/s2 on the agent's branch)
+  - next: stage 2 running: the reveal's ink missing before gf's switch (live 998be57: smoke only at 3 s and 5 s), the 107-208 s wait and cold repeat visits, Levi's blink and no-fade complaints on a warm page, then reveal parity with today
+  - brief: `docs/design/K1472_s2_reveal_parity.md`
 
 ## Next, in order
 
