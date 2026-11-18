@@ -11,7 +11,7 @@ for (const [k, v] of Object.entries<any>(raw)) {
   if (v && typeof v === "object" && v.__t) { const C = (globalThis as any)[v.__t]; T[k] = C.from(v.v.map((x: any) => (x === "Inf" ? Infinity : x === "-Inf" ? -Infinity : x === "NaN" ? NaN : x))); } else T[k] = v;
 }
 const SJ = JSON.parse(readFileSync(sp, "utf8")); const [a, , , d, e, f] = SJ.toDevA;
-const E = new GfEval(T); const out: any = {};
+(globalThis as any).__K1482 = +(process.argv[7] ?? process.env.K1482M ?? 0); const E = new GfEval(T); const out: any = {};
 for (const nm of names.split(",")) {
   const s = SJ.sites.find((q: any) => q.site === nm); const cx = Math.round(s.x), cy = Math.round(s.y); const px: number[][] = [];
   for (let y = cy - R; y < cy + R; y++) for (let x = cx - R; x < cx + R; x++) {

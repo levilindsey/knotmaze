@@ -91,6 +91,14 @@ export class GfEval {
     return 1 - ss(zt, Z, az);
   }
 
+  /** K1482 s2: an open chain's end cap (the foot clamped to the chain's tip, s at the chain's first or last vertex)
+   * sinks one pass (amp = 10 zt, tables.ts) when its piece belongs to a junction group: a fused tail's cap yields to
+   * the thread it meets, as the approved look's outline runs on unbroken at under-tail ends. gf_glsl.ts tipSink. */
+  tipSink(c: number, s: number): number {
+    const T = this.T; if (T.cClosed[c] === 1) return 0;
+    const v0 = T.cV0[c]; return s <= T.vs[v0] || s >= T.vs[v0 + T.cNV[c] - 1] ? 10 * T.zt : 0;
+  }
+
   /** Membership of (c, s) as eval() takes it (group -1 = none; ramp 1 = full): for tests and probes. */
   memberAt(c: number, s: number): { g: number; ramp: number } {
     this.depth(c, s); this.member(c, s, this.mz);
@@ -363,6 +371,7 @@ export class GfEval {
     for (let j = 0; j < np; j++) {
       this.pz[j] = this.depth(this.pc[j], this.ps[j]); this.pkey[j] = this.pz[j] - this.pd[j] * zK;
       this.member(this.pc[j], this.ps[j], this.mz); this.pg[j] = this.mg; this.pramp[j] = this.mramp;
+      if (this.mg >= 0) this.pkey[j] -= this.tipSink(this.pc[j], this.ps[j]);
       if (this.mg >= 0 && this.mramp > 0 && this.mramp < 1) {
         if (nr < MAXR) rIdx[nr++] = j;
         else { /* past MAXR: rounds to the nearer configuration */ this.pramp[j] = this.mramp >= 0.5 ? 1 : 0; }
