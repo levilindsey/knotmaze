@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1458.
+Next free ID: K1459.
 
 ## Waiting on Levi
 
@@ -303,17 +303,27 @@ Next free ID: K1458.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
-- **K1444** · rp=gf home membership looks (after K1439 makes it live behind a flag): (1) on by default? (2)
-  spot 4 (muse_hash 5.88,8.50) rounds the corner where rp=outline draws a dive shadow; (3) g41_user_tw64
-  17.80,9.55: soft band at the default fadeLength, no line at 1.2, where master and rp=outline draw a fading
-  stub; sheets .claude/probes/K1438/out/sheet_fl_1..2.png, sheet_worse.png
 - **K1455** · the border look (tlk=border) under rp=gf: outlines only with no fill, as K797b defines it and as
   today's renderer draws it (fainter); rp=outline ignores the thread look and always fills. Should border
   carry colour under gf, and should rp=outline follow the setting? Crops:
   .claude/probes/K1450/runs/crop_today.png, crop_gf.png, crop_outl.png (worktree agent-ad30609f43a2c2a15)
+- **K1444** · rp=gf home membership looks (after K1439 makes it live behind a flag): (1) on by default? (2)
+  spot 4 (muse_hash 5.88,8.50) rounds the corner where rp=outline draws a dive shadow; (3) g41_user_tw64
+  17.80,9.55: soft band at the default fadeLength, no line at 1.2, where master and rp=outline draw a fading
+  stub; sheets .claude/probes/K1438/out/sheet_fl_1..2.png, sheet_worse.png
 
 ## In progress
 
+- **K1458** · rp=gf draws no crossing fade on an ordinary load: the under thread runs at full colour to the
+  over thread's edge at every Crossing fade value (today ramps it; Levi 2026-11-17: 'I don't see any fading
+  happening, regardless of the slider value'); also the panel's address rewrite drops rp=gf&gfh=1, and gf's
+  border look differs from today's (near-black, wider, hard-cut strokes). Evidence:
+  .claude/probes/K1444/live_fill_A.png, live_border_A.png
+  - owner: agent `a108251c8d94e5b3a` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 09:07, 2 h cap ~11:07)
+  - branch: `worktree-agent-a108251c8d94e5b3a`, worktree `.claude/worktrees/agent-a108251c8d94e5b3a`; last commit: `12feaf66`
+  - evidence: .claude/probes/K1444/ (coordinator sheets), .claude/probes/K1458/ (agent)
+  - next: find why lkGap's fade does not draw on an ordinary load, fix, guard probe fade.mjs
+  - brief: `docs/design/K1458_gf_crossing_fade.md`
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
