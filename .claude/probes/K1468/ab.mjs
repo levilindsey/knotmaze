@@ -49,7 +49,7 @@ try {
     }, SIMT);
     await sleep(2500);
     const c0 = await page.evaluate(() => { globalThis.__knotGfOpts = { ...(globalThis.__knotGfOpts ?? {}), redraw: true }; return globalThis.__knotGf.stats.composites; });
-    await page.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 60000, polling: 100 }, c0);
+    await page.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 900000, polling: 100 }, c0);
     await sleep(600);
     writeFileSync(join(outDir, `${l}_${fl}_${tlk}.png`), await page.screenshot({ type: "png" }));
     const info = await page.evaluate(() => ({ lost: globalThis.__k1468lost, fb: globalThis.__knotGf?.stats?.fallback ?? null }));
