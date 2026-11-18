@@ -1041,7 +1041,7 @@ export class GfComposite {
       gl.useProgram(this.lprog);
       // K1389 s2: the pass's second attachment holds the colours; K1425: the third holds the border indication
       gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, src.tex[1] ?? src.tex[0]);
+      gl.bindTexture(gl.TEXTURE_2D, src.tex[1]);
       gl.activeTexture(gl.TEXTURE2);
       gl.bindTexture(gl.TEXTURE_2D, src.tex[2] ?? src.tex[0]);
       gl.activeTexture(gl.TEXTURE0);
