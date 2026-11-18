@@ -4,7 +4,7 @@
 // Layout, in texels of a GF_TW-wide texture (index i at (i & (TW-1), i >> LOG)):
 //   CH   3 per chain:  (cV0, cNV, cClosed, cLen) (cS0, cPin0, cPinN, cArm0) (cArmN, 0, 0, 0)
 //   V    1 per vertex: (vx, vy, vs, 0)
-//   PIN  1 per pin:    (pinS, pinZ, 0, 0)
+//   PIN  1 per pin:    (pinS, pinZ, pinWL, pinWR)   K1451: the key windows
 //   ARM  2 per arm:    (aSR, aDir, aL, aLcut) (aG, aHome, 0, 0)    aHome only with T.homeOn (K1438), else 0
 //   K    6 per corner: (kCx, kCy, kR, kRmax) (kThru, kRV, kG, kJ) (kEax, kEay, kEbx, kEby)
 //                      (kCa, kCb, kSa, kSb) (kZa, kZb, kTax, kTay) (kTbx, kTby, 0, 0)
@@ -61,7 +61,7 @@ export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKe
     put(o.ch + 3 * c + 2, T.cArmN[c], 0, 0, 0);
   }
   for (let v = 0; v < T.nV; v++) put(o.v + v, T.vx[v], T.vy[v], T.vs[v], 0);
-  for (let i = 0; i < T.pinS.length; i++) put(o.pin + i, T.pinS[i], T.pinZ[i], 0, 0);
+  for (let i = 0; i < T.pinS.length; i++) put(o.pin + i, T.pinS[i], T.pinZ[i], T.pinWL[i], T.pinWR[i]);
   const home = T.homeOn; // K1438: aHome rides the arm record's free .y only when the switch is on (off: master's bits)
   for (let a = 0; a < T.nA; a++) {
     put(o.arm + 2 * a, T.aSR[a], T.aDir[a], T.aL[a], T.aLcut[a]);

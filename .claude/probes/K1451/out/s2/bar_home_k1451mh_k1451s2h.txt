@@ -1,0 +1,6 @@
+tag       stray   hard  paper  broken  k1049  total  excepted
+k1451mh      14      0     11     399      0    424        57
+k1451s2h     21     11     11     393      0    436        57
+1:30:18 PM
+
+[exited with code 0]
