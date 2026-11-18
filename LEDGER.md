@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1485.
+Next free ID: K1489.
 
 ## Waiting on Levi
 
@@ -311,6 +311,10 @@ Next free ID: K1485.
   inside the web is a small trapezoid bump where it was a thin spike (21 px at 4x; pin 278 L's over window
   0.658 -> 0.770). No rule tried fixes spot 7 without changing it. Keep, or go back to the spike and reopen
   spot 7? Picture: .claude/probes/K1451/out/s4/g_j71.png (columns 3 and 4), m_j71wide.png
+- **K1485** · rp=gf border look, a dead-end tail under the thread it meets: since 0a84d3d1 (K1482 s2) the tail
+  stops just short of that thread, like an under pass, where it used to fuse into it (and drew a sliver across
+  it). Keep the short stop, or fuse the tail without the sliver? Picture:
+  .claude/probes/K1482/out/s2/sliver_00.png (j3, j61, j76; master | tip | diff), live on Levi's link
 
 ## In progress
 
@@ -668,10 +672,10 @@ Next free ID: K1485.
   unlike every checked link). Live fc520c2d: no blink, but gf needs two programs before it composes (cold
   151-282 s under load), shows only fragments meanwhile and stray dashes and outlines after; today's reveal
   also barely moves in the probe (page or probe not yet told apart)
-  - owner: agent `af888a799cf269dde` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 23:23, 2 h cap ~01:23)
-  - branch: `worktree-agent-af888a799cf269dde`, worktree `.claude/worktrees/agent-af888a799cf269dde`; last commit: `7a518b9c`
-  - evidence: `.claude/probes/K1472/`
-  - next: the agent's report (stage 3, cap about 01:00 on 2026-11-18): view its sheets and the takeover table, merge, check the live link on visits 1 and 2
+  - owner: nobody since 2026-11-18 00:37 (2026-11-18 00:22: stage 3 merged; the reveal work waits behind K1456 unless Levi says otherwise; agent `af888a799cf269dde` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `b42aa13f`
+  - evidence: .claude/probes/K1472/out/s3/ (pin2 sheets, spots_counts.txt, xpoff/)
+  - next: paused after stage 3 (the coordinator's plan of 2026-11-17 23:40, Levi may overrule: the reveal's differences wait behind the first visit's wait, K1456). Landed: gf never takes over in the middle of a reveal (takeover jump warm 38-49k px -> 0.6-10k; 0 px at rest against master). Still open: differences 1, 2, 4, 5 against today's reveal (all 13 spots same as master), the 01c72dfc (lkJCut) verdict, the ?b.FMKB4DIQ sheets, hold.mjs 60/60. To resume: shoot today's renderer at f4 with the burn effect off; if the strands join, compare gf's burn term (gf_look.ts ~1032) with paint_glsl.ts; then a live check of Levi's link on visits 1 and 2 (liveshots.mjs)
   - brief: `docs/design/K1472_s3_reveal_parity.md`
 - **K1482** · rp=gf's border look on Levi's own link at rest (3.FGH1HtvQeDjm6e4BII, gfh=1), junction by
   junction against his approved look: sweep every junction and under-tail end at 4x, class each fault (break,
@@ -679,13 +683,24 @@ Next free ID: K1485.
   wedge 19, notch 11, dot 7, tick 5, dash 4, break 3, stub 3; the sliver class (and 9 wedges) is an open
   end's round cap drawn across the neighbour it should pass under (the end piece takes its junction group's
   flat depth key); a 2x2 opening of the border alpha was tried and reverted (cut 1-px strokes at 14 sites).
+  Stage 2 (merged 16e0c573, fix 0a84d3d1: such an end sinks one pass): 54 of 327 faulted (sliver 14, wedge 11,
+  notch 9, dot 6, tick 5, dash 4, stub 3, break 2); it left one hard dark block in the fill look at census
+  `ring` (1.77, 15.26), which is stage 3's first item.
   Delete the local probe branch `k1482-gwoff` once its evidence is no longer needed. Levi 2026-11-17: "I still see
   plenty of border artifacts". The stub past a crossing is K1477 (Muse 26H)
-  - owner: agent `a8d924c8a5107064c` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 22:52, 2 h cap ~00:52)
-  - branch: `worktree-agent-a8d924c8a5107064c`, worktree `.claude/worktrees/agent-a8d924c8a5107064c`; last commit: `3c1076c2`
-  - evidence: `.claude/probes/K1482/`
-  - next: the agent's report (cap about 00:55 on 2026-11-18): view its tiles at the 33 sliver and 19 wedge sites, merge, verify on the live link
-  - brief: `docs/design/K1482_s2_end_caps.md`
+  - owner: agent `a3b732fc927c3682b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 00:37, 2 h cap ~02:37)
+  - branch: `worktree-agent-a3b732fc927c3682b`, worktree `.claude/worktrees/agent-a3b732fc927c3682b`; last commit: `b28822bc`
+  - evidence: .claude/probes/K1482/ (out/s2/ sheets and classes_tip.txt; K1436 bar out/bar/k1482s2/)
+  - next: the agent's report (stage 3, cap about 02:45 on 2026-11-18): view its tiles, check the bar passes and the sweep's faulted count (54 on master), merge, tell Levi the scoreboard
+  - brief: `docs/design/K1482_s3_borders.md`
+- **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
+  each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
+  frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
+  - owner: agent `aa439c7176a2f52db` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 00:37, 2 h cap ~02:37)
+  - branch: `worktree-agent-aa439c7176a2f52db`, worktree `.claude/worktrees/agent-aa439c7176a2f52db`; last commit: `b28822bc`
+  - evidence: `.claude/probes/K1456/`
+  - next: the agent's report (stage 2, cap about 02:45 on 2026-11-18): the per-program table, the cold first visit's seconds before and after, the picture unchanged; merge, check the live link's first visit
+  - brief: `docs/design/K1456_s2_first_visit.md`
 
 ## Next, in order
 
@@ -1007,12 +1022,6 @@ Every other item below waits on the trigger it names.
 - **K1432** · rp=gf smudges (muse_hash 5.88,8.50 extra 1243; 19.41,14.16 extra 752): composite()'s equal-depth
   tie blend smears dark into the fill where today's fill shows none; narrowing the window everywhere fails the
   bar (37 new wedges), so it needs a discriminator (K1407 c5; docs/design/K1407_c4_bar.md Handoff c4)
-- **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
-  each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
-  frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
-  - branch: unknown; last commit: `58349500`
-  - evidence: .claude/probes/K1456/out/26A (cold runs, holdA pass, holdB fail with context loss)
-  - next: Re-run the warm proof (worker done, reload same profile under 2 s), the 0px compare, hold link B on a quiet machine, both dragchecks and the crops; see Handoff 26A
 - **K1457** · every gf brief's Done list (Muse and agents) runs the ordinary-load guard: node
   .claude/probes/K1450/hold.mjs <url> <outDir> <profileDir> 60 250 5000 on ?3&xp=off&am=instant&rp=gf and the
   border link, no prp=off / snd=none; forced-frame probes missed a blink that stood since 2026-11-12
@@ -2327,6 +2336,15 @@ Every other item below waits on the trigger it names.
   0.55 s (master 0.52 / 0.43 / 0.52), IoU 0.65 / 0.74 / 0.72 (master 0.49 / 0.41 / 0.50), 0 px with no ripple.
   Not re-run: hold.mjs 60/60 with the ripple on and music mode's auto plucks, DRAG=1, dragcheck; age 0.12 s is
   1% short of the 25% bar
+- **K1486** · rp=gf's per-program GPU timers read 16-19 ms each while the GPU is shared with other Chromes
+  (K1468 s2 run 2), so they cannot attribute frame time on a loaded machine
+- **K1487** · probe captures are not pixel-stable, so a whole-frame A/B cannot prove 0 px:
+  .claude/probes/K1482/cap.mjs differs 35-46k px (1-2 levels, stroke edges and the start marker) between two
+  loads of one build; the reveal pin does not hold appear_fx's smoke and ember particles (40-624 px between
+  builds mid-reveal); the bare ?3 design moves between captures (146k px master vs master). K1468's pixel A/B
+  of af53913c is still owed and needs a noise-free capture
+- **K1488** · scripts/preview.ps1 -Ref fails from an agent worktree whose node_modules lacks packages: it
+  junctions the worktree's node_modules instead of the main checkout's (K1482 s2)
 
 ## Approved, to schedule (2026-10-11)
 
