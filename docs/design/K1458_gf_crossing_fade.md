@@ -77,3 +77,50 @@ whichever comes first. A compaction is not a stop: re-read this brief and `git l
 the fade not matching: report what you tried and why each attempt fell short, not only the cause. On
 stopping: commit WIP, append `### Handoff K1458` here, commit, and report: what holds, the sheets' paths,
 the numbers, a `Ledger items` list and K1458's handle fields.
+
+### Handoff K1458
+
+2026-11-17, 09:07-10:50. Branch `worktree-agent-a108251c8d94e5b3a`, rebased on origin/master 48d1b37c
+(the conflict was 25B's reverted K1431 block in gf_app.ts; master's form kept, plus the re-bake line).
+
+**Cause** (from the drawn page, fade.mjs at fl 0 / 0.14 / 0.5 / 1.2 on one frozen state). gf's crossing
+cut looped only over the per-pixel candidate pieces, which enter the list within rc = h + W + 2aa of the
+pixel, so the under thread's fade stopped at a hard edge wherever today's ramp is longer than that
+(every fl above about 0.14): the "gap that ignores the slider". Three more gaps behind it: today's K1218
+S3 joint window cap and the per-side clearance scales were not ported, and the bake ran only on a build,
+so a slider move on a sleeping knot kept the old window. Last, the per-sample bake that fixes the first
+compared a float64 window against its own float32 copy and dropped about 2 of 3 samples, which drew the
+stripes and stairs at long fades. The gates missed it because K1423's gate measured only fl 0.14 at
+520x520 DSF1, where the candidate reach covers the whole ramp.
+
+**Commits** (oldest first): b34cc9ba URL-only flags survive the panel's rewrite (+ test); 9b48e44f the
+far reach (GW4 bake: winM, over chain, kept over index, scan + packed scales; shader lkGwSlot / lkNearOn
+ramps from the over pass's true nearest point); 13bd0e34 fade.mjs; 676bd926 joint cap + clearance
+scales; eff5a869 their tests; 77c180b9 re-bake on a fade or margin change; 7a5e8aad the float32 fix.
+
+**Done, measured on 7a5e8aad's parent tree c681ecb7 (same src as 7a5e8aad before the rebase)**:
+1. fade.mjs, gf / gfh sides within tolerance: fl 0 667/679, 0.14 665/679, 0.5 614/630, 1.2 432/451
+   (98.2 / 97.9 / 97.5 / 95.8%; p90 |d - today| 0.0008 / 0.0006 / 0.0040 / 0.0155 world; before the
+   float32 fix 0.5 was 82.4% and 1.2 77.6% with p90 0.093). The guard still prints FAIL: its sameState
+   check fails because loads settle in one of two states (hashes 49c20566 / f9d72040), whatever fl is.
+2. dragcheck.mjs (on de44f13e): PASS both modes, 0 px at every stop against a same-state fresh load.
+3. Sheet `k1458out\pv6\sheet_c681.png`: fl 0 and 0.14 match today at all 9 sites; fl 1.2 fades smoothly
+   at the six crossings. Left: a thin stair-stepped outer edge and faint radial bands on the faded under
+   thread at jB and ci3's upper right (`pv6\zoom_c681.png`), and gf reads a little brighter than today
+   at ci0's lower right. jB at fl 0 shows a small round blob at the lower right junction in gf and not
+   in today's: a junction-look difference present with no fade, not part of this cause.
+4. hold.mjs PASS on the rebased head 7a5e8aad, both links (60 of 60 frames show the maze).
+5. Done (url_flags.test.ts; dragcheck's search keeps rp=gf and gfh=1).
+6. npm test green on c681ecb7 (3111 passed) and on the rebased head (3110 passed; master's 25B revert
+   took one test). No pin moved.
+Border (Do 4): border.mjs on 7a5e8aad wrote `k1458out\border7\border_{today,gf,gfh}.png`, then died
+with a puppeteer "Target closed" in its measuring step: no numbers.
+
+**Probes** `.claude/probes/K1458/`: fade.mjs (guard), dragcheck.mjs, sheet.mjs, border.mjs (unrun),
+claims.mjs (falsified the "wrong over pass named" idea: 0 of 700 sides claimed), align.mjs (bake index
+= field vertex index on all 86 chains), bake.mjs (per-sample bake along one window; found the float32
+holes), info.mjs, win.mjs.
+
+**Next**: fix border.mjs's crash and measure the border; find the jB / ci3 edge stairs at fl 1.2
+(bake.mjs on those crossings: a sample with oCh -1 inside a window, or the ±40-sample scan cap); make
+fade.mjs's sameState pick same-hash loads (dragcheck's retry) so its verdict means something.
