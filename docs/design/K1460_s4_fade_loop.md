@@ -78,3 +78,47 @@ whichever comes first. A compaction is not a stop: re-read this brief and `git l
 append `### Handoff K1460 s4` here, commit, and report: what holds, the sheets' paths (each spot named fixed,
 same as master or open), the numbers, which commits are confirmed on screen, a `Ledger items` list and
 K1460's handle fields.
+
+### Handoff K1460 s4
+
+Stopped 2026-11-17 18:40 with every Done item met except item 5 of "Do" (today's protect term), which is still open. Branch `worktree-agent-a3840a23f835d4829`, rebased on origin/master f7086589. Every number below comes from frozen state f9d72040 (`cap.mjs`). Pixel checks ran on the pre-rebase build 0fab6aa0. It has the same src as the tip; the rebase added only Muse K1459 and LEDGER commits, and K1459 is off at `xp=off`.
+
+**The change.** `lkNearOn(c, s, w, p, aU, sx)` handles a self crossing (cO == cU). It skips any over segment whose nearest point lies within sx of the pixel's own arc, wrapped onto the lap (`per`). Here sx = 2h + margin + fade + GAP_EXIT_PAD, which is today's selfEx (gapSegFull). Commit 2bb6f63b. Stage 3's candidate-loop skip (e1a4fea0) is dropped (19a2fd2d). Variant B was judged against variant a: loop.py 0.023 for both, dip.py 0.015 against 0.014. Frames a and b differ only at the stamp, so the skip added nothing.
+
+**Numbers at fade 1.2 (gf and gfh read the same).**
+- loop.py (the kink loop at 594,470): today 0.016, master 0.125, tip 0.023.
+- dip.py (junction B, 866,138, the line at 2 o'clock): today's line is the reference, master 0.041, tip 0.015.
+
+Both fail on master and pass on the tip.
+
+**Sheets** (4x, today | master | tip), all under `.claude/probes/K1460/out/s4/sheets/`:
+- `gf_{0,0.14,0.5,1.2}.png` and `gfh_*.png`: the seven sites plus the loop.
+- `loops_1.2.png`: thirteen loop and seam sites, gf and gfh.
+
+**Each spot at fade 1.2:**
+- **594,470 (kink loop): fixed.** Master's hard radial edge is gone.
+- **866,138 (jB):** the line is fixed by the number above (master 0.041, tip 0.015). On the tile it looks the same as master.
+- **Same as master:** 531,75, 566,77, 941,75, 1046,96, 580,70 and 613,474.
+- **Master's radial seam removed: fixed** at 510,850, 410,690, 1170,70, 1090,770, 770,70, 650,550, 570,750, 1050,490, 1190,430 and 810,468.
+- **430,410:** same as master. Both are smooth; today draws a hard edge there.
+- **955,360:** closer to today than master. The under thread is full brightness past the gap instead of master's long dark fade.
+- **1068,615:** same as master.
+
+At fades 0, 0.14 and 0.5, every site is the same as master in gf and gfh.
+
+**Other checks:**
+- hf.py passes all seven rows at fades 0.5 and 1.2.
+- Dotted line: only 1046,96 has 1 px. It is identical on master, s3 and tip at every fade, fade 0 included, so it is anti-aliasing and not the dotted line. The count reads 0 in effect.
+- `dragcheck.mjs` (EXTRA=--disable-gpu-watchdog) passes at all four stops for gf and gfh. At most 113 px differ from a fresh load.
+- `hold.mjs` reads 60/60 on `?3&xp=off&am=instant&rp=gf` and 60/60 on `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`, warm.
+- `npm test` is green: 252 files, 3127 tests.
+- The src diff touches only gf_look.ts. The keys, the pack and the flag-off path are untouched.
+
+**Confirmed on screen:**
+- 2bb6f63b and 19a2fd2d, as listed above.
+- Stage 3's 236f8f4e: 1068,615 and 810,468 are fixed. 430,410 and 955,360 carried no master tick at this state.
+- e1a4fea0: superseded and dropped.
+
+**Open: item 5 (today's protect term, restricted to its interval).** Not attempted this stage. Stage 3 added the protect loop (24c093da), and the d3d11 compile of gf's program then never finished (f027928d took it out). Restricting the term to today's intervals needs each crossing's protect interval in gf's tables, and K1451 owns tables.ts and gf_pack.ts. Next step: K1451 adds a per-crossing interval row (two floats). After that, gf_look applies the term only inside that interval, with no loop. Then cold-compile it with cap.mjs before judging the look.
+
+Tools: `cap.mjs`, `shot.mjs`, `loop.py`, `dip.py`, `crop.py` and `hf.py` in `.claude/probes/K1460/`. Geometry is in `out/s4/geo/`.
