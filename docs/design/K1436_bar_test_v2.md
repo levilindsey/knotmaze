@@ -85,9 +85,8 @@ one unclear vdip:plain. Sheet 1 (`sheet_h1.png`, `sheet_h0.png`, before WIDE 0 /
 vwide and vdip at clean edges and corners.
 
 **Done 3, recall.** The twelve K1451 spots (GF_HOME=1, src; `out/val/k1451/rows_v2.txt`, `scan_v2.txt`): all 12 flag
-on the crops; in the 100 px/unit scan 10 of 12 have a find within 0.28 (g41_ring_tw64:19.78:20.37 and
-muse_hash:2.02:9.63 do not: the bandless seam is under 9 px of sites at that resolution, and 2.02:9.63's 34 px crop dip
-is under the scan's floors). The kink-loop tick (c5fc87d1) is NOT visible to the CPU scan: that merge changed only
+on the crops; in the 100 px/unit scan 11 of 12 have a find within 0.28 (19.78:20.37 by the SEAM test, vdip:tie 199
+px). muse_hash:2.02:9.63 does not: at 100 px/unit its dip is 8 px, under MINPX 9 (it flags at MINPX 4). The kink-loop tick (c5fc87d1) is NOT visible to the CPU scan: that merge changed only
 `gf_look.ts`, `gf_pass.ts`, `gf_app.ts` and `url_state.ts`, never `eval.ts`, so GfEval draws the same picture on both
 sides; left. Twenty clean stretches (`k1436_clean.ts`, picked by geometry, `out/clean/`): all 20 clean by eye, none
 flag (scan and local rerun). Caveat: the ten "junction" picks landed on plain band edges near junction groups, not
