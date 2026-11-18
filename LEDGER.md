@@ -619,11 +619,11 @@ Next free ID: K1466.
   threads (junction B, ci3 upper right, the blue kink loop at ?3); (3) a dashed dark tick across the kink loop
   at ?3 at every fade; (4) today's protect term (pr) is not ported to gf's gap window; (5) a round blob at
   junction B at fade 0. Next: bake.mjs on those crossings (missing over threads, the +-40-sample scan cap)
-  - owner: agent `ae13158a4930b03bd` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 13:32, 2 h cap ~15:32)
-  - branch: `worktree-agent-ae13158a4930b03bd`, worktree `.claude/worktrees/agent-ae13158a4930b03bd`; last commit: `da5ee44c`
+  - owner: nobody since 2026-11-17 15:26 (merged; agent `ae13158a4930b03bd` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `3927e434`
   - evidence: .claude/probes/K1460/ (stage 1 sheets in out/), .claude/probes/K1458/
-  - next: stage 2 running (started 13:33, cap 15:35): bands and stairs, the loop at 1.2, jB bite and blob, protect, numbers
-  - brief: `docs/design/K1460_s2_fade_bands.md`
+  - next: stage 2 merged (3927e434): lkTanS smooths the fade's tangent, radial bands gone on ?3 (hf.py: every row passes, master fails every row). Open for stage 3: the kink loop's hard radial edge at fade 1.2 (594,470), the jB dark line and the blob at fade 0, the protect term, three sites on the second link, today's darker captures, b0707a26 loaded alone, the full sheets, twenty loads
+  - brief: `docs/design/K1460_s3_fade_loop.md`
 - **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
   wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
@@ -643,11 +643,11 @@ Next free ID: K1466.
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
   band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
   with it (Handoff K1433)
-  - owner: agent `a6098dba61a4f2f8b` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 13:48, 2 h cap ~15:48)
-  - branch: `worktree-agent-a6098dba61a4f2f8b`, worktree `.claude/worktrees/agent-a6098dba61a4f2f8b`; last commit: `7035d1b2`
+  - owner: nobody since 2026-11-17 15:26 (merged; agent `a6098dba61a4f2f8b` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `da34ef0b`
   - evidence: .claude/probes/K1436/ (v2), .claude/probes/K1433/ (v1)
-  - next: stage running: band-profile check, crossing exemption, precision and recall sheets
-  - brief: `docs/design/K1436_bar_test_v2.md`
+  - next: stage 1 merged (da34ef0b): scan v2 (.claude/probes/K1436/k1436_scan.ts) 88% real by eye (44 of 50), finds 11 of K1451's 12 spots, 12 scenes at gfh=1 156 finds (v1 2434), flag off 1224 (v1 3964). Stage 2: the same scan on GPU captures (the mirror scan cannot see the look), one bar command (k1436_bar.ps1), the residuals (vdip:ramp 3 of 6 false, rstray 3-6 px false finds, def seam notches need a spots mode)
+  - brief: `docs/design/K1436_s2_gpu_scan.md`
 
 ## Next, in order
 
