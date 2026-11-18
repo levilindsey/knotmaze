@@ -972,6 +972,9 @@ Every other item below waits on the trigger it names.
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
+  - branch: unknown; last commit: `58349500`
+  - evidence: .claude/probes/K1456/out/26A (cold runs, holdA pass, holdB fail with context loss)
+  - next: Re-run the warm proof (worker done, reload same profile under 2 s), the 0px compare, hold link B on a quiet machine, both dragchecks and the crops; see Handoff 26A
 - **K1457** · every gf brief's Done list (Muse and agents) runs the ordinary-load guard: node
   .claude/probes/K1450/hold.mjs <url> <outDir> <profileDir> 60 250 5000 on ?3&xp=off&am=instant&rp=gf and the
   border link, no prp=off / snd=none; forced-frame probes missed a blink that stood since 2026-11-12
