@@ -1,7 +1,8 @@
 // K1450 diagnosis: who leaves a framebuffer bound when gf's composite (a Pixi RenderContainer) runs?
 // Wraps bindFramebuffer before load; each non-null FRAMEBUFFER/DRAW bind records its caller's stack in
 // globalThis.__fbWho (a null bind clears it). Needs the build's temporary __fbWhoN counter in gf_app's
-// render callback (K1450 diagnosis only).
+// render callback (K1450 diagnosis only; that instrumentation is not committed, so this file is a record of how
+// the pluck ripple's FilterSystem.push was found, and runs only on a build that re-adds the counter).
 //   node fbwho.mjs <url> <profileDir> [waitMs]
 import puppeteer from "puppeteer-core";
 const [, , url, profileDir, waitArg = "6000"] = process.argv;

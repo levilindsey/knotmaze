@@ -400,7 +400,18 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       render: (renderer) => {
         if (!comp || !target || off || !T) return;
         const g = comp.gl;
-        if (g.getParameter(g.FRAMEBUFFER_BINDING) !== null) return;
+        // K1450: the composite writes the canvas (its shaders fetch the target at gl_FragCoord). A bound
+        // framebuffer means Pixi is drawing the world into a filter's texture: the pluck ripple's filter on
+        // the world container (pluck_ripple.ts) while a ripple lives, which music mode's auto plucks keep
+        // live most of the time. Returning there dropped the maze from every such frame (it showed only in
+        // the gaps between ripples). Within a frame bound for the canvas, draw onto the canvas under the
+        // filter and hand the filter its framebuffer back; the ripple then shows over the maze, not through
+        // it. Any other render target (a RenderTexture of the scene) still gets nothing.
+        const fb = g.getParameter(g.FRAMEBUFFER_BINDING) as WebGLFramebuffer | null;
+        const wr0 = renderer as unknown as WebGLRenderer;
+        if (fb !== null && !wr0.renderTarget.renderingToScreen) return;
+        const vp = fb !== null ? (g.getParameter(g.VIEWPORT) as Int32Array) : null;
+        if (fb !== null) g.bindFramebuffer(g.FRAMEBUFFER, null);
         try {
           const bc = ctx.scene.renderer?.borderColor ?? 0;
           const ink: [number, number, number] = bc ? [((bc >> 16) & 255) / 255, ((bc >> 8) & 255) / 255, (bc & 255) / 255] : INK_AUTO;
@@ -410,6 +421,10 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
           comp.draw(target, FILL, ink, lt && lr ? { mode: lr.threadLook, bd: bc ? [ink[0], ink[1], ink[2], 1] : [0, 0, 0, 0], fx: rvDrawn } : null);
           stats.composites++;
         } finally {
+          if (fb !== null && vp) {
+            g.bindFramebuffer(g.FRAMEBUFFER, fb);
+            g.viewport(vp[0], vp[1], vp[2], vp[3]);
+          }
           const wr = renderer as unknown as WebGLRenderer;
           wr.shader.resetState();
           wr.geometry.resetState();
