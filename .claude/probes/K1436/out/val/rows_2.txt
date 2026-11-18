@@ -1,0 +1,1 @@
+muse_hash:5.53:14.97	1336	FLAG	{"vdip:plain":"12+4+12"}	least res/aa -6.924 max 0.829 (392 sites)

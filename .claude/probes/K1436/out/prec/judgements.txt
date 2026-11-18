@@ -1,0 +1,7 @@
+K1436 precision, judged by eye at 4x (tiles: crop at 4x the scan's 100 px/unit, flagged scan pixels outlined, red cross = the sampled find)
+sheet1 (sheet_h1/h0, before WIDE 0 / MINPX 9 / SEAM): h1 13 real, 6 false, 1 unsure; h0 10 real, 6-8 false, 2 unsure (~55-60%): false = short vwide/vdip 4-7 px at clean band edges and corners by white.
+sheet2_h1 (20): real 1-17, 20. 18, 19 = vwide from user_tw42.lightpaper's STALE JSON (that scene died on the full disk; the fresh scan has no vwide) - excluded.
+sheet2_h0 (20): real 1-5, 7, 10-12, 14-20. false 6 (vdip:ramp, clean band edge), 8 (vdip:ramp, clean edge), 9 (rstray:ramp 6 px, colour seam, no ink), 13 (vdip:plain, unclear, counted false).
+sheet3_h1 (8): real 1, 2, 4-8. false 3 (vdip:ramp, clean band edge by white).
+sheet3_h0 (5): #1 repeats sheet2_h0 #9 (counted once). real 2-4. false 5 (rstray:ramp 3 px, no ink).
+TOTAL 50 distinct: 44 real = 88%. tie 16/16, plain 14/15 (93%), ramp 14/19 (74%). vdip:ramp 3/6, rstray:ramp 2 false of 10 (both <= 6 px).

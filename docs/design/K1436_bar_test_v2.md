@@ -55,3 +55,59 @@ flag what the eye flags and nothing else. Today's does not:
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1436` here, commit, and report: what holds, the sheets' paths, the numbers, a
 `Ledger items` list and K1436's handle fields.
+
+### Handoff K1436
+
+Stage done 2026-11-17 15:10 (start 13:48). Tools and outputs: `.claude/probes/K1436/` (how to run and the thresholds
+with their measurements: the header of `k1436_scan.ts`).
+
+**v2.** The scan keeps v1's strays (dstray, rstray) and replaces dbreak, rbreak and rthin with a band profile
+(`k1436_lib.ts`): per exposed-edge site a ray along the smoothed normal measures the band's width; the level is a
+quadratic fit along the edge, and the residual's median flags vdip (thinner, or a hole in the core) and vwide (wider,
+or ink past the inner edge). Corners (normal turns > 30 deg within 1 aa) are exempt. GEOMETRIC CROSSING EXEMPTION: the
+ray stops where it crosses onto another surface, so a clean crossing never flags and a smear before it still does.
+`plain` is fixed by construction: the plain finds that remain are real band faults (14 of 15 sampled real). A label
+change with no band flags only when the fills either side differ by more than 0.08 (SEAM): a missing band between two
+colours is real (K1451's g41_ring_tw64:19.78:20.37), a same-colour seam is not. At the scan's 100 px/unit, vwide is off
+and band finds need 9 px (WIDE 0, MINPX 9, UPX 3, DWPX 0.6; the crops keep vwide and 4 px).
+Output is k1451_scan's JSON (`finds` {kind, cls, x, y, px, peak}, `cnt`/`px`) plus v1's tally on the same raster
+(`cnt1`/`px1`) and timings. `k1451_cls.ts` runs unchanged on files named `<variant>_<scene>.json` (scanall writes
+`<tag>/<scene>.json`: copy or rename; on the h1 scan: cfg 21, zeq 14, zdiff 8, grp 17).
+
+**Done 1, validations (crops, 480 px, `out/val/rows_final_*.txt`): all hold.** 2b: def:3.60, 30.88, 3.69 flag on
+d547dab6 (vwide 4, vwide 5, vdip 8+8 + vwide 8) and are clean on u and src. 1: the four open spots flag on u. 2a:
+muse_hash:5.53 flags on 1336 (vdip 12+4+12), clean on u and d547. 3: all 25 clean spots clean on u.
+
+**Done 2, precision (`out/prec/judgements.txt`, sheets `sheet2_h1.png`, `sheet2_h0.png`, `sheet3_h1.png`,
+`sheet3_h0.png`, keys `key2_*`, `key3_*`): holds.** 50 finds, 44 real = 88%; tie 16/16, plain 14/15, ramp 14/19
+(74%). The false ones: vdip:ramp at clean band edges by white (3 of 6 sampled), rstray:ramp of 3-6 px with no ink (2),
+one unclear vdip:plain. Sheet 1 (`sheet_h1.png`, `sheet_h0.png`, before WIDE 0 / MINPX 9 / SEAM) was ~55-60%: short
+vwide and vdip at clean edges and corners.
+
+**Done 3, recall.** The twelve K1451 spots (GF_HOME=1, src; `out/val/k1451/rows_v2.txt`, `scan_v2.txt`): all 12 flag
+on the crops; in the 100 px/unit scan 11 of 12 have a find within 0.28 (19.78:20.37 by the SEAM test, vdip:tie 199
+px). muse_hash:2.02:9.63 does not: at 100 px/unit its dip is 8 px, under MINPX 9 (it flags at MINPX 4). The kink-loop tick (c5fc87d1) is NOT visible to the CPU scan: that merge changed only
+`gf_look.ts`, `gf_pass.ts`, `gf_app.ts` and `url_state.ts`, never `eval.ts`, so GfEval draws the same picture on both
+sides; left. Twenty clean stretches (`k1436_clean.ts`, picked by geometry, `out/clean/`): all 20 clean by eye, none
+flag (scan and local rerun). Caveat: the ten "junction" picks landed on plain band edges near junction groups, not
+on webs.
+
+**Done 4, 12 scenes on src, ppu 100, v1 / v2 finds per class:**
+
+| class | gfh=1 v1 | gfh=1 v2 | flag off v1 | flag off v2 |
+|---|---|---|---|---|
+| tie | 176 | 60 | 1744 | 1162 |
+| ramp | 192 | 25 | 53 | 19 |
+| thru | 4 | 0 | 4 | 0 |
+| plain | 2062 | 71 | 2163 | 43 |
+| all | 2434 | 156 | 3964 | 1224 |
+
+v2 by kind, gfh=1: dstray plain 2 / tie 24, rstray plain 19 / ramp 19 / tie 21, vdip plain 50 / ramp 6 / tie 15.
+Flag off: dstray tie 710, rstray plain 12 / ramp 16 / tie 336, vdip plain 31 / ramp 3 / tie 116.
+Run time: the 12 scenes in parallel, 61-84 s wall, 184-236 s CPU (the raster dominates; v2 adds ~1-2 s per scene).
+Some scenes died out of memory in parallel runs while the disk was full (twice this hour, not this stage's files) and
+were rerun alone; the table is from all 12 JSONs.
+
+**Residuals.** vdip:ramp's precision (3 of 6 false); rstray (v1's, kept unchanged) has short 3-6 px false finds; the
+scan cannot see the def seam notches (0.15-0.35 px at 100 px/unit; only the crops can), so a notch regression needs
+the spots tool, not the scan. Scan dumps (`out/scan_h*/`, `out/noise/`) are regenerable and not committed.

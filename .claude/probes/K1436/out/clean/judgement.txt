@@ -1,0 +1,3 @@
+20 clean stretches (k1436_clean.ts, seed 7, flag off, plain class, picked by geometry only): sheet.png, list.tsv, scan_near.txt.
+By eye: all 20 clean (10 crossings: T-joins and over/under crossings; 10 'junction' picks, which landed on plain band edges near junction groups, not on webs; #16 shows section-fill wedges, no band fault).
+v2: no find within 0.15 in the h0 scan JSONs and none in the local rerun, for all 20.

@@ -1,0 +1,4 @@
+def:3.60:13.52	d547	FLAG	{"vwide:plain":"4"}	least res/aa -0.047 max 0.178 (409 sites)
+def:30.88:12.42	d547	FLAG	{"vwide:plain":"5"}	least res/aa -0.044 max 0.140 (421 sites)
+def:3.69:34.42	d547	FLAG	{"vdip:plain":"8+8","vwide:plain":"8"}	least res/aa -0.120 max 0.316 (408 sites)
+muse_hash:5.53:14.97	d547	clean	{}	least res/aa -0.038 max 0.080 (392 sites)
