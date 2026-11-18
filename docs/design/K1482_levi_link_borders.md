@@ -81,3 +81,41 @@ whichever comes first. A compaction is not a stop: re-read this brief and `git l
 append `### Handoff K1482` here, commit, and report: the sweep's table (sites per class), the sheets' paths
 (each site named fixed, same as master or open), the numbers, which commits are confirmed on screen, a
 `Ledger items` list and K1482's handle fields.
+
+### Handoff K1482
+
+2026-11-17, Claude agent, branch `worktree-agent-a9a536be366802d97` (rebased on b01cc37b). No source change survives:
+src/ and test/ equal origin/master. Evidence: `.claude/probes/K1482/` (scripts in its root, results in `out/`).
+
+**Sweep (Do 1, done).** Master 0007c8df, link A at hash fff8c9e5, 327 sites, every 4x tile looked at:
+clean 242, sliver 33, wedge 19, notch 11, dot 7, tick 5, dash 4, break 3, stub 3. Files: `out/sites.tsv`,
+`classes_master.txt`, sheets `out/master/sheets/gf_00..10.png`, faults largest first `faults_00..03.png`.
+Today's renderer on link A draws fragmentary strokes whose geometry differs from gf's, so it cannot serve as
+the "where a stroke runs" reference here.
+
+**Fix 1 tried and reverted.** bd6ca0e5 (a 2x2 grey opening of the border alpha in LOOK_COMP_FS): specks in the
+site tiles 519 -> 13, but `pieces.py` finds 14 sites whose 1-px sliver necks it cut into dashes (j0 j3 j60 j71
+j77 j139 t0s t1e t25s t25e t30e t46e t64e t77s, two of them master-clean), and the visible classes are unchanged
+(`out/tip/sheets/ab_00..04.png`, `newbreaks.png`, `zoom8.png`). Reverted in 4c76c6b5. Every site therefore
+stays "same as master".
+
+**The sliver class's cause (diagnosed, not fixed).** Falsified first: crossing angle (sliver tails' median
+89 deg against clean 87, `out/master/angles.txt`) and the gap window (a uGwLive=0 probe build, branch
+`k1482-gwoff` 6dc43631, never merge: it removes only the K1477-like eyes at j81 j138 j139 and breaks 49 sites,
+`out/gwoff/`). The CPU mirror (GfEval, form B, no look) shows it: at 32 of 33 sliver sites a winKind 3 term
+(an open end's round cap, `eval.ts` `wk = this.pend[j] ? 3 : 1`) draws ink; 23 of them put >= 20 px of it on
+screen, against 10 of 242 clean sites (`mirror_caps.py`, `out/master/mirror_caps.tsv`,
+`zoom/mirror_slivers.png`). `cap_surfaces.ts` (`out/master/cap_surfaces.txt`) shows the same layering at
+t55s, t64e, t0s and j62: the chain's END piece sits in a junction-group surface (S149, S79, S150, S63) at
+the group's key, about -0.09, and outranks a neighbouring under thread still in its dip (key -0.12 to -0.20,
+its own surface), while an over thread sits above both (+0.3 to +0.45). So the end's cap outline is drawn
+across the neighbour's body, and the eye between it and the neighbour's edge stroke is the sliver. The wedge
+class shares it at 9 of 19 sites.
+
+**Next.** Make the end piece's cap yield to a covering neighbour it should pass under: either give an end
+piece its own chain's depth key instead of its group's flat key (tables.ts arm groups; this moves the K1362
+tables digest), or bury a cap term under any higher-ranked surface whose tube holds the cap's edge point
+(form B: gf_glsl.ts, another agent's file, plus the eval.ts mirror). Gate it with `mirror_caps.py` (sliver
+sites with on-screen cap ink, 23 -> 0, clean 10 not rising), then the 4x today | master | tip sheets, Do 3's
+carry-across, hold.mjs 60/60 and the K1436 bar. Not run this session, because no fix was kept: Do 3, hold.mjs
+and the bar.
