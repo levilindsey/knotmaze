@@ -1,0 +1,1 @@
+[["highp float cut = full ? (1.0 - k) * inWin * inFoot * fs : 0.0;", "highp float cut = full ? (1.0 - k) * inFoot : 0.0;"]]
