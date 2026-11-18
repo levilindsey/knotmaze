@@ -1,0 +1,13 @@
+FAIL  new 3  grown 0  gone 9  (match radius 0.3, grow > 10% and >= 3 px)
+
+mirror rstray:ramp
+  new 3: def:9.01:6.44 49px; def:31.22:28.59 52px; ring:1.77:15.26 17px
+
+mirror rstray:tie
+  gone 4: def:9.04:6.40 98px; def:34.45:13.92 32px; def:1.83:17.39 19px; def:31.26:28.56 89px
+
+mirror vdip:plain
+  gone 4: def:19.23:2.33 22px; def:15.36:6.27 19px; def:19.59:20.33 18px; ring:1.71:15.14 15px
+
+mirror vdip:ramp
+  gone 1: def:13.41:2.46 12px

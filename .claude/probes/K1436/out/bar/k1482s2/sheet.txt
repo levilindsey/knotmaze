@@ -1,0 +1,4 @@
+rows top to bottom; tiles: base fill | ref fill | base border | ref border (80 device px at 4x, ring = the find)
+1. new mirror rstray:ramp def:9.01:6.44 49px
+2. new mirror rstray:ramp def:31.22:28.59 52px
+3. new mirror rstray:ramp ring:1.77:15.26 17px

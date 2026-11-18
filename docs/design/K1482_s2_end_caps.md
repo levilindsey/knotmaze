@@ -118,7 +118,16 @@ dash 4 -> 4, stub 3 -> 3, tick 5 -> 5.
   and j51's stray speck is gone.
 
 **Checks.** `hold.mjs` on link A against the tip: 60/60 cold and 60/60 warm (min 7108 edges, max 8862). `npm test`
-green after the rebase (254 files, 3169 tests). K1436 bar: see below.
+green after the rebase (254 files, 3169 tests). **K1436 bar (STRICT=1, -Ref 0a84d3d1 -Base 7c739b42, ring + def):
+FAIL, new 3, grown 0, gone 9** (`.claude/probes/K1436/out/bar/k1482s2/bar.txt`, `sheet.png`), all three looked at:
+- def (9.01, 6.44) 49 px and def (31.22, 28.59) 52 px, `rstray:ramp`: the same spots as two GONE `rstray:tie` finds
+  (98 and 89 px). On screen the tail's tapered dark tongue across the over thread is gone and the tail ends short
+  with a round end (fill look); the border look's stray is shorter. Better, relabelled, not a regression.
+- **ring (1.77, 15.26) 17 px, `rstray:ramp`: a REGRESSION in the fill look.** Base had a soft dark band across the
+  thread there (a gone `vdip:plain`, 15 px); the tip shows a hard-edged rectangle of background cut into the thread's
+  fill. The border look is the same on both. Untraced at the stop line (no time left for a fix and the reruns):
+  next, trace it in the mirror (which piece wins those pixels on base and tip, and whether the sunk end piece's
+  casing or gap now cuts the over thread's fill), and fix before merging, or merge with it named.
 
 **Look question for Levi.** Where a tail used to fuse into the thread it meets, its border now stops just short of
 that thread, like an ordinary under pass (j76, j3, t25e, t26s). That is what the fix is, but it changes how a
