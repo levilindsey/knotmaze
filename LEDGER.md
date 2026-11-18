@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1490.
+Next free ID: K1491.
 
 ## Waiting on Levi
 
@@ -315,6 +315,12 @@ Next free ID: K1490.
   stops just short of that thread, like an under pass, where it used to fuse into it (and drew a sliver across
   it). Keep the short stop, or fuse the tail without the sliver? Picture:
   .claude/probes/K1482/out/s2/sliver_00.png (j3, j61, j76; master | tip | diff), live on Levi's link
+- **K1490** · rp=gf border look at sharp V's (K1482 stage 3): where two threads' outlines converge at a sharp
+  angle the ink runs together into a dark wedge, or leaves a light sliver under a pixel wide (wedge sites j15
+  j50 j82 j143 j158 t23e t59s t73e t84e, slivers j95 j147 t43s t56s: 13 of the 46 faulted sites). A fault to
+  fix, or how the border look should meet? Picture: .claude/probes/K1482/out/s4/card_sharp_v.png (stage 4's
+  item 0; until then out/s3/hair_00.png rows j95, j147, t43s). Options: keep as it is; fix (the agent then
+  owns how)
 
 ## In progress
 
@@ -627,9 +633,9 @@ Next free ID: K1490.
   slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
   docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
   - owner: nobody since 2026-11-17 18:39 (merged; agent `aa84d5035d75f3084` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `ae2b4dfb`
-  - evidence: `.claude/probes/K1451/out/s3/`
-  - next: the bench verdict is in (K1468 s2, under contention: ae2b4dfb against 8711ef35 link A frame -6.2%, link B +2.1%: pass) and the build time read e83fa5a6 184.0 ms against dc335eab 197.1 (+7.1%, per scene -9% to +29%; Muse 26E is on it); still owed: rerun hold.mjs on the gfh=1 link; the original k1362s2_census at gfh=1 never turns home on or sets the pass's fade (use census_s4*); then K1460's protect-interval row
+  - branch: mainline; last commit: `7c739b42`
+  - evidence: .claude/probes/K1451/ (k1451_26e_*.ts, out_26e_*; handoff 26E in docs/design/K1464_muse_batch26.md)
+  - next: Muse 26E (7c739b42, bit-identical pinReach speedup, pin loop 10-25% faster) left the build time 17% over a3a9a6b4 with home membership on (190.6 against 162.4 ms over the 12 scenes; fat +69%); guards pass (hold 60/60 on both links, dragcheck, digests equal). Decide by K1456's first-visit numbers whether 2 ms a scene matters; if it does, the next lever is fewer pins, not a faster pin. Still owed: the original k1362s2_census at gfh=1
   - brief: `docs/design/K1451_s4_spots_5_7.md`
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
@@ -685,14 +691,18 @@ Next free ID: K1490.
   flat depth key); a 2x2 opening of the border alpha was tried and reverted (cut 1-px strokes at 14 sites).
   Stage 2 (merged 16e0c573, fix 0a84d3d1: such an end sinks one pass): 54 of 327 faulted (sliver 14, wedge 11,
   notch 9, dot 6, tick 5, dash 4, stub 3, break 2); it left one hard dark block in the fill look at census
-  `ring` (1.77, 15.26), which is stage 3's first item.
+  `ring` (1.77, 15.26).
+  Stage 3 (merged 3b524da2, fix 059b5a04: the sink tapers over the tail's last half width, so no key step at the
+  tip): 46 of 327 (wedge 11, notch 9, sliver 7, dot 6, tick 5, dash 3, stub 3, break 2); ring's block and the
+  hairlines at j77/t64e, j102/t62e, t30e gone; the K1436 bar's one new find (def 23.55, 13.09, 3 px) is K1485's
+  look. The wedges and four slivers are two outlines converging at a sharp V: a card for Levi is stage 4's item 0.
   Delete the local probe branch `k1482-gwoff` once its evidence is no longer needed. Levi 2026-11-17: "I still see
   plenty of border artifacts". The stub past a crossing is K1477 (Muse 26H)
-  - owner: agent `a3b732fc927c3682b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 00:37, 2 h cap ~02:37)
-  - branch: `worktree-agent-a3b732fc927c3682b`, worktree `.claude/worktrees/agent-a3b732fc927c3682b`; last commit: `b28822bc`
-  - evidence: .claude/probes/K1482/ (out/s2/ sheets and classes_tip.txt; K1436 bar out/bar/k1482s2/)
-  - next: the agent's report (stage 3, cap about 02:45 on 2026-11-18): view its tiles, check the bar passes and the sweep's faulted count (54 on master), merge, tell Levi the scoreboard
-  - brief: `docs/design/K1482_s3_borders.md`
+  - owner: agent `aaaa3c03e18bd5e10` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 01:32, 2 h cap ~03:32)
+  - branch: `worktree-agent-aaaa3c03e18bd5e10`, worktree `.claude/worktrees/agent-aaaa3c03e18bd5e10`; last commit: `e64d6ea9`
+  - evidence: .claude/probes/K1482/ (out/s3/ sheets and classes_tip.txt; K1436 bar out/bar/k1482s3/)
+  - next: stage 4's report (cap about 03:40 on 2026-11-18): send Levi the sharp-V card (.claude/probes/K1482/out/s4/card_sharp_v.png), view the tiles, check the sweep count (46 on master) and the bar, merge
+  - brief: `docs/design/K1482_s4_borders.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
