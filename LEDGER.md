@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1476.
+Next free ID: K1480.
 
 ## Waiting on Levi
 
@@ -636,10 +636,10 @@ Next free ID: K1476.
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
   band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
   with it (Handoff K1433)
-  - owner: agent `a383f38542edaf5e1` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:08, 2 h cap ~21:08)
-  - branch: `worktree-agent-a383f38542edaf5e1`, worktree `.claude/worktrees/agent-a383f38542edaf5e1`; last commit: `6ae3e994`
-  - evidence: .claude/probes/K1436/ (v2 scan, out/prec, out/s2; out/s3 on the agent's branch)
-  - next: stage 3 running: the 12-scene screen table, the twenty largest screen finds at gfh=1 and flag off (the junction lane's work list), the bar run end to end, precision samples
+  - owner: nobody since 2026-11-17 21:13 (stage 3 stopped at its 2 h cap, 2026-11-17 21:08: table and work list done, precision 75%, bar control passed once; agent `a383f38542edaf5e1` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `573dc5bf`
+  - evidence: .claude/probes/K1436/out/s3/ (table.md: screen finds 62 at gfh=1, 77 at gfh=0, the same finds both ways; worklist_named.tsv; sheets/), out/bar/self1/bar.txt (control PASS once)
+  - next: stage 4 from Handoff K1436 s3: raise the screen scan's precision from 75% to the 85% bar (a minimum find area for the 4-5 px cuts at crossings, drop cuts that differ from today only in stroke style, tighten vdip:plain at crossings (0 of 2 real), V-shaped junction ends read as rstray:tie) and re-sample 40; make STRICT=1 the bar's default and fail a pair whose physics hashes differ; run the known-FAIL pair (17053a36 against a3a9a6b4) and a second control; capture g41_def_tw64 at gfh=1 alone; item 3 (K1460's link on c5fc87d1, --disable-gpu-watchdog and a warm pass first, and on master) on a quiet machine; residuals: vdip:ramp near white, a spots mode for def's seam notches
   - brief: `docs/design/K1436_s3_screen_bar.md`
 - **K1468** · rp=gf's cold load hangs the GPU process until Chrome kills it: on a profile without the build's
   gf shaders, the first draw of each multi-target program burns the GPU main thread for 50-70 s (measured,
@@ -647,10 +647,10 @@ Next free ID: K1476.
   loops; seen on live b4e0a08e, a3a9a6b4 and b423013a, never on a warm profile. Likely Levi's "the entire maze
   blinks in and out". Fix: one target per program, plus a no-loop guard
   (docs/design/K1468_gf_cold_load_gpu_hang.md; probes .claude/probes/K1468/)
-  - owner: nobody since 2026-11-17 19:53 (agent `a517b983b5550575b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:08, 2 h cap ~21:08); stage 2 stopped 19:44 on the disk rule (C: 0.88 GB free as the pagefile grew) before any measurement; C: back to 16 GB at 19:50)
-  - branch: `worktree-agent-a517b983b5550575b`, worktree `.claude/worktrees/agent-a517b983b5550575b`; last commit: `2e206394`
+  - owner: agent `ad4db178a3a26c189` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 21:13, 2 h cap ~23:13)
+  - branch: `worktree-agent-ad4db178a3a26c189`, worktree `.claude/worktrees/agent-ad4db178a3a26c189`; last commit: `dc335eab`
   - evidence: .claude/probes/K1468/s2/ (warm.ps1, interleave.ps1, summarize.mjs), rest.mjs, probe build 182fb101 (#k1468p=div|alu)
-  - next: relaunch stage 2 from docs/design/K1468_s2_frame_time.md (Handoff K1468 s2) once at most one other Chrome agent runs: builds 8711ef35, ae2b4dfb, origin/master on 5660-5662, warm.ps1 each, interleave.ps1 -Rounds 4 -BuildTime, summarize.mjs, then 182fb101's div/alu reads on link A
+  - next: stage 2, second run, started 21:20: items 1 and 2 only (the interleaved table on 8711ef35 / ae2b4dfb / origin/master, K1451's bench verdict and build time, link A's gap attributed and removed, then the pixel A/B); item 3 (the cold compile) is K1472 stage 2's
   - brief: `docs/design/K1468_s2_frame_time.md`
 - **K1469** · Verify Muse 26B's K1459 fix on screen (01c72dfc, live in aad94eb7: the reveal's interior cut at
   junctions by today's own cuts, lkJCut): only its unit test and a rest frame were checked, because pinned gf
@@ -662,7 +662,7 @@ Next free ID: K1476.
   - owner: nobody since 2026-11-17 19:56 (agent `ab2cc2513ac20a475` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-17 19:08, 1 h cap ~20:08); stopped at its 1 h cap about 20:00: gf's reveal draws no thread ink on master (pinned and live, all programs ready, link b.FMKB4DIQ), so the cut cannot be judged)
   - branch: `worktree-agent-ab2cc2513ac20a475`, worktree `.claude/worktrees/agent-ab2cc2513ac20a475`; last commit: `b1118def`
   - evidence: .claude/probes/K1395/out/26B/ (M_def_f4_whole.png, pw_live.png), .claude/probes/K1459/k1469_pinwatch.mjs, k1469_live.mjs
-  - next: the reveal's ink is back (998be573): rerun the brief's three-way captures (today | 01c72dfc~1 | master), the k1459_cap / k1459_guard2 / k1431_inkcmp counts and the per-spot verdicts; then close K1459 or revert 01c72dfc
+  - next: folded into K1472 stage 2 (its items 1-3: three-build reveal sheets today | master | master with 01c72dfc reverted, and the verdict to keep, repair or revert 01c72dfc); close this item, and K1459, from that report
   - brief: `docs/design/K1469_reveal_cut_check.md`
 - **K1472** · rp=gf on Levi's own link (`?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1`: the trace/burn reveal plays,
   unlike every checked link). Live fc520c2d: no blink, but gf needs two programs before it composes (cold
@@ -1032,6 +1032,24 @@ Every other item below waits on the trigger it names.
   s5: .claude/probes/K1460/out/s5/jb_*.png, recol.py, jbdiff.py). Find where the colour departs (K1389's
   colour table, the look composite) and make interiors equal today's; number: max channel diff over thread
   interiors on ?3 at rest
+- **K1476** · rp=gf: a stray dark line across the fill at j64 on the census scenes muse_default_tw and
+  muse_hash (world 5.6, 2.8; 362 and 182 px in K1436's screen scan), plus a notch at the junction's top edge
+  on muse_default_tw; today's fill has neither. Queued as Muse run 26G (docs/design/K1464_muse_batch26.md;
+  .claude/probes/K1436/out/s3/worklist_named.tsv, sheets/worklist_h1_1.png row 3)
+- **K1477** · rp=gf: the under thread's border stroke tapers to a point and stops past a crossing at ring x68
+  (19.4, 20.0; 963 px in K1436's screen scan), g41_ring_tw64 j24 (the same spot, 660 px) and x67 (18.0, 20.6;
+  296 px); today's stroke runs through, the fill matches. Queued as Muse run 26H
+  (docs/design/K1464_muse_batch26.md; .claude/probes/K1436/out/s3/sheets/worklist_h1_1.png rows 1, 2, 4)
+- **K1478** · rp=gf: the rest of K1436 s3's work list of screen faults (each tile viewed;
+  .claude/probes/K1436/out/s3/worklist_named.tsv, sheets/worklist_h1_*.png and worklist_h0_*.png): muse_hash
+  j81 wedge and stray arc (25.2, 23.5); g41_def_tw64 j148 smear plus three specks (13.0, 10.3; gfh=0 only, no
+  gfh=1 capture) and j24 dash (25.4, 0.8); g41_def_tw42 j132 wedge and dash, j89 notch and dash; g41_ring_tw42
+  j8 notch; lightpaper j29 wedge, j7 dash and notch, j27 smear, j23 notch and dash; muse_hash j144 tick. One
+  bounded Muse run per site or cause once 26G and 26H show the pattern
+- **K1479** · K868 census states are not one per scene: ring froze on two physics hashes (50dd4ffd, 0a0ee15e)
+  within one build in K1436's bar control, and g41_user_tw42 freezes on user_tw42.lightpaper's state, so its
+  finds repeat lightpaper's. Find what the freeze leaves unpinned (K1468 s2's ab.mjs saw two hashes per link
+  too) and re-take the stale diag hashes (Handoff K1436 s3, docs/design/K1436_s3_screen_bar.md)
 
 ## Residuals (known, not fixed)
 
