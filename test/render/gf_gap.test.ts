@@ -96,6 +96,16 @@ describe("K1423 gapWindow (marchUnder's perp window on polylines)", () => {
     expect(r2[4]).toBe(0.5);
     expect(r2[5]).toBe(0.45);
   });
+  it("K1476: a ride that never clears ends at the joint room, not the cap", () => {
+    const under = straight(0, 0, 20, 0);
+    const over = straight(0, 0.2, 20, 0.2);
+    // d = 0.2 stays inside the fade band (all-lanes exit 0.33): no all, no win
+    const [wn, wp] = gapWindow(under, over, 10, 10, H, MARGIN, FADE, 2.0, 2.0, 1e6, 0.58);
+    expect(wp).toBeCloseTo(0.58, 5);
+    expect(wn).toBeCloseTo(2.0, 5);
+    const [, wp2] = gapWindow(under, over, 10, 10, H, MARGIN, FADE, 2.0, 2.0);
+    expect(wp2).toBeCloseTo(2.0, 5);
+  });
 });
 
 describe("K1423 GfGapTable", () => {

@@ -499,7 +499,10 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
       if (fade > 0) sc6[dir > 0 ? 5 : 3] = Math.min(1, Math.max(0.45, (room - (sl + mArc * ms)) / fade));
     }
     // K1458: crossing_gaps.ts's K1218 S3 joint window cap (perp): once every lane is out, the window ends at the joint's room
-    return Number.isNaN(all) ? w : Math.min(w, Math.max(room, all + GAP_EXIT_PAD));
+    // K1476: the lanes never clear (two arms of one joint crossing just before it, then riding side by side
+    // into it): there is no all-lanes exit to protect, and today's ribbon is handed to the fan inside the
+    // joint's room, so the window ends at the room instead of running to its cap along the fan's arms.
+    return Number.isNaN(all) ? Math.min(w, room) : Math.min(w, Math.max(room, all + GAP_EXIT_PAD));
   };
   sc6[0] = march(-1, capNeg, roomNeg); sc6[1] = march(1, capPos, roomPos);
   return sc6;
