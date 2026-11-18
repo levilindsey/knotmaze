@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { gfFs, homeForm } from "../../src/render/gpu_field/gf_glsl";
 import { lookForm, LOOK_COMP_FS } from "../../src/render/gpu_field/gf_look";
-import { cornerPlan, GF_TIERS, GfPass, packComp, packForm } from "../../src/render/gpu_field/gf_pass";
+import { COMP_FS, cornerPlan, GF_TIERS, GfPass, packComp, packForm } from "../../src/render/gpu_field/gf_pass";
 import { revealForm } from "../../src/render/gpu_field/gf_reveal";
 
 /** The fragment outputs a program declares once the preprocessor has taken the app's branch (no PROBE, no SPLIT1). */
@@ -66,6 +66,39 @@ describe("K1468 packComp", () => {
     const v = m[1].split(", ").map(Number);
     expect(v.length).toBe(256);
     for (let k = 0; k < 256; k++) expect(Math.fround(v[k])).toBe(Math.fround(k / 255));
+  });
+});
+
+describe("K1454 (26D): the composites can draw into the pluck ripple's filter texture", () => {
+  // Pixi renders a non-root target with its Y flipped against the canvas
+  // (calculateProjection's flipY), so a composite bound for the ripple
+  // filter's texture reads its target at the mirrored row; on the canvas
+  // (uFlip 0) the read is the old one, texel for texel.
+  const FLIP = "if (uFlip > 0.5) q.y = textureSize(uC, 0).y - 1 - q.y;";
+  it("both composite shaders flip the fetch row under uFlip", () => {
+    for (const fs of [COMP_FS, LOOK_COMP_FS]) {
+      expect(fs).toContain("uniform float uFlip;");
+      expect(fs).toContain("ivec2 q = ivec2(gl_FragCoord.xy);");
+      expect(fs).toContain(FLIP);
+      expect(fs.indexOf(FLIP)).toBeLessThan(fs.indexOf("texelFetch(uC, q, 0)"));
+    }
+    // the flip survives packComp (uC stays uC; textureSize(uC) is its own)
+    const packed = packComp(LOOK_COMP_FS);
+    expect(packed).toContain(FLIP);
+    expect(packed).toContain("vec4 c = gfU8(texelFetch(uC, q, 0).x);");
+    expect(packComp(COMP_FS)).toContain(FLIP);
+  });
+  it("gf_app composites into the bound filter framebuffer, never rebinds the canvas under a filter", async () => {
+    const { readFileSync } = await import("node:fs");
+    const app = readFileSync(new URL("../../src/render/gpu_field/gf_app.ts", import.meta.url), "utf8");
+    expect(app).toContain("flip: true");
+    expect(app).not.toContain("bindFramebuffer(g.FRAMEBUFFER, null)");
+    // in the filter's texture (cleared to alpha 0, and the filter reads the
+    // alpha) the composite writes its own alpha; on the canvas it keeps the
+    // backdrop's, so the no-ripple frame is the old one's texel for texel
+    const { readFileSync: read2 } = await import("node:fs");
+    const pass = read2(new URL("../../src/render/gpu_field/gf_pass.ts", import.meta.url), "utf8");
+    expect(pass).toContain("if (dest?.flip) gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);");
   });
 });
 

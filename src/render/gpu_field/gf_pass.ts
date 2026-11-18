@@ -991,14 +991,17 @@ export class GfPass {
 
 // The app's composite: the pass's (ink, coverage) target over the canvas,
 // premultiplied (ink over the fill).
-const COMP_FS = `#version 300 es
+export const COMP_FS = `#version 300 es
 precision highp float;
 uniform sampler2D uC;
 uniform vec3 uFill;
 uniform vec3 uInk;
+uniform float uFlip;
 out vec4 o;
 void main() {
-  vec4 c = texelFetch(uC, ivec2(gl_FragCoord.xy), 0);
+  ivec2 q = ivec2(gl_FragCoord.xy);
+  if (uFlip > 0.5) q.y = textureSize(uC, 0).y - 1 - q.y;
+  vec4 c = texelFetch(uC, q, 0);
   float ink = c.x; float cov = c.y;
   o = vec4(uInk * ink + uFill * cov * (1.0 - ink), ink + (1.0 - ink) * cov);
 }`;
@@ -1066,7 +1069,7 @@ export class GfComposite {
   private lprog: WebGLProgram | null = null;
   private lu = new Map<string, WebGLUniformLocation | null>();
   private vao: WebGLVertexArrayObject;
-  private uC: WebGLUniformLocation | null = null; private uFill: WebGLUniformLocation | null = null; private uInk: WebGLUniformLocation | null = null;
+  private uC: WebGLUniformLocation | null = null; private uFill: WebGLUniformLocation | null = null; private uInk: WebGLUniformLocation | null = null; private uFlip: WebGLUniformLocation | null = null;
   private khr: boolean | null = null;
   private err: string | null = null;
   readonly gl: WebGL2RenderingContext;
@@ -1101,6 +1104,7 @@ export class GfComposite {
       this.uC = gl.getUniformLocation(p, "uC");
       this.uFill = gl.getUniformLocation(p, "uFill");
       this.uInk = gl.getUniformLocation(p, "uInk");
+      this.uFlip = gl.getUniformLocation(p, "uFlip");
     });
     if (!this.err) this.ljob = step(this.ljob, (p) => { this.lprog = p; });
   }
@@ -1109,13 +1113,13 @@ export class GfComposite {
   get ready(): boolean { return !!this.prog; }
   get lookReady(): boolean { return !!this.lprog; }
   compileError(): string | null { return this.err; }
-  /** Into the currently bound framebuffer (the canvas), viewport w x h.
+  /** Into the currently bound framebuffer (the canvas, or with `dest` the ripple filter's texture: its viewport, Y flipped), viewport w x h.
    *  K1456: false while the needed composite program still compiles (the caller keeps today's frame). */
-  draw(src: GfTarget, fill: [number, number, number], ink: [number, number, number], look?: GfLookComp | null): boolean {
+  draw(src: GfTarget, fill: [number, number, number], ink: [number, number, number], look?: GfLookComp | null, dest?: { flip: boolean; w: number; h: number } | null): boolean {
     this.poll();
     if (look ? !this.lprog : !this.prog) return false;
     const gl = this.gl;
-    gl.viewport(0, 0, src.w, src.h);
+    gl.viewport(0, 0, dest ? dest.w : src.w, dest ? dest.h : src.h);
     gl.disable(gl.SCISSOR_TEST);
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.STENCIL_TEST);
@@ -1123,9 +1127,12 @@ export class GfComposite {
     gl.colorMask(true, true, true, true);
     gl.enable(gl.BLEND);
     gl.blendEquation(gl.FUNC_ADD);
-    gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
+    // K1454: on the canvas the destination alpha is the backdrop's (kept); in the ripple filter's
+    // texture it starts at 0 and the filter reads it, so there the composite must write its own.
+    if (dest?.flip) gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    else gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
     if (look) {
-      if (!this.lu.size) for (const n of ["uC", "uCo", "uHi", "uLook", "uBd", "uFill", "uRvFx"]) this.lu.set(n, gl.getUniformLocation(this.lprog!, n));
+      if (!this.lu.size) for (const n of ["uC", "uCo", "uHi", "uLook", "uBd", "uFill", "uRvFx", "uFlip"]) this.lu.set(n, gl.getUniformLocation(this.lprog!, n));
       const u = (n: string): WebGLUniformLocation | null => this.lu.get(n) ?? null;
       gl.useProgram(this.lprog);
       // K1389 s2: the pass's second attachment holds the colours; K1425: the third holds the border indication
@@ -1143,6 +1150,7 @@ export class GfComposite {
       gl.uniform4f(u("uBd"), look.bd[0], look.bd[1], look.bd[2], look.bd[3]);
       gl.uniform3f(u("uFill"), fill[0], fill[1], fill[2]);
       gl.uniform1f(u("uRvFx"), look.fx ? 1 : 0);
+      gl.uniform1f(u("uFlip"), dest?.flip ? 1 : 0);
       gl.bindVertexArray(this.vao);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl.bindVertexArray(null);
@@ -1159,6 +1167,7 @@ export class GfComposite {
     gl.uniform1i(this.uC, 0);
     gl.uniform3f(this.uFill, fill[0], fill[1], fill[2]);
     gl.uniform3f(this.uInk, ink[0], ink[1], ink[2]);
+    gl.uniform1f(this.uFlip, dest?.flip ? 1 : 0);
     gl.bindVertexArray(this.vao);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.bindVertexArray(null);

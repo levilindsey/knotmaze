@@ -2219,9 +2219,11 @@ uniform int uLook;
 uniform vec4 uBd;
 uniform vec3 uFill;
 uniform float uRvFx;
+uniform float uFlip;
 out vec4 o;
 void main() {
   ivec2 q = ivec2(gl_FragCoord.xy);
+  if (uFlip > 0.5) q.y = textureSize(uC, 0).y - 1 - q.y;
   vec4 c = texelFetch(uC, q, 0);
   float ink = c.x; float cov = c.y;
   if (!(ink > 0.0) && !(cov > 0.0)) { o = vec4(0.0); return; }
