@@ -27,7 +27,7 @@ async function load(mode, fl) {
   await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
   await page.goto(linkOf(mode, fl), { waitUntil: "load", timeout: 900000 });
   await page.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
-  if (mode !== "today") await page.waitForFunction(() => (globalThis.__knotGf?.stats?.composites ?? 0) > 0, { timeout: 900000, polling: 300 });
+  if (mode !== "today") await page.waitForFunction(() => (globalThis.__knotGf?.stats?.switchedMs ?? -1) > 0 && (globalThis.__knotGf?.stats?.composites ?? 0) > 2, { timeout: 900000, polling: 300 }); // K1460 s3: gf has switched in (be6ae5f6)
   const hash = await page.evaluate(async (t) => {
     await window.__knotPhysFreeze(true);
     await window.__knotStepUntil(t);

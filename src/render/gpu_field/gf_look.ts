@@ -1423,7 +1423,10 @@ int lkj[MAXS]; float lks[MAXS];
 `;
 const M_ANCHOR = "\nvoid main() {\n";
 function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? s : s + ".0"; }
+// PROBE K1460 s3 (reverted): lkdbg bits 1 no window, 2 no far reach, 4 no candidate loop, 8 no fringe
+const LKDBG = typeof location !== "undefined" ? Number(new URLSearchParams(location.search).get("lkdbg") ?? 0) | 0 : 0;
 const M_LOOK = `
+#define LKDBG ${LKDBG}
 uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG; uniform float uLkF;
 uniform highp sampler2D uPt; uniform vec3 uGold;
 uniform highp sampler2D uGw; uniform float uGwLive;
@@ -1889,7 +1892,7 @@ float lkCut(float d, float sinT, float exg, float wm, float pxw, vec2 sc) {
   float e = d - uH - uLkG * sc.x;
   float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);
   float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;
-  if (uGwLive > 0.5) {
+  if (uGwLive > 0.5 && (LKDBG & 1) == 0) {
     float fs = clamp(wm / max(0.5 * uLkF, pxw), 0.0, 1.0);
     fs = mix(1.0, fs * fs * (3.0 - 2.0 * fs), clamp(e / pxw, 0.0, 1.0));
     cut *= clamp(wm / pxw + 0.5, 0.0, 1.0) * fs;
@@ -1905,6 +1908,7 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   vec2 sc = vec2(1.0);
   if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
   for (int j = 0; j < np; j++) {
+    if ((LKDBG & 4) != 0) break;
     if (!(pkey[j] > key + uZt)) continue;
     vec2 qO = lookQ(j, p); vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
@@ -1916,7 +1920,7 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   // rc = h + W + 2aa of the pixel, so the loop above sees the over thread only about W past its edge:
   // the ramp stopped there, a hard edge whatever the fade. Inside a window, the bake names the over
   // pass and its arc near this sample; the pass's true nearest point gives today's distance.
-  if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {
+  if (uGwLive > 0.5 && wm > -pxw && g < 0.999 && (LKDBG & 2) == 0) {
     if (sl.x >= 0.0) {
       int cO = int(sl.x + 0.5);
       vec3 N = lkNearOn(cO, sl.y, sl.z, p, cO == cU ? qU.x : -1.0);
@@ -1935,6 +1939,7 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
 // the under thread beside an over pass, the uncut fringe drew a dotted line across the faded under thread. Cut the
 // fringe by its lowest covering piece's gap, keeping whatever pieces above that one cover the pixel.
 void lkFringe(vec2 p, inout float ink, inout float cov) {
+  if ((LKDBG & 8) != 0) return;
   int jU = -1; float kU = BIG;
   for (int j = 0; j < np; j++) { if (pd[j] < uH + uAA && pkey[j] < kU) { kU = pkey[j]; jU = j; } }
   if (jU < 0) return;
