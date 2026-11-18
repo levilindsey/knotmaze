@@ -1,0 +1,11 @@
+columns: base_0 | clip_0 | base_d | clip_d | base_1.2 | clip_1.2 | ol
+row 1: muse_default_tw:24.50:10.58
+row 2: muse_default_tw:22.90:2.44
+row 3: muse_default_tw:22.42:2.92
+row 4: muse_default_tw:24.05:10.43
+row 5: muse_default_tw:23.59:27.19
+row 6: muse_default_tw:23.32:27.41
+row 7: muse_default_tw:25.16:10.40
+row 8: muse_default_tw:24.25:10.56
+row 9: muse_default_tw:23.98:27.41
+row 10: muse_default_tw:23.75:27.63

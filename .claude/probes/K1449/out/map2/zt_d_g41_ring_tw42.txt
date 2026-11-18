@@ -1,0 +1,1 @@
+g41_ring_tw42	zt_d	finds 33	{"rbreak:plain":23,"rthin:plain":10}	{"px":5921916,"act":1544479,"msPerMpx":1060,"usPerAct":4.06,"pcallsPerAct":0.122,"segsPerAct":0.76,"cfgsPerAct":1.023,"nSegPerAct":20,"nKPerAct":0.28}

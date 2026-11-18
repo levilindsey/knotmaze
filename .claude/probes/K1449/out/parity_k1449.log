@@ -1,0 +1,9 @@
+renderer ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11)
+def off fl 0.14: 9088544 px; ink max 3.01e-3 at 34.4562,13.7813 (>1e-3 10, >1e-2 0, >0.1 0); cov max 3.16e-4 (>1e-2 0); chainMis 48; s max 8.74e+0; win/seg/k mis 221/25/0; home-changed px 0 (ink >1e-2 0); 89435 ms
+def on fl 0: 9088544 px; ink max 6.91e-4 at 21.4438,16.0813 (>1e-3 0, >1e-2 0, >0.1 0); cov max 3.16e-4 (>1e-2 0); chainMis 48; s max 8.74e+0; win/seg/k mis 343/25/0; home-changed px 22841 (ink >1e-2 16420); 106308 ms
+def on fl 0.14: 9088544 px; ink max 9.67e-4 at 7.7438,3.2437 (>1e-3 0, >1e-2 0, >0.1 0); cov max 3.16e-4 (>1e-2 0); chainMis 48; s max 8.74e+0; win/seg/k mis 363/25/0; home-changed px 25724 (ink >1e-2 19088); 77009 ms
+def on fl 1.2: 9088544 px; ink max 6.91e-4 at 21.4438,16.0813 (>1e-3 0, >1e-2 0, >0.1 0); cov max 3.16e-4 (>1e-2 0); chainMis 48; s max 8.74e+0; win/seg/k mis 363/25/0; home-changed px 27052 (ink >1e-2 20481); 77939 ms
+muse_hash off fl 0.14: 9919140 px; ink max 6.09e-3 at 12.5938,34.3687 (>1e-3 26, >1e-2 0, >0.1 0); cov max 3.24e-4 (>1e-2 0); chainMis 74; s max 4.81e+1; win/seg/k mis 267/37/0; home-changed px 0 (ink >1e-2 0); 68716 ms
+muse_hash on fl 0: 9919140 px; ink max 6.09e-3 at 12.5938,34.3687 (>1e-3 7, >1e-2 0, >0.1 0); cov max 3.24e-4 (>1e-2 0); chainMis 74; s max 4.81e+1; win/seg/k mis 440/37/0; home-changed px 161902 (ink >1e-2 140693); 95137 ms
+muse_hash on fl 0.14: 9919140 px; ink max 1.11e-1 at 24.2312,32.7188 (>1e-3 23, >1e-2 2, >0.1 1); cov max 3.24e-4 (>1e-2 0); chainMis 74; s max 4.81e+1; win/seg/k mis 440/37/0; home-changed px 169023 (ink >1e-2 147235); 94743 ms
+muse_hash on fl 1.2: 9919140 px; ink max 6.09e-3 at 12.5938,34.3687 (>1e-3 8, >1e-2 0, >0.1 0); cov max 3.24e-4 (>1e-2 0); chainMis 74; s max 4.81e+1; win/seg/k mis 442/37/0; home-changed px 179273 (ink >1e-2 157582); 90032 ms

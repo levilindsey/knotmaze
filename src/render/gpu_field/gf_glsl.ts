@@ -110,9 +110,9 @@ export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; ol
  * GfPass only behind the `gfh=1` render flag (gf_app.ts): without it no program changes, byte for byte
  * (gf_home_glsl.test.ts). member() takes the piece's depth z; loop 1 also finds the home arm, the nearest root
  * (smallest d) whose home interval [0, aHome] holds s (aHome rides the arm record's second texel .y, gf_pack.ts with
- * T.homeOn); a piece that is not already a full member takes that arm's group at 1 - ss(0, Z, |z|) when that is
+ * T.homeOn); a piece that is not already a full member takes that arm's group at 1 - ss(zt, Z, |z|) when that is
  * more than it has, Z = uHomeZ = fadeLength * amp / win (GfPass.homeFade, fed per frame: no table rebuild), a hard
- * step at Z = 0. The keys widen each arm's s set to aHome (gf_keys.ts). The depth classes (zc's P0 and P1, NORAMP)
+ * step at |z| = zt while Z <= zt (K1449: eval.ts homeRamp, full membership down to the tie depth). The keys widen each arm's s set to aHome (gf_keys.ts). The depth classes (zc's P0 and P1, NORAMP)
  * call the same member() in the same keys loop, so a ramp still routes the pixel exactly as before.
  */
 export function homeForm(src: string): string {
@@ -136,7 +136,7 @@ export function homeForm(src: string): string {
     "  if (g < 0) ramp = 1.0;\n" +
     "  if (hg >= 0 && !(g >= 0 && ramp >= 1.0)) {\n" +
     "    float az = abs(z);\n" +
-    "    float r = uHomeZ > 0.0 ? 1.0 - ss(0.0, uHomeZ, az) : (az > 0.0 ? 0.0 : 1.0);\n" +
+    "    float r = uHomeZ > uZt ? 1.0 - ss(uZt, uHomeZ, az) : (az > uZt ? 0.0 : 1.0);\n" +
     "    if (r > 0.0 && !(g == hg && ramp >= r)) { g = hg; ramp = r; }\n" +
     "  }\n" +
     "  mg = g; mramp = ramp;\n}\n",

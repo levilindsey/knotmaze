@@ -1,0 +1,1 @@
+g41_def_tw64	clip_d	finds 344	{"dbreak:tie":1,"rstray:tie":3,"rthin:plain":299,"rthin:ramp":24,"rthin:tie":16,"rthin:thru":1}	{"px":14041776,"act":8356431,"msPerMpx":2602,"usPerAct":4.37,"pcallsPerAct":0.315,"segsPerAct":3.23,"cfgsPerAct":1.019,"nSegPerAct":32.9,"nKPerAct":0.51}

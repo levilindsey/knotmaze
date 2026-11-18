@@ -1,0 +1,1 @@
+def	zt_d	finds 105	{"rstray:ramp":12,"rthin:plain":92,"rthin:ramp":1}	{"px":13809720,"act":7084305,"msPerMpx":2302,"usPerAct":4.49,"pcallsPerAct":0.295,"segsPerAct":2.59,"cfgsPerAct":1.032,"nSegPerAct":27.8,"nKPerAct":0.59}

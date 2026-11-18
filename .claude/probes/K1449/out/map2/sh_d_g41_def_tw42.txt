@@ -1,0 +1,1 @@
+g41_def_tw42	sh_d	finds 7	{"rbreak:plain":1,"rstray:tie":6}	{"px":13616484,"act":5978087,"msPerMpx":1457,"usPerAct":3.32,"pcallsPerAct":0.26,"segsPerAct":1.93,"cfgsPerAct":1.066,"nSegPerAct":23.8,"nKPerAct":0.57}

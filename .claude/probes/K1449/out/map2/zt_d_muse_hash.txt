@@ -1,0 +1,1 @@
+muse_hash	zt_d	finds 612	{"dbreak:tie":18,"dstray:tie":18,"dstray:plain":2,"rbreak:tie":8,"rstray:plain":19,"rstray:ramp":6,"rthin:plain":373,"rthin:ramp":147,"rthin:tie":19,"rthin:thru":2}	{"px":14876088,"act":10100660,"msPerMpx":3127,"usPerAct":4.61,"pcallsPerAct":0.33,"segsPerAct":3.81,"cfgsPerAct":1.044,"nSegPerAct":39.2,"nKPerAct":0.59}

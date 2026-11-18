@@ -1,0 +1,1 @@
+muse_hash	base_0	finds 820	{"dbreak:tie":71,"dstray:tie":82,"rbreak:tie":61,"rstray:plain":17,"rstray:tie":5,"rthin:plain":558,"rthin:tie":24,"rthin:thru":2}	{"px":14876088,"act":10100660,"msPerMpx":2244,"usPerAct":3.3,"pcallsPerAct":0.293,"segsPerAct":3.37,"cfgsPerAct":1,"nSegPerAct":39.2,"nKPerAct":0.59}

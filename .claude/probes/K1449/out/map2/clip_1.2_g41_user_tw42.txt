@@ -1,0 +1,1 @@
+g41_user_tw42	clip_1.2	finds 106	{"rbreak:plain":49,"rbreak:ramp":1,"rthin:plain":48,"rthin:ramp":8}	{"px":6426640,"act":2463353,"msPerMpx":1553,"usPerAct":4.05,"pcallsPerAct":0.226,"segsPerAct":1.65,"cfgsPerAct":1.079,"nSegPerAct":23.9,"nKPerAct":0.47}

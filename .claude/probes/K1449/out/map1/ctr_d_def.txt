@@ -1,0 +1,1 @@
+def	ctr_d	finds 113	{"rstray:tie":16,"rthin:plain":94,"rthin:tie":1,"rthin:ramp":2}	{"px":13809720,"act":7084305,"msPerMpx":1423,"usPerAct":2.77,"pcallsPerAct":0.291,"segsPerAct":2.56,"cfgsPerAct":1.042,"nSegPerAct":27.8,"nKPerAct":0.59}

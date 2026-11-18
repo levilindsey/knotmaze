@@ -1,0 +1,1 @@
+g41_def_tw64	base_d	finds 344	{"dbreak:tie":1,"rstray:tie":13,"rthin:plain":297,"rthin:ramp":12,"rthin:tie":20,"rthin:thru":1}	{"px":14041776,"act":8356431,"msPerMpx":2062,"usPerAct":3.46,"pcallsPerAct":0.315,"segsPerAct":3.23,"cfgsPerAct":1.038,"nSegPerAct":32.9,"nKPerAct":0.51}

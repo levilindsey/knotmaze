@@ -71,20 +71,24 @@ export class GfEval {
    * K1438: the crossing fade (`fadeLength`, world units; url_state's default, pinned by a test), read per pixel
    * like a uniform: set it at any time, no table rebuild. With home membership on (T.homeOn), a piece inside an
    * arm's home interval stays in the arm's junction group while its depth is near 0 and leaves it as the thread
-   * dives: membership 1 - ss(0, Z, |z|), Z = fadeLength * amp / win, the depth a full-window hat (slope amp / win)
-   * reaches over fadeLength of arc. So the fade runs over fadeLength of arc as the dive starts (less where two pins
-   * share a shorter window), the same length the look's crossing gap ramps over (gf_look.ts lkGap); 0 is a hard step
-   * at the dive's first sample (membership only where |z| is exactly 0). K1435's tgr (3 zt) is fadeLength 0.3 win.
+   * dives: membership 1 - ss(zt, Z, |z|), Z = fadeLength * amp / win, the depth a full-window hat (slope amp / win)
+   * reaches over fadeLength of arc. So the fade ends fadeLength of arc into the dive (less where two pins share a
+   * shorter window), the same length the look's crossing gap ramps over (gf_look.ts lkGap). K1449: a full member
+   * down to zt (the depth within which two surfaces' keys tie, composite()): a piece shallower than that is never a
+   * second surface keyed within zt of its own junction, so the dive draws no tie band; and a Z at or below zt
+   * (fadeLength 0 included) is a hard step at zt, clear of the tent's foot, where |z| leaves 0 by f32 noise (K1439's
+   * parity outlier). K1435's tgr (3 zt) is fadeLength 0.3 win.
    */
   fadeLength = GF_FADE_LENGTH;
 
   constructor(T: GfTables) { this.T = T; }
 
-  /** K1438: the home membership's ramp at depth |z| = az (1 = full member). */
+  /** K1438/K1449: the home membership's ramp at depth |z| = az (1 = full member); gf_glsl.ts homeForm mirrors it. */
   homeRamp(az: number): number {
+    const zt = this.T.zt;
     const Z = (this.fadeLength * this.T.amp) / this.T.win;
-    if (!(Z > 0)) return az > 0 ? 0 : 1;
-    return 1 - ss(0, Z, az);
+    if (!(Z > zt)) return az > zt ? 0 : 1;
+    return 1 - ss(zt, Z, az);
   }
 
   /** Membership of (c, s) as eval() takes it (group -1 = none; ramp 1 = full): for tests and probes. */

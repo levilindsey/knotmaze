@@ -1,0 +1,4 @@
+columns: base_0 | clip_0 | base_d | clip_d | base_1.2 | clip_1.2 | ol
+row 1: g41_user_tw64:9.13:18.25
+row 2: g41_user_tw64:8.73:18.59
+row 3: g41_user_tw64:17.80:9.55

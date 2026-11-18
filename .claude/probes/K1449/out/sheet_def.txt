@@ -1,0 +1,7 @@
+columns: base_0 | clip_0 | base_d | clip_d | base_1.2 | clip_1.2 | ol
+row 1: def:19.96:30.66
+row 2: def:19.71:30.93
+row 3: def:3.60:13.52
+row 4: def:30.88:12.42
+row 5: def:3.69:34.42
+row 6: def:9.06:6.41

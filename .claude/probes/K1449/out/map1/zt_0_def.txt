@@ -1,0 +1,1 @@
+def	zt_0	finds 130	{"dbreak:tie":8,"rbreak:tie":1,"rstray:tie":5,"rthin:plain":114,"rthin:ramp":2}	{"px":13809720,"act":7084305,"msPerMpx":1691,"usPerAct":3.3,"pcallsPerAct":0.287,"segsPerAct":2.53,"cfgsPerAct":1.014,"nSegPerAct":27.8,"nKPerAct":0.59}

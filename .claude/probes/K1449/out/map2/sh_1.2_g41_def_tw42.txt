@@ -1,0 +1,1 @@
+g41_def_tw42	sh_1.2	finds 0	{}	{"px":13616484,"act":5978087,"msPerMpx":1725,"usPerAct":3.93,"pcallsPerAct":0.26,"segsPerAct":1.93,"cfgsPerAct":1.107,"nSegPerAct":23.8,"nKPerAct":0.57}

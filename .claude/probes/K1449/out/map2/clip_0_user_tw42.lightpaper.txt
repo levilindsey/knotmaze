@@ -1,0 +1,1 @@
+user_tw42.lightpaper	clip_0	finds 128	{"rbreak:plain":50,"rbreak:ramp":1,"rstray:tie":5,"rstray:ramp":7,"rthin:plain":64,"rthin:ramp":1}	{"px":6426640,"act":2463396,"msPerMpx":1795,"usPerAct":4.68,"pcallsPerAct":0.216,"segsPerAct":1.58,"cfgsPerAct":1.039,"nSegPerAct":23.9,"nKPerAct":0.47}

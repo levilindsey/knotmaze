@@ -1,0 +1,1 @@
+g41_def_tw42	clip_0	finds 6	{"rbreak:plain":1,"rstray:tie":5}	{"px":13616484,"act":5978087,"msPerMpx":1922,"usPerAct":4.38,"pcallsPerAct":0.26,"segsPerAct":1.93,"cfgsPerAct":1.048,"nSegPerAct":23.8,"nKPerAct":0.57}
