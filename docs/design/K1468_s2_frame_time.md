@@ -73,3 +73,48 @@ A partial result lands: item 1 alone is mergeable.
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1468 s2` here, commit, and report: what holds, the numbers, a `Ledger items` list and
 K1468's handle fields.
+
+### Handoff K1468 s2
+
+Stopped at 7:44 PM (started 7:08 PM) on the disk rule. C: dropped from 27.5 GB free at the start to
+0.88 GB at 7:43 PM. The warm script's `Test-Disk` threw before the third build's warm. I deleted my own
+files (the three preview builds, 2.44 GB, and two profiles, 0.24 GB), which brought C: back to 3.6 GB.
+That is still under the 5 GB line, so no measurement ran.
+
+- **What used the disk (inferred, not verified).** `C:\pagefile.sys` is system-managed and now 26.2 GB
+  (allocated 25030 MB, in use 3.0 GB, peak 3.15 GB), last written 7:34 PM. Its size at 7:08 PM was not
+  recorded. My own files came to 2.7 GB at most. Other agents' temp folders held 4.1 GB more: 1.6 GB in
+  `k1460s5-prev`, 1.7 GB in `knotmaze-previews` and 0.8 GB in `k1436s3-prev`. If the pagefile grew from
+  a commit spike, the space comes back only when Windows shrinks it, and with a system-managed pagefile
+  that is usually at the next restart.
+- **Done 1-4: nothing measured.** There is no interleaved table, no K1451 build time, no pixel A/B and
+  no cold-compile run. The perf lock was never taken.
+- **Cold first composite, as a side reading from the warm runs.** Watchdog off (`--disable-gpu-watchdog`),
+  fresh profiles, one load per link, no context loss:
+  - 8711ef35: link A 110.0 s, link B 138.8 s.
+  - ae2b4dfb: link A 145.0 s, link B 150.3 s.
+  - origin/master: not reached.
+  These sit in or above stage 1's range (84-117 s on A, 127-178 s on B).
+- **Probes committed** (`.claude/probes/K1468/s2/`), ready to run once C: has 5 GB free:
+  - `common.ps1`: links A and B, `Wait-Mem`, `Test-Disk`.
+  - `warm.ps1 <port> <name>`: warms one profile per build on both links, watchdog off.
+  - `interleave.ps1 -Out <dir> -Rounds 4 -Builds "b8711=5660","bae2b=5661","bmaster=5662" -BuildTime`:
+    the ABC ABC rounds under the perf lock, the lock waited for inside, then K1451's build time with
+    `tables_k1451m.ts` copied from e83fa5a6 and deleted after.
+  - `summarize.mjs <dir> [bae2b]`: the table and each build's percent against ae2b4dfb.
+  - `rest.mjs` now passes a `#k1468p=<v>` hash to the page as `window.__k1468p`, before the URL rewrite.
+- **The attribution probe for link A is ready.** Commit 182fb101 (8a33b692 before the rebase) is the
+  probe build, reverted in the next commit. `#k1468p=div` replaces the composite's const `GF_U8[256]`
+  table read with `vec4(uvec4(bytes)) / 255.0`. `#k1468p=alu` uses exact integer k/255 bits
+  (findMSB, then ((k << (23 - e)) + 127) / 255; checked in JS for every k from 1 to 254). With no hash
+  it reads the table, as master does.
+- **Next.**
+  1. Free C: to 5 GB or more. A restart (to shrink the pagefile) needs Levi.
+  2. Build 8711ef35, ae2b4dfb and origin/master on ports 5660-5662 with `scripts/preview.ps1`, and warm
+     each one with `warm.ps1`.
+  3. Run `interleave.ps1 ... -BuildTime`, then `summarize.mjs`.
+  4. Replace the 8711ef35 slot with a build of 182fb101, and compare the default, `div` and `alu` reads
+     on link A.
+  5. If the table read is the gap, the candidate fixes are: the exact ALU form; or reading only the
+     chosen texel's bytes after the fringe loop (keep the uint word and test `(w >> 24) != 0u`); or a
+     256x1 R32F lookup texture. Done 2-4 follow as the brief says.
