@@ -691,32 +691,13 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
   // K1414: this frame's route bands, snapshotted like the paint (they follow the samples' arcs)
   const routeSrc = (r: NonNullable<typeof ctx.scene.renderer>): GfRouteSource => {
     const x = r as unknown as GfRouteSource & { armNextJointCtrl: (jn: number, a: { chain: number; slot: number; dir: 1 | -1 }) => number | null };
-    // K1414 (24F): the fan's own bands (joinery's records, via the renderer's
-    // fieldProbe) - gf's bands/discs exist exactly where the fan's do, with its d/m.
-    let fanBands: GfRouteSource["fanBands"];
-    try {
-      const fp = (r as unknown as { fieldProbe?: { record: (ji: number) => number; arms: (ji: number) => ReadonlyArray<{ chain: number; slot: number; dir: number }>; routes: (ji: number) => ReadonlyArray<{ ia: number; ib: number; d: number; m: number }> } }).fieldProbe;
-      if (fp) {
-        const map = new Map<number, { a: { chain: number; slot: number; dir: 1 | -1 }; b: { chain: number; slot: number; dir: 1 | -1 } | null; d: number; m: number }[]>();
-        for (const ji of x.routesByJn.keys()) {
-          if (fp.record(ji) < 0) continue;
-          const arms = fp.arms(ji);
-          const list: { a: { chain: number; slot: number; dir: 1 | -1 }; b: { chain: number; slot: number; dir: 1 | -1 } | null; d: number; m: number }[] = [];
-          for (const rt of fp.routes(ji)) {
-            const A = arms[rt.ia];
-            if (!A) continue;
-            const B = rt.ib >= 0 ? arms[rt.ib] : null;
-            list.push({ a: { chain: A.chain, slot: A.slot, dir: A.dir as 1 | -1 }, b: B ? { chain: B.chain, slot: B.slot, dir: B.dir as 1 | -1 } : null, d: rt.d, m: rt.m });
-          }
-          if (list.length) map.set(ji, list);
-        }
-        fanBands = map;
-      }
-    } catch { fanBands = undefined; }
+    // K1424 (26C): no fan-record source: attach() nulls filletLayer, so joinery's
+    // records freeze without the walk's routes; bands build from the live
+    // declaration (routesByJn) and the fan bake in GfRouteTable.
     return {
       kd: x.kd, kcv: x.kcv, chainSamples: x.chainSamples,
       style: x.style, cuspRadius: x.cuspRadius, junctionArms: x.junctionArms,
-      routesByJn: x.routesByJn, fullJn: x.fullJn, fanBands,
+      routesByJn: x.routesByJn, fullJn: x.fullJn,
       armNextJointCtrl: (jn, a) => x.armNextJointCtrl(jn, a),
     };
   };

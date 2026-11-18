@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { gfFs } from "../../src/render/gpu_field/gf_glsl";
 import {
   GfRouteTable,
+  fanAt,
   lookForm,
   rimAcross,
   rimAlong,
@@ -100,12 +101,35 @@ describe("K1414 gf route bands", () => {
     expect(routeDeclKey(a)).toBe(routeDeclKey(src(new Map([[0, [{ a: { chain: 0, slot: 2, dir: -1 as const }, b: null }]]]))));
   });
 
+  it("K1424: the fan bake marks every arm's samples within the fan reach, third arms included", () => {
+    // fh 0.6, fan reach max(1.25 * 0.6, 1.2) + 0.25 = 1.45 world: samples 1 world
+    // from the root are fan, samples 2 world from it are not.
+    const wide: GfRouteSource = { ...src(new Map([[0, [{ a: { chain: 0, slot: 2, dir: -1 as const }, b: { chain: 1, slot: 2, dir: 1 as const } }]]])), style: { threadWidth: 1.2, casingWidth: 1.4 } };
+    const T = new GfRouteTable();
+    const S = T.snapshot(wide);
+    expect(T.bands[0].disc).toBe(0);
+    expect(S!.data[3]).toBe(T.fanBase);
+    expect(S!.data[(1 + 6 * 0) * 4 + 20]).toBe(0); // H5: the band's disc ordinal
+    // positions layout: chain 0 at base 0, chain 1 at base 5 (5 open samples each)
+    expect([...T.fan.slice(0, 5)]).toEqual([0, 1, 1, 1, 0]);
+    expect([...T.fan.slice(5, 10)]).toEqual([0, 1, 1, 1, 0]);
+    // the shader twin: nearest kept sample decides
+    expect(fanAt(T.fan, 0, 5, false, 1, 0)).toBe(0);
+    expect(fanAt(T.fan, 0, 5, false, 0, 0)).toBe(-1);
+    expect(fanAt(T.fan, 5, 5, false, 3, 0.4)).toBe(0);
+    expect(fanAt(T.fan, 5, 5, false, 4, 0)).toBe(-1);
+    expect(fanAt(T.fan, 5, 5, false, 3, 0.6)).toBe(-1); // nearer sample 4: no fan
+  });
+
   it("the look form carries the band and rim terms; the originals are untouched", () => {
     const programs = [...cornerPlan(GF_TIERS[0]).map((e) => gfFs(false, true, e.tier)), gfFs(false, true)];
     for (const s of programs) {
       for (const f of [lookForm(s), lookForm(revealForm(s))]) {
         expect(f).toContain("uniform highp sampler2D uRt;");
         expect(f).toContain("lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0)");
+        expect(f).toContain("int lkFan(int c, vec2 q)");
+        expect(f).toContain("bool inFan = fanD == bDisc");
+        expect(f).toContain("if (!inFan && (!(stp > 0.0) || ad / stp > 1.25)) continue;");
         expect(f).toContain("lkRim(lkCo.rgb, lab, lq, p)");
       }
       expect(s).not.toContain("uRt");

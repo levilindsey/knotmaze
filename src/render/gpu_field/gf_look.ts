@@ -1155,13 +1155,17 @@ export interface GfRouteSource extends GfLookSource {
   // renderer's fieldProbe: arm refs plus the turn's d/m, turn-fit bisection included).
   // When present, bands and discs are built ONLY for these junctions and routes -
   // the fan draws nothing at a junction it has no record for, and its d is the shrunk one.
-  fanBands?: ReadonlyMap<number, ReadonlyArray<{ a: GfRouteArmRef; b: GfRouteArmRef | null; d: number; m: number }>>;
+  // K1424 (26C): no fan-record source: under gf the joinery's records freeze at
+  // attach (gf_app nulls filletLayer), so bands build from routesByJn alone and
+  // the fan's d comes from routeCorner plus the turn-fit bisection below.
   fullJn: ReadonlySet<number>;
   armNextJointCtrl: (jn: number, a: GfRouteArmRef) => number | null;
 }
 
 export interface GfRouteBandInfo {
   chainA: number; chainB: number; nv: number; tau0: number; tau1: number;
+  /** The suppression disc (routed-junction ordinal) this band belongs to. */
+  disc: number;
   verts: [number, number, number][];
 }
 
@@ -1178,7 +1182,7 @@ export function routeDeclKey(r: GfRouteSource): number {
     }
   }
   for (const ji of r.fullJn) mix(ji + 1000003);
-  if (r.fanBands) for (const [ji, list] of r.fanBands) { mix(ji + 2000003); mix(list.length); for (const rt of list) { mix(Math.round(rt.d * 4096)); mix(Math.round(rt.m * 4096)); } }
+  // (26C: the fan records' d/m no longer ride the key: bands build from routesByJn.)
   for (let ch = 0; ch < r.chainSamples.length; ch++) mix(r.chainSamples[ch]?.count ?? -1);
   return h >>> 0;
 }
@@ -1196,7 +1200,13 @@ interface GfArmLite {
  * routeCorner; the under-gap cap and the turn-fit bisection are the two omissions: under gf's lean
  * the under windows are empty, so the gap cap is infinite, and a turn that leaves the web only
  * recolours field pixels the web already covers). Layout, texels of a GF_TW-wide RGBA32F texture:
- * texel 0 = (band count, disc count, disc base, texels); per band 5 header texels then, after the
+ * texel 0 = (band count, disc count, disc base, fan base); per band 6 header texels (the sixth
+ * carries its disc ordinal) then, after the discs (4 texels each), every band's vertices
+ * (x, y, tau), then the fan bake. K1424 (26C): the fan bake is one float per kept sample in
+ * the look positions' layout (its disc ordinal + 1, 0 = no routed fan), the sample's arc
+ * along any arm of a routed junction within the fan reach of its root; lkFan reads the
+ * label's nearest sample, so suppression and bands act on fan pixels exactly as today's
+ * fan does, instead of approximating the fan from labels and arcs.
  * discs (3 texels each: centre/radius/full, chain count + chains), every band's vertices (x, y, tau).
  * A disc per routed junction suppresses the gold in its web outside the bands (today's untraveled
  * base); a fully traveled junction's disc is flagged and suppresses nothing.
@@ -1207,6 +1217,10 @@ export class GfRouteTable {
   rows = 0;
   ms = 0;
   bands: GfRouteBandInfo[] = [];
+  /** K1424: the fan bake (per kept sample, look positions' layout): disc ordinal + 1, or 0. */
+  fan = new Float32Array(0);
+  /** The fan bake's first texel in the packed texture. */
+  fanBase = 0;
   private scratch = new Float32Array(8);
 
   /** Build the packed table from the renderer's current samples and route declaration. */
@@ -1234,7 +1248,8 @@ export class GfRouteTable {
     const discs: { x: number; y: number; r: number; full: number; arms: { chain: number; sample: number; step: number }[] }[] = [];
     const vertsAll: number[] = [];
     const bands: GfRouteBandInfo[] = [];
-    for (const [ji, list] of (r.fanBands ?? r.routesByJn)) {
+    const fanArms: { chain: number; sample0: number; step: number; disc: number; closed: boolean; count: number; arcPer: number }[] = [];
+    for (const [ji, list] of r.routesByJn) {
       if (!list || list.length === 0) continue;
       const jn = r.junctionArms[ji];
       if (!jn) continue;
@@ -1282,6 +1297,14 @@ export class GfRouteTable {
       const discArms: { chain: number; sample: number; step: number }[] = [];
       for (let i = 0; i < jn.arms.length; i++) if (lites[i].ok) discArms.push({ chain: jn.arms[i].chain, sample: lites[i].sample0, step: Math.abs(lites[i].step) });
       discs.push({ x: jx, y: jy, r: webR, full: r.fullJn.has(ji) ? 1 : 0, arms: discArms });
+      // K1424: every arm of this routed junction marks its samples as fan of this disc
+      for (let i = 0; i < jn.arms.length; i++) {
+        const arm = lites[i];
+        if (!arm.ok) continue;
+        const a = jn.arms[i];
+        const arcPer = Math.max(1e-9, r.kd.geom[r.kcv[a.chain].geom * 4 + 1]);
+        fanArms.push({ chain: a.chain, sample0: arm.sample0, step: arm.step, disc: discs.length - 1, closed: arm.closed, count: (r.chainSamples[a.chain] as unknown as SplineSamples).count, arcPer });
+      }
       const armReach = (arm: GfArmLite): number => Math.min(L, Math.max(0.3 * L, arm.domain));
       const coverCap = (arm: GfArmLite): number => Math.min(arm.domain, Math.max(fh + casingGap + 2 * CUT_BIAS, drawWedges ? L : 0));
       const bandEnd = (arm: GfArmLite): number => Math.min(arm.toEnd, bandEndBase);
@@ -1314,8 +1337,46 @@ export class GfRouteTable {
           const reach = drawWedges ? Math.min(armReach(A), armReach(B)) : fh;
           d = routeCorner(alpha, reach, fh, coverCap(A), coverCap(B)).d;
           m = Math.max(d, 0.5 * fh);
-          const fanRt = rt as { d?: number; m?: number };
-          if (fanRt.d !== undefined) { d = fanRt.d; m = fanRt.m ?? Math.max(d, 0.5 * fh); }
+          // K1424 (26C): joinery's turn-fit bisection, rim-less form (the fan gate
+          // in lkRoute keeps a turn that leaves the web from painting outside it):
+          // the cubic's inner edge must stay inside either arm's ribbon or the
+          // seal disc (0.92 fh), with joinery's 0.04 fh slack past them.
+          const turnFits = (dt: number): boolean => {
+            if (dt <= 1e-6) return true;
+            armAt(A, dt, 0);
+            const ax2 = S[0]; const ay2 = S[1]; const atx2 = S[2]; const aty2 = S[3];
+            armAt(B, dt, 0);
+            const cub: number[] = [];
+            routeCubic(ax2, ay2, atx2, aty2, S[0], S[1], S[2], S[3], dt, 14, cub);
+            const np = cub.length / 3;
+            for (let i = 1; i + 1 < np; i++) {
+              let tx = cub[(i + 1) * 3] - cub[(i - 1) * 3];
+              let ty = cub[(i + 1) * 3 + 1] - cub[(i - 1) * 3 + 1];
+              const tl = Math.hypot(tx, ty);
+              if (tl < 1e-9) continue;
+              tx /= tl; ty /= tl;
+              let px = -ty; let py = tx;
+              const cx = jx - cub[i * 3]; const cy = jy - cub[i * 3 + 1];
+              if (px * cx + py * cy < 0) { px = -px; py = -py; }
+              const ex = cub[i * 3] + px * fh - jx;
+              const ey = cub[i * 3 + 1] + py * fh - jy;
+              let e = Math.hypot(ex, ey) - 0.92 * fh;
+              for (const X of [A, B]) {
+                if (ex * X.dx + ey * X.dy < 0) continue;
+                const lat = Math.abs(ex * X.dy - ey * X.dx) - fh;
+                if (lat < e) e = lat;
+              }
+              if (e > 0.04 * fh) return false;
+            }
+            return true;
+          };
+          if (!turnFits(d)) {
+            let lo = 0; let hi = d;
+            for (let it = 0; it < 6; it++) { const mid = (lo + hi) / 2; if (turnFits(mid)) lo = mid; else hi = mid; }
+            d = lo;
+            m = Math.max(d, 0.5 * fh);
+          }
+          // (fan-record d/m override removed in 26C: see turnFits above)
           along(A, Math.max(bandEnd(A), d), d, -1, 24, true, false, verts);
           // the turn: arm frames at arc d, then routeCubic's points
           armAt(A, d, 0);
@@ -1348,23 +1409,64 @@ export class GfRouteTable {
         let boundR = webR;
         for (const v of verts) boundR = Math.max(boundR, Math.hypot(v[0] - jx, v[1] - jy) + fh);
         heads.push(verts.length, A.chain, B ? B.chain : -1, m, A.sample0, B ? B.sample0 : 0, A.step, B ? B.step : 0, jx, jy, webR, boundR, A.dx, A.dy, B ? B.dx : 0, B ? B.dy : 0, mdx, mdy, inT);
-        bands.push({ chainA: A.chain, chainB: B ? B.chain : -1, nv: verts.length, tau0: verts[0][2], tau1: verts[verts.length - 1][2], verts });
+        bands.push({ chainA: A.chain, chainB: B ? B.chain : -1, nv: verts.length, tau0: verts[0][2], tau1: verts[verts.length - 1][2], disc: discs.length - 1, verts });
         for (const v of verts) vertsAll.push(v[0], v[1], v[2], 0);
       }
     }
     this.bands = bands;
     this.nBands = bands.length;
     this.nDiscs = discs.length;
-    const nTex = 1 + 5 * bands.length + 4 * discs.length + vertsAll.length / 4;
+    // K1424: the fan bake, in the look positions' layout (as GfPaintTable bakes)
+    const fanByChain = new Map<number, typeof fanArms>();
+    for (const fa of fanArms) { let l = fanByChain.get(fa.chain); if (!l) fanByChain.set(fa.chain, (l = [])); l.push(fa); }
+    let nFan = 0;
+    for (let ch = 0; ch < r.chainSamples.length; ch++) if (lookValid(r, ch)) nFan += r.chainSamples[ch]!.count + (r.kcv[ch].closed ? 1 : 0);
+    const fan = new Float32Array(nFan);
+    {
+      let pb = 0;
+      for (let ch = 0; ch < r.chainSamples.length; ch++) {
+        if (!lookValid(r, ch)) continue;
+        const c = r.kcv[ch];
+        const count = r.chainSamples[ch]!.count;
+        const rawC = new Float32Array(count);
+        const fas = fanByChain.get(ch) ?? [];
+        for (let k = 0; k < count; k++) {
+          let best = -1; let bestAlong = Infinity;
+          for (const fa of fas) {
+            let dSf = k - fa.sample0;
+            if (fa.closed && fa.count > 0) { dSf = ((dSf % fa.count) + fa.count) % fa.count; if (dSf > fa.count / 2) dSf -= fa.count; }
+            const along = dSf * Math.sign(fa.step) * fa.arcPer;
+            if (along < -1e-9 || along > webR) continue;
+            if (along < bestAlong) { bestAlong = along; best = fa.disc; }
+          }
+          rawC[k] = best + 1;
+        }
+        const xy = r.chainSamples[ch]!.positions;
+        let kv = 0; let l = -1;
+        for (let k = 0; k < count; k++) {
+          if (l >= 0 && xy[2 * k] === xy[2 * l] && xy[2 * k + 1] === xy[2 * l + 1]) continue;
+          fan[pb + kv++] = rawC[k]; l = k;
+        }
+        if (c.closed && kv > 1 && xy[2 * l] === xy[0] && xy[2 * l + 1] === xy[1]) kv--;
+        const end = count + (c.closed ? 1 : 0);
+        const pad = c.closed ? fan[pb] : fan[pb + kv - 1];
+        for (let k = kv; k < end; k++) fan[pb + k] = pad;
+        pb += end;
+      }
+    }
+    this.fan = fan;
+    const fanBase = 1 + 6 * bands.length + 4 * discs.length + vertsAll.length / 4;
+    this.fanBase = fanBase;
+    const nTex = fanBase + nFan;
     const rows = Math.max(1, Math.ceil(nTex / GF_TW));
     const len = rows * GF_TW * 4;
     const data = out && out.length >= len ? out : new Float32Array(len);
     data.fill(0, 0, len);
-    data[0] = bands.length; data[1] = discs.length; data[2] = 1 + 5 * bands.length; data[3] = nTex;
-    let vo = 1 + 5 * bands.length + 4 * discs.length;
+    data[0] = bands.length; data[1] = discs.length; data[2] = 1 + 6 * bands.length; data[3] = fanBase;
+    let vo = 1 + 6 * bands.length + 4 * discs.length;
     for (let bi = 0; bi < bands.length; bi++) {
       const h = heads.slice(bi * 19, bi * 19 + 19);
-      const o = (1 + 5 * bi) * 4;
+      const o = (1 + 6 * bi) * 4;
       data[o] = vo; data[o + 1] = h[0]; data[o + 2] = h[1]; data[o + 3] = h[2];
       data[o + 4] = h[3]; data[o + 5] = h[4]; data[o + 6] = h[5]; data[o + 7] = h[6];
       // H2 = (jx, jy, webR, boundR)
@@ -1373,10 +1475,12 @@ export class GfRouteTable {
       data[o + 12] = h[12]; data[o + 13] = h[13]; data[o + 14] = h[14]; data[o + 15] = h[15];
       // H4 = (stepB, mid dir x, mid dir y, inside-turn flag)
       data[o + 16] = h[7]; data[o + 17] = h[16]; data[o + 18] = h[17]; data[o + 19] = h[18];
+      // H5 = (disc ordinal, 0, 0, 0)
+      data[o + 20] = bands[bi].disc; data[o + 21] = 0; data[o + 22] = 0; data[o + 23] = 0;
       vo += bands[bi].nv;
     }
     for (let di = 0; di < discs.length; di++) {
-      const o = (1 + 5 * bands.length + 4 * di) * 4;
+      const o = (1 + 6 * bands.length + 4 * di) * 4;
       const D = discs[di];
       data[o] = D.x; data[o + 1] = D.y; data[o + 2] = D.r; data[o + 3] = D.full;
       for (let ai = 0; ai < 4; ai++) {
@@ -1385,12 +1489,26 @@ export class GfRouteTable {
         data[o + 12 + ai] = A ? A.step : 0;
       }
     }
-    const vBase = (1 + 5 * bands.length + 4 * discs.length) * 4;
+    const vBase = (1 + 6 * bands.length + 4 * discs.length) * 4;
     for (let i = 0; i < vertsAll.length; i++) data[vBase + i] = vertsAll[i];
+    for (let i = 0; i < nFan; i++) data[(fanBase + i) * 4] = fan[i];
     this.rows = rows;
     this.ms = performance.now() - t0;
     return { data, rows };
   }
+}
+
+/**
+ * K1424: the shader lkFan's twin: chain c's fan disc ordinal at segment k and
+ * fraction u in a baked fan array (positions layout: base b, n samples), or -1.
+ * The nearest kept sample decides, as the shader's texel fetch does.
+ */
+export function fanAt(F: ArrayLike<number>, b: number, n: number, closed: boolean, k: number, u: number): number {
+  const last = closed ? n : n - 1;
+  let kk = u < 0.5 ? k : k + 1;
+  if (kk < 0) kk = 0;
+  if (kk > last) kk = last;
+  return Math.round(F[b + kk]) - 1;
 }
 
 /** Today's crossing gap beyond the over thread's edge (world units): the casing's margin plus crossing_gaps' CUT_BIAS. */
@@ -1730,6 +1848,22 @@ vec2 lkFoot(int c, vec2 q, vec2 p) {
   if (!(C0.z > 0.5) && F(uOV + int(C0.x)).z < 0.0) sf -= 1.0;
   return vec2(sf, length(p - mix(A.xy, B.xy, q.y)));
 }
+// K1424 (26C): the label's fan disc ordinal from the baked fan table (gf_look.ts fanAt's
+// twin): the nearest kept sample's disc + 1, 0 = no routed fan. Fan pixels are exactly
+// the samples on a routed junction's arms within the fan reach of their roots, so a
+// turn-centre pixel won by a third arm still reads its junction here.
+int lkFan(int c, vec2 q) {
+  vec4 H = LKT(c);
+  if (H.z < 1.0) return -1;
+  bool closed = H.w > 0.5;
+  int k = int(q.x); float u = q.y;
+  if (!closed && F(uOV + int(F(uOCh + 3 * c).x)).z < 0.0) k -= 1;
+  int last = closed ? int(H.z) : int(H.z) - 1;
+  int kk = u < 0.5 ? k : k + 1;
+  if (kk < 0) kk = 0;
+  if (kk > last) kk = last;
+  return int(RT(int(RT(0).w + 0.5) + int(H.y + 0.5) + kk).x + 0.5) - 1;
+}
 // K1414: the K81 route bands over the label's colour (junction_field's junctionField, band part):
 // a routed junction's web outside its bands reads the untraveled material (its disc), inside a band
 // the two arms' composed material blended over tau in [-m, m], oldest band first. ROUTE_BAND_RAMP
@@ -1739,29 +1873,21 @@ vec3 lkRoute(vec3 col, int lab, vec2 lq, vec2 p, bool web) {
   int nB = int(hd.x + 0.5); int nD = int(hd.y + 0.5); int dBase = int(hd.z + 0.5);
   if (nB <= 0 && nD <= 0) return col;
   vec3 outc = col;
-  float ls = lq.x + lq.y; bool hasWeb = false; vec2 webC = vec2(0.0);
-  for (int di = 0; di < 128; di++) {
-    if (di >= nD) break;
-    vec4 D0 = RT(dBase + 4 * di);
-    if (length(p - D0.xy) >= D0.z) continue;
-    vec4 D1 = RT(dBase + 4 * di + 1); vec4 D2 = RT(dBase + 4 * di + 2); vec4 D3 = RT(dBase + 4 * di + 3);
-    bool mine = false;
-    for (int ai = 0; ai < 4; ai++) {
-      float ac = ai == 0 ? D1.x : ai == 1 ? D1.z : ai == 2 ? D2.x : D2.z;
-      float asf = ai == 0 ? D1.y : ai == 1 ? D1.w : ai == 2 ? D2.y : D2.w;
-      float ast = ai == 0 ? D3.x : ai == 1 ? D3.y : ai == 2 ? D3.z : D3.w;
-      if (int(ac + 0.5) != lab || !(ast > 0.0)) continue;
-      vec4 LH = LKT(lab);
-      float dd = abs(ls - asf);
-      if (LH.w > 0.5 && LH.z > 1.0) dd = min(dd, abs(LH.z - dd));
-      if (dd / ast < D0.z) { mine = true; break; }
-    }
-    if (mine) { hasWeb = true; webC = D0.xy; if (web && !(D0.w > 0.5)) outc = lkColour(lab, lq).rgb; break; }
+  float ls = lq.x + lq.y;
+  // K1424: suppression by fan membership: a fan pixel of a routed junction reads the
+  // untraveled material (its section colour, no gold) outside the bands, whatever
+  // arm or corner won the pixel - today's fan base, exactly.
+  int fanD = lkFan(lab, lq);
+  if (fanD >= 0 && fanD < nD) {
+    vec4 D0 = RT(dBase + 4 * fanD);
+    if (length(p - D0.xy) < D0.z && !(D0.w > 0.5)) outc = lkColour(lab, lq).rgb;
   }
+  // (26C: the former arc-based disc loop is the fanD test above)
   float rw = 1.25 * 2.0 * uAA;
   for (int bi = 0; bi < 256; bi++) {
     if (bi >= nB) break;
-    vec4 H0 = RT(1 + 5 * bi); vec4 H1 = RT(2 + 5 * bi); vec4 H2 = RT(3 + 5 * bi); vec4 H3 = RT(4 + 5 * bi); vec4 H4 = RT(5 + 5 * bi);
+    vec4 H0 = RT(1 + 6 * bi); vec4 H1 = RT(2 + 6 * bi); vec4 H2 = RT(3 + 6 * bi); vec4 H3 = RT(4 + 6 * bi); vec4 H4 = RT(5 + 6 * bi); vec4 H5 = RT(6 + 6 * bi);
+    int bDisc = int(H5.x + 0.5); bool inFan = fanD == bDisc;
     if (length(p - H2.xy) > H2.w) continue;
     int nv = int(H0.y + 0.5); int cA = int(H0.z + 0.5); int cB = int(H0.w + 0.5); int vo = int(H0.x + 0.5);
     vec2 bA = vec2(1e20, 0.0); vec2 bB = vec2(1e20, 0.0);
@@ -1793,7 +1919,7 @@ vec3 lkRoute(vec3 col, int lab, vec2 lq, vec2 p, bool web) {
     float bd = sqrt(nearA ? bA.x : bB.x);
     float cov = 1.0 - ss(uH - rw, uH + rw, bd);
     bool inT = false;
-    if (H4.w > 0.5 && cB >= 0) {
+    if (inFan && H4.w > 0.5 && cB >= 0) {
       vec2 v = p - H2.xy; float lv = length(v);
       if (lv < H2.z && lv > 1e-6) {
         vec2 vn = v / lv; vec2 dirA = H3.xy; vec2 dirB = H3.zw; vec2 md = H4.yz;
@@ -1805,7 +1931,12 @@ vec3 lkRoute(vec3 col, int lab, vec2 lq, vec2 p, bool web) {
       }
     }
     if (inT) cov = 1.0;
-    if (cov > 0.0 && (lab == cA || lab == cB || inT || (hasWeb && webC == H2.xy))) {
+    // the label's own arm of this band (chain alone cannot tell a junction's two
+    // same-chain arms apart: the third arm's along is negative from the root)
+    float alongA = H1.w != 0.0 ? (ls - H1.y) / H1.w : -1.0;
+    float alongB = H4.x != 0.0 ? (ls - H1.z) / H4.x : -1.0;
+    bool armPixel = (lab == cA && alongA > -0.25) || (cB >= 0 && lab == cB && alongB > -0.25);
+    if (cov > 0.0 && ((web && armPixel) || (!web && inFan && inT))) {
       float wB = nearA ? 0.0 : 1.0;
       if (inT) { float da = sqrt(bA.x); float db = sqrt(bB.x); float s = max(0.5 * min(da, db), 1e-6); wB = ss(-s, s, da - db); }
       vec3 bm = vec3(0.0); float wsum = 0.0;
@@ -1818,7 +1949,9 @@ vec3 lkRoute(vec3 col, int lab, vec2 lq, vec2 p, bool web) {
         vec4 AH = LKT(sd == 0 ? cA : cB);
         float ad = abs(ls - sArm);
         if (AH.w > 0.5 && AH.z > 1.0) ad = min(ad, abs(AH.z - ad));
-        if (!(stp > 0.0) || ad / stp > 1.25) continue;
+        // K1424: a fan pixel takes the band's material by tau alone (its label may
+        // be a third arm, whose sample float cannot be compared to the band's)
+        if (!inFan && (!(stp > 0.0) || ad / stp > 1.25)) continue;
         vec3 sm = lkMat(cA, H1.y + H1.w * max(-tau, 0.0));
         if (cB >= 0) sm = mix(sm, lkMat(cB, H1.z + H4.x * max(tau, 0.0)), ss(-H1.x, H1.x, tau));
         bm += ws * sm; wsum += ws;
