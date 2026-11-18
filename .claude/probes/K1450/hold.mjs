@@ -12,6 +12,7 @@
 //     env EDGE=16  the luminance step that counts as an edge: the border look's dim outlines (tlk=border) are
 //                  7.5-8.8k edges at 16 and lost at 48 (1.2k, background level); a background-only frame is 1.5-2.5k
 //     env XMAX=.78 count only x < XMAX * width: the open panel's text is ~20k edges of its own
+//     env EXTRA="--a --b" extra Chrome args, space-separated (as K1458/dragcheck.mjs)
 //
 // Keep one profileDir across runs: Chrome's shader cache lives there, and a cold first rp=gf load blocks the
 // main thread for minutes (K1450 handoff). Ports, links: probes.md (a bare URL is today's daily: pass a query).
@@ -33,7 +34,8 @@ const browser = await puppeteer.launch({
   headless: false, userDataDir: profileDir,
   args: ["--use-angle=d3d11", "--no-first-run", "--no-default-browser-check", "--window-position=2200,50",
     "--window-size=1720,1000", "--disable-features=CalculateNativeWinOcclusion",
-    "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding"],
+    "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding",
+    ...(process.env.EXTRA ?? "").split(" ").filter(Boolean)], // K1460 s5: extra Chrome args, as dragcheck.mjs (EXTRA="--disable-gpu-watchdog")
 });
 let code = 0;
 try {

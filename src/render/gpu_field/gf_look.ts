@@ -432,6 +432,47 @@ function gapPointAt(S: GapSamples, arc: number, o: { x: number; y: number }): vo
   o.y = P[i0 * 2 + 1] + (P[i1 * 2 + 1] - P[i0 * 2 + 1]) * u;
 }
 
+// K1460 s5: today's protect (crossing_gaps.ts PROTECT_*, protectReach), on the sample polylines
+const GAP_PROT_PAD_PER_HALF = 1.0;
+const GAP_PROT_PAD = 0.02;
+const GAP_PROT_STEP = 0.03;
+const GAP_PROT_MARCH_MAX = 1.5;
+interface GapNb { su: GapSamples; bArc: number; b: number; off: number }
+function gapTanAt(S: GapSamples, arc: number): { x: number; y: number } {
+  const a = { x: 0, y: 0 }, b = { x: 0, y: 0 }, e = 0.5 * S.arcPer;
+  gapPointAt(S, arc - e, a);
+  gapPointAt(S, arc + e, b);
+  const dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1;
+  return { x: dx / l, y: dy / l };
+}
+/** How far along A from aArc (direction dir) some lane of A's ribbon still overlaps B's (crossing_gaps.ts
+ * protectReach): the estimate w0 first, then a march while A's centreline is within h (1 + |cos|) of B's. */
+function gapProtReach(aS: GapSamples, aArc: number, dir: number, bS: GapSamples, bArc: number, h: number, w0: number): number {
+  let sb = bArc;
+  const pa = { x: 0, y: 0 }, pb = { x: 0, y: 0 };
+  const wrapB = (s: number): number => (bS.closed ? s : Math.max(0, Math.min(bS.total, s)));
+  const overlaps = (s: number): boolean => {
+    gapPointAt(aS, aArc + dir * s, pa);
+    for (let it = 0; it < 3; it++) {
+      gapPointAt(bS, sb, pb);
+      const t = gapTanAt(bS, sb);
+      const step = (pa.x - pb.x) * t.x + (pa.y - pb.y) * t.y;
+      sb = wrapB(sb + step);
+      if (Math.abs(step) < 1e-4) break;
+    }
+    gapPointAt(bS, sb, pb);
+    const ta = gapTanAt(aS, aArc + dir * s), tb = gapTanAt(bS, sb);
+    return Math.hypot(pa.x - pb.x, pa.y - pb.y) < h * (1 + Math.abs(ta.x * tb.x + ta.y * tb.y));
+  };
+  if (!overlaps(w0)) return w0;
+  let s = w0;
+  while (s < w0 + GAP_PROT_MARCH_MAX) {
+    s += GAP_PROT_STEP;
+    if (!overlaps(s)) return s - 0.5 * GAP_PROT_STEP;
+  }
+  return s;
+}
+
 /**
  * One crossing's window along the under thread (marchUnder's perp branch on the sample polylines):
  * [winNeg, winPos] of arc from the under centre. capNeg/capPos bound the march (the caller's neighbour
@@ -563,11 +604,14 @@ export class GfGapTable {
       const self = x.overChain === x.underChain;
       // the neighbouring passes on the under chain (setupUnder's uCaps: NB_CLEAR, twins at half)
       let gapN = Infinity, gapP = Infinity, twinN = false, twinP = false;
+      // K1460 s5: the neighbouring pass on each side when it is the OVER pass of another crossing (A over B):
+      // today's protect (crossing_gaps.ts PROTECT) waives this slot's margin and fade where A covers B there
+      let nbN: GapNb | null = null, nbP: GapNb | null = null;
       for (const o of cents) {
         if (!o) continue;
         const passes = [
-          { ch: o.x.overChain, arc: o.oC, ownOver: o === e, other: o.x.underChain },
-          { ch: o.x.underChain, arc: o.uC, ownOver: false, other: o.x.overChain },
+          { ch: o.x.overChain, arc: o.oC, ownOver: o === e, other: o.x.underChain, over: true },
+          { ch: o.x.underChain, arc: o.uC, ownOver: false, other: o.x.overChain, over: false },
         ];
         for (const p of passes) {
           if (p.ch !== x.underChain || (o === e && !p.ownOver)) continue;
@@ -575,10 +619,29 @@ export class GfGapTable {
           if (su.closed) fwd = ((fwd % su.total) + su.total) % su.total;
           const bwd = su.closed ? su.total - fwd : -fwd;
           const twin = p.ownOver || p.other === x.overChain;
-          if (fwd > 1e-9 && fwd < gapP) { gapP = fwd; twinP = twin; }
-          if (bwd > 1e-9 && bwd < gapN) { gapN = bwd; twinN = twin; }
+          const nb = p.over && o !== e ? { su: o.su, bArc: o.uC, b: o.x.underChain } : null;
+          if (fwd > 1e-9 && fwd < gapP) { gapP = fwd; twinP = twin; nbP = nb && { ...nb, off: fwd }; }
+          if (bwd > 1e-9 && bwd < gapN) { gapN = bwd; twinN = twin; nbN = nb && { ...nb, off: -bwd }; }
         }
       }
+      // K1460 s5: each side's protect interval in arc from the under centre (crossing_gaps.ts PROTECT: off -+ the
+      // measured overlap reach -+ the pad), or none
+      const prot: number[] = [];
+      for (const nb of [nbN, nbP]) {
+        if (!nb) continue;
+        const sb = nb.su; // B's samples (the neighbouring crossing's under chain)
+        const aArc = uC + nb.off;
+        const ta = gapTanAt(su, aArc), tb = gapTanAt(sb, nb.bArc);
+        const sinX = Math.abs(ta.x * tb.y - ta.y * tb.x), cosX = Math.abs(ta.x * tb.x + ta.y * tb.y);
+        const w0 = (r.fillHalf * (1 + cosX)) / Math.max(sinX, 0.25);
+        const pad = GAP_PROT_PAD_PER_HALF * r.fillHalf + GAP_PROT_PAD;
+        prot.push(nb.off - gapProtReach(su, aArc, -1, sb, nb.bArc, r.fillHalf, w0) - pad, nb.off + gapProtReach(su, aArc, 1, sb, nb.bArc, r.fillHalf, w0) + pad);
+      }
+      const protAt = (off: number): number => {
+        let v = 0;
+        for (let i = 0; i + 1 < prot.length; i += 2) if (prot[i] < prot[i + 1]) v = Math.max(v, Math.max(0, Math.min(1, Math.min(off - prot[i], prot[i + 1] - off) / 0.04 + 0.5)));
+        return v;
+      };
       let splitP = Infinity, splitN = Infinity;
       if (self) {
         let fwd = uC - oC, bwd = oC - uC;
@@ -665,7 +728,8 @@ export class GfGapTable {
           const km = keptOf(x.overChain, so);
           ent.o[3 * k] = x.overChain;
           ent.o[3 * k + 1] = km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))];
-          ent.o[3 * k + 2] = Math.ceil(w / so.arcPer) + (off >= 0 ? packP : packN);
+          // K1460 s5: fraction x 16384 = scales (bits 0..9) + 1024 x the sample's protect level (0..15)
+          ent.o[3 * k + 2] = Math.ceil(w / so.arcPer) + ((off >= 0 ? packP : packN) + Math.round(protAt(off) * 15)) / 16;
         }
       }
     }
@@ -1660,6 +1724,23 @@ vec3 lkGwSlot(int c, vec2 q) {
   vec4 P = (u < 0.5 && A.y >= 0.0) || B.y < 0.0 ? A : B;
   return P.yzw;
 }
+// K1460 s5: the protect level at segment q (the bake's w fraction x 16384, bits 10..13, over 15), linear
+// between the samples: today's gapInterval along the under thread
+float lkGwProt(int c, vec2 q) {
+  vec4 H = LKT(c);
+  if (H.z < 1.0) return 0.0;
+  bool closed = H.w > 0.5;
+  int k = int(q.x); float u = q.y;
+  if (!closed && F(uOV + int(F(uOCh + 3 * c).x)).z < 0.0) k -= 1;
+  int last = closed ? int(H.z) : int(H.z) - 1;
+  if (k < 0) { k = 0; u = 0.0; }
+  if (k >= last) { k = last; u = 0.0; }
+  int b = int(H.y);
+  vec4 A = GW4(b + k); vec4 B = GW4(b + min(k + 1, last));
+  float pa = A.y >= 0.0 ? float(int(fract(A.w) * 16384.0 + 0.5) / 1024) : 0.0;
+  float pb = B.y >= 0.0 ? float(int(fract(B.w) * 16384.0 + 0.5) / 1024) : 0.0;
+  return mix(pa, pb, u) / 15.0;
+}
 // K1458: the nearest point to p on chain c within w samples of kept sample s: (distance, segment, fraction)
 vec3 lkNearOn(int c, float s, float w, vec2 p, float aU, float sx) {
   vec4 C0 = F(uOCh + 3 * c); int cV0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
@@ -2046,7 +2127,19 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   float pxw = 2.0 * uAA;
   vec3 sl = uGwLive > 0.5 && wm > -pxw ? lkGwSlot(cU, qU) : vec3(-1.0, 0.0, 0.0);
   vec2 sc = vec2(1.0);
-  if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
+  if (sl.x >= 0.0) {
+    int pk = int(fract(sl.z) * 16384.0 + 0.5); pk -= (pk / 1024) * 1024;
+    sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0;
+    // K1460 s5: today's protect (gap_mask.ts pr = gapInterval x gapProtCover): inside the slot's protect interval,
+    // where a piece below the label (B, the thread the under thread passes over there) covers the pixel, the
+    // margin and fade scale by 1 - pr
+    float prq = lkGwProt(cU, qU);
+    if (prq > 0.0) {
+      float cv = 0.0;
+      for (int j = 0; j < np; j++) { if (pkey[j] < key - uZt) cv = max(cv, clamp((uH - pd[j]) / pxw + 0.5, 0.0, 1.0)); }
+      sc *= 1.0 - prq * cv;
+    }
+  }
   // K1460 s4: the pixel's own arc and today's selfEx (both half-widths + margin + fade + the exit pad), for lkNearOn's
   // self crossing: its own thread is no over pass within sx of that arc (today's gapSegFull skip).
   float aU = lkArc(cU, qU);
