@@ -49,9 +49,9 @@ describe("K1439 flag off: master's programs and tables", () => {
   it("GfPass compiles master's sources (app and probe)", () => {
     const app = sources(false); const probe = sources(true);
     expect(app.srcs.length).toBe(6);
-    expect(sha(...app.srcs)).toBe("1df27e98ef00c13fc934878781ca071c1dcf43971b38910ffedb765abed2fe36");
+    expect(sha(...app.srcs)).toBe("e412bfcb54d8d88601653fd3f030383cba012547fbb8cb5f329227c445e85d36");
     expect(probe.srcs.length).toBe(4);
-    expect(sha(...probe.srcs)).toBe("36a98d2e84fdb9fb484729d4674ce66d987b1617df454a2a671416c0bf541df2");
+    expect(sha(...probe.srcs)).toBe("4390c49cf1af76ee2cff3833304fcef5a8c77370e29408d5ae33f092c72582b2");
     // { home: false } is the default
     expect(sha(...sources(false, false).srcs)).toBe(sha(...app.srcs));
     expect(app.pass.home).toBe(false);
@@ -59,8 +59,8 @@ describe("K1439 flag off: master's programs and tables", () => {
   });
   it("buildKeys and packTables give master's bytes", () => {
     const pins: Record<string, [string, string]> = {
-      "j_cross.json": ["d183bca5542582429c071ecc4049b3d49d1d7baf88ef7ae0915517dca5b50a92", "4bf27673cd79c7b4c472e6c6ce2512dbfbcef8bc2565cecbfda7722a7bc0cfed"],
-      "k42.json": ["f3e8f41e0def175a16341ac665b8d32858f0dc9cfe824911e22847a0de2e513a", "be6598aa6e9569eb1fce6d8a21a729517755a165edfd2c57152beb87b68dd6de"],
+      "j_cross.json": ["d183bca5542582429c071ecc4049b3d49d1d7baf88ef7ae0915517dca5b50a92", "5cc487d0f002a38d1533b91cf42704c1221b5d294556edbf130463ad0900b2a4"],
+      "k42.json": ["f3e8f41e0def175a16341ac665b8d32858f0dc9cfe824911e22847a0de2e513a", "d263ed2f1ad7159efb70afe203b22bd964f37fe7bb0a4009375c5eba9d2af5ff"],
       "y120.json": ["dc0e69a62c26a3ae399746e6c334056327b39137d31c080c9cc6dfc9ad758db1", "244107d2f531e486b59a95c7bdda909ad534f8cf954f3c07fbaa702ebe03ecb4"],
       "x4_throughs.json": ["c19722d95f5fbd7f7dfa2adebc0edbee04a22763065fdf88415ab3aee23489b4", "5b17a70aa18af7d48897168587f0c5330d11a640c433369e3b43db0ef3b6a776"],
     };
@@ -99,10 +99,10 @@ describe("K1439 flag on: homeForm on every program", () => {
       expect(s).toContain("void member(int c, float s, vec4 KB, float z) {");
     }
   });
-  it("applies to every tier form the shader builds (three member() calls, each with the piece's depth)", () => {
+  it("applies to every tier form the shader builds (three member() calls, each with the piece's membership depth mz, K1451 s2)", () => {
     for (const probe of [false, true]) for (const tier of [undefined, { p: 3, k: 2, ramps: true }, { p: 3, k: 2, ramps: false }]) {
       const src = homeForm(gfFs(probe, true, tier));
-      expect(src.split("KB, pz);").length - 1).toBe(3);
+      expect(src.split("KB, mz);").length - 1).toBe(3);
     }
     expect(() => homeForm(GF_VS)).toThrow(/gfFs home/);
   });

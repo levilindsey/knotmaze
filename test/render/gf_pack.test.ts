@@ -47,7 +47,7 @@ describe("gf_pack layout", () => {
       for (let v = 0; v < T.nV; v++) {
         expect([at(o.v + v, 0), at(o.v + v, 1), at(o.v + v, 2)]).toEqual([f32(T.vx[v]), f32(T.vy[v]), f32(T.vs[v])]);
       }
-      for (let i = 0; i < T.pinS.length; i++) expect([at(o.pin + i, 0), at(o.pin + i, 1)]).toEqual([f32(T.pinS[i]), f32(T.pinZ[i])]);
+      for (let i = 0; i < T.pinS.length; i++) expect([at(o.pin + i, 0), at(o.pin + i, 1), at(o.pin + i, 2), at(o.pin + i, 3)]).toEqual([f32(T.pinS[i]), f32(T.pinZ[i]), f32(T.pinWL[i]), f32(T.pinWR[i])]);
       for (let a = 0; a < T.nA; a++) {
         const b = o.arm + 2 * a;
         expect([at(b, 0), at(b, 1), at(b, 2), at(b, 3), at(b + 1, 0)]).toEqual([f32(T.aSR[a]), f32(T.aDir[a]), f32(T.aL[a]), f32(T.aLcut[a]), T.aG[a]]);
