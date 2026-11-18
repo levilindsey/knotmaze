@@ -1914,11 +1914,9 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   vec3 sl = uGwLive > 0.5 && wm > -pxw ? lkGwSlot(cU, qU) : vec3(-1.0, 0.0, 0.0);
   vec2 sc = vec2(1.0);
   if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
-  // K1460 s3: a self crossing's own thread is no over pass near the pixel's own arc (today's polyDist skips over points
-  // within selfEx = both half-widths + margin + fade + the exit pad of the under arc): where a kink loop's halves meet,
-  // the half keyed above read as an over piece at distance 0 and cut the other half out to its window's end, a radial edge.
-  vec4 CU = F(uOCh + 3 * cU);
-  float aU = lkArc(cU, qU), perU = CU.z > 0.5 ? F(uOV + int(CU.x) + int(CU.y) - 1).z : 0.0;
+  // K1460 s4: the pixel's own arc and today's selfEx (both half-widths + margin + fade + the exit pad), for lkNearOn's
+  // self crossing: its own thread is no over pass within sx of that arc (today's gapSegFull skip).
+  float aU = lkArc(cU, qU);
   float sx = 2.0 * uH + uLkG + uLkF + ${lkF(GAP_EXIT_PAD)};
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
