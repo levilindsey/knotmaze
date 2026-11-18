@@ -142,8 +142,8 @@ export function homeForm(src: string): string {
     "  mg = g; mramp = ramp;\n}\n",
     1,
   );
-  rep("member(PC(j), ps[j], KB);", "member(PC(j), ps[j], KB, pz);", 2);
-  rep("member(PC(j), sj, KB);", "member(PC(j), sj, KB, pz);", 1);
+  rep("member(PC(j), ps[j], KB);", "member(PC(j), ps[j], KB, mz);", 2);
+  rep("member(PC(j), sj, KB);", "member(PC(j), sj, KB, mz);", 1);
   if (/member\(PC\(j\), [\w[\]]+, KB\)/.test(src)) throw new Error("gfFs home: a member() call without its depth is left");
   return src;
 }
@@ -937,23 +937,28 @@ void member(int c, float s, vec4 KB) {
 }
 
 float hat(float z, float d, float w) { return w <= 1e-12 ? (d <= 0.0 ? z : 0.0) : d >= w ? 0.0 : z * (1.0 - d / w); }
+// K1451: depth() returns the KEY depth (each pin's hat over its own window on the facing side, PIN .z left / .w
+// right, cut at the pin gap) and leaves today's diagram depth (both hats over min(win, the gap)) in mz, which
+// home membership reads (homeForm)
+float mz;
 float depth(int c, float s, vec4 KB) {
   vec4 C0 = F(uOCh + 3 * c); vec4 C1 = F(uOCh + 3 * c + 1);
-  int n = int(C1.z); if (n == 0) return 0.0;
+  int n = int(C1.z); mz = 0.0; if (n == 0) return 0.0;
   int b = uOPin + int(C1.y); float win = uWin; bool closed = C0.z > 0.5; float len = C0.w;
   float u = s;
   if (closed) { u = mod(s - C1.x, len); u += C1.x; }
   int lo = int(KB.x); int hi = int(KB.y);
   while (hi - lo > 1) { int m = (lo + hi) >> 1; if (F(b + m).x <= u) lo = m; else hi = m; }
-  float zL = 0.0; float dL = 0.0; float zR = 0.0; float dR = 0.0; float w = win;
+  float zL = 0.0; float dL = 0.0; float zR = 0.0; float dR = 0.0; float w = win; float wL = win; float wR = win;
   if (closed) {
     int iL = lo < 0 ? n - 1 : lo; vec4 PL = F(b + iL); float sL = lo < 0 ? PL.x - len : PL.x;
     int iR = lo + 1 >= n ? 0 : lo + 1; vec4 PR = F(b + iR); float sR = lo + 1 >= n ? PR.x + len : PR.x;
-    w = min(win, sR - sL); zL = PL.y; dL = u - sL; zR = PR.y; dR = sR - u;
-  } else if (lo < 0) { vec4 P = F(b); zR = P.y; dR = P.x - u; dL = BIG; }
-  else if (lo + 1 >= n) { vec4 P = F(b + n - 1); zL = P.y; dL = u - P.x; dR = BIG; }
-  else { vec4 PL = F(b + lo); vec4 PR = F(b + lo + 1); w = min(win, PR.x - PL.x); zL = PL.y; dL = u - PL.x; zR = PR.y; dR = PR.x - u; }
-  return hat(zL, dL, w) + hat(zR, dR, w);
+    float g = sR - sL; w = min(win, g); wL = min(PL.w, g); wR = min(PR.z, g); zL = PL.y; dL = u - sL; zR = PR.y; dR = sR - u;
+  } else if (lo < 0) { vec4 P = F(b); zR = P.y; dR = P.x - u; dL = BIG; wR = P.z; }
+  else if (lo + 1 >= n) { vec4 P = F(b + n - 1); zL = P.y; dL = u - P.x; dR = BIG; wL = P.w; }
+  else { vec4 PL = F(b + lo); vec4 PR = F(b + lo + 1); float g = PR.x - PL.x; w = min(win, g); wL = min(PL.w, g); wR = min(PR.z, g); zL = PL.y; dL = u - PL.x; zR = PR.y; dR = PR.x - u; }
+  mz = hat(zL, dL, w) + hat(zR, dR, w);
+  return hat(zL, dL, wL) + hat(zR, dR, wR);
 }
 
 float pieceD(int j, vec2 p) {
