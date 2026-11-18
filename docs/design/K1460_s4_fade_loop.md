@@ -116,7 +116,7 @@ At fades 0, 0.14 and 0.5, every site is the same as master in gf and gfh.
 
 **Confirmed on screen:**
 - 2bb6f63b and 19a2fd2d, as listed above.
-- Stage 3's 236f8f4e: 1068,615 and 810,468 are fixed. 430,410 and 955,360 carried no master tick at this state.
+- Stage 3's 236f8f4e: 1068,615 is fixed. 810,468's seam is fixed only with 2bb6f63b, since s3 alone still shows it. At this state, 430,410 and 955,360 show no master tick to confirm against.
 - e1a4fea0: superseded and dropped.
 
 **Open: item 5 (today's protect term, restricted to its interval).** Not attempted this stage. Stage 3 added the protect loop (24c093da), and the d3d11 compile of gf's program then never finished (f027928d took it out). Restricting the term to today's intervals needs each crossing's protect interval in gf's tables, and K1451 owns tables.ts and gf_pack.ts. Next step: K1451 adds a per-crossing interval row (two floats). After that, gf_look applies the term only inside that interval, with no loop. Then cold-compile it with cap.mjs before judging the look.
