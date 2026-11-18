@@ -78,6 +78,56 @@ gf-only connected component over 12 px and no today-only component over 12 px at
 ji0 tick and patch, ji80's purple centre). 3. 0 px against master gf with no route showing. 4. Crops per
 junction. 5. `npm test` green. 6. The guards.
 
+### Handoff 26C
+
+Done at e820cadd: landed one real fix, pixel bars unmet (bars are Done 1 and Done 2). What landed: (1)
+junction identity baked beside the tables (K1424's next angle): `GfRouteTable` now bakes, per kept
+sample in the look positions' layout, the disc ordinal of the routed junction whose fan covers that
+sample - the sample's arc along ANY arm of that junction (third arms included) within today's fan
+reach; `lkFan(lab, lq)` reads the label's nearest sample, and suppression plus every band gate on
+it. (2) Bands now build from `routesByJn` alone: measured in this run's own pages, the 24F fanBands
+source is dead under rp=gf - attach() nulls `filletLayer`, joinery stops rebuilding (count stuck at
+5), and the fan records freeze with zero routes, so a warm gf page drew no bands at all (master gf
+measured 302 px on the whole state, caps only; 25C's 634 rode a cold profile whose late switch let
+the fans rebuild). `gf_app`'s fieldProbe read is gone, joinery's turn-fit bisection is ported into
+the bake in rim-less form, and each band header carries its disc ordinal. (3) The band gate is the
+label's own arm by along sign (chain alone cannot tell a junction's two same-chain arms apart) for
+pieces, and fan+wedge (`inT`) for corners.
+
+Measured on 24F's state (seed 7 walk; tools `k1414_26c_ab.mjs` / `mask26c.mjs` / `comp26c.mjs`; all
+in `.claude/probes/K1414/out/26C/`): floor first - two today loads same state, 747 px, ratio 1.000,
+IoU 1.000, stands. Overall: gf 721 vs today 747, ratio 0.965 (inside 15%), IoU 0.366 (bar 0.7, unmet).
+Per junction (union components): ji0 164/110 IoU 0.566, ji167 64/81 0.543, ji157 127/80 0.302,
+ji80 27/80 0.115, ji156 79/231 0.230, ji155 73/49 0.525 (+37 fragment), ji169 109/75 0.586,
+ji176's pixels lie in ji169/ji155's boxes. Done 2 (no component over 12 px either way) fails at every
+junction still. Eyes on the 4x crops (`crop_ji<ji>.png`: today | master gf | new gf): the on-frames
+are close to today's at ji80/ji156 (master gf broke the band there) and the 25C ji0 yellow tick is
+gone; what remains is worse at ji0 where gf's band top is duller than today's (suppressed fan pixels
+the band does not re-gilt, the 40 px component at ji0's centre), and ji157 keeps a dull patch on the
+salmon third arm at centre. Why the mask stays low, traced in the code: the residual gap is not band
+placement - it is the off frame. At the through junctions today's off-frame web is the angular blend
+of both arms' materials, so turning routes on changes the whole fan; gf's off-frame corner reads its
+nearer side only, already split gold/purple, so parts of today's mask have no gf counterpart at any
+gate. That is the junction web (K1414H's composed base), not the bands: closing it means gf's
+corner colour itself must blend its two arms off-route, which is outside this run's files. Next
+angle: teach lkRoute to sharpen the off-frame too: when no route shows (or in GfPaintTable worlds)
+a corner pixel inside a fan disc blends the bracketing arms' materials instead of reading one side -
+then re-measure the same mask.
+
+Done 3 (0 px against master gf with no route showing) not re-measured in this run - the mask keeps
+the whole value and `lkRoute` still returns the colour untouched when nB and nD are both 0 - and
+Done 1 and 2 above stand in its place. Crops are the ones this handoff names. `npm test` green (252
+files: 3135 passed, 9 skipped; tsc clean; K1424 covered in test/render/gf_route.test.ts). Guards (the
+last row, preview of e820cadd on :5520, one profileDir kept across runs
+`%TEMP%\k1414-26c-guards`, saved under out/26C): `hold.mjs` 60 250 5000: plain link
+?3&xp=off&am=instant&rp=gf PASS (first composite 83 s), fat link gfh=1 PASS (40 s);
+`dragcheck.mjs` gf PASS and gfh PASS (every stop 0 px over TOL 24). Tools: `.claude/probes/K1414/k1414_26c_ab.mjs` (PROFILE env is a kept
+preview profile: cold compiles take ~70 s and the mouse still changes images, so fresh-profile
+captures must wait for passes>0 and keep the profile as it worked here; not run again since),
+`mask26c.mjs`, `comp26c.mjs`, `maskvis26c.mjs`. Files: gf_look.ts (the bake, turnFits, lkFan,
+the new gate), gf_app.ts (routesByJn only), test/render/gf_route.test.ts; gf_pass.ts untouched
+beyond the unit it already had.
+
 ## Run D (26D): K1454, a pluck ripple bends the threads under rp=gf
 
 (This run was K1455, the border look's strokes. Levi, 2026-11-17: "Keep gf as it is". gf's border strokes
