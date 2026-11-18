@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1460.
+Next free ID: K1462.
 
 ## Waiting on Levi
 
@@ -314,16 +314,6 @@ Next free ID: K1460.
 
 ## In progress
 
-- **K1458** · rp=gf draws no crossing fade on an ordinary load: the under thread runs at full colour to the
-  over thread's edge at every Crossing fade value (today ramps it; Levi 2026-11-17: 'I don't see any fading
-  happening, regardless of the slider value'); also the panel's address rewrite drops rp=gf&gfh=1, and gf's
-  border look differs from today's (near-black, wider, hard-cut strokes). Evidence:
-  .claude/probes/K1444/live_fill_A.png, live_border_A.png
-  - owner: agent `a108251c8d94e5b3a` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 09:07, 2 h cap ~11:07)
-  - branch: `worktree-agent-a108251c8d94e5b3a`, worktree `.claude/worktrees/agent-a108251c8d94e5b3a`; last commit: `12feaf66`
-  - evidence: .claude/probes/K1444/ (coordinator sheets), .claude/probes/K1458/ (agent)
-  - next: find why lkGap's fade does not draw on an ordinary load, fix, guard probe fade.mjs
-  - brief: `docs/design/K1458_gf_crossing_fade.md`
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
@@ -646,6 +636,12 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1460** · rp=gf crossing-fade leftovers after K1458 (live c5fc87d1, crops scratch live2 zoom_a/zoom_b,
+  agent's .claude/probes/K1458/ sheet pv6): (1) a thin dotted line continues the over thread's edge across the
+  faded under thread at fade 0.28 and up; (2) radial bands and a stepped outer edge on long fades in curved
+  threads (junction B, ci3 upper right, the blue kink loop at ?3); (3) a dashed dark tick across the kink loop
+  at ?3 at every fade; (4) today's protect term (pr) is not ported to gf's gap window; (5) a round blob at
+  junction B at fade 0. Next: bake.mjs on those crossings (missing over threads, the +-40-sample scan cap)
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
@@ -963,6 +959,11 @@ Every other item below waits on the trigger it names.
   .claude/probes/K1395/out/25B/). The next run's bar is per-thread, not a pixel count: each partly revealed
   run gf draws has today's stroke width within 1 px and no run today draws is missing; Handoff 25B's mechanism
   (today hands the fill to the fan rim inside the junction cut) stands
+- **K1461** · K1458 tools: border.mjs crashes with Target closed while measuring, so gf's border look vs
+  today's has no numbers (K1458 Do 4); fade.mjs prints FAIL when two loads settle in different physics states
+  (hashes 49c20566 / f9d72040) and should retry until the states match, as dragcheck.mjs does;
+  .claude/probes/K1444/drag.mjs aims at the slider's filled bar, so its stops land off target (0.14 -> 0.28,
+  0.5 -> 0.62) and the first drag does nothing
 
 ## Residuals (known, not fixed)
 
@@ -2586,6 +2587,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1458** · rp=gf fades the under thread before a crossing as today's does and follows the live slider (gf baked the gap only inside the pixel's candidate list; joint window cap, per-side clearance scales and a re-bake on a sleeping knot ported); panel rewrites keep rp/gfh. Live on c5fc87d1: hold.mjs 60/60 on both links, real slider drags change the fade at 0.14/0.28/0.62/1.2 in gf and gf+gfh. Done in c5fc87d1 (2026-11-17).
 - **K1450** · rp=gf's maze blinked: its render callback skipped any frame drawn into a filter texture, and a live pluck ripple (K279) filters the world, so music mode's auto plucks hid the maze most of the time (since adac76dd); it now draws to the screen and restores the filter's target; guard: .claude/probes/K1450/hold.mjs (ordinary load, 60 frames). Done in dcf4b082 (2026-11-17).
 - **K1449** · home leftovers (gfh=1 only): the home ramp is full to the tie depth; fadeLength 0 is a crisp cut (690 -> 203 finds); default 435 -> 368, short of 250 (rest in K1451); flag-off pixels equal (0 px). Done in 7657e03b (2026-11-17).
 - **K1418** · Muse batch 24 (rp=gf look matches today): 24C, 24E, 24G landed whole; 24D, 24F, 24H, 24I in part; leftovers K1424, K1431, K1434, K1446, K1447 go to batch 25 (K1448). Done in fc861dea (2026-11-17).
