@@ -20,6 +20,7 @@ items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
 Next free ID: K1494.
+Next free ID: K1493.
 
 ## Waiting on Levi
 
@@ -1130,6 +1131,10 @@ Every other item below waits on the trigger it names.
   within one build in K1436's bar control, and g41_user_tw42 freezes on user_tw42.lightpaper's state, so its
   finds repeat lightpaper's. Find what the freeze leaves unpinned (K1468 s2's ab.mjs saw two hashes per link
   too) and re-take the stale diag hashes (Handoff K1436 s3, docs/design/K1436_s3_screen_bar.md)
+- **K1492** · fade.mjs guard prints FAIL on cfe66a7d (fl=0: 677/679 sides pass, 348/350 crossings complete;
+  fl=1.2: 439/451 sides, 287/299) while its distances match today (p90 |d-today| 0.0001-0.0124 world) - is the
+  FAIL its crossing-completeness/dot criterion rather than a distance failure? Seen in Muse batch 26 Run F's
+  guards (.claude/probes/K1474/out/26F/guards_fade/summary.txt); not a Run F Done item
 
 ## Residuals (known, not fixed)
 

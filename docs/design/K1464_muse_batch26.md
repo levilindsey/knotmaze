@@ -228,6 +228,73 @@ without `gfh=1`. 2. Where the colour departs, named in the code, with the value 
 today | master gf | new gf at junction B and five more spots, looked at. 6. `npm test` green; a pin that
 moves because the colour moved is re-taken and named in the commit. 7. The guards.
 
+
+### Handoff 26F
+
+Run 2026-11-18 01:14-04:00 PST, Muse (no subagents). Starting master 517f508c; master moved twice under the
+required pulls (bfb9017b, then 82405bf9), which matters below. Fix on top: cfe66a7d. Probes and inputs:
+.claude/probes/K1474/ (interiors.py, trace.mjs, trace.ts, ord.mjs; captures under out/26F/, servers
+127.0.0.1:5480-5483, previews of 517f508c / bfb9017b / the fix in %TEMP%; perf lock held 01:31-04:00).
+
+1. **The number first, failing on master** (517f508c; K1460 recipe, SIMT 20, DSF 2; interiors = at least
+3 px inside both inks, 5x5 flat, at most 2 plateau colours in 31x31; interiors.py). Floor (two today
+loads): max 1, mean 0.00 on all three links, so the 6/2 bar stands. gf and gfh alike: ?3 max 51, mean
+(12.09, 15.55, 23.02); ?7 max 46, mean (11.83, 15.21, 22.52); ?b.FMKB4DIQ max 22, mean (0.00, 0.01, 0.01).
+Per section colour (s3): every saturated section colour is off by a constant (21, 27, 40); grey and marker
+colours (55,56,61), (173,175,184), (252,252,252) are exact.
+
+2. **Where the colour departs.** One pixel (junction B, seed 3): today cc7ac0 = (204,122,192); gf reads
+e195e8 = (225,149,232) = today + (21,27,40), and (21,27,40) is the flat backdrop colour. The value at
+each step: the live look table is innocent (trace.mjs/trace.ts: the page's paint mirror and a Node
+rebuild of GfLookTable both give lookColour = knotSection = kSectionAtArc = (205,122,192) at chain 82
+sample 362, ctrl 54.92; slot 54 run 239, R2 = (0.802, 0.478, 0.754)). The pass and the composite shaders
+are innocent (BLEND off in the pass, colour packed to 8 bits by gfB, composite out = C*cov). The step
+that departs is GfComposite.draw's blend state in gf_pass.ts: on the canvas it kept the destination
+alpha (ONE, ONE_MINUS_SRC_ALPHA, ZERO, ONE). With a transparent backdrop - background none (or
+intensity 0: the layer writes nothing, .claude/rules via background.ts) - destination alpha under a
+thread is 0, so the browser composites the page CSS colour (21,27,40) over the premultiplied thread. On
+an opaque backdrop (default vellum) the same frames are already exact.
+
+3. **Fixed (cfe66a7d):** the composite writes its own coverage alpha on the canvas too (one
+blendFuncSeparate(ONE, ONE_MINUS_SRC_ALPHA, ONE, ONE_MINUS_SRC_ALPHA), the call the ripple-filter
+destination already used; comment rewritten; pin in test/render/gf_packout.test.ts re-taken, plus a
+K1474 case - it fails 1/33 without the fix). Not in lkJCut/lkFx or any reveal function. On the committed
+build (SIMT 90, same-build today/gf pairs, fix90_* sets): ?3 gf mean (0,0,0), per-section max <= 2,
+overall max 18 (15 interior pixels at 4 section-ramp spots, 7-18 levels - the stated max <= 6 is not
+met on those pixels); gfh mean (0.10, 0.05, 0.10). ?7 gf mean (0,0,0), max 12. ?b gf mean (0,0,0), max 2.
+
+4. **Border:** no literal 0 px. border_master vs border_fix differ by 138,792 px > 0, but the fat
+link's same-build floor is 117,909 px > 0 (two loads of the fixed build), so the capture difference is
+the load floor, not the change; by construction the change cannot move an opaque-backdrop frame (RGB
+factors untouched, written alpha lands on 1).
+
+5. **Crops** (out/26F/crop_sheet.png, crop_jb_*.png; today | master gf | new gf, 4x, junction B and
+five spots at (500,200), (1200,300), (400,650), (1100,700), (750,480) CSS): at every spot the three
+panels are indistinguishable in fill colour; the fade ends read the same as today's; nothing in the new
+gf panels reads worse. (Sheets shot on the SIMT 90 sets; the first master2 sets at SIMT 20 landed on an
+angular pre-settle renderer state and were discarded.)
+
+6. **Tests:** npm test green (254 files, 3179 passed, 9 skipped) including the new K1474 case.
+
+7. **Guards** (build of cfe66a7d, preview 5483, one kept profile): hold PASS on both links
+(?3 rp=gf: 60/60 frames, min edge 102,751 vs max 104,060; fat gfh link: 60/60, min 7,383 vs max 9,902).
+Dragcheck PASS for gf and gfh (all stops 0, 0.5, 1.2, 0.14: 0-4 px differ by more than 24 outside the panel against the fresh-load frames, limit 200; frames in out/26F/guards_fade/) NOTE: fade.mjs's own guard prints FAIL on this build
+(fl=0: 677/679 sides pass; fl=1.2: 439/451) - not one of Run F's Done items; worth a look by whoever
+owns fade, as it may be that guard's crossing-completeness criterion rather than a distance failure
+(p90 |d-today| 0.0001-0.0124 world).
+
+Caveat for the next reader: after the mid-run pull, master bfb9017b (K1481's compile-poll change landed
+there) no longer reproduces the lightening in frozen or ordinary captures (junction B correct on
+master90_gf and on an ordinary bg=none load), so on current master the defect is masked, not absent;
+the composite still kept the destination alpha until cfe66a7d. The masking mechanism itself was not
+traced to its line (inferred from the 517-vs-bfb A/B and K1481's change list; the other two upstream
+src changes, gf_glsl/eval tipSink, cannot lighten a thread). K1474 stays open: the 15 ramp pixels above
+Done 3's max, the literal 0 px of Done 4 unproven under the fat link's load floor, and the question of
+whether today's 517-era visibility returns under some other frame state. K1464, K1451 and K1460 left
+as instructed (K1460 was already done). Stopped at the 2-hour line with Done 1, 2, 6 and the hold half
+of 7 measured, Done 3 met on mean and per-section max but not on 15 ramp pixels, Done 4 floored, Done 5
+looked at.
+
 ## Run G (26G): K1476, rp=gf's stray dark line across the fill at j64
 
 Added 2026-11-17, from K1436 stage 3's work list of gf's largest faults on screen
