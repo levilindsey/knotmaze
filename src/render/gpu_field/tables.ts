@@ -136,7 +136,7 @@ export const GF_REACH_CAP = 10;
  * the walk returns gap). An open chain's walk holds its end point past the end (chainAt clamps), as the probe did.
  * Returns the last arc still inside (0 = the first step is out).
  */
-export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0" | "vx" | "vy" | "vs">, c: number, s0: number, dir: number, p: number, sp: number, h: number, gap: number): number {
+export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0" | "vx" | "vy" | "vs">, c: number, s0: number, dir: number, p: number, sp: number, h: number, gap: number, from = 0): number {
   const step = GF_REACH_STEP * h; const cap = GF_REACH_CAP * h; const sep = GF_REACH_SEP * h; const sep2 = sep * sep;
   const v0 = T.cV0[p]; const nseg = T.cNV[p] - 1; const closed = T.cClosed[p] === 1;
   if (nseg < 1) return 0;
@@ -157,7 +157,12 @@ export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | 
   const next = (k: number): number => (k + 1 < nseg ? k + 1 : closed ? 0 : -1);
   const lim = Math.min(cap, gap);
   let r = 0;
-  for (let i = 1; ; i++) {
+  // K1451 s3 (build time): a reach short of `from` gives the caller the same window as none, so the walk starts at
+  // the first step at or past it (0 when the walk is out there; an overlap that left and came back before it counts
+  // as staying), and returns 0 without walking when the limit falls short of it.
+  const i0 = Math.max(1, Math.ceil(from / step - 1e-9));
+  if (from > 0 && i0 * step > lim) return 0;
+  for (let i = i0; ; i++) {
     const t = i * step;
     if (t > lim) return lim < cap ? gap : r;
     chainAtInto(T, c, s0 + dir * t, Q);
@@ -172,25 +177,28 @@ export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | 
       // strand, a self-crossing's own pass): before calling the step out, search the partner's whole stretch,
       // cap + sep of arc each way of its pin (the stage 1 probe's partner search). A self-crossing's stretch can
       // hold this pass itself: a kink loop shorter than it reads as overlapping throughout.
-      const span = cap + sep; let ub = sp - span; const ue = sp + span;
-      for (let guard = 0; ub < ue && guard <= nseg; guard++) {
-        // the segment holding ub (wrapped on a closed chain), and the arc offset from its own s to ub's frame
-        let w = ub; let off = 0;
-        if (closed) { w = (ub - T.cS0[p]) % T.cLen[p]; if (w < 0) w += T.cLen[p]; w += T.cS0[p]; off = ub - w; }
-        let a = v0; let z = v0 + nseg;
-        if (w <= T.vs[a]) z = a + 1; else if (w >= T.vs[z]) a = z - 1;
-        else while (z - a > 1) { const m = (a + z) >> 1; if (T.vs[m] <= w) a = m; else z = m; }
-        const s0a = T.vs[a] + off; const s1a = T.vs[a + 1] + off; const L = s1a - s0a;
+      const span = cap + sep; const ub = sp - span; const ue = sp + span;
+      // the segment holding ub (wrapped on a closed chain; off = ub's frame minus the wrapped one), found once, then
+      // the following segments in turn (K1451 s3: the search used to re-find each one)
+      let w = ub; let off = 0;
+      if (closed) { w = (ub - T.cS0[p]) % T.cLen[p]; if (w < 0) w += T.cLen[p]; w += T.cS0[p]; off = ub - w; }
+      else if (w < T.vs[v0]) w = T.vs[v0];
+      let a = v0; let z = v0 + nseg;
+      if (w <= T.vs[a]) z = a + 1; else if (w >= T.vs[z]) a = z - 1;
+      else while (z - a > 1) { const m = (a + z) >> 1; if (T.vs[m] <= w) a = m; else z = m; }
+      for (let guard = 0; guard <= nseg; guard++) {
+        const s0a = T.vs[a] + off; if (s0a >= ue) break;
+        const L = T.vs[a + 1] - T.vs[a];
         const ta = L > 0 ? Math.max(0, (ub - s0a) / L) : 0; const tb = L > 0 ? Math.min(1, (ue - s0a) / L) : 1;
         const ax = T.vx[a]; const ay = T.vy[a]; const dx = T.vx[a + 1] - ax; const dy = T.vy[a + 1] - ay; const l2 = dx * dx + dy * dy;
         const tt = l2 > 0 ? Math.min(tb, Math.max(ta, ((Q.x - ax) * dx + (Q.y - ay) * dy) / l2)) : 0;
         const ex = ax + dx * tt - Q.x; const ey = ay + dy * tt - Q.y; const dd = ex * ex + ey * ey;
         if (dd < d) { d = dd; kp = a - v0; }
-        if (!closed && (a === v0 + nseg - 1 || ub < T.vs[v0])) { if (ub < T.vs[v0]) { ub = T.vs[v0]; continue; } break; }
-        ub = s1a + 1e-9 * Math.max(1, Math.abs(s1a));
+        if (a + 1 < v0 + nseg) a++;
+        else if (closed) { a = v0; off += T.cLen[p]; }
+        else break;
       }
-    }
-    if (d > sep2) return r;
+    }    if (d > sep2) return r;
     r = t;
   }
 }
@@ -520,8 +528,8 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
         let gL = Infinity; let gR = Infinity;
         if (cClosed[c]) { gL = n > 1 ? p.s - P[(i + n - 1) % n].s : cLen[c]; if (gL <= 0) gL += cLen[c]; gR = n > 1 ? P[(i + 1) % n].s - p.s : cLen[c]; if (gR <= 0) gR += cLen[c]; }
         else { if (i > 0) gL = p.s - P[i - 1].s; if (i + 1 < n) gR = P[i + 1].s - p.s; }
-        pinWL[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, -1, p.pc, p.ps, h, gL));
-        pinWR[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, 1, p.pc, p.ps, h, gR));
+        pinWL[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, -1, p.pc, p.ps, h, gL, win / GF_REACH_K));
+        pinWR[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, 1, p.pc, p.ps, h, gR, win / GF_REACH_K));
       }
     });
   }
@@ -947,6 +955,36 @@ export function mergeGfChunkBins(parts: { cellChN: Int32Array; cellChList: Int32
   return { cellCh0, cellChN, cellChList };
 }
 
+const GF_NOCLIP: boolean = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_NOCLIP === "1";
+
+/** K1451 s3: pinWL / pinWR cut at the nearest arm interval [aSR, aSR + aDir max(aL, aHome)] on the pin's chain
+ * each way (0 inside one), never below win. */
+function clipPinWindows(P: Pick<GfPrefix, "nC" | "cClosed" | "cLen" | "cPin0" | "cPinN" | "pinS" | "pinWL" | "pinWR" | "win" | "cArm0" | "cArmN" | "aSR" | "aDir" | "aL">, aHome: Float64Array): [Float64Array, Float64Array] {
+  const { nC, cClosed, cLen, cPin0, cPinN, pinS, win, cArm0, cArmN, aSR, aDir, aL } = P;
+  const wL = Float64Array.from(P.pinWL); const wR = Float64Array.from(P.pinWR);
+  for (let c = 0; c < nC; c++) {
+    const a0 = cArm0[c]; const an = cArmN[c]; if (an === 0) continue;
+    const closed = cClosed[c] === 1; const len = cLen[c];
+    for (let q = cPin0[c]; q < cPin0[c] + cPinN[c]; q++) {
+      if (!(wL[q] > win) && !(wR[q] > win)) continue;
+      const s = pinS[q]; let dR = Infinity; let dL = Infinity;
+      for (let i = a0; i < a0 + an; i++) {
+        const ext = Math.max(aL[i], aHome[i]); if (!(ext > 0)) continue;
+        const e2 = aSR[i] + aDir[i] * ext; const lo = Math.min(aSR[i], e2); const hi = Math.max(aSR[i], e2);
+        if (closed) {
+          const md = (v: number): number => ((v % len) + len) % len;
+          if (md(s - lo) <= hi - lo) { dR = 0; dL = 0; break; }
+          dR = Math.min(dR, md(lo - s)); dL = Math.min(dL, md(s - hi));
+        } else {
+          if (s >= lo && s <= hi) { dR = 0; dL = 0; break; }
+          if (lo > s) dR = Math.min(dR, lo - s); else dL = Math.min(dL, s - hi);
+        }
+      }
+      wR[q] = Math.max(win, Math.min(wR[q], dR)); wL[q] = Math.max(win, Math.min(wL[q], dL));
+    }
+  }
+  return [wL, wR];
+}
 /** The tables from a prefix and its corners (all of them, in order).
  * With a merged chunk-bin slice set, bins take it; else bins run whole. */
 export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfChunkMeta; bins: { cellCh0: Int32Array; cellChN: Int32Array; cellChList: Int32Array } } | null, ms: { vtx: number; pins: number; arms: number; corners: number }, t0: number): GfTables {
@@ -996,10 +1034,13 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
   // K1438: from the arms themselves (P.arms is armTab.arms on every path: cold, pooled, the worker's), so no
   // caller copies a new field.
   const aHome = new Float64Array(nA); for (let i = 0; i < nA; i++) aHome[i] = P.arms[i].home;
+  // K1451 s3: a pin's reach window stops where a junction's arm or home begins on its chain (and stays win when the
+  // pin lies inside one), so the key depth equals member()'s depth wherever membership splits ribbons into blocks.
+  const [wL2, wR2] = P.homeOn === true && !GF_NOCLIP ? clipPinWindows(P, aHome) : [pinWL, pinWR];
 
   return {
     h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
-    nV, vx, vy, vs, pinS, pinZ, pinWL, pinWR, nA, aSR, aDir, aL, aLcut, aG, aHome, homeOn: P.homeOn === true,
+    nV, vx, vy, vs, pinS, pinZ, pinWL: wL2, pinWR: wR2, nA, aSR, aDir, aL, aLcut, aG, aHome, homeOn: P.homeOn === true,
     nK, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
     ms: { vtx: ms.vtx, pins: ms.pins, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
