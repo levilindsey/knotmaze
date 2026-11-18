@@ -1,0 +1,10 @@
+  11s pid 34376 main 0.0s/10s (UserRequest) top: t22244=0.0s t26216=0.0s t40364=0.0s | gpu3D total 25% this 3% top 13204:22 34376:3
+  21s pid 34376 main 1.3s/10s (UserRequest) top: t6252=10.2s t37784=7.3s t8412=7.2s | gpu3D total 35% this 20% top 34376:20 13204:16
+  32s pid 34376 main 1.1s/10s (UserRequest) top: t15584=10.4s t6252=10.4s t40364=10.3s | gpu3D total 41% this 24% top 34376:24 13204:17
+  42s pid 34376 main 1.2s/10s (UserRequest) top: t6252=10.3s t15584=10.2s t37784=9.8s | gpu3D total 59% this 40% top 34376:40 13204:19
+  52s pid 34376 main 1.1s/10s (UserRequest) top: t6252=10.2s MAIN31220=1.1s t15584=0.4s | gpu3D total 60% this 41% top 34376:41 13204:19
+  63s pid 34376 main 1.2s/10s (UserRequest) top: t6252=10.2s MAIN31220=1.2s t35576=0.2s | gpu3D total 56% this 33% top 34376:33 13204:15 24416:9
+  73s pid 34376 main 1.0s/10s (UserRequest) top: t6252=10.2s MAIN31220=1.0s t35576=0.2s | gpu3D total 44% this 36% top 34376:36 24416:8
+  83s pid 34376 main 1.4s/10s (UserRequest) top: t6252=10.3s MAIN31220=1.4s t35576=0.3s | gpu3D total 36% this 36% top 34376:36
+  93s pid 34376 main 1.3s/10s (UserRequest) top: t6252=10.2s MAIN31220=1.3s t35576=0.3s | gpu3D total 46% this 46% top 34376:46
+ 103s pid 34376 main 0.7s/10s (UserRequest) top: t36752=6.2s t6252=3.8s t25784=2.2s | gpu3D total 54% this 54% top 34376:54

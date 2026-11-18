@@ -1,0 +1,13 @@
+[A:0.14:border] console.warn [K307 warm-up] wave 1 timed out after 15002 ms; 5 program(s) still compiling, the first frame draws now
+[A:0.14:border] hash fff8c9e5 lost 1 fallback 
+[A:0.14:fill] hash fff8c9e5 lost 1 fallback 
+[A:1.2:border] hash 10104c64 lost 1 fallback 
+[A:1.2:fill] hash 10104c64 lost 1 fallback 
+[B:0.14:border] hash f9d72040 lost 1 fallback 
+[B:0.14:fill] hash f9d72040 lost 1 fallback 
+[B:1.2:border] hash 49c20566 lost 1 fallback 
+[B:1.2:fill] hash 49c20566 lost 1 fallback 
+DONE lost=8
+18:27:50
+
+[exited with code 0]

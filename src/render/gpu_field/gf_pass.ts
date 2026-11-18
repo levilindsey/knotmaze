@@ -77,18 +77,20 @@ export function compileProgram(gl: WebGL2RenderingContext, vs: string, fs: strin
   return finishProgram(gl, startProgram(gl, vs, fs));
 }
 
-/** A framebuffer of n colour textures (RGBA8, or RGBA32F for the probe). */
+/** A framebuffer of n colour textures (RGBA8, RGBA32F for the probe, or RGBA32UI for the app's packed pass). */
 export class GfTarget {
   readonly gl: WebGL2RenderingContext;
   readonly fbo: WebGLFramebuffer;
   readonly tex: WebGLTexture[] = [];
   readonly n: number;
   readonly float: boolean;
+  /** K1468: RGBA32UI attachments (packForm's one output; packComp reads them). */
+  readonly uint: boolean;
   /** K1362 s4: the depth-stencil the tiers' route needs (GfPass.draw adds it on first use). */
   private ds: WebGLRenderbuffer | null = null;
   w = 0; h = 0;
-  constructor(gl: WebGL2RenderingContext, n: number, float: boolean) {
-    this.gl = gl; this.n = n; this.float = float;
+  constructor(gl: WebGL2RenderingContext, n: number, float: boolean, uint = false) {
+    this.gl = gl; this.n = n; this.float = float; this.uint = uint && !float;
     if (float && !gl.getExtension("EXT_color_buffer_float")) throw new Error("no EXT_color_buffer_float");
     this.fbo = gl.createFramebuffer()!;
     for (let i = 0; i < n; i++) this.tex.push(gl.createTexture()!);
@@ -101,7 +103,8 @@ export class GfTarget {
     const bufs: number[] = [];
     for (let i = 0; i < this.n; i++) {
       gl.bindTexture(gl.TEXTURE_2D, this.tex[i]);
-      gl.texImage2D(gl.TEXTURE_2D, 0, this.float ? gl.RGBA32F : gl.RGBA8, w, h, 0, gl.RGBA, this.float ? gl.FLOAT : gl.UNSIGNED_BYTE, null);
+      if (this.uint) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32UI, w, h, 0, gl.RGBA_INTEGER, gl.UNSIGNED_INT, null);
+      else gl.texImage2D(gl.TEXTURE_2D, 0, this.float ? gl.RGBA32F : gl.RGBA8, w, h, 0, gl.RGBA, this.float ? gl.FLOAT : gl.UNSIGNED_BYTE, null);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -297,6 +300,8 @@ export class GfPass {
   private pieces: GfPieces | null = null;
   // K1456: the app's compile queue (pollPrograms). khr is null until the first poll asks the context.
   private readonly asyncCompile: boolean = false;
+  /** K1468: every program writes packForm's one RGBA32UI output (the app's pass). */
+  readonly pack: boolean = false;
   private khr: boolean | null = null;
   private compileErr: string | null = null;
   private compileIssued = 0;
@@ -313,9 +318,12 @@ export class GfPass {
    * tiers: GF_TIERS by default; [] draws the full program alone (stage 2's pass). fs: a program's source override
    * (benches; split programs get their pass as the second argument). split (K1362 s7): the one tier as two passes.
    */
-  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split: boolean | "skip" | GfSplitForm = false, opts: { home?: boolean } = {}) {
+  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split: boolean | "skip" | GfSplitForm = false, opts: { home?: boolean; pack?: boolean } = {}) {
     this.gl = gl; this.probe = probe; this.home = !!opts.home;
     const hf = this.home ? homeForm : (src: string): string => src; // K1439
+    // K1468: the app's programs write one packed output (packForm) into a GfTarget(1, false, true)
+    this.pack = !!opts.pack && !probe && !split && !fs;
+    const pf = this.pack ? packForm : (src: string): string => src;
     if (split && (probe || tiers.length !== 1)) throw new Error("GfPass: split needs one tier and no probe");
     const sf: GfSplitForm = split === "skip" ? { skip: true } : typeof split === "object" ? split : {};
     this.skip = !!sf.skip; const keys = !!sf.keys;
@@ -331,7 +339,7 @@ export class GfPass {
     this.uniformsOf = uniformsOf;
     const make = (form: (src: string) => string): GfProg[] => plan.map(({ tier, split: s, when }) => {
       const src = hf(fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined));
-      const fsrc = form(src);
+      const fsrc = pf(form(src));
       if (this.asyncCompile) return { prog: null, u: new Map(), tier, split: s, when, state: "spec" as const, job: null, src: fsrc };
       const prog = compileProgram(gl, GF_VS, fsrc);
       return { prog, u: uniformsOf(prog), tier, split: s, when, state: "ready" as const, job: null, src: "" };
@@ -789,6 +797,7 @@ export class GfPass {
     const T = this.T;
     const P = this.packed;
     if (!T || !P) return false;
+    if (this.pack !== target.uint && !target.float) throw new Error("GfPass: a packed pass draws into a uint target, and only it");
     if (this.asyncCompile) this.pollPrograms();
     gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
     gl.viewport(0, 0, target.w, target.h);
@@ -804,8 +813,9 @@ export class GfPass {
     const corners = this.cellCorners;
     const rv = this.rv;
     const lk = this.lk;
-    // K1389 s2: the look form writes its colour to the target's second attachment; the original programs only o0
-    if (!target.float && target.n > 1) gl.drawBuffers(lk ? (target.n > 2 ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2] : [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]) : [gl.COLOR_ATTACHMENT0, gl.NONE]);
+    // K1389 s2: the look form writes its colour to the target's second attachment; the original programs only o0.
+    // K1468: a packed pass (one RGBA32UI attachment) keeps the target's [ATT0], the only layout ANGLE's D3D11 link compiles
+    if (!target.float && !target.uint && target.n > 1) gl.drawBuffers(lk ? (target.n > 2 ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2] : [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]) : [gl.COLOR_ATTACHMENT0, gl.NONE]);
     if (lk && !this.lprogs[rv ? 1 : 0]) this.lprogs[rv ? 1 : 0] = this.lplan!(!!rv);
     // K1456: draw the routed set once its full program is ready; while a newly routed set (a reveal's
     // form, say) still compiles, the best ready set draws instead, so the maze never leaves the screen.
@@ -819,6 +829,7 @@ export class GfPass {
     const pieces = this.pieces;
     if (routed) target.ensureStencil();
     if (target.float) for (let i = 0; i < target.n; i++) gl.clearBufferfv(gl.COLOR, i, [0, 0, 0, 0]);
+    else if (target.uint) for (let i = 0; i < target.n; i++) gl.clearBufferuiv(gl.COLOR, i, [0, 0, 0, 0]);
     else { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
     if (routed && !pieces) { gl.stencilMask(0xff); gl.depthMask(true); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
     const [x0, y0, x1, y1] = rect;
@@ -966,6 +977,54 @@ void main() {
   o = vec4(uInk * ink + uFill * cov * (1.0 - ink), ink + (1.0 - ink) * cov);
 }`;
 
+// K1468: ONE OUTPUT PER PROGRAM. ANGLE's D3D11 link compiles a pixel shader for one output layout only: the first
+// output alone (GetDefaultOutputLayoutFromShader). The look forms wrote three targets, so their first draw compiled
+// the [ATT0, ATT1, ATT2] variant synchronously on the GPU process's main thread: 50-70 s on a cold shader cache, and
+// the GPU watchdog killed the process (context lost, gf recompiled, the loop repeated). KHR_parallel_shader_compile
+// never reaches that compile. packForm gives every app program one RGBA32UI output instead (x, y, z = the three
+// targets' bytes, w 0), and packComp reads it, so the link's variant is the one every draw uses.
+// Bit-exact with the RGBA8 targets on the desktop's AMD (.claude/probes/K1468/exact.mjs, 697k values, NaN and
+// infinities included): AMD exports colour to an 8-bit target as fp16 rounded toward zero, then rounds that to the
+// byte, so gfB truncates the float to fp16's 10 mantissa bits before rounding (byte = fp16 * 255 + 0.5 has no ties).
+// Other GPUs round the fp32 itself: there gfB's byte can be 1 lower where x * 255's fraction is in [0.5, 0.63).
+// The read: RGBA8 -> float is k / 255 correctly rounded, which a shader division is not (504 of 1024 bytes 1 ulp off
+// on D3D11), so the bytes index a table of those floats (GF_U8, exact).
+const PACK_BLOCK = "layout(location = MAXP) out uvec2 o3;\n#else\n";
+const PACK_END = "#if defined(SPLIT1) && defined(SPLITSKIP)\n";
+const PACK_DECL = `layout(location = 0) out highp uvec4 oP; // K1468: packForm's one output
+vec4 o0 = vec4(0.0); vec4 o1 = vec4(0.0); vec4 o2 = vec4(0.0);
+highp uint gfB(highp vec4 v) {
+  highp vec4 c = uintBitsToFloat(floatBitsToUint(clamp(v, 0.0, 1.0)) & 0xffffe000u);
+  highp uvec4 b = uvec4(c * 255.0 + 0.5);
+  return b.x | (b.y << 8) | (b.z << 16) | (b.w << 24);
+}
+`;
+const PACK_WRITE = "#if !defined(PROBE) && !defined(SPLIT1)\n  oP = uvec4(gfB(o0), gfB(o1), gfB(o2), 0u); // K1468\n#endif\n";
+
+/** K1468: a program's outputs (one to three vec4 targets: the plain and look forms) as one packed RGBA32UI output. */
+export function packForm(src: string): string {
+  const a = src.indexOf(PACK_BLOCK);
+  const b = a < 0 ? -1 : src.indexOf("#endif\n", a);
+  if (a < 0 || b < 0 || src.indexOf(PACK_BLOCK, a + 1) >= 0 || src.split(PACK_END).length !== 2) throw new Error("packForm: the output block or main's end moved");
+  const head = a + PACK_BLOCK.length;
+  if (!/^(?:(?:layout\(location = [0-2]\) )?out vec4 o[0-2];\n)+$/.test(src.slice(head, b))) throw new Error("packForm: unexpected outputs");
+  return src.slice(0, head) + PACK_DECL + src.slice(b).replace(PACK_END, PACK_WRITE + PACK_END);
+}
+
+const GF_U8 = `const float GF_U8[256] = float[256](${Array.from({ length: 256 }, (_, k) => { const s = Math.fround(k / 255).toPrecision(9); return /[.e]/.test(s) ? s : `${s}.0`; }).join(", ")});
+vec4 gfU8(highp uint w) { return vec4(GF_U8[w & 255u], GF_U8[(w >> 8) & 255u], GF_U8[(w >> 16) & 255u], GF_U8[w >> 24]); }
+`;
+
+/** K1468: a composite over the RGBA8 targets uC (o0), uCo (o1) and uHi (o2) made to read packForm's one uint target uC. */
+export function packComp(fs: string): string {
+  const lane: Record<string, string> = { uC: "x", uCo: "y", uHi: "z" };
+  let out = fs.replace("uniform sampler2D uC;\n", "uniform highp usampler2D uC;\n" + GF_U8).replace("uniform sampler2D uCo;\n", "").replace("uniform sampler2D uHi;\n", "");
+  out = out.replace(/texelFetch\((uC|uCo|uHi), ((?:[^(),]|\([^()]*\))+), 0\)/g, (_m, s: string, at: string) => `gfU8(texelFetch(uC, ${at}, 0).${lane[s]})`);
+  out = out.replace(/textureSize\((uCo|uHi), 0\)/g, "textureSize(uC, 0)");
+  if (!out.includes("usampler2D uC;") || /\buCo\b|\buHi\b|sampler2D uC;/.test(out.replace("usampler2D uC;", ""))) throw new Error("packComp: a target read was not converted");
+  return out;
+}
+
 /**
  * K1389 s1: the look's composite inputs: the colour table's texture and first colour texel (GfLookTable.oK), the
  * thread look (0 fill, 1 border, 2 both) and the border colour (w 1 when one is set, else the section's own stroke).
@@ -985,10 +1044,14 @@ export class GfComposite {
   private khr: boolean | null = null;
   private err: string | null = null;
   readonly gl: WebGL2RenderingContext;
-  constructor(gl: WebGL2RenderingContext) {
+  /** K1468: reads a packed pass's one RGBA32UI target (packComp). */
+  readonly packed: boolean;
+  constructor(gl: WebGL2RenderingContext, opts: { packed?: boolean } = {}) {
     this.gl = gl;
-    this.job = startProgram(gl, GF_VS, COMP_FS);
-    this.ljob = startProgram(gl, GF_VS, LOOK_COMP_FS);
+    this.packed = !!opts.packed;
+    const pc = this.packed ? packComp : (fs: string): string => fs;
+    this.job = startProgram(gl, GF_VS, pc(COMP_FS));
+    this.ljob = startProgram(gl, GF_VS, pc(LOOK_COMP_FS));
     this.vao = gl.createVertexArray()!;
   }
 
@@ -1040,10 +1103,11 @@ export class GfComposite {
       const u = (n: string): WebGLUniformLocation | null => this.lu.get(n) ?? null;
       gl.useProgram(this.lprog);
       // K1389 s2: the pass's second attachment holds the colours; K1425: the third holds the border indication
+      // (K1468: a packed target holds all three in its one texture)
       gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, src.tex[1]);
+      gl.bindTexture(gl.TEXTURE_2D, this.packed ? null : src.tex[1]);
       gl.activeTexture(gl.TEXTURE2);
-      gl.bindTexture(gl.TEXTURE_2D, src.tex[2] ?? src.tex[0]);
+      gl.bindTexture(gl.TEXTURE_2D, this.packed ? null : src.tex[2] ?? src.tex[0]);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, src.tex[0]);
       gl.uniform1i(u("uC"), 0);

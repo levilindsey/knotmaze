@@ -1,0 +1,6 @@
+  11s pid 17444 main 0.0s/10s (UserRequest) top: t5416=0.0s t39004=0.0s t36700=0.0s | gpu3D total 23% this 23% top 17444:23
+  21s pid 17444 main 1.3s/10s (UserRequest) top: t1020=10.8s t33988=10.8s t17348=10.8s | gpu3D total 24% this 24% top 17444:24
+  32s pid 17444 main 1.2s/10s (UserRequest) top: t33988=10.3s t17348=10.2s t1020=10.2s | gpu3D total 42% this 42% top 17444:42
+  42s pid 17444 main 1.4s/10s (UserRequest) top: t1020=10.2s t17348=6.5s t33988=3.2s | gpu3D total 41% this 41% top 17444:41
+  52s pid 17444 main 1.0s/10s (UserRequest) top: t1020=10.2s MAIN1112=1.0s t18148=0.2s | gpu3D total 22% this 22% top 17444:22
+  62s pid 17444 main 9.7s/10s () top: MAIN1112=9.7s t25168=9.5s t1020=0.6s | gpu3D total % this % top 

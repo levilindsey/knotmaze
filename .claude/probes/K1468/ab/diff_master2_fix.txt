@@ -1,0 +1,9 @@
+A_0.14_border.png: 15444 px, max delta 105, delta 1/2/3: 13643/83/35, box x 787-3139 y 92-1775
+A_0.14_fill.png: 98347 px, max delta 195, delta 1/2/3: 66077/17818/8962, box x 738-3139 y 73-1775
+A_1.2_border.png: 7102 px, max delta 63, delta 1/2/3: 6247/34/34, box x 735-3139 y 84-1707
+A_1.2_fill.png: 129037 px, max delta 204, delta 1/2/3: 83414/15282/10398, box x 736-3139 y 67-1708
+B_0.14_border.png: 25171 px, max delta 63, delta 1/2/3: 23975/430/40, box x 701-3139 y 31-1713
+B_0.14_fill.png: 11088 px, max delta 133, delta 1/2/3: 10137/156/78, box x 762-3139 y 94-1705
+B_1.2_border.png: 28071 px, max delta 63, delta 1/2/3: 25891/1179/227, box x 701-3139 y 30-1713
+B_1.2_fill.png: 7882 px, max delta 130, delta 1/2/3: 7146/21/34, box x 752-3139 y 87-1713
+TOTAL 322142

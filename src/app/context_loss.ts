@@ -68,6 +68,66 @@ export class ContextLossModel {
   }
 }
 
+// K1468: rp=gf's guard against a context-loss loop. A GPU process killed
+// while gf compiles (or just after: a draw-time shader compile) comes back,
+// gf compiles again, and the kill repeats. A loss while gf has programs
+// compiling, or before or within GF_EARLY_MS of its first composite, counts;
+// at GF_LOSS_LIMIT gf stays off for the tab's session (sessionStorage, so the
+// cover's Reload does not start the loop over) and today's renderer draws.
+export const GF_EARLY_MS = 10000;
+export const GF_LOSS_LIMIT = 2;
+export const GF_LOSS_KEY = "knotmaze.gfLosses";
+
+export interface GfLossStore {
+  read(): string | null;
+  write(v: string): void;
+}
+
+export class GfLossGuard {
+  losses = 0;
+  private readonly store: GfLossStore | null;
+  constructor(store: GfLossStore | null = null) {
+    this.store = store;
+    let v = 0;
+    try {
+      v = Number(store?.read() ?? 0);
+    } catch {
+      v = 0;
+    }
+    this.losses = Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
+  }
+
+  get off(): boolean {
+    return this.losses >= GF_LOSS_LIMIT;
+  }
+
+  // A context loss while gf was on. `compiling`: programs still compiling;
+  // `drawingMs`: time since gf's first composite, null before it. True when
+  // this loss turns gf off.
+  lost(compiling: boolean, drawingMs: number | null): boolean {
+    if (this.off) return false;
+    if (!compiling && drawingMs !== null && drawingMs >= GF_EARLY_MS) return false;
+    this.losses++;
+    try {
+      this.store?.write(String(this.losses));
+    } catch {
+      // no storage: the count lives as long as the page
+    }
+    return this.off;
+  }
+}
+
+// The tab's sessionStorage under `key`, or null where storage is refused.
+export function sessionLossStore(key = GF_LOSS_KEY): GfLossStore | null {
+  try {
+    const s = globalThis.sessionStorage;
+    if (!s) return null;
+    return { read: () => s.getItem(key), write: (v) => s.setItem(key, v) };
+  } catch {
+    return null;
+  }
+}
+
 export interface LossCover {
   show(): void;
   message(): void;
