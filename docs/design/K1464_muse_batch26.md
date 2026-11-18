@@ -168,3 +168,27 @@ change: `k1362t2_digest` equal to your starting master's with home on and off, p
 and every `pinWL` / `pinWR` value bit-equal on the 12 scenes (`.claude/probes/K1451/k1451_wcmp.ts`). 4. One
 GPU capture at `gfh=1` on each of the two links: 0 px against your starting master. 5. `npm test` green
 with no pin re-taken. 6. The guards.
+
+## Run F (26F): K1474, rp=gf's thread fill is lighter than today's
+
+Added 2026-11-17, after K1460 stage 5. On `?3&xp=off&am=instant` (default look) today's thread at junction B
+(866,138 at 1600x900 DSF 2) reads cc7ac0 and rp=gf's reads e195e8, with and without `gfh=1`. The lighter fill
+is visible at a glance and makes an edge where a long crossing fade ends; with gf's colour mapped onto
+today's, the same crop matches today within 11 levels at every fade (sheets
+`.claude/probes/K1460/out/s5/jb_*.png`; tools `recol.py`, `jbdiff.py`, `shot.mjs` there). Nobody has traced
+where the colour departs: K1389's colour table (`gf_look.ts`), the look composite, the section colour's
+shading, or a blend or colour-space step.
+
+Scope: the fill colour of thread interiors with the default look (`tlk=fill`). The border look
+(`tlk=border`) stays exactly as it is (Levi, 2026-11-17): its captures must not change. A Claude agent
+(K1472 stage 2) is editing the reveal's code in `gf_reveal.ts`, `gf_look.ts` (`lkJCut`, `lkFx`), `gf_app.ts`
+and `gf_pass.ts`: keep out of those functions, pull before you start and before each push.
+
+Done: 1. The number first, failing on master: over thread interiors (pixels at least 3 px inside both
+renderers' ink, away from crossings' fades and junction fans) on `?3`, `?7` and `?b.FMKB4DIQ` with
+`xp=off&am=instant`, the max and mean channel difference between today and gf, per section colour, with and
+without `gfh=1`. 2. Where the colour departs, named in the code, with the value at each step for one pixel.
+3. Fixed: max channel difference 6 or less and mean 2 or less on all three links. 4. `tlk=border` on
+`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`: 0 px against your starting master. 5. 4x crops
+today | master gf | new gf at junction B and five more spots, looked at. 6. `npm test` green; a pin that
+moves because the colour moved is re-taken and named in the commit. 7. The guards.
