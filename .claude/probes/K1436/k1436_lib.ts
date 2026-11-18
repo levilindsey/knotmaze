@@ -74,7 +74,14 @@ export function bandSites(R: Raster, T: any): Sites {
     for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) { const a = head.get(cy * gw + cx); if (!a) continue; for (const q of a) { const dx = S.x[q] - x, dy = S.y[q] - y; if (dx * dx + dy * dy <= rad * rad && sameB(k, q)) fn(q); } }
   };
   const nx2 = new Float32Array(n), ny2 = new Float32Array(n);
-  const SM = Math.max(P.SMOOTH, P.NSM * aaP); for (let k = 0; k < n; k++) { let sx = 0, sy = 0; near(k, SM, (q) => { sx += S.nx[q]; sy += S.ny[q]; }); const l = Math.hypot(sx, sy) || 1; nx2[k] = sx / l; ny2[k] = sy / l; }
+  // the normal averages EVERY site within SM whose raw normal is not opposed, whatever its labels: where the labels
+  // change along an edge (a tie or ramp) a label-filtered average left staircase sites with a raw axis normal, and
+  // the ray then measured the band 1/cos(tilt) too wide (muse_hash:21.99:2.97, 2026-11-17)
+  const nearG = (k: number, rad: number, fn: (q: number) => void): void => {
+    const x = S.x[k], y = S.y[k]; const cx0 = Math.floor((x - rad) / CS), cx1 = Math.floor((x + rad) / CS), cy0 = Math.floor((y - rad) / CS), cy1 = Math.floor((y + rad) / CS);
+    for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) { const a = head.get(cy * gw + cx); if (!a) continue; for (const q of a) { const dx = S.x[q] - x, dy = S.y[q] - y; if (dx * dx + dy * dy <= rad * rad && S.nx[k] * S.nx[q] + S.ny[k] * S.ny[q] >= 0) fn(q); } }
+  };
+  const SM = Math.max(P.SMOOTH, P.NSM * aaP); for (let k = 0; k < n; k++) { let sx = 0, sy = 0; nearG(k, SM, (q) => { sx += S.nx[q]; sy += S.ny[q]; }); const l = Math.hypot(sx, sy) || 1; nx2[k] = sx / l; ny2[k] = sy / l; }
   S.nx.set(nx2); S.ny.set(ny2);
   // corners: a site whose smoothed normal turns by more than acos(CORNER) within SM along its boundary (a cusp,
   // the band's mitre at a sharp tip: the width there follows no smooth level); width flags skip sites within

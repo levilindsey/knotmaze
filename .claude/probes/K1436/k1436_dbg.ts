@@ -2,6 +2,7 @@
 import { makeJudge, tablesOf, rasterJudge, bandSites, loadEval } from "./k1436_lib.ts";
 const [which, nm, xs, ys, rs] = process.argv.slice(2); const X = +xs, Y = +ys; const RAD = rs ? +rs : 20;
 const G = which === "src" ? (await import("../../../src/render/gpu_field/eval.ts")).GfEval : await loadEval(which);
+if (which === "u") G.MODE = "master";
 const T = tablesOf(nm); const ppu = +(process.env.PPU ?? 480 / (2.5 * T.h)); const N = 2 * Math.ceil((T.W * 1.5 + 3 * T.aa) * ppu + 12 + RAD + 100);
 const c0 = Math.round(X * ppu) - N / 2, r0 = Math.round(Y * ppu) - N / 2;
 const R = rasterJudge(makeJudge(new G(T)), c0, r0, N, N, ppu); const S = bandSites(R, T); const WP = T.W * ppu;
