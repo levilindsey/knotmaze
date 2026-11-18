@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1462.
+Next free ID: K1464.
 
 ## Waiting on Levi
 
@@ -632,10 +632,10 @@ Next free ID: K1462.
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
   slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
   docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
-  - owner: agent `adec56ce45de83bd3` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 11:10, 2 h cap ~13:10)
-  - branch: `worktree-agent-adec56ce45de83bd3`, worktree `.claude/worktrees/agent-adec56ce45de83bd3`; last commit: `854ac158`
+  - owner: nobody since 2026-11-17 12:04 (merged; agent `adec56ce45de83bd3` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `70cbb806`
   - evidence: .claude/probes/K1458/live/zoom0_a.png, .claude/probes/K1449/ (scan tools)
-  - next: reproduce the kink-loop tick in the CPU mirror, classify the 246 tie finds, fix the largest class
+  - next: stage 2: build the reach window (rck1.15: per-pin depth window = the ribbon overlap's arc, keys only) into tables.ts / eval.ts / gf_glsl.ts / gf_keys.ts and verify on the GPU; brief docs/design/K1451_s2_reach_window.md
   - brief: `docs/design/K1451_crossing_ties.md`
 
 ## Next, in order
@@ -978,6 +978,13 @@ Every other item below waits on the trigger it names.
   (hashes 49c20566 / f9d72040) and should retry until the states match, as dragcheck.mjs does;
   .claude/probes/K1444/drag.mjs aims at the slider's filled bar, so its stops land off target (0.14 -> 0.28,
   0.5 -> 0.62) and the first drag does nothing
+- **K1462** · rp=gf's cfg dashes: the weighted configuration mix of a ramping piece in member() / homeRamp
+  fades the over outline into straight-ended dashes (90 finds, 3584 px, plus the 52 tie finds the reach window
+  relabels ramp); its own stage after K1451 s2, same files (Handoff K1451,
+  .claude/probes/K1451/out/tie_causes.png)
+- **K1463** · rp=gf: a small notch where the pink arm meets the blue thread at ?3 (lower right of
+  .claude/probes/K1458/live/zoom_a.png): the look's colour/fill, present before K1458, the field is clean
+  there (Handoff K1451)
 
 ## Residuals (known, not fixed)
 
