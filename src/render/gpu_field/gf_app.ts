@@ -1094,8 +1094,10 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         // K1472 s3: never in the middle of a reveal. A warm visit's programs are ready about 1.7 s
         // into the reveal (its ink already on screen), a cold one's long after it; a takeover there
         // jumped 38-49k px, against 2.9k (the rest look) at the reveal's end. So today's renderer
-        // draws the whole first reveal on every visit and gf takes over the frame it ends.
-        if (rvDrawn && !opts().midReveal) return;
+        // draws the whole first reveal on every visit and gf takes over once it ends, FX tail included
+        // (r.fxLive: today's burn pieces linger FX_TAIL past the reveal clock's end, which gf does not
+        // draw; a switch at the clock's end dropped them at once).
+        if ((rvDrawn || r.fxLive) && !opts().midReveal) { requestFrame(); return; }
         const lookComp = pass.looking ? comp!.lookReady : comp!.ready;
         if (!pass.drawReady() || !lookComp) return; // today's renderer is still on screen
         attach();

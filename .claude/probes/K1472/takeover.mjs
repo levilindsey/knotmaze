@@ -3,7 +3,7 @@
 // polls every 100 ms (reveal clock, gf stats), and shoots the page every SHOTMS while gf has not switched
 // (keeping the last two) and right after the switch, so the last today's frame and gf's first can be diffed.
 //   node takeover.mjs <url> <profileDir> <outPrefix> [secs=240]
-// env VW/VH (900x900), SHOTMS (250)
+// env VW/VH (900x900), SHOTMS (250), AT_DONE=1 (a control on today's renderer: the "switch" is the reveal's end; AT_DONE=fx: the FX tail's end)
 import puppeteer from "puppeteer-core";
 import { writeFileSync } from "node:fs";
 const [, , url, prof, out, secs = "240"] = process.argv;
@@ -46,7 +46,7 @@ try {
   for (let k = 0; k < +secs * 10; k++) {
     const s = await p.evaluate(() => {
       const r = globalThis.__knotReveal?.(); const g = globalThis.__knotGf?.stats;
-      return { ev: globalThis.__k1472p ?? [], now: performance.now(), rv: r ? { c: r.clock, d: r.duration, done: r.done } : null,
+      return { ev: globalThis.__k1472p ?? [], now: performance.now(), fx: globalThis.__knotRenderer?.()?.fxLive, rv: r ? { c: r.clock, d: r.duration, done: r.done } : null,
         gf: g ? { c: g.composites, i: g.compileIssued, r: g.compileReady, sw: g.switchedMs, fb: g.fallback, w: `${g.compileWorker}:${g.compileWarmed}` } : null };
     }).catch((e) => ({ ev: [], err: e.message }));
     for (; seen < s.ev.length; seen++) { say(`  page ${s.ev[seen].t}s ${s.ev[seen].what} ${s.ev[seen].prog}`); res.events.push(s.ev[seen]); }
@@ -56,9 +56,9 @@ try {
     const key = line.replace(/rv=[^ ]+/, "");
     if (key !== last) say(T(), line);
     last = key;
-    if (!sw && s.gf && s.gf.sw > 0) {
+    if (!sw && (process.env.AT_DONE ? s.rv?.done && (process.env.AT_DONE !== "fx" || s.fx === false) : s.gf && s.gf.sw > 0)) {
       sw = true;
-      swInfo = { t: T(), rv: s.rv, gf: s.gf, pageSwitchS: +(s.gf.sw / 1000).toFixed(2) };
+      swInfo = { t: T(), rv: s.rv, gf: s.gf, pageSwitchS: s.gf ? +(s.gf.sw / 1000).toFixed(2) : null };
       await p.screenshot({ path: `${out}_post0.png` });
       await sleep(120);
       await p.screenshot({ path: `${out}_post1.png` });
@@ -69,6 +69,7 @@ try {
       const buf = await p.screenshot();
       shots.push({ t: T(), buf, rv: s.rv }); if (shots.length > 2) shots.shift();
     }
+    if (sw && process.env.AT_DONE) break;
     if (sw && s.gf && s.gf.i === s.gf.r && /done|failed|none/.test(s.gf.w) && revealEnd !== null) { say(T(), "all compiled, switched, worker over"); break; }
     await sleep(100);
   }
