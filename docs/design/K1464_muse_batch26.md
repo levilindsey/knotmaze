@@ -474,7 +474,7 @@ commit small, and if a pull conflicts in `layers()`, redo your change on top of 
 
 ### Handoff 26J (Muse, 2026-11-18, partial: the compile cut landed in 41c13cf6, Done 2's half unmet)
 
-Started 09:04 PST, stopped 10:55 PST. Starting master 9d097df2; fix on master in 41c13cf6 (deploy 44366936385 success). Probes and sources under `.claude/probes/K1456/out/26J/` (`base_src/` master's dumped worker sources, `new_src/` the fix's, `var/` every variant, `picA*`/`picP*` captures, `*_single*.json` ctime runs).
+Started 09:04 PST, stopped 10:20 PST. Starting master 9d097df2; fix on master in 41c13cf6 (deploy 44366936385 success). Probes and sources under `.claude/probes/K1456/out/26J/` (`base_src/` master's dumped worker sources, `new_src/` the fix's, `var/` every variant, `picA*`/`picP*` captures, `*_single*.json` ctime runs).
 
 Done 1 (the number first, failing on master, perf lock held; `ctime.mjs` salted singles, median of three, Levi's idle browser on the machine): full look program (idx 0, 78,956 chars) **21.4 s** (21.4 / 20.8 / 22.3); idx 2 (corner tier) **19.9 s**; idx 1 (corner-free) **8.3 s**. Serial attribution on the preprocessed source (23.4 s): stubbing `layers()` leaves 4.4 s; `fillBur` accounts for ~8.7 s, `vtx` ~8.4 s, `pieceD` ~6.3 s; dropping ONE of fillBur's two call sites saves ~5.5 s — the driver compiler inlines fillBur per site and pays per copy.
 
