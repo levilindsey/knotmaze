@@ -1,0 +1,2 @@
+PASS  new 0  grown 0  gone 0  (match radius 0.3, grow > 10% and >= 3 px)
+taken under load (NoPerfLock: perf lock wait skipped)
