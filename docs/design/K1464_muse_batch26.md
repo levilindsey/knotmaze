@@ -858,3 +858,22 @@ gets its sources 0.8 s after the load; `docs/design/K1456_s3_first_visit.md`, Ha
 navigation to the first gf composite on link A. Done: the table of 10 loads with medians and the paired
 differences; land the cherry-pick only if the paired median is at least 10% sooner and `npm test`, `hold.mjs`
 60/60 and both dragchecks pass; otherwise record the numbers and leave master as it is.
+
+### Handoff 26T (Muse, 2026-11-19, not landed: paired median 4.4% sooner, under the 10% bar; master left as it is)
+
+Started 03:37 PST, stopped 04:08 PST. Starting master 7fe5ee2a6; the cherry-pick of 955de39d onto it was built as 058f23c4b (4 files, `frame_loop.ts` / `gf_app.ts` / `gf_pass.ts` / `gf_compile.test.ts`; the probe-file conflict in `.claude/probes/K1456/s3/ab.ps1` was resolved to master's copy, and the temp commit was reverted whole after the decision, never pushed). Builds in `$env:TEMP\k26t-prev` (7fe5ee2a6, 058f23c4b); probes under `.claude/probes/K1456/s3/out/26T1-*.json`, `26T2-*.json`, `26T-summary.json` and `out/26T/guards_*`; perf lock held 03:37-04:08 for every load and guard, released at the end. No Chrome of this run was alive beside the one load at a time; Levi's browser and a K1482 s18 probe Chrome (profile `k1482s18-start`, 22-31 Chrome processes in total) shared the GPU throughout, so this is quiet by this run's lights, not an empty machine.
+
+Cold A/B (fresh profile each load, link A `?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1`, `.claude/probes/K1456/s3/ab.ps1` + `s2/table.mjs`, seconds from navigation to the first gf composite; 26T1 rounds run master then early, 26T2 rounds early then master):
+
+| Pair | Master (s) | Early (s) | Diff early-master (s) | Early sooner |
+|---|---|---|---|---|
+| 26T1-1 | 54.55 | 67.05 | +12.50 | -22.9% |
+| 26T1-2 | 59.15 | 57.55 | -1.60 | +2.7% |
+| 26T1-3 | 51.41 | 43.21 | -8.20 | +15.9% |
+| 26T2-1 | 80.34 | 45.89 | -34.45 | +42.9% |
+| 26T2-2 | 50.87 | 48.62 | -2.25 | +4.4% |
+
+Medians: master 54.55 s (50.87, 51.41, 54.55, 59.15, 80.34), early 48.62 s (43.21, 45.89, 48.62, 57.55, 67.05). Paired median difference -2.25 s; paired median sooner 4.4%. The unpaired median ratio (10.9% sooner) is not the brief's bar. The early start itself works exactly as 955de39d promises: the compile worker gets its sources at 0.58-0.63 s (median 0.60) against master's 7.90-9.16 s (median 8.32), but the gating program (idx 0) then links in a median 47.84 s on early against 46.86 s on master - the head start is eaten by compiling while the loading phase's own work runs, as Handoff K1456 s3 inferred under load. The spread is wide on both builds (master 50.9-80.3 s, early 43.2-67.1 s).
+
+Decision: the paired median (4.4%) is under the 10% bar, so the cherry-pick does not land and master stays at 7fe5ee2a6. The landing guards were still run on that master build (preview on :5642, one kept profile `%TEMP%\k26t-guards-profile`): `hold.mjs` 60 250 5000 PASS on `?3&xp=off&am=instant&rp=gf` (first composite 50.7 s cold; 60/60, edges min 102885) and on `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (61.8 s; 60/60, min 6936); `dragcheck.mjs` PASS for gf and for gfh (every stop 0 px over TOL 24). `npm test` green on master (256 files, 3198 passed, 9 skipped; tsc clean; the cherry-pick's own `gf_compile.test.ts` was also green before the revert). K1456 stays open: the early start is proven to reach the worker at 0.6 s and proven not to move the first composite by the bar on this machine - the wait is still the one program's FXC compile (Run 26J's lane). K1464, K1451 and K1460 left open and untouched. Preview server (5642) stopped; the two preview builds and the kept guard profile stay in `$env:TEMP`.
+
