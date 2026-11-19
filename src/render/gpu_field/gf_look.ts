@@ -786,7 +786,9 @@ export class GfGapTable {
           const S = sam(ch);
           if (!S) continue;
           const kmA = keptOf(ch, S);
-          for (let k = 0; k < S.count; k++) if (r.overMember(ch, kmA[k])) {
+          // u18 & 256: only an open chain's END samples (within 0.3 arc of an end): a joint arm that ends there
+          const E = V18p & 256 ? (S.closed ? -1 : Math.ceil(0.3 / S.arcPer)) : S.count;
+          for (let k = 0; k < S.count; k++) if ((k <= E || k >= S.count - 1 - E) && r.overMember(ch, kmA[k])) {
             const px = S.positions[2 * k], py = S.positions[2 * k + 1], key = Math.floor(px / cs) * 100003 + Math.floor(py / cs);
             let L = allM.grid.get(key);
             if (!L) allM.grid.set(key, (L = []));
