@@ -837,6 +837,7 @@ export class GfGapTable {
     }
     this.nPos = nPos;
     this.ms = performance.now() - t0;
+    { const G18 = globalThis as { __k15?: { log?: number }; __k15log?: number[][]; __k18ms?: number }; if (G18.__k15?.log && (G18.__k15log ??= []).length < 400) G18.__k15log.push([this.ms, G18.__k18ms ?? -1]); } // K1482 s18 prototype timing
     return V;
   }
 }
