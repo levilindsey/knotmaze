@@ -196,10 +196,12 @@ describe("K1423 GfGapTable", () => {
     const y = (x: number) => V[4 * (over.count + Math.round(x / under.arcPer)) + 1];
     // the wall rides at y 0.28-0.3, left of the under thread (its tangent is +x): bit 1 only, the chain stays 0
     for (const x of [11, 11.3]) { expect(y(x)).toBe(0.125); expect(Math.round(y(x))).toBe(0); }
-    // at the crossing the nearest member is past the cut's reach (fillHalf + margin + fade); at 10.6 a non-member
-    // over sample lies within a fill half-width of the outline point: no flag either way
+    // at the crossing the nearest member is past the cut's reach (fillHalf + margin + fade): no flag
     expect(y(10)).toBe(0);
-    expect(y(10.6)).toBe(0);
+    // K1482 s17: at 10.6 a non-member over sample (the wall's own, just short of its membership at 10.55) lies within a
+    // fill half-width of the outline point, but the member surface is nearer and the slot joins the flagged run at 11:
+    // the flag spreads to it, so the window's slots up to the member boundary keep the joint's outline (link A j158)
+    expect(y(10.6)).toBe(0.125);
     // mirrored below the under thread, the same wall flags the right side (bit 2)
     const flip = (P: Float32Array) => P.map((v, i) => (i % 2 ? -v : v));
     const oF = flip(over.positions), uF = flip(under.positions);
