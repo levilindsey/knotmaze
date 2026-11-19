@@ -50,7 +50,8 @@ try {
     const shots = [
       ["t_nomask", "r.maskEnabled = false; r.update();", "r.maskEnabled = true; r.update();"],
       ["t_noprot", "r.protect = false; r.update();", "r.protect = true; r.update();"],
-      ["t_nofans", "r.filletMesh.visible = false; r.filletTopMesh.visible = false;", "r.filletMesh.visible = true; r.filletTopMesh.visible = true;"],
+      ["t_nofans", "r.root.children[1].renderable = false;", "r.root.children[1].renderable = true;"],
+      ["t_nojp", "r.skipJointPairs = false; r.update(); r.rebuildFillets(true);", "r.skipJointPairs = true; r.update(); r.rebuildFillets(true);"],
     ];
     for (const [nm, on, off] of shots) {
       await page.evaluate((s) => { const r = window.__knotRenderer(); new Function("r", s)(r); }, on);

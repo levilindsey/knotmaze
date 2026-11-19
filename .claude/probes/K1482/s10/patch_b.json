@@ -1,0 +1,14 @@
+[
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "/*K1482s10b*/ if ((cS < 0 || PC(j) == cS) && pg[j] < 0) g = max(g, cj);"
+  ],
+  [
+    "float cN = lkCut(N.x, sinT, exg, wm, pxw, sc);",
+    "float cN = lkCut(N.x, sinT, exg, wm, pxw, sc); float aN10 = lkArc(cO, N.yz); member(cO, aN10, keyBin(cO, aN10)); float cNx10 = mg >= 0 ? 0.0 : cN;"
+  ],
+  [
+    "g = max(g, cN);",
+    "g = max(g, cNx10);"
+  ]
+]
