@@ -99,3 +99,36 @@ comes first. A compaction is not a stop: re-read this brief and `git log`. On st
 `### Handoff K1482 s10` here, commit, and report: the sweep's faulted count by class, the sheets' paths (each
 site named), the numbers, which commits are confirmed on screen, a `Ledger items` list and K1482's handle
 fields.
+
+### Handoff K1482 s10
+
+Stopped at 15:26 (started 13:55), no `src/` change; the sweep stands at master's 36 (wedge 10, notch 9, sliver 6,
+tick 3, break 3, dot 2, stub 2, pocket 1; `out/s8/classes_tip.txt`), the four (j49, j55, j36, t70s) still cut.
+Evidence: `.claude/probes/K1482/out/s10/pixels.txt` (step 1: 12 pixel rows, today side) and `candidates.txt`
+(step 2), sheets `sh_b3.png` (j49 j55 j36 t70s j87 j93 j122 t16e: today | gf | b3 | ink diff), `sh_c.png`
+(j49 j55 j36 t70s), `cr_b3_j87.png` and `cr_b3_t16e.png` (gf | b3 | c), probes in `.claude/probes/K1482/s10/`
+(cap10.ps1, ttog.mjs, diffsites.py, crop4.py, dbgread.py, patch_*.json).
+
+- Step 1, the pixel read: every one of the 12 cuts comes from lkGap's loop (lkCut on the baked slot's over
+  chain), inside gf's window and today's chainCuts; at each of the four the cutting chain is the TRUE over
+  thread of a real crossing (j49: 75 over 71 at x325; j55, j36: self crossings of 58 and 11; t70s: 5 over 64 at
+  x41, 70 over 5 at x40). Today cuts there too: at j49 J75's fan (the over chain's fused joint 0.4 arc down
+  75) lays 75's outline over 71's faded tip, so no gap shows; at j55, j36, t70s today's mask removes the
+  ribbon at the picks.
+- (a) today's shorter extent: refuted by measurement, every pick lies inside today's oCaps reach. Not patched.
+- (b) joint room: `patch_b3.json` (no cut from an over piece that is a fused joint's member or ramp, PSURF)
+  joins j87 (22 px, looked at) and none of the four; 52 other sites change by >= 10 px, unlooked. The
+  cutting pieces at the four are not members: the field's membership ramp ends short of where today's fan
+  reaches. `patch_b`/`b2` used `pg[]`, absent under PGRP (compile failure, cap.mjs waits forever);
+  `patch_b4` (the under piece in a joint room) also never produced a frame (killed after 8 min, cause not
+  diagnosed). FAIL.
+- (c) only the true under thread is cut: `patch_c.json`, a no-op (ink changes at the recapture noise floor,
+  about 1250 each way; the four unchanged on `sh_c.png`). s8's rule already does this.
+- Done list: no rule passed, so nothing to fill-check, bar, hold or test; tip = origin/master + probe files.
+- Next: the rule that joins j49 needs where a fused joint's fan reaches along the OVER chain (arc from the
+  crossing to the over chain's nearest fused joint, against the fan's reach): gapWindow's joint room carries
+  the under chain's joints only, so this is a new baked number (stop-and-report per this brief; it belongs to
+  the window bake, Muse Run M's area). j55, j36, t70s are a different case (today's mask, not a fan): read
+  which of today's mask terms keeps their outline and whether gf should match it at all. Before either, the
+  master frames (raw/m, 880ec605) must be recaptured: origin/master moved (K1502, 3971ec64, the reach key
+  windows) under this stage. If b3's j87 join is wanted alone, look at its 52 other changed sites first.
