@@ -797,6 +797,25 @@ export class GfGapTable {
         (globalThis as { __k18ms?: number }).__k18ms = performance.now() - tA;
       }
       const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, V18p ? { uc: x.underChain, kmU: keptOf(x.underChain, su), all: allM ?? undefined } : undefined) : null;
+      // K1482 s18 PROTOTYPE: u18 & 16 = a slot within jd of a fused joint on the under chain (r.joints) flags both sides
+      const K18 = (globalThis as { __k15?: { jd?: number; dbg?: number[][] }; __k15log?: number[][] });
+      if (jfs && (V18p & 16 || K18.__k15?.dbg)) {
+        const jd = K18.__k15?.jd ?? (r.jointClear ?? 0) + r.fillHalf + r.margin + r.fade;
+        for (let i = 0; i < ks.length; i++) {
+          const k = ks[i];
+          let dj = Infinity;
+          if (jl) for (const jc of jl) {
+            let d = kArcOfCtrl(D, r.kcv[x.underChain], jc.ctrl) - k * su.arcPer;
+            if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
+            dj = Math.min(dj, Math.abs(d));
+          }
+          const b0 = jfs[i];
+          if (V18p & 16 && dj < jd) jfs[i] = 3;
+          const ux = su.positions[2 * k], uy = su.positions[2 * k + 1];
+          if (K18.__k15?.dbg?.some((p) => Math.hypot(p[0] - ux, p[1] - uy) < 0.8) && (K18.__k15log ??= []).length < 4000)
+            K18.__k15log.push([-1, x.overChain, x.underChain, k, +ux.toFixed(3), +uy.toFixed(3), +dj.toFixed(3), b0, jfs[i], r.overMember ? (r.overMember(x.underChain, keptOf(x.underChain, su)[k]) ? 1 : 0) : -1, +(r.jointClear ?? 0).toFixed(3), +jd.toFixed(3)]);
+        }
+      }
       for (let i = 0; i < ks.length; i++) {
         const k = ks[i];
         ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0);
