@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1509.
+Next free ID: K1511.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -734,11 +734,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a0d4a2de816fca20f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 12:45, 2 h cap ~14:45)
-  - branch: `worktree-agent-a0d4a2de816fca20f`, worktree `.claude/worktrees/agent-a0d4a2de816fca20f`; last commit: `c7d28b0a`
-  - evidence: .claude/probes/K1482/out/s8/ (classes_tip.txt: 36 faulted on master after stage 8's merge 363b6948; fixA_m0..m4.png, b_look3.png), .claude/probes/K1482/s8/
-  - next: stage 9 (started 2026-11-18 12:45, cap about 14:45): the 12 sites where the gap cuts the under arm's outline beside a fused joint (ticks j49 j55 j87, stubs j36 t79s, breaks j22 j29 t65s, pocket t80s, wedge t81s, sliver t70s, dot j88), a border-only rule in the outline's cut. On its report: view its tiles, check the count against 36 and the STRICT bar, merge, CI, live check of Levi's link (also owed for stage 7's fold fix and stage 8's fix A). Stage 8 (merged 363b6948): inside a baked gap window only that crossing's over thread cuts the outline (lkGap returns the outline's cut and the coverage's cut; fill look 0 px), dots j2/t1s t24s t46e and dash t39s gone; 22 sites wait on K1490; the home build stays parked on worktree-agent-ad03e8b65a2afa540
-  - brief: `docs/design/K1482_s9_borders.md`
+  - owner: agent `a78ef819b8f18362f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 13:55, 2 h cap ~15:55)
+  - branch: `worktree-agent-a78ef819b8f18362f`, worktree `.claude/worktrees/agent-a78ef819b8f18362f`; last commit: `880ec605`
+  - evidence: .claude/probes/K1482/out/s9/ (b_ov_a.png, b_ov_b.png, b_today_tbn.png, tday.txt), .claude/probes/K1482/out/s8/classes_tip.txt (36 faulted on master), .claude/probes/K1482/out/live/live_sites.png (live 363b694: stage 7's and 8's seven sites clean)
+  - next: stage 10 (started 2026-11-18 13:57, cap about 15:57): the same 12 joint-side cuts, read at the pixel with a shader debug output, candidate rules by patch judged on 4x tiles. On its report: view its tiles, check the count against 36 and the STRICT bar, merge, CI, live check. Stage 9 (merged 880ec605, no source change) found no number separating the 12 from clean near-joint crossings and suspects they were assigned to the wrong crossings; stage 8 (merged 363b6948) fixed the dots and the dash, confirmed on the live link; 22 sites wait on K1490; the home build stays parked on worktree-agent-ad03e8b65a2afa540
+  - brief: `docs/design/K1482_s10_borders.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -2446,6 +2446,10 @@ Every other item below waits on the trigger it names.
   results, 7091c9a4): consistent, but nobody has looked at it on screen
 - **K1508** · .claude/probes/K1482/cap.mjs: the first shot can come before the view settles (edges shift by 1
   px); a second render in the same state is right
+- **K1509** · .claude/probes/K1482/cap.mjs dies with '__knotGf is not defined' (line 105) on a today-only
+  shot, after writing today.png; .claude/probes/K1482/s9/cap9.ps1 with GF=0,TODAY=1 works
+- **K1510** · K1436 bar noise: census scene g41_user_tw64 settles to different physics hashes run to run
+  (0d51331b, c1b63637), so its screen finds can move without a source change
 
 ## Approved, to schedule (2026-10-11)
 
