@@ -18,3 +18,16 @@
 #          t25s t53e t45s t49e j114 j100 (3-4 px more of a fade ramp).
 #   K1490's, changed: t43s (the dot inside the sliver joins it; the sliver stays), t16e, t45s (notch unchanged).
 # GAP sites: 17 on master -> 12 (dots j2 t1s t24s t46e and dash t39s fixed).
+# SPLIT (64cd2bb4, rebased 7091c9a4): fix A as first written (4833334e, rebased 17b9dfc9) also moved the FILL look
+#   (tlk=fill): raw/mF vs raw/tF gf_fill.png 975 px differ, 722 > 24, max 179, thin casing slivers beside crossings
+#   (fill_diff.png: the 8 largest clusters, master | tip | diff). lkGap now returns (outline gap, coverage gap): x is
+#   fix A's and cuts ink and the border's flag lane, y is master's (every higher piece) and cuts cov and lkHiA.
+#   Tip build 64cd2bb4 (raw/tB, hash fff8c9e5): gf_fill vs master 0 px; gf_fls0 / 1.2 / 0.14 vs fix A's build
+#   (raw/tF) 0 px, so the border look and the five fixes above are unchanged. (tB's first frame, gf.png, differs from
+#   its own fls0.14 re-render by 86780 px, every edge 1 px over: the view was not settled at the first shot; mF and
+#   tF's first frames equal their re-renders.)
+# Counts (islands_th73.txt, dark-ink islands in a 64x64 box, today | master | tip): j2 0|1|0, t1s 0|1|0,
+#   t24s 0|2|0, t39s 0|1 (52 px)|0; t46e's dot is lighter than the ink threshold (by eye only).
+# Crossing fade on the split build: K1458 dragcheck.mjs (fill) PASS at 0 / 0.5 / 1.2 / 0.14 (raw/dcf/log.txt);
+#   K1492 dragcheck_b.mjs (border) PASS on fix A's build d077956a (raw/dcb2/log.txt), whose border frames the split
+#   leaves bit for bit. hold.mjs 60/60 PASS warm on link A (min 6854 / max 9593 edges).

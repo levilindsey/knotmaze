@@ -1,0 +1,46 @@
+# K1482 s8: link A border look at rest (fff8c9e5), tip 7091c9a4 (fix A 17b9dfc9 + its split 7091c9a4; before the rebase 4833334e, 64cd2bb4; the border
+# frames are bit-identical to b0d4dbf4's (pre-rebase 69e7df92, build d077956a), raw/tB vs raw/tF gf_fls0/1.2/0.14: 0 px). Master ba0fb106: 41 (s7 classes.txt).
+# Read by eye on the 4x tiles: every site whose screen changed (fixA_m0..m4.png, fixA_blobs_0..3.png, fixA_t18s.png,
+# fixA_j88j2.png, j88_zoom.png; fixA.txt names each). Sites whose screen did not change keep master's class.
+# Fixed: j2 t1s t24s t46e (dot), t39s (dash). Island count (islands_th73.txt, ink sum <= 73, 64x64 box):
+#   j2 1 -> 0, t1s 1 -> 0, t24s 2 -> 0, t39s 1 (52 px) -> 0; t46e's dot is not an island at that threshold (by eye only).
+# No site clean on master turned faulty (fixA.txt: 14 + 6 clean sites changed, all still clean).
+# site class owner
+j4 notch K1490
+j14 notch K1490
+j15 wedge K1490
+j22 break GAP
+j29 break GAP
+j36 stub GAP
+j41 notch K1490
+j47 notch K1490
+j49 tick GAP
+j50 wedge K1490
+j55 tick GAP
+j59 notch K1490
+j64 dot PIN
+j71 sliver K1470
+j82 wedge K1490
+j87 tick GAP
+j88 dot GAP
+j95 sliver K1490
+j143 wedge K1490
+j147 sliver K1490
+j158 wedge K1490
+t4s notch K1490
+t16e notch K1490
+t23e wedge K1490
+t43s sliver K1490
+t45s notch K1490
+t56s sliver K1490
+t58e notch K1490
+t59s wedge K1490
+t65s break GAP
+t70s sliver GAP
+t73e wedge K1490
+t79s stub GAP
+t80s pocket GAP
+t81s wedge GAP
+t84e wedge K1490
+# tip total 36: wedge 10, notch 9, sliver 6, tick 3, break 3, dot 2, stub 2, pocket 1 (master 41: + dot 4, dash 1).
+# by owner: K1490 22, GAP 12, K1470 1, PIN 1 (j64).
