@@ -1,0 +1,26 @@
+[
+  [
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {",
+    "vec4 dbA = vec4(0.0); vec4 dbB = vec4(0.0); bool dbOn = false; bool dbL = false; vec4 dbE = vec4(0.0); vec4 dbF = vec4(0.0);\nvec2 lkGap(float key, vec2 p, vec2 qU, int cU) {"
+  ],
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "if (cS < 0 || PC(j) == cS) { if (dbOn && cj > g) dbA.w = float(PC(j)); g = max(g, cj); }"
+  ],
+  [
+    "if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {",
+    "if (dbOn) { dbA.x = g; dbA.z = wm; dbB.xy = sc; dbB.z = sl.x; } if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {"
+  ],
+  [
+    "float cN = lkCut(N.x, sinT, exg, wm, pxw, sc);",
+    "float cN = lkCut(N.x, sinT, exg, wm, pxw, sc); if (dbOn) dbA.y = cN;"
+  ],
+  [
+    "vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0);",
+    "dbA = vec4(0.0, 0.0, 1e3, -1.0); dbB = vec4(1.0, 1.0, -1.0, 0.0); dbOn = true; vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); dbOn = false; dbL = true; { float q1 = floor(clamp(dbA.x, 0.0, 1.0) * 15.0 + 0.5); float q2 = floor(clamp(dbA.y, 0.0, 1.0) * 15.0 + 0.5); dbE = vec4(float(lab) / 255.0, (dbB.z >= 0.0 ? floor(dbB.z + 0.5) + 1.0 : 0.0) / 255.0, (q1 * 16.0 + q2) / 255.0, 1.0); dbF = vec4((dbA.w + 1.0) / 255.0, clamp(floor((dbA.z + 0.5) * 100.0 + 0.5), 0.0, 255.0) / 255.0, (floor(clamp(dbB.x, 0.0, 1.0) * 15.0 + 0.5) * 16.0 + floor(clamp(dbB.y, 0.0, 1.0) * 15.0 + 0.5)) / 255.0, 1.0); }"
+  ],
+  [
+    "o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);",
+    "if (dbL) { o0 = vec4(0.0, 1.0, 0.0, 0.0); o1 = dbF; o2 = dbE; } else { o0 = vec4(0.0); o1 = vec4(0.0); o2 = vec4(0.0); }"
+  ]
+]
