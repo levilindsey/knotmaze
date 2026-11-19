@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1502.
+Next free ID: K1503.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -2439,6 +2439,14 @@ Every other item below waits on the trigger it names.
   only muse_default_tw/muse_hash were screen-checked (bar PASS both flags, j81/x307/j138 also gone there).
   Screen-look the changed sides on def, ring, g41_* and user_tw42.lightpaper (4x tiles vs today/master), then
   close K1476.
+- **K1502** · K1477 next angle (Muse 26H, 2026-11-18): the border stub past a crossing (ring x68,
+  g41_ring_tw64 j24/x67) is form B's surface key order: past the crossing both pins' depth hats read 0 (feet
+  0.88/1.20 arc past pins, WL/WR = win 0.658), so the under surface wins by centreline distance and buries the
+  over edge ink (values in Handoff 26H, docs/design/K1464_muse_batch26.md). Fix in the K1451/K1482 lane: bake
+  K1451's pinReach key windows (GF_REACH_SEP 2h, ~1.9-2.2 arc at x68) with home off, watching the census stray
+  rise recorded at tables.ts:578 (16 -> 231 without home membership); then k1436_bar.ps1 -Scenes
+  ring,g41_ring_tw64 at HomeFlag 1 and 0. The scan's cut find is separately the lkGap centreline cut outside
+  the scan's legit zone, where gf's fill already equals today's.
 
 ## Approved, to schedule (2026-10-11)
 
