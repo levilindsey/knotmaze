@@ -2418,11 +2418,6 @@ Every other item below waits on the trigger it names.
   after its 4 retries (K1482 s6: g41_user_tw64 c1b63637 against 0d51331b), which makes that pair's finds
   meaningless; the bar should fail the scene, or retry until the hashes match
   (.claude/probes/K1436/k1436_bar.ps1, out/bar/k1482s6/ on branch worktree-agent-ad03e8b65a2afa540)
-- **K1500** · rp=gf fill look, gaps where a thread dives under a junction differ from today's: at fl 0 a dark
-  block, full looped gaps and small triangles where today's draws a thin line; at fl 1.2 straight hard edges
-  and bright slivers across the fade (K1458's stairs and bands). Fill look only; the border look on Levi's
-  link reads clean there. Picture: .claude/probes/K1495/out/sheet_dives.png (four dives, today's | gf at fl 0,
-  0.5, 1.2). Likely the far-reach bake or the junction gap geometry (tables.ts / eval.ts)
 - **K1501** · K1476 follow-up (26G): the never-clearing gap-window fix (9ae14f27) changed 2-10 baked window
   sides on every census scene but fat (trigger scan .claude/probes/K1476/out/26G/triggers.txt, approximate);
   only muse_default_tw/muse_hash were screen-checked (bar PASS both flags, j81/x307/j138 also gone there).
@@ -2823,6 +2818,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1500** · rp=gf's crossing fade at the start and exit markers equals today's (start 5.1/9.4/30.1/40.7 px = today at fl 0/0.14/0.5/1.2, exit none in either; table/tiles/drag in .claude/probes/K1500/out/26K, docs/design/K1500_marker_fade.md). Done in 970b6ece (2026-11-18).
 - **K1477** · rp=gf: the under thread's border stroke tapers to a point and stops past a crossing at ring x68 (19.4, 20.0; 963 px in K1436's screen scan), g41_ring_tw64 j24 (the same spot, 660 px) and x67 (18.0, 20.6; 296 px); today's stroke runs through, the fill matches. Dropped: cause found by Muse 26H (no fix landed); continued as K1502 (2026-11-18).
 - **K1476** · Muse 26G: a never-clearing gap window ends at the joint room; the long line is gone on muse_default_tw and muse_hash (a short speck remains at its left end, K1503; other scenes' changed sides: K1501). Done in 9ae14f27 (2026-11-18).
 - **K1498** · Crossing fade on dense mazes (both renderers): on Levi's link the fade at 1.2 runs about 12 device px, not the ~51 the value asks for, because today's fade is held back near junctions (crossing_gaps.ts: FADE_JOINT_FLOOR's clearance scale, and the gap window's end about 43 px from the crossing); with the clearance scale off it reaches 14.5 px, and the window is the harder stop (K1495, .claude/probes/K1495/out/prof_cause.txt). Dropped: Levi, 2026-11-18: keep as is. A high fade keeps today's junction limits in both renderers (2026-11-18).
