@@ -31,7 +31,7 @@ import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build"
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
 import { GfExploreTable, gfExploring } from "./gf_explore";
 import { knotUniformValues } from "../paint_model";
-import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, gfJointClear, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfPaintSource, type GfRimSource, GfRouteTable, routeDeclKey, type GfRouteSource } from "./gf_look";
+import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, gfJointClear, gfMarkerUniforms, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfMarkerUniforms, type GfPaintSource, type GfRimSource, GfRouteTable, routeDeclKey, type GfRouteSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 import { GfLossGuard, sessionLossStore } from "../../app/context_loss";
@@ -667,6 +667,41 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     stats.gwMs.push(performance.now() - t0);
     return P;
   };
+  // K1500: the marker discs' gap uniforms (gf_look.ts gfMarkerUniforms), recomputed with the gap bake
+  // (their windows march with margin and fade, so a slider move re-derives them with it)
+  let mkU: GfMarkerUniforms | null = null;
+  const mkSnap = (): GfMarkerUniforms | null => {
+    const r = ctx.scene.renderer;
+    if (!r || lkKey < 0 || !pass?.lookable || opts().look === false) return null;
+    const xr = r as unknown as {
+      markerOccluders: readonly { chain: number; ctrl: number; radius: number }[];
+      ps: { crossings: readonly { under: { chain: number } }[] };
+      renderCtrl: (p: never) => number;
+      junctionArcCtrls: ReadonlyMap<number, readonly { ctrl: number }[]>;
+      cuspRadius: number;
+      style: { threadWidth: number };
+    };
+    if (!xr.markerOccluders?.length) return null;
+    const src = r as unknown as { kd: Parameters<typeof gfMarkerUniforms>[0]["kd"]; kcv: Parameters<typeof gfMarkerUniforms>[0]["kcv"]; chainSamples: Parameters<typeof gfMarkerUniforms>[0]["chainSamples"] };
+    const junctionArcs: (number[] | undefined)[] = [];
+    const underArcs: (number[] | undefined)[] = [];
+    for (const mk of xr.markerOccluders) {
+      const ch = mk.chain;
+      if (junctionArcs[ch] !== undefined || ch < 0 || ch >= src.kcv.length) continue;
+      junctionArcs[ch] = (xr.junctionArcCtrls.get(ch) ?? []).map((j) => kArcU(src.kd, src.kcv[ch], j.ctrl));
+      underArcs[ch] = [];
+    }
+    for (const c of xr.ps.crossings) {
+      const ch = c.under.chain;
+      if (underArcs[ch]) underArcs[ch].push(kArcU(src.kd, src.kcv[ch], xr.renderCtrl(c.under as never)));
+    }
+    return gfMarkerUniforms({
+      kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples,
+      markers: xr.markerOccluders,
+      fillHalf: xr.style.threadWidth / 2, margin: lookGap(r), fade: lookFade(r),
+      cuspRadius: xr.cuspRadius, junctionArcs, underArcs,
+    });
+  };
   const gwShow = (P: Float32Array | null): void => {
     if (!P) return;
     if (gwP && gwP !== P && gwPool.length < 4) gwPool.push(gwP);
@@ -770,6 +805,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     lkShow(lkNext ?? lkSnap());
     ptShow(ptNext ?? ptSnap());
     gwShow(gwSnap());
+    mkU = mkSnap();
     dynShow(dynNext ?? dynSnap());
     rtShow(rtNext ?? rtSnap());
     pass!.upload(T);
@@ -1068,7 +1104,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         const fade = lookFade(r);
         // K1458: the gap window's bake reads margin and fade (its windows and clearance scales),
         // so a slider move re-bakes it at once; a sleeping knot installs no build to do it
-        if (gap !== lkGap || fade !== lkFadeV) { lkGap = gap; lkFadeV = fade; gwShow(gwSnap()); dirty = true; }
+        if (gap !== lkGap || fade !== lkFadeV) { lkGap = gap; lkFadeV = fade; gwShow(gwSnap()); mkU = mkSnap(); dirty = true; }
         // K1395 (24D): the look draws over the reveal form while the reveal runs, shaded by the
         // FX baked above (fxShow per revealing frame); gfLookDraws holds it off only for an A/B's
         // look: false. (K1404 held the look off here: its border interior was clear, so the ribbons
@@ -1078,7 +1114,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         } else {
           const up = pass.lkPMs;
           if (rvDrawn) fxShow(fxSnap());
-          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn, rimUniforms(rimSrc(r)), gwP, gwVer, rtCur, rtVer);
+          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn, rimUniforms(rimSrc(r)), gwP, gwVer, rtCur, rtVer, mkU);
           if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
         }
       } else if (lkGap >= 0) {

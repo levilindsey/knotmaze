@@ -96,8 +96,7 @@ describe("K1389 look form", () => {
       expect(f).toContain("float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);");
       expect(f).toContain("float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;");
       expect(f).not.toContain("CASE");
-      // K1482 s8: x cuts the outline (ink), y the coverage (every higher piece: the fill look as before)
-      expect(f).toContain("vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y;");
+      expect(f).toContain("vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y;");
     }
     expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0))");
     expect(LOOK_COMP_FS).not.toContain("CASE");

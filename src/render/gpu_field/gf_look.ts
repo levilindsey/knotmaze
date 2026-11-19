@@ -55,6 +55,8 @@
  * to the nearest junction on every chain and deleted partly revealed runs; these margins are
  * today's cuts exactly (fused ends only, wedge-facing sides only), so a run today draws keeps its
  * stroke and only the fan's share of the interior goes.
+ * K1500 (26K): lkMarker (uMkA/uMkB, gfMarkerUniforms) cuts piece labels by today's marker-disc gap
+ * at the start/exit discs, its window clipped where a junction fan's flank covers the thread.
  */
 import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, kSampleArc, kWall, kWrap, knotSection, type KChain, type KData, type KIgn } from "../paint_math";
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
@@ -707,6 +709,119 @@ export class GfGapTable {
     this.ms = performance.now() - t0;
     return V;
   }
+}
+
+/**
+ * K1500 (26K): the marker discs' gap for gf - today's marker slots (ribbon/crossing_gaps.ts
+ * renderMarkerGaps): a start/exit disc is an over pass whose polyline is its centre point, hiding its
+ * thread inside (radius + margin) and fading it back over fadeLength radially (sin 1), inside a window
+ * marched along the thread to where the centreline clears radius + margin + fade + both half-widths.
+ * gf's look had no port of it, so the thread stayed crisp at every fadeLength. Two vec4s a disc ride as
+ * uniforms (uMkA/uMkB, at most GF_MARKER_SLOTS): A = (centreX, centreY, radius, chain),
+ * B = (centreArc, winNeg, winPos, total | 0 open); chain -1 = no disc.
+ */
+export interface GfMarkerSource extends GfLookSource {
+  markers: readonly { chain: number; ctrl: number; radius: number }[];
+  fillHalf: number; margin: number; fade: number;
+  // today's fan flank reach (joinery.ts FILLET_REACH_PER_HALF and the cusp slider) and, per chain, its
+  // junction arcs and under-crossing arcs, for the fan clip in gfMarkerUniforms
+  cuspRadius: number;
+  junctionArcs: readonly (readonly number[] | undefined)[];
+  underArcs: readonly (readonly number[] | undefined)[];
+}
+export interface GfMarkerUniforms { a: Float32Array; b: Float32Array }
+export const GF_MARKER_SLOTS = 4;
+
+/** renderMarkerGaps' winOf (both directions): arc along the thread until it clears exitD from the centre. */
+export function markerWindow(S: GapSamples, center: number, cx: number, cy: number, exitD: number): [number, number] {
+  const pt = { x: 0, y: 0 };
+  const winOf = (dir: number): number => {
+    const cap = S.closed ? S.total / 4 : dir > 0 ? S.total - center : center;
+    for (let s = 0; ; s += GAP_MARCH_STEP) {
+      const sc = Math.min(s, cap);
+      gapPointAt(S, center + dir * sc, pt);
+      if (Math.hypot(pt.x - cx, pt.y - cy) >= exitD) return Math.min(cap, sc + GAP_MARCH_STEP);
+      if (sc >= cap) return cap;
+    }
+  };
+  return [winOf(-1), winOf(1)];
+}
+
+const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
+
+/** Today's marker cut (gap_mask.ts gapKeepAt, the n <= 1 branch): at radial distance d from the centre, arc offset off in the window. */
+export function markerCutAt(d: number, radius: number, off: number, winNeg: number, winPos: number, margin: number, fade: number, pxW: number): number {
+  const m = Math.min(off + winNeg, winPos - off);
+  if (m <= -pxW) return 0;
+  const inWin = clamp01(m / pxW + 0.5);
+  const e = d - radius - margin;
+  let k = clamp01((e + 0.5 * pxW) / Math.max(fade, pxW));
+  k = k * k * (3 - 2 * k);
+  let fs = clamp01(m / Math.max(0.5 * fade, pxW));
+  fs = 1 + (fs * fs * (3 - 2 * fs) - 1) * clamp01(e / pxW);
+  return (1 - k) * inWin * fs;
+}
+
+/**
+ * Today's fan flank reach along an arm (joinery.ts armReach): the full reach L, capped by the arm's
+ * domain, and stopped a fillHalf short of the arm's nearest under-gap (never below 0.3 L).
+ */
+export function markerArmReach(L: number, domain: number, near: number, fillHalf: number): number {
+  const dom = Math.min(L, Math.max(L * 0.3, domain));
+  return Math.min(dom, Math.max(L * 0.3, near - fillHalf));
+}
+
+/** The discs' look uniforms from the renderer's occluders, in the installed samples' frame. */
+export function gfMarkerUniforms(r: GfMarkerSource): GfMarkerUniforms {
+  const a = new Float32Array(GF_MARKER_SLOTS * 4);
+  const b = new Float32Array(GF_MARKER_SLOTS * 4);
+  for (let i = 0; i < GF_MARKER_SLOTS; i++) a[i * 4 + 3] = -1;
+  const D = r.kd;
+  const G = D.geom;
+  const pt = { x: 0, y: 0 };
+  let n = 0;
+  for (const mk of r.markers) {
+    if (n >= GF_MARKER_SLOTS) break;
+    const ch = mk.chain;
+    if (ch < 0 || ch >= r.chainSamples.length || !lookValid(r, ch)) continue;
+    const c = r.kcv[ch];
+    const sm = r.chainSamples[ch]!;
+    const S: GapSamples = { positions: sm.positions, count: sm.count, closed: c.closed, total: G[c.geom * 4], arcPer: G[c.geom * 4 + 1] };
+    const center = kArcOfCtrl(D, c, mk.ctrl);
+    gapPointAt(S, center, pt);
+    const exitD = mk.radius + r.margin + r.fade + r.fillHalf * 2 + GAP_EXIT_PAD;
+    let [winNeg, winPos] = markerWindow(S, center, pt.x, pt.y, exitD);
+    // Fan clip: today's fan material (silhouette gap only) replaces the ribbon inside a junction fan's
+    // flank reach, so the marker fade never shows there - clip the window at each fan's near edge.
+    const L = r.fillHalf * 1.25 * r.cuspRadius;
+    if (L > 0) {
+      const jns = [...(r.junctionArcs[ch] ?? [])].sort((x, y) => x - y);
+      const unds = r.underArcs[ch] ?? [];
+      for (const J of jns) {
+        // the arm from J toward the disc: its domain runs to the next junction or the chain's end
+        const discDir = center >= J ? 1 : -1;
+        let domain = discDir > 0 ? S.total - J : J;
+        for (const J2 of jns) {
+          if (J2 === J) continue;
+          const d2 = (J2 - J) * discDir;
+          if (d2 > 0 && d2 < domain) domain = d2;
+        }
+        let near = Infinity;
+        for (const U of unds) {
+          const dU = (U - J) * discDir;
+          if (dU > 0 && dU <= domain && dU < near) near = dU;
+        }
+        const reach = markerArmReach(L, domain, near, r.fillHalf);
+        const side = Math.max(0, Math.abs(J - center) - reach);
+        if (J >= center) winPos = Math.min(winPos, side);
+        else winNeg = Math.min(winNeg, side);
+      }
+    }
+    a.set([pt.x, pt.y, mk.radius, ch], n * 4);
+    b.set([center, winNeg, winPos, c.closed ? S.total : 0], n * 4);
+    n++;
+  }
+  return { a, b };
 }
 
 /**
@@ -1562,6 +1677,7 @@ const M_LOOK = `
 uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG; uniform float uLkF;
 uniform highp sampler2D uPt; uniform vec3 uGold;
 uniform highp sampler2D uGw; uniform float uGwLive;
+uniform vec4 uMkA[4]; uniform vec4 uMkB[4];
 uniform highp sampler2D uRt;
 uniform vec4 uRimA; uniform vec4 uRimB; uniform vec4 uRimC; uniform vec3 uHov;
 vec4 LKT(int i) { return texelFetch(uLk, ivec2(i & TWM, i >> LOG), 0); }
@@ -2091,6 +2207,32 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
   }
   return vec2(g, gA);
 }
+// K1500: today's marker-disc cut (gap_mask.ts gapKeepAt, the n <= 1 branch) at the label's foot: radial
+// from the disc centre (sin 1), inside the marched window; the CPU twin is gf_look.ts markerCutAt.
+// Piece labels only (the lkMarker site): today's fan material takes the silhouette only, so a stub a
+// junction fan covers keeps no marker fade (the exit stub on link A, measured in .claude/probes/K1500).
+float lkMarker(int c, float arc, vec2 p) {
+  float cut = 0.0;
+  float pxw = 2.0 * uAA;
+  for (int i = 0; i < 4; i++) {
+    if (int(uMkA[i].w + 0.5) != c) continue;
+    float total = uMkB[i].w;
+    float off = arc - uMkB[i].x;
+    if (total > 0.0) off -= total * floor(off / total + 0.5);
+    float m = min(off + uMkB[i].y, uMkB[i].z - off);
+    if (m <= -pxw) continue;
+    float inWin = clamp(m / pxw + 0.5, 0.0, 1.0);
+    float d = length(p - uMkA[i].xy);
+    float e = d - uMkA[i].z - uLkG;
+    float k = clamp((e + 0.5 * pxw) / max(uLkF, pxw), 0.0, 1.0);
+    k = k * k * (3.0 - 2.0 * k);
+    float fs = clamp(m / max(0.5 * uLkF, pxw), 0.0, 1.0);
+    fs = mix(1.0, fs * fs * (3.0 - 2.0 * fs), clamp(e / pxw, 0.0, 1.0));
+    float exg = uExLive > 0.5 ? exAt(c, uMkB[i].x).x : 1.0;
+    cut = max(cut, (1.0 - k) * inWin * fs * exg);
+  }
+  return cut;
+}
 // K1460: an antialiased fringe pixel has coverage but no label (the label needs d < h), so the site above never
 // cut it, and the composite paints it in a labelled neighbour's colour: along the edge where form B's burial ends
 // the under thread beside an over pass, the uncut fringe drew a dotted line across the faded under thread. Cut the
@@ -2099,7 +2241,9 @@ void lkFringe(vec2 p, inout float ink, inout float cov) {
   int jU = -1; float kU = BIG;
   for (int j = 0; j < np; j++) { if (pd[j] < uH + uAA && pkey[j] < kU) { kU = pkey[j]; jU = j; } }
   if (jU < 0) return;
-  vec2 g = lkGap(kU, p, lookQ(jU, p), PC(jU));
+  vec2 fq = lookQ(jU, p);
+  vec2 g = lkGap(kU, p, fq, PC(jU));
+  g = max(g, vec2(lkMarker(PC(jU), lkArc(PC(jU), fq), p)));
   if (!(g.y > 0.0)) return;
   float aT = 0.0;
   for (int j = 0; j < np; j++) { if (pkey[j] > kU + uZt) aT = max(aT, ss(-uAA, uAA, uH - pd[j])); }
@@ -2132,7 +2276,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 
