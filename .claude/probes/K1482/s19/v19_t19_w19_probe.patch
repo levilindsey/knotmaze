@@ -1,0 +1,159 @@
+diff --git a/src/render/gpu_field/gf_app.ts b/src/render/gpu_field/gf_app.ts
+index 075520b59..7af129e19 100644
+--- a/src/render/gpu_field/gf_app.ts
++++ b/src/render/gpu_field/gf_app.ts
+@@ -677,6 +677,12 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
+     if (gwEvT !== T || !gwEv) { gwEvT = T; gwEv = new GfEval(pass.home === T.homeOn ? T : { ...T, homeOn: pass.home }); }
+     const ev = gwEv; ev.fadeLength = fade;
+     const Tt = ev.T;
++    (globalThis as { __k15memG?: (c: number, k: number) => number }).__k15memG = (c, k) => { // K1482 s19 PROBE: the member's group
++      if (c < 0 || c >= Tt.cV0.length) return -1;
++      const v0 = Tt.cV0[c]; const pad = Tt.cClosed[c] !== 1 && Tt.vs[v0] < 0 ? 1 : 0;
++      const m = ev.memberAt(c, Tt.vs[v0 + Math.min(Tt.cNV[c] - 1, k + pad)]);
++      return m.g >= 0 && m.ramp > 0 ? m.g : -1;
++    };
+     return (c, k) => {
+       if (c < 0 || c >= Tt.cV0.length) return false;
+       const v0 = Tt.cV0[c]; const pad = Tt.cClosed[c] !== 1 && Tt.vs[v0] < 0 ? 1 : 0;
+diff --git a/src/render/gpu_field/gf_look.ts b/src/render/gpu_field/gf_look.ts
+index bab1aa192..1a0385fef 100644
+--- a/src/render/gpu_field/gf_look.ts
++++ b/src/render/gpu_field/gf_look.ts
+@@ -556,6 +556,7 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
+   const reach2 = (sc.fh + sc.mg + sc.fd) ** 2, off = sc.fh + GAP_JOINT_OB, nn2 = sc.fh * sc.fh, uxy = su.positions;
+   const last = su.count - 1;
+   const near = new Array<number>(ks.length).fill(0);
++  const T19 = (globalThis as { __k15?: { t19?: number } }).__k15?.t19 ?? 0; // K1482 s19 PROBE t19
+   for (let i = 0; i < ks.length; i++) {
+     const k = ks[i];
+     const ka = su.closed ? (k + last) % su.count : Math.max(0, k - 1), kb = su.closed ? (k + 1) % su.count : Math.min(last, k + 1);
+@@ -568,6 +569,7 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
+       for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
+       for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
+       if (dM < reach2 && dM <= dN) { nb |= bit; if (dN >= nn2) bits |= bit; }
++      else if (T19 && dM < reach2 && Math.sqrt(dM) <= Math.sqrt(dN) + T19 * so.arcPer) nb |= bit; // K1482 s19 PROBE t19
+       for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } }
+     }
+     out[i] = bits; near[i] = nb;
+@@ -623,6 +625,7 @@ export class GfGapTable {
+     const CUT_REACH = Math.max(1.35, r.fillHalf * 6.5, 4.5);
+     const scan = Math.max(0.6, 3 * r.fillHalf); // K1458: lkGap's scan half-range around the baked over arc
+     const gpt = { x: 0, y: 0 };
++    let jv19: { ch: number; a: number; x: number; y: number }[] | null = null; // K1482 s19 PROBE v19's joint vertices
+     // sample index -> kept-sample index (positions()'s compaction: a repeat of the last kept sample,
+     // and a closed chain's closing repeat of its first, fold into it)
+     const kept = new Map<number, Int32Array>();
+@@ -753,6 +756,113 @@ export class GfGapTable {
+         }
+       }
+       const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, { c: x.underChain, km: keptOf(x.underChain, su) }) : null;
++      { // K1482 s19 PROBE u19 (a19 arc): over AND under members both within a19 of the crossing -> the far side's slots flagged 3
++        const G9 = globalThis as { __k15?: { u19?: number; a19?: number }; __k15log?: { __fire?: Record<string, number[]> } };
++        const u19 = G9.__k15?.u19 ?? 0, a19 = G9.__k15?.a19 ?? 0.7;
++        if (u19 && jfs && r.overMember) {
++          const mem = r.overMember, kmU = keptOf(x.underChain, su);
++          const memG = (globalThis as { __k15memG?: (c: number, k: number) => number }).__k15memG;
++          const gs = [-1, -1];
++          const nearest = (S: GapSamples, ch: number, kmS: ArrayLike<number>, a0: number, gi: number): number => {
++            let best = NaN;
++            for (let q = Math.round((a0 - a19) / S.arcPer); q <= Math.round((a0 + a19) / S.arcPer); q++) {
++              let k = q; if (S.closed) k = ((k % S.count) + S.count) % S.count; else if (k < 0 || k >= S.count) continue;
++              if (mem(ch, kmS[k]) && (isNaN(best) || Math.abs(q * S.arcPer - a0) < Math.abs(best))) { best = q * S.arcPer - a0; gs[gi] = memG ? memG(ch, kmS[k]) : -1; }
++            }
++            return best;
++          };
++          const dO = nearest(so, x.overChain, km, oC, 0), dU = nearest(su, x.underChain, kmU, uC, 1);
++          if (!isNaN(dO) && !isNaN(dU) && (!(u19 & 4) || gs[0] === gs[1])) {
++            const fired: number[] = [];
++            ks.forEach((k, i) => {
++              let d = k * su.arcPer - uC; if (su.closed) d = ((d % su.total) + 1.5 * su.total) % su.total - 0.5 * su.total;
++              if ((u19 & 2 ? true : d * dU < 0) && jfs[i] !== 3) { jfs[i] = 3; fired.push(+d.toFixed(2)); }
++            });
++            const pc = { x: 0, y: 0 }; gapPointAt(su, uC, pc);
++            if (fired.length) ((G9.__k15log ??= {}).__fire ??= {})[`${cents.indexOf(e)}:${x.overChain}/${x.underChain}`] = [+pc.x.toFixed(2), +pc.y.toFixed(2), +dO.toFixed(2), +dU.toFixed(2), fired.length, gs[0], gs[1]];
++          }
++        }
++      }
++      { // K1482 s19 PROBE v19 (v19a arc): a THIRD chain sharing a fused joint whose vertex lies on the over chain (v19 & 1)
++        // or the under chain (v19 & 2) within v19a arc of the crossing: its member samples within GAP_JOINT_RA of that
++        // vertex, when one lies within the cut's reach of a slot side's outline point, flag that side
++        const G9 = globalThis as { __k15?: { v19?: number; v19a?: number }; __k15log?: { __fire?: Record<string, unknown[]> } };
++        const v19 = G9.__k15?.v19 ?? 0, A19 = G9.__k15?.v19a ?? 1.5;
++        if (v19 && jfs && r.overMember && r.joints) {
++          if (!jv19) {
++            jv19 = [];
++            for (const [ch, l] of r.joints) { const S = sam(ch); if (!S) continue; for (const j of l) { const a = kArcOfCtrl(D, r.kcv[ch], j.ctrl); gapPointAt(S, a, gpt); jv19.push({ ch, a, x: gpt.x, y: gpt.y }); } }
++          }
++          const tx: number[] = [], ty: number[] = [], tch: number[] = [];
++          for (const [bitC, ch0, S0, a0] of [[1, x.overChain, so, oC], [2, x.underChain, su, uC]] as const) {
++            if (!(v19 & bitC)) continue;
++            for (const j of r.joints.get(ch0) ?? []) {
++              const a = kArcOfCtrl(D, r.kcv[ch0], j.ctrl);
++              let da = Math.abs(a - a0); if (S0.closed) da = Math.min(da, S0.total - da);
++              if (da > A19) continue;
++              gapPointAt(S0, a, gpt); const jx = gpt.x, jy = gpt.y;
++              for (const v of jv19) {
++                if (v.ch === x.overChain || v.ch === x.underChain) continue;
++                if ((v.x - jx) ** 2 + (v.y - jy) ** 2 > r.fillHalf * r.fillHalf) continue;
++                const S = sam(v.ch)!, kmT = keptOf(v.ch, S);
++                for (let q = Math.round((v.a - GAP_JOINT_RA) / S.arcPer); q <= Math.round((v.a + GAP_JOINT_RA) / S.arcPer); q++) {
++                  let k = q; if (S.closed) k = ((k % S.count) + S.count) % S.count; else if (k < 0 || k >= S.count) continue;
++                  if (r.overMember(v.ch, kmT[k])) { tx.push(S.positions[2 * k]); ty.push(S.positions[2 * k + 1]); if (!tch.includes(v.ch)) tch.push(v.ch); }
++                }
++              }
++            }
++          }
++          if (tx.length && (v19 & 8)) { // K1482 s19 PROBE w19: t19's boundary tolerance only where a third chain's joint is near
++            const K9 = G9.__k15 as { t19?: number; v19t?: number }; const old = K9.t19; K9.t19 = K9.v19t ?? 0.25;
++            const j2 = gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, { c: x.underChain, km: keptOf(x.underChain, su) });
++            K9.t19 = old;
++            const pc = { x: 0, y: 0 }; gapPointAt(su, uC, pc); const fired: number[] = [];
++            ks.forEach((k, i) => { if ((j2[i] & ~jfs[i]) & 3) fired.push(+(k * su.arcPer - uC).toFixed(2)); jfs[i] |= j2[i] & 3; });
++            if (fired.length) ((G9.__k15log ??= {}).__fire ??= {})[`w${cents.indexOf(e)}:${x.overChain}/${x.underChain}`] = [+pc.x.toFixed(2), +pc.y.toFixed(2), fired.length, tch.join("+"), fired.join(" ")];
++          }
++          if (tx.length && !(v19 & 16)) {
++            const reach2 = (r.fillHalf + r.margin + r.fade) ** 2, off = r.fillHalf + 0.04, uxy = su.positions, last = su.count - 1;
++            const fired: number[] = [];
++            ks.forEach((k, i) => {
++              const ka = su.closed ? (k + last) % su.count : Math.max(0, k - 1), kb = su.closed ? (k + 1) % su.count : Math.min(last, k + 1);
++              let ux = uxy[2 * kb] - uxy[2 * ka], uy = uxy[2 * kb + 1] - uxy[2 * ka + 1];
++              const tl = Math.sqrt(ux * ux + uy * uy) || 1; ux /= tl; uy /= tl;
++              for (const [sd, bit] of [[1, 1], [-1, 2]] as const) {
++                if (jfs[i] & bit) continue;
++                const qx = uxy[2 * k] - sd * uy * off, qy = uxy[2 * k + 1] + sd * ux * off;
++                for (let m = 0; m < tx.length; m++) if ((tx[m] - qx) ** 2 + (ty[m] - qy) ** 2 < reach2) { jfs[i] |= bit; fired.push(+(k * su.arcPer - uC).toFixed(2) * (sd as number)); break; }
++              }
++            });
++            const pc = { x: 0, y: 0 }; gapPointAt(su, uC, pc);
++            if (fired.length) ((G9.__k15log ??= {}).__fire ??= {})[`${cents.indexOf(e)}:${x.overChain}/${x.underChain}`] = [+pc.x.toFixed(2), +pc.y.toFixed(2), fired.length, tch.join("+"), fired.join(" ")];
++          }
++        }
++      }
++      { // K1482 s19 PROBE (d19 = [[wx, wy, R], ...]): the crossings near the points, their slots, flags and memberships
++        const G19 = globalThis as { __k15?: { d19?: number[][] }; __k15log?: Record<string, unknown> };
++        const P19 = G19.__k15?.d19;
++        const uxC = { x: 0, y: 0 }; gapPointAt(su, uC, uxC);
++        if (P19 && r.overMember && P19.some((p) => Math.hypot(p[0] - uxC.x, p[1] - uxC.y) < p[2])) {
++          const mem = r.overMember;
++          const run = (S: GapSamples, ch: number, a0: number): string => {
++            const kmX = keptOf(ch, S); let s = "";
++            for (let q = Math.round((a0 - 3) / S.arcPer); q <= Math.round((a0 + 3) / S.arcPer); q++) {
++              let k = q; if (S.closed) k = ((k % S.count) + S.count) % S.count; else if (k < 0 || k >= S.count) { s += " "; continue; }
++              s += (q === Math.round(a0 / S.arcPer) ? (mem(ch, kmX[k]) ? "M" : "N") : mem(ch, kmX[k]) ? "m" : ".");
++            }
++            return s;
++          };
++          const jA = (ch: number): number[] => (r.joints?.get(ch) ?? []).map((jc) => +kArcOfCtrl(D, r.kcv[ch], jc.ctrl).toFixed(3));
++          (G19.__k15log ??= {})[`${cents.indexOf(e)}:${x.overChain}/${x.underChain}`] = ({
++            xi: cents.indexOf(e), over: x.overChain, under: x.underChain, oC: +oC.toFixed(3), uC: +uC.toFixed(3), at: [+uxC.x.toFixed(3), +uxC.y.toFixed(3)],
++            win: [+wn.toFixed(3), +wp.toFixed(3)], cap: [+capN.toFixed(3), +capP.toFixed(3)], jRoom: [+jRoomN.toFixed(3), +jRoomP.toFixed(3)], sc: [msN, fsN, msP, fsP].map((v) => +v.toFixed(2)),
++            arcPer: [+su.arcPer.toFixed(4), +so.arcPer.toFixed(4)], totals: [+su.total.toFixed(2), +so.total.toFixed(2)], closed: [su.closed, so.closed],
++            jU: jA(x.underChain), jO: jA(x.overChain), jc: r.jointClear,
++            runO: run(so, x.overChain, oC), runU: run(su, x.underChain, uC),
++            slots: ks.map((k, i) => [k, +(k * su.arcPer - uC).toFixed(3), jfs ? jfs[i] : -1, +su.positions[2 * k].toFixed(3), +su.positions[2 * k + 1].toFixed(3)]),
++          });
++        }
++      }
+       for (let i = 0; i < ks.length; i++) {
+         const k = ks[i];
+         ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0);
