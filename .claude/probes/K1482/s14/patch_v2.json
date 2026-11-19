@@ -1,0 +1,18 @@
+[
+  [
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {",
+    "float lkArmW(int c, float s) { vec4 KB = keyBin(c, s); vec4 C0 = F(uOCh + 3 * c); int a0 = int(KB.z); int an = int(KB.w); bool closed = C0.z > 0.5; float len = C0.w; float w = 0.0; float L = max(uLkG + uLkF, 1e-5); for (int i = a0; i < a0 + an; i++) { vec4 A = F(KAB + 2 * i); float d = (s - A.x) * A.y; if (closed) d = mod(d, len); if (d < -1e-12 || d > A.z + 1e-12) continue; float en = A.w >= BIGT ? A.z : min(A.z, A.w); w = max(w, clamp((en - d) / L, 0.0, 1.0)); } return w * w * (3.0 - 2.0 * w); }\nvec2 lkGap(float key, vec2 p, vec2 qU, int cU) {"
+  ],
+  [
+    "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;",
+    "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1; bool jm13 = false;"
+  ],
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "bool mem13 = PSURF(j) >= 0 || PSURF(j) < -MAXP; float cjo = mem13 ? lkCut(pd[j], sinT, exg, wm, pxw, sc * mix(vec2(1.0), vec2(0.0, 0.3), lkArmW(PC(j), lkArc(PC(j), qO)))) : cj; if (cS < 0 || PC(j) == cS) g = max(g, cjo); if (PC(j) == cS && mem13) jm13 = true;"
+  ],
+  [
+    "g = max(g, cN);",
+    "g = max(g, jm13 ? lkCut(N.x, sinT, exg, wm, pxw, sc * mix(vec2(1.0), vec2(0.0, 0.3), lkArmW(cO, lkArc(cO, N.yz)))) : cN);"
+  ]
+]

@@ -1,0 +1,14 @@
+[
+  [
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {",
+    "float lkMemR(int c, float s) { vec4 KB = keyBin(c, s); float z = depth(c, s, KB); member(c, s, KB, mz); return mg >= 0 ? mramp : 0.0; }\nvec2 lkGap(float key, vec2 p, vec2 qU, int cU) {"
+  ],
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "float r14 = (cS < 0 || PC(j) == cS) ? lkMemR(PC(j), lkArc(PC(j), qO)) : 0.0; float cjo = r14 > 0.0 ? lkCut(pd[j], sinT, exg, wm, pxw, sc * mix(vec2(1.0), vec2(0.0, 0.3), r14)) : cj; if (cS < 0 || PC(j) == cS) g = max(g, cjo);"
+  ],
+  [
+    "g = max(g, cN);",
+    "float rN14 = lkMemR(cO, lkArc(cO, N.yz)); g = max(g, rN14 > 0.0 ? lkCut(N.x, sinT, exg, wm, pxw, sc * mix(vec2(1.0), vec2(0.0, 0.3), rN14)) : cN);"
+  ]
+]

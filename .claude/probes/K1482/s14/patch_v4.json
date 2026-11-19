@@ -1,0 +1,18 @@
+[
+  [
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {",
+    "float lkMemR(int c, float s) { vec4 KB = keyBin(c, s); float z = depth(c, s, KB); member(c, s, KB, mz); return mg >= 0 ? mramp : 0.0; }\nvec2 lkGap(float key, vec2 p, vec2 qU, int cU) {"
+  ],
+  [
+    "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;",
+    "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1; bool jm13 = false; float rN13 = 0.0; if (cS >= 0) { vec3 N0 = lkNearOn(cS, sl.y, sl.z, p, cS == cU ? aU : -1.0, sx); if (N0.y >= 0.0) rN13 = lkMemR(cS, lkArc(cS, N0.yz)); } vec2 scJ = sc * mix(vec2(1.0), vec2(0.0, 0.3), rN13);"
+  ],
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "bool mem13 = PSURF(j) >= 0 || PSURF(j) < -MAXP; float cjo = cS < 0 ? (mem13 ? lkCut(pd[j], sinT, exg, wm, pxw, sc * vec2(0.0, 0.3)) : cj) : (PC(j) == cS && rN13 > 0.0 ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); if (cS < 0 || PC(j) == cS) g = max(g, cjo);"
+  ],
+  [
+    "g = max(g, cN);",
+    "g = max(g, rN13 > 0.0 ? lkCut(N.x, sinT, exg, wm, pxw, scJ) : cN);"
+  ]
+]

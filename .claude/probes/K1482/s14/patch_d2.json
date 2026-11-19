@@ -1,0 +1,30 @@
+[
+  [
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {",
+    "float dbS1 = 0.0; float dbW1 = 0.0; float dbSN = 0.0; float dbWN = 0.0; int dbLG = -1; int dbGO = -1; bool dbL = false; bool dbRec = false;\nfloat lkArmW(int c, float s) { vec4 KB = keyBin(c, s); vec4 C0 = F(uOCh + 3 * c); int a0 = int(KB.z); int an = int(KB.w); bool closed = C0.z > 0.5; float len = C0.w; float w = 0.0; float L = max(uLkG + uLkF, 1e-5); for (int i = a0; i < a0 + an; i++) { vec4 A = F(KAB + 2 * i); float d = (s - A.x) * A.y; if (closed) d = mod(d, len); if (d < -1e-12 || d > A.z + 1e-12) continue; float en = A.w >= BIGT ? A.z : min(A.z, A.w); w = max(w, clamp((en - d) / L, 0.0, 1.0)); } return w; }\nint lkMemG(int c, float s) { vec4 KB = keyBin(c, s); float z = depth(c, s, KB); member(c, s, KB, mz); return mg; }\nvec2 lkGap(float key, vec2 p, vec2 qU, int cU) {"
+  ],
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj); if (dbRec && PC(j) == cS && (PSURF(j) >= 0 || PSURF(j) < -MAXP)) { dbS1 = max(dbS1, sinT); dbW1 = max(dbW1, lkArmW(PC(j), lkArc(PC(j), qO))); }"
+  ],
+  [
+    "if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {",
+    "if (uGwLive > 0.5 && wm > -pxw && (g < 0.999 || dbRec)) {"
+  ],
+  [
+    "g = max(g, cN);",
+    "if (dbRec) { float aN = lkArc(cO, N.yz); dbSN = sinT; dbWN = lkArmW(cO, aN); dbGO = lkMemG(cO, aN); } if (g < 0.999) g = max(g, cN);"
+  ],
+  [
+    "return vec2(g, gA);",
+    "if (dbRec) dbLG = lkMemG(cU, aU);\n  return vec2(g, gA);"
+  ],
+  [
+    "vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0);",
+    "dbL = true; dbRec = true; vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); dbRec = false;"
+  ],
+  [
+    "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);",
+    "  if (dbL) { o0 = vec4(0.0, 1.0, 0.0, 0.0); o1 = vec4(dbS1, dbW1, dbSN, 1.0); o2 = vec4(dbWN, float(dbLG + 1) / 255.0, float(dbGO + 1) / 255.0, 1.0); } else { o0 = vec4(0.0); o1 = vec4(0.0); o2 = vec4(0.0); }"
+  ]
+]
