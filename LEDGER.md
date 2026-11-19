@@ -2467,6 +2467,11 @@ Every other item below waits on the trigger it names.
   (candidate: the arm's radial profile runs straight past its grid, joinery.ts near 1191, profArc in
   junction_field.ts, fits only j36 and t2s). Next probe: dump junction 55's profile rows against its thread's
   centreline (.claude/probes/K1482/out/s12/step1_fans.png)
+- **K1515** · K1503 follow-up (26M): the j64 speck's remaining 51 of 83 px (speck box x 4.95..5.25, y
+  3.00..3.20, muse_default_tw; 18 px muse_hash) are form B's own fan/burial seam, not the look's gap: mirror
+  ink 0.00 at (4.86,3.09) where today draws fill, lkGap-off viz removes only 32 px, gap=0/fl=0/cr=10 leave it
+  unchanged. Fix belongs in the junction field (tables/eval/gf_glsl fan coverage at j64's fan edge, chain
+  56/28 ride), hands off in batch 26. K1503 stays open for it.
 
 ## Approved, to schedule (2026-10-11)
 
