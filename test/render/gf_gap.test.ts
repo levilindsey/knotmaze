@@ -211,6 +211,20 @@ describe("K1423 GfGapTable", () => {
     const V0 = new GfGapTable().values(src);
     expect(V0[4 * (over.count + 110) + 1]).toBe(0);
   });
+  it("K1482 s18: a slot whose UNDER pass is a joint arm within the cut's reach carries the flag on both sides", () => {
+    // the under thread past x 10.9 is an arm of a fused joint; the over thread holds no member
+    const mem = (c: number, k: number) => c === 1 && under.positions[2 * k] >= 10.9;
+    const V = new GfGapTable().values({ ...src, overMember: mem });
+    const y = (x: number) => V[4 * (over.count + Math.round(x / under.arcPer)) + 1];
+    // at 11 the arm's own sample lies an outline offset (fillHalf + 0.04) from each side's outline point: bits 1 and 2
+    expect(y(11)).toBe(0.375);
+    expect(Math.round(y(11))).toBe(0);
+    // at 10.4 the nearest arm sample (10.9) is past the cut's reach (fillHalf + margin + fade = 0.34): no flag
+    expect(y(10.4)).toBe(0);
+    // s15's over-member test alone (the arm not a member) leaves the slot unflagged
+    const V1 = new GfGapTable().values({ ...src, overMember: () => false });
+    expect(V1[4 * (over.count + 110) + 1]).toBe(0);
+  });
 });
 describe("K1460 s3: a kink loop's self-crossing window (setupUnder's split and selfEx)", () => {
   // one open chain: a 45 degree leg up to a small loop and a leg back down across the first, a

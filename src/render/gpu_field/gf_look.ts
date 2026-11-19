@@ -527,8 +527,11 @@ const GAP_JOINT_RA = 1.5;
  * side's outline point is nearer the member surface and within reach, on a run of slots holding a side so flagged). c1 decided
  * per piece at each pixel; deciding per slot side keeps its closed joint lines without its flip specks (link A: its
  * 15 better sites, no new speck; docs/design/K1482_s15_slot_flag.md, .claude/probes/K1482/out/s15).
+ * s18 (un: the under chain and its kept indices): a side is also flagged when a member sample of the UNDER chain within
+ * GAP_JOINT_RA (arc) of a slot lies within the cut's reach of its outline point: the crossing sits on an arm of a fused
+ * joint, so the full cut's ending erased the arm's outline where it meets the joint's (link A j22/j88/t80s/t65s/t70s/t81s).
  */
-export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }): number[] {
+export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }, un?: { c: number; km: ArrayLike<number> }): number[] {
   const out = new Array<number>(ks.length).fill(0);
   const pt = { x: 0, y: 0 };
   const mx: number[] = [], my: number[] = [], nx: number[] = [], ny: number[] = [];
@@ -538,7 +541,18 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
     gapPointAt(so, k * so.arcPer, pt);
     if (mem(c, km[k])) { mx.push(pt.x); my.push(pt.y); } else { nx.push(pt.x); ny.push(pt.y); }
   }
-  if (!mx.length) return out;
+  const ux: number[] = [], uy: number[] = [];
+  if (un) {
+    const R = Math.round(GAP_JOINT_RA / su.arcPer), seen = new Set<number>();
+    for (const k0 of ks) for (let q = k0 - R; q <= k0 + R; q++) {
+      let k = q;
+      if (su.closed) k = ((k % su.count) + su.count) % su.count; else if (k < 0 || k >= su.count) continue;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      if (mem(un.c, un.km[k])) { ux.push(su.positions[2 * k]); uy.push(su.positions[2 * k + 1]); }
+    }
+  }
+  if (!mx.length && !ux.length) return out;
   const reach2 = (sc.fh + sc.mg + sc.fd) ** 2, off = sc.fh + GAP_JOINT_OB, nn2 = sc.fh * sc.fh, uxy = su.positions;
   const last = su.count - 1;
   const near = new Array<number>(ks.length).fill(0);
@@ -554,6 +568,7 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
       for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
       for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
       if (dM < reach2 && dM <= dN) { nb |= bit; if (dN >= nn2) bits |= bit; }
+      for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } }
     }
     out[i] = bits; near[i] = nb;
   }
@@ -737,7 +752,7 @@ export class GfGapTable {
           wr.push(km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))], Math.ceil(w / so.arcPer) + (off >= 0 ? packP : packN));
         }
       }
-      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }) : null;
+      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, { c: x.underChain, km: keptOf(x.underChain, su) }) : null;
       for (let i = 0; i < ks.length; i++) {
         const k = ks[i];
         ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0);

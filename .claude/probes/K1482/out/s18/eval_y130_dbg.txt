@@ -1,0 +1,81 @@
+50s hash fff8c9e5
+toDevA 42.8045,0.0000,0.0000,42.8045,830.2033,130.2210 homeOn true T.homeOn false fade 0.14 h 0.4 W 0.15200000000000002 aa 0.01167059531245461
+(1491,385) ink 0.00 cov 1.00 ch 68 s -0.01 win 0/-1/0 seg 32 k 2
+   p0 c68 d-h -0.165 s -0.006 lo 0 hi 9 end 0 g 148 ramp 1.000 surf 148 key -0.054
+   p1 c82 d-h -0.117 s 1.973 lo 18 hi 30 end 0 g 148 ramp 1.000 surf 148 key -0.066
+   S148 v 0.000 a 1.000 wk 0/-1
+   pair p0/p1: V0 r 0.208 V dev (1499.5,388.2) dV 0.196 (W+aa 0.164) onj 0.000 onm 4.4e-16 (aa 0.012) bur none
+(2227,748) ink 0.00 cov 1.00 ch 29 s 9.39 win 0/-1/0 seg 48 k 1
+   p0 c29 d-h -0.301 s 9.387 lo 184 hi 207 end 0 g 67 ramp 1.000 surf 67 key -0.023
+   S67 v 0.000 a 1.000 wk 0/-1
+(1734,950) ink 1.00 cov 1.00 ch 67 s 18.20 win 1/67/-1 seg 48 k 2
+   p0 c67 d-h -0.134 s 18.196 lo 221 hi 236 end 0 g 145 ramp 1.000 surf 145 key -0.062
+   S145 v 1.000 a 1.000 wk 1/67
+(2089,1109) ink 1.00 cov 1.00 ch 66 s 52.07 win 1/66/-1 seg 40 k 1
+   p0 c66 d-h -0.053 s 52.070 lo 655 hi 667 end 0 g -1 ramp 1.000 surf -1 key 0.405
+   p1 c71 d-h -1.2e-5 s 5.973 lo 65 hi 74 end 0 g -1 ramp 1.000 surf -2 key -0.563
+   S-1 v 1.000 a 1.000 wk 1/66
+   S-2 v 0.501 a 0.501 wk 1/71
+   pair p0/p1: surf differ
+(2298,607) ink 1.00 cov 1.00 ch 66 s 24.12 win 1/66/1 seg 59 k 2
+   p0 c19 d-h -0.093 s 1.463 lo 31 hi 34 end 1 g 52 ramp 1.000 surf 52 key -0.999
+   p1 c66 d-h -0.269 s 6.993 lo 82 hi 98 end 0 g -1 ramp 1.000 surf -2 key -0.255
+   p2 c66 d-h -0.011 s 24.123 lo 302 hi 312 end 0 g -1 ramp 1.000 surf -3 key 0.532
+   S52 v 1.000 a 1.000 wk 3/19
+   S-2 v 0.000 a 1.000 wk 0/-1
+   S-3 v 0.997 a 0.997 wk 1/66
+   pair p0/p1: surf differ
+   pair p0/p2: surf differ
+   pair p1/p2: surf differ
+(2069,318) ink 0.00 cov 1.00 ch 58 s 23.88 win 0/-1/0 seg 40 k 0
+   p0 c3 d-h 0.080 s 54.549 lo 693 hi 702 end 0 g -1 ramp 1.000 surf -1 key 0.600
+   p1 c58 d-h -0.181 s 23.882 lo 310 hi 324 end 0 g -1 ramp 1.000 surf -2 key -0.293
+   S-2 v 0.000 a 1.000 wk 0/-1
+   pair p0/p1: surf differ
+(1895,844) ink 0.00 cov 1.00 ch 67 s 23.80 win 0/-1/0 seg 40 k 0
+   p0 c66 d-h 0.100 s 60.153 lo 760 hi 766 end 0 g -1 ramp 1.000 surf -1 key 0.792
+   p1 c67 d-h -0.369 s 23.795 lo 292 hi 306 end 0 g -1 ramp 1.000 surf -2 key -0.270
+   S-2 v 0.000 a 1.000 wk 0/-1
+   pair p0/p1: surf differ
+(2244,1160) ink 1.00 cov 1.00 ch 71 s 9.93 win 1/71/-1 seg 64 k 0
+   p0 c16 d-h 0.145 s 0.187 lo 1 hi 13 end 0 g 46 ramp 1.000 surf 46 key -0.127
+   p1 c35 d-h 0.110 s 14.199 lo 232 hi 241 end 0 g -1 ramp 1.000 surf -2 key 0.450
+   p2 c71 d-h -0.056 s 9.931 lo 110 hi 121 end 0 g -1 ramp 1.000 surf -3 key -0.302
+   S-3 v 1.000 a 1.000 wk 1/71
+   pair p0/p1: surf differ
+   pair p0/p2: surf differ
+   pair p1/p2: surf differ
+(2021,766) ink 0.00 cov 1.00 ch 60 s 2.08 win 0/-1/0 seg 45 k 2
+   p0 c60 d-h -0.387 s 2.079 lo 33 hi 57 end 0 g 70 ramp 0.134 surf 70 key -0.176
+   p1 c67 d-h 0.126 s 48.753 lo 608 hi 614 end 0 g -1 ramp 1.000 surf -2 key 0.584
+   S70 v 0.000 a 1.000 wk 0/-1
+   pair p0/p1: surf differ
+(1840,245) ink 1.00 cov 1.00 ch 68 s 11.88 win 1/68/-1 seg 59 k 0
+   p0 c3 d-h -0.215 s 31.170 lo 391 hi 405 end 0 g -1 ramp 1.000 surf -1 key -0.534
+   p1 c37 d-h 0.127 s 5.813 lo 102 hi 106 end 0 g 6 ramp 1.000 surf 6 key -0.450
+   p2 c68 d-h -0.082 s 11.883 lo 179 hi 195 end 0 g -1 ramp 1.000 surf -3 key 0.606
+   S-1 v 0.000 a 1.000 wk 0/-1
+   S-3 v 1.000 a 1.000 wk 1/68
+   pair p0/p1: surf differ
+   pair p0/p2: surf differ
+   pair p1/p2: surf differ
+(1219,1064) ink 0.05 cov 1.00 ch 64 s 29.98 win 1/59/1 seg 56 k 2
+   p0 c59 d-h 0.008 s 2.407 lo 44 hi 62 end 0 g -1 ramp 1.000 surf -1 key 0.783
+   p1 c64 d-h -0.400 s 29.983 lo 343 hi 357 end 0 g -1 ramp 1.000 surf -2 key -0.297
+   S-1 v 0.051 a 0.051 wk 1/59
+   S-2 v 0.000 a 1.000 wk 0/-1
+   pair p0/p1: surf differ
+(1618,837) ink 0.00 cov 1.00 ch 66 s 67.41 win 0/-1/0 seg 40 k 1
+   p0 c8 d-h 0.112 s 2.768 lo 34 hi 41 end 0 g -1 ramp 1.000 surf -1 key 0.735
+   p1 c66 d-h -0.257 s 67.414 lo 848 hi 862 end 0 g -1 ramp 1.000 surf -2 key -0.290
+   S-2 v 0.000 a 1.000 wk 0/-1
+   pair p0/p1: surf differ
+(909,708) ink 1.00 cov 1.00 ch 64 s 61.63 win 1/64/-1 seg 40 k 0
+   p0 c6 d-h -0.039 s 4.886 lo 50 hi 61 end 0 g 24 ramp 4.4e-4 surf 24 key -0.280
+   p1 c24 d-h 0.139 s -0.257 lo 0 hi 0 end 1 g 24 ramp 1.000 surf 24 key -1.053
+   p2 c64 d-h -0.002 s 61.635 lo 716 hi 725 end 0 g -1 ramp 1.000 surf -3 key 0.349
+   S24 v 1.000 a 1.000 wk 1/6
+   S-3 v 0.603 a 0.603 wk 1/64
+   pair p0/p1: V0 r 0.203 V dev (902.7,718.0) dV 0.273 (W+aa 0.164) onj -0.004 onm 0.005 (aa 0.012) bur none
+   pair p0/p2: surf differ
+   pair p1/p2: surf differ

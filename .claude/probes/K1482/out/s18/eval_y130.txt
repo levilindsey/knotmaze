@@ -1,0 +1,16 @@
+99s hash 10104c64 != fff8c9e5, reload
+165s hash fff8c9e5
+toDevA 42.8045,0.0000,0.0000,42.8045,830.2033,130.2210 homeOn true T.homeOn false fade 0.14 h 0.4 W 0.15200000000000002 aa 0.01167059531245461
+(1491,385) ink 0.00 cov 1.00 ch 68 s -0.01 win 0/-1/0 seg 32 k 2
+(2227,748) ink 0.00 cov 1.00 ch 29 s 9.39 win 0/-1/0 seg 48 k 1
+(1734,950) ink 1.00 cov 1.00 ch 67 s 18.20 win 1/67/-1 seg 48 k 2
+(2089,1109) ink 1.00 cov 1.00 ch 66 s 52.07 win 1/66/-1 seg 40 k 1
+(2298,607) ink 1.00 cov 1.00 ch 66 s 24.12 win 1/66/1 seg 59 k 2
+(2069,318) ink 0.00 cov 1.00 ch 58 s 23.88 win 0/-1/0 seg 40 k 0
+(1895,844) ink 0.00 cov 1.00 ch 67 s 23.80 win 0/-1/0 seg 40 k 0
+(2244,1160) ink 1.00 cov 1.00 ch 71 s 9.93 win 1/71/-1 seg 64 k 0
+(2021,766) ink 0.00 cov 1.00 ch 60 s 2.08 win 0/-1/0 seg 45 k 2
+(1840,245) ink 1.00 cov 1.00 ch 68 s 11.88 win 1/68/-1 seg 59 k 0
+(1219,1064) ink 0.05 cov 1.00 ch 64 s 29.98 win 1/59/1 seg 56 k 2
+(1618,837) ink 0.00 cov 1.00 ch 66 s 67.41 win 0/-1/0 seg 40 k 1
+(909,708) ink 1.00 cov 1.00 ch 64 s 61.63 win 1/64/-1 seg 40 k 0
