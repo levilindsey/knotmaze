@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1521.
+Next free ID: K1522.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -338,6 +338,13 @@ Next free ID: K1493.
   Which should the border look show there? Picture: .claude/probes/K1482/out/s12/step1_a.png (today | flat
   today | gf). Options: keep gf's curves as they are; make gf draw today's straight strokes. Until answered
   gf's own picture is the reference (stage 13)
+- **K1521** · rp=gf, Crossing fade at joints: since K1482 s15/s18 an outline cut beside a fused joint (flagged
+  crossing sides, about 1000+ slots on link A) starts at the over thread's edge and fades over 0.3 of the
+  slider's length, so at a large fade (1.2) those outlines run nearly up to the over thread while ordinary
+  crossings fade over the full length (29k px on link A; picture
+  .claude/worktrees/agent-a077003d003b40d70/.claude/probes/K1482/out/s18/sheets/fl12_top.png). At the default
+  0.14 this is what closes the joint gaps. Keep, or make the joint sides' fade follow the full slider length
+  above some fade?
 
 ## In progress
 
@@ -739,10 +746,10 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a077003d003b40d70` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 02:05, 2 h cap ~04:05)
-  - branch: `worktree-agent-a077003d003b40d70`, worktree `.claude/worktrees/agent-a077003d003b40d70`; last commit: `2e70be908`
+  - owner: nobody since 2026-11-19 04:04 (merged; agent `a077003d003b40d70` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `cf38cf6b`
   - evidence: .claude/probes/K1482/s18, .claude/probes/K1482/out/s18, out/s17/classes_tip.txt, out/s17/eval_red.txt
-  - next: stage 18 running (the 8 GAP sites, under-member flag first); on its report view the sheets, merge, recount, check the deploy. j4's cross-surface line waits on Levi's K1490 answer
+  - next: stage 18 landed (27 to 22 on link A: j22 j88 t80s t70s t65s fixed; fill 0 px; bar PASS on def and muse_hash only, ring and g41_user_tw64 did not freeze). By owner: K1490 17, GAP 3 (j29, j49, t81s's V at 909-912,1168-1170), K1470 1, PIN 1 (Handoff K1482 s18, docs/design/K1482_s18_cut_endings.md). Next stage: j29 (no joint within reach: read the pixel's shader terms first), j49 (a third-chain joint test kept within 1.5 arc; prototypes v4/v12, u18 in the s18 WIP commits), t81s's V, j71; rerun the bar on ring and g41_user_tw64 once Muse's freeze fix holds. j4's cross-surface line waits on K1490
   - brief: `docs/design/K1482_s18_cut_endings.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
