@@ -18,6 +18,13 @@ describe("K1423 lkGap shader: the cut is windowed by the baked winM", () => {
     expect(f).toContain("cut *= clamp(wm / pxw + 0.5, 0.0, 1.0) * fs;");
     expect(f).toContain("float fs = clamp(wm / max(0.5 * uLkF, pxw), 0.0, 1.0);");
   });
+  it("K1482 s8: inside a baked window only the named crossing's over thread cuts", () => {
+    const f = lookForm(gfFs(false, true));
+    expect(f).toContain("int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;");
+    expect(f).toContain("gA = max(gA, cj);");
+    expect(f).toContain("if (cS < 0 || PC(j) == cS) g = max(g, cj);");
+    expect(f).toContain("ink *= 1.0 - g.x * (1.0 - aT); cov *= 1.0 - g.y * (1.0 - aT);");
+  });
 });
 
 const H = 0.13, MARGIN = 0.07, FADE = 0.14;

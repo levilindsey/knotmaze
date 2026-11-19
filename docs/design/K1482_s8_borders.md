@@ -80,3 +80,59 @@ comes first. A compaction is not a stop: re-read this brief and `git log`. On st
 `### Handoff K1482 s8` here, commit, and report: the sweep's faulted count by class, the sheets' paths (each
 site named), the numbers, which commits are confirmed on screen, a `Ledger items` list and K1482's handle
 fields.
+
+### Handoff K1482 s8
+
+Claude agent a453ce852efbe1ae6, 10:58-12:58 (2026-11-18), branch `worktree-agent-a453ce852efbe1ae6`, rebased on
+origin/master 0a328fcc (only LEDGER.md and docs moved upstream). Probes in `.claude/probes/K1482/s8/`, results
+and sheets in `.claude/probes/K1482/out/s8/` (raw frames in `out/s8/raw/`, untracked).
+
+**Sweep: 41 on master -> 36 on the tip** (`out/s8/classes_tip.txt`, by eye on 4x tiles): wedge 10, notch 9,
+sliver 6, tick 3, break 3, dot 2 (j64's pinhole, PIN; j88, GAP), stub 2, pocket 1; by owner
+K1490 22, GAP 12, K1470 1, PIN 1. This stage's family: 17 GAP sites -> 12.
+
+**Cause A, fixed (fix A + the split; `src/render/gpu_field/gf_look.ts` `lkGap`).** Inside a gap window the bake
+names (`sl.x >= 0`), master cut the under thread's outline with EVERY higher-key piece; today's slot cuts with
+its own crossing's over pass alone. A tucked tail's host (a fused joint, no crossing) therefore cut a short
+island out of a neighbour's outline: dots j2/t1s (one dot, both tiles), t24s, t46e and dash t39s. Fix A: inside
+a baked window only that crossing's over thread (`PC(j) == cS`) cuts. It also moved 975 px of the fill look
+(thin casing slivers beside crossings, `out/s8/fill_diff.png`), so lkGap now returns `vec2(outline gap,
+coverage gap)`: x (fix A's) cuts ink and the border's flag lane (lkCo.a), y (master's, every higher piece) cuts
+cov and lkHiA, all the fill look reads. Commits: 17b9dfc9 fix A, b0d4dbf4 fix A confirmed on screen, 7091c9a4
+the split, 5f09e4a3 the split confirmed.
+- Numbers, link A at rest, hash fff8c9e5: fill look (tlk=fill) 0 px vs master; border frames at fls 0 / 1.2 /
+  0.14 0 px vs fix A's own build (so the split leaves fix A's border bit for bit); fix A vs master: 25 changed
+  blobs, 0 px of ink lost, 159 px gained, 14 sites change (all named in `out/s8/fixA.txt`); islands in a 64x64
+  box, today | master | tip (`out/s8/islands_th73.txt`, TH 73): j2 0|1|0, t1s 0|1|0, t24s 0|2|0, t39s 0|1
+  (52 px)|0; t46e's dot is lighter than the threshold (by eye only).
+- Crossing fade: K1458 `dragcheck.mjs` (fill) PASS at 0 / 0.5 / 1.2 / 0.14 on the split build; K1492
+  `dragcheck_b.mjs` (border) PASS on fix A's build (border frames identical to the split's; not re-run on the
+  split build); ordinary crossings x84 x88 x52 0 px vs master at fl 0, 1.2 and 0.14.
+- `hold.mjs` (K1450) 60/60 PASS warm on link A (edges min 6854 / max 9593); `npm test` green (254 files, 3174
+  tests).
+- The K1436 bar (STRICT=1, -Ref 7091c9a4 -Base ba0fb106, ring, def, muse_hash, g41_user_tw64): **PASS, new 0,
+  grown 0, gone 0**; every scene's base and ref captures froze at the same physics hash (`out/s8/bar.txt`). The
+  bar's own run waited on Muse's perf lock (26K) at the ref's captures, which this brief says not to wait on, so
+  its ref half ran by hand on the same served build with `s8/bar_ref.ps1` (the bar's lines and its compare, no
+  lock wait).
+- Sheets: `fixA_m0..m4.png` (the 17 GAP sites, master | tip | diff, 4x), `fixA_blobs_0..3.png` (every changed
+  blob, named), `fixA_t18s.png`, `fixA_j88j2.png` (today | master | tip | diff), `j88_zoom.png` (nogap | master |
+  tip, 10x), `fill_diff.png` (fix A's fill leak before the split). Attribution (b829a55d): `m_a/m_b.png` and
+  `split_a/split_b.png` (the 17, today | nogap | master [| onlyslot]), `os_others_a/b.png` (the other sites
+  onlyslot moved), `var_*.png`, `mz_*.png`, `ov_b*.png` (window overlays: centrelines, crossings, joints).
+
+**Cause B, open (12 GAP sites): the cut next to a fused joint.** j49 j55 j87 (tick), j36 t79s (stub), j22 j29
+t65s (break), t80s (pocket), t81s (wedge), t70s (sliver), j88 (dot). At a crossing 0.45-1.4 arc from a fused
+joint, the gap cuts the under arm's outline back by margin + fade; past the cut the arm's outline resumes only
+as a detached faded tip at the joint. The nogap patch (`s8/patch/nogap.json`) joins every one of them to the
+look today's renderer draws (`b_a/b_b.png` today | nogap | master; `b_look1.png` stretched today | nogap | tip |
+diff at j49 j55 j87; `b_look3.png` today | nogap | tip at j49 j87 j55 j36 t79s), so at j36 t79s j49 j55 j87 it is
+the gap's, not K1502's key order. Not attempted for time. What is known: 156 of link A's 350 crossings lie
+within 1.5 arc of a fused joint (`s8/xpos.ts`), so a blanket "no cut near a joint" is far too broad; the rule
+has to name the arm whose outline ends at the joint (inferred from the tiles, not traced in
+`crossing_gaps.ts`: today's renderer keeps that outline running into the joint). Border-only, in the x lane,
+so the fill look stays put.
+
+**Not done:** cause B; dragcheck_b re-run on the split build.
+
+Next: cause B in lkGap's x lane (border only), from `b_look3.png`'s five sites, then the other seven.
