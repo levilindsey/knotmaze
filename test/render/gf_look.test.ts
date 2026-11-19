@@ -62,7 +62,7 @@ describe("K1389 look form", () => {
     expect(LOOK_COMP_FS).toContain("vec3 C = k.a > 0.0 ? k.rgb : uFill;");
   });
   it("K1492: the border outline fades over the gap's whole ramp (the flag lane carries 1 - lkg)", () => {
-    for (const src of programs) expect(lookForm(src)).toContain("lkHiA *= 1.0 - lkg; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0);");
+    for (const src of programs) expect(lookForm(src)).toContain("lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0);");
     // the composite's border alpha, mirrored on RGBA8 values (both targets round to 1/255)
     const u8 = (v: number) => Math.round(Math.min(1, Math.max(0, v)) * 255) / 255;
     const A = (x: number) => Math.min(1, Math.max(0, (x - 0.36) * 3.5));
@@ -89,14 +89,15 @@ describe("K1389 look form", () => {
     for (const src of programs) {
       const f = lookForm(src);
       expect(f).toContain("uniform float uLkF;");
-      expect(f).toContain("float lkGap(float key, vec2 p, vec2 qU, int cU)");
+      expect(f).toContain("vec2 lkGap(float key, vec2 p, vec2 qU, int cU)");
       // K1458: sc = the side's joint clearance scales (margin, fade), 1 away from a fused joint
       expect(f).toContain("float fw = max(uLkF * sc.y * max(sinT, 0.2), 2.0 * uAA);");
       expect(f).toContain("float e = d - uH - uLkG * sc.x;");
       expect(f).toContain("float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);");
       expect(f).toContain("float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;");
       expect(f).not.toContain("CASE");
-      expect(f).toContain("float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg;");
+      // K1482 s8: x cuts the outline (ink), y the coverage (every higher piece: the fill look as before)
+      expect(f).toContain("vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y;");
     }
     expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0))");
     expect(LOOK_COMP_FS).not.toContain("CASE");
