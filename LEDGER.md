@@ -739,10 +739,10 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a5430e2070cd377bc` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 00:22, 2 h cap ~02:22)
-  - branch: `worktree-agent-a5430e2070cd377bc`, worktree `.claude/worktrees/agent-a5430e2070cd377bc`; last commit: `ae3155eac`
+  - owner: nobody since 2026-11-19 02:04 (merged; agent `a5430e2070cd377bc` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `e6eab6bb`
   - evidence: .claude/probes/K1482/s17, .claude/probes/K1482/out/s17, out/s16/classes_tip.txt
-  - next: stage 17 running (the 8 GAP sites: flag's arc end at j158/t73e, the joint's own outlines at j4/j71, j22 j29 j49 j88 t65s t70s t80s t81s); on its report view the sheets, merge, recount, check the deploy
+  - next: stage 17 landed (29 to 27 on link A: j158/t73e fixed, a dozen 1 px joint seams inked; fill 0 px; bar PASS). By owner: K1490 17, GAP 8, K1470 1, PIN 1 (out/s17/classes_tip.txt). Two causes left, named in Handoff K1482 s17: (a) the 8 GAP sites (j22 j29 j49 j88 t65s t70s t80s t81s): a crossing cut's ending removes ink on an unflagged slot whose over thread is not a member of the fused joint beside it; at j22, j88, t80s the joint is on the UNDER chain, which the flag never reads (out/s17/eval_red.txt): stage 18 starts there; (b) j4 (likely j71): a light line between two separate near-tangent surfaces at a V, needs a cross-surface contact rule in gf_glsl.ts/eval.ts, overlaps K1490, waits on Levi's K1490 answer
   - brief: `docs/design/K1482_s17_joint_outlines.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
