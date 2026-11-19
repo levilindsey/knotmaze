@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1522.
+Next free ID: K1523.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -345,6 +345,12 @@ Next free ID: K1493.
   .claude/worktrees/agent-a077003d003b40d70/.claude/probes/K1482/out/s18/sheets/fl12_top.png). At the default
   0.14 this is what closes the joint gaps. Keep, or make the joint sides' fade follow the full slider length
   above some fade?
+- **K1522** · rp=gf, the last two joint-side sites (j29, j49) are ordinary under-pass gaps ending next to a
+  joint; closing them means joining the under thread's outline to the over thread's (no gap) at about 74 other
+  crossings (u19) or about 11-17 under-tail and junction gaps (v19 / w19, a dot left at j50), which removes
+  the over/under cue there. Coordinator's read: keep today's gaps. Pictures:
+  .claude/worktrees/agent-a5d6861178992f9ee/.claude/probes/K1482/out/s19/sheets/u19a_cmp.png, w19a_1.png,
+  v19a_movers.png (Handoff K1482 s19)
 
 ## In progress
 
@@ -746,10 +752,10 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a5d6861178992f9ee` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 04:05, 2 h cap ~06:05)
-  - branch: `worktree-agent-a5d6861178992f9ee`, worktree `.claude/worktrees/agent-a5d6861178992f9ee`; last commit: `be41ee3ec`
+  - owner: nobody since 2026-11-19 05:56 (merged; agent `a5d6861178992f9ee` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `af41daae`
   - evidence: .claude/probes/K1482/s19, .claude/probes/K1482/out/s19, docs/design/K1482_s18_cut_endings.md
-  - next: stage 19 running (j29, j49, t81s's V, j71, then the bar on four scenes against 2e70be908); on its report view the sheets, merge, recount, check the deploy. j4 waits on K1490, the joint-side fade on K1521
+  - next: stage 19 landed no src (22 holds on link A; the bar PASS on all four scenes across stages 18-19 against 2e70be908). The joint-side lane is finished short of look choices: j29 and j49 are ordinary crossing-gap endings that only close by joining under outlines to over outlines at many other sites (K1522, waits on Levi); t81s's V and j71 are cross-surface light with no cut, now K1490's (19 sites) with j4; j64 is Muse's (K1517). Prototypes as patches in .claude/probes/K1482/s19/ (u19_probe.patch, v19_t19_w19_probe.patch). Next: act on Levi's K1490 / K1522 / K1521 answers; residual: K1492's dragcheck_b fresh loads can miss the drag's state (needs retries or a pinned state)
   - brief: `docs/design/K1482_s19_last_gaps.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
