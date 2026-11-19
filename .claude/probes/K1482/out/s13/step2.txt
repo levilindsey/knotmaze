@@ -23,6 +23,13 @@
 #     j16  (1090,1091) 1 px (64 against 114), beside the under arm's faded tip
 #   Sheets (4-6x, master | c1 [| tip]): raw/t_1.png (j36, j37), raw/t_1b.png (ink tinted), raw/t_1c.png (5x R30),
 #     raw/t_2.png (j126, t62e, t76e, t73e: closed, better), raw/t_sp.png (the three 1 px specks), raw/ovj36.png.
+#   Movers (outline ink XOR >= 10 px in the 48x48 box, 327 sites; frame-wide 2210 ink px differ): 23. Judged by eye
+#   at 4x, master | c1 (sheets/mv_1..3.png, R30):
+#     better 15: t21e j55 t2s j122 j4 j140 j83 j71 j102 t30e t34s j120 t36s j21 j87 (the under arm's outline now
+#       meets the joint's or the over pass's outline where master stops it a few px short with a faded tip)
+#     same 3: t42e t27s, and j46 = t16e (one place: the V closes, but into a hairline wedge)
+#     worse 4: j77, t64e (a detached stub turns solid and darker), t25s = j60 (one place: the arm joins along the
+#       over outline with a 1 px background sliver between), plus the specks above at j36, j37, t10s, j16
 #   The 4 sort-step "remnant goes" sites (j36, t79s, t70s, j88): none is among the 20 closures, and j36 gains a speck;
 #     c1's effect is of the "line closes" kind. t79s, t70s, j88 not judged on tiles.
 #

@@ -1,0 +1,15 @@
+FAIL  new 11  grown 3  gone 2  (match radius 0.3, grow > 10% and >= 3 px)
+NOTE g41_ring_tw42: physics hash base f7b1dff2 ref 076a1b2a (not one state: every screen find may move)
+
+screen cut:plain
+  grown 2: g41_user_tw64:6.43:17.68 j34 27px (was 24px); g41_user_tw64:10.46:21.36 x155 10px (was 7px)
+
+screen cut:ramp
+  grown 1: g41_user_tw64:1.46:14.40 j66 30px (was 25px)
+
+screen speck:plain
+  new 9: g41_user_tw64:1.87:14.40 x151 8px; g41_user_tw64:15.21:16.40 x18 10px; g41_user_tw64:22.02:16.49 x113 4px; g41_user_tw64:14.92:17.34 x37 4px; g41_user_tw64:19.87:18.06 x21 11px; g41_user_tw64:13.71:18.37 x47 4px; g41_user_tw64:5.67:20.15 x53 4px; g41_user_tw64:14.89:21.77 x110 4px; g41_user_tw64:19.94:22.76 x43 7px
+  gone 2: g41_user_tw64:3.54:4.09 j27 4px; g41_user_tw64:14.04:22.71 x109 4px
+
+screen spill:plain
+  new 2: g41_user_tw64:15.98:22.18 x110 5px; g41_user_tw64:14.11:24.31 x108 8px
