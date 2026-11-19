@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1517.
+Next free ID: K1519.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -1139,6 +1139,10 @@ Every other item below waits on the trigger it names.
 - **K1514** · K1482 mask case at j55, j36, t70s: today hides those stretches with the over thread's
   silhouette; map the slot's over polyline and hO into frame coordinates against gf's window
   (.claude/probes/K1482/out/s11/mask.txt); waits on stage 12's check of the today reference
+- **K1518** · rp=gf border look on g41_user_tw64 at x70 and x130: since 9ae14f27 the under thread's outline
+  runs into the over's as a hard T with a ragged edge where the parent cut it short
+  (.claude/probes/K1501/out/26M/tile_g41_user_tw64_x70_border.png, _x130_border.png, parent | fix; Muse viewed
+  fill only). Same class as K1482's joint-side sites: judge after stage 13's rule
 
 ## Residuals (known, not fixed)
 
@@ -2430,11 +2434,6 @@ Every other item below waits on the trigger it names.
   after its 4 retries (K1482 s6: g41_user_tw64 c1b63637 against 0d51331b), which makes that pair's finds
   meaningless; the bar should fail the scene, or retry until the hashes match
   (.claude/probes/K1436/k1436_bar.ps1, out/bar/k1482s6/ on branch worktree-agent-ad03e8b65a2afa540)
-- **K1501** · K1476 follow-up (26G): the never-clearing gap-window fix (9ae14f27) changed 2-10 baked window
-  sides on every census scene but fat (trigger scan .claude/probes/K1476/out/26G/triggers.txt, approximate);
-  only muse_default_tw/muse_hash were screen-checked (bar PASS both flags, j81/x307/j138 also gone there).
-  Screen-look the changed sides on def, ring, g41_* and user_tw42.lightpaper (4x tiles vs today/master), then
-  close K1476.
 - **K1502** · K1477 next angle (Muse 26H, 2026-11-18): the border stub past a crossing (ring x68,
   g41_ring_tw64 j24/x67) is form B's surface key order: past the crossing both pins' depth hats read 0 (feet
   0.88/1.20 arc past pins, WL/WR = win 0.658), so the under surface wins by centreline distance and buries the
@@ -2467,7 +2466,7 @@ Every other item below waits on the trigger it names.
   (candidate: the arm's radial profile runs straight past its grid, joinery.ts near 1191, profArc in
   junction_field.ts, fits only j36 and t2s). Next probe: dump junction 55's profile rows against its thread's
   centreline (.claude/probes/K1482/out/s12/step1_fans.png)
-- **K1515** · K1503 follow-up (26M): the j64 speck's remaining 51 of 83 px (speck box x 4.95..5.25, y
+- **K1517** · (renumbered from Muse's duplicate K1515; Handoff 26M calls it K1515) K1503 follow-up (26M): the j64 speck's remaining 51 of 83 px (speck box x 4.95..5.25, y
   3.00..3.20, muse_default_tw; 18 px muse_hash) are form B's own fan/burial seam, not the look's gap: mirror
   ink 0.00 at (4.86,3.09) where today draws fill, lkGap-off viz removes only 32 px, gap=0/fl=0/cr=10 leave it
   unchanged. Fix belongs in the junction field (tables/eval/gf_glsl fan coverage at j64's fan edge, chain
@@ -2845,6 +2844,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1501** · Muse 26M: every changed window side better or same on screen (def, ring, g41_ring_tw64, lightpaper 0 px; g41_user_tw64 9 clusters, fill viewed); no source change. Border look of two of them: K1518. Done in fe9a8596 (2026-11-18).
 - **K1513** · K1502 follow-up (Muse 26L, 2026-11-18): on Levi's link (?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1, hash fff8c9e5, .claude/probes/K1482/cap.mjs) list the sites whose border ink changes by more than 8 px with the home-off reach key windows (K=1.0) against master, each on a 4x tile master|new named better/same/worse; the muse_hash j49 tail-join class (26L5 bar, 17 px) is the one to watch - no site may turn worse. Dropped: answered by K1482 stage 11's recount on 314b1896: K1502 moved 10 sites on Levi's link by more than 8 px and broke none (out/s11/classes_base.txt); the x68 cut:plain class stays described in K1502 (2026-11-18).
 - **K1500** · rp=gf fades the thread away from the marker discs like today (Muse 26K, handoff 281a7c8c; tiles viewed). Done in 970b6ece (2026-11-18).
 - **K1477** · rp=gf: the under thread's border stroke tapers to a point and stops past a crossing at ring x68 (19.4, 20.0; 963 px in K1436's screen scan), g41_ring_tw64 j24 (the same spot, 660 px) and x67 (18.0, 20.6; 296 px); today's stroke runs through, the fill matches. Dropped: cause found by Muse 26H (no fix landed); continued as K1502 (2026-11-18).
