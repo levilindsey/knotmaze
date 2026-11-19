@@ -99,3 +99,36 @@ all +0 -0 except j15 +1, an end-cap edge pixel. None moved, none worse.
   - The fill dragcheck hit the same lottery at 0.14 and reached f9d72040 on its third load.
   - With src identical to the start, this is load-state nondeterminism. The probe needs more retries, or a
     pinned state.
+
+**The K1436 bar** (`STRICT=1 -NoPerfLock`, ref 24a9f83b2 against base 2e70be908, scenes ring, def, muse_hash,
+g41_user_tw64, `-Tag k1482s19`; `.claude/probes/K1436/out/bar/k1482s19/bar.txt`):
+- **PASS: new 0, grown 0, gone 0.**
+- Each scene froze on the same hash on both builds: ring 50dd4ffd, def 910ff135, muse_hash 733ee14a,
+  g41_user_tw64 0d51331b.
+- Ring needed two loads on the base (it saw 0a0ee15e first). It needed one on the ref.
+- So ring and g41_user_tw64 are judged across stages 18 and 19, and every scene froze.
+- Taken under load (no perf lock).
+
+**Confirmed on screen:** none of this stage's commits changes the picture (src equals be41ee3ec). Stage 18's
+merge cf38cf6bb holds at 22 on the tip's own build.
+
+**Ledger items:**
+- **j29: a look question for Levi.** Should an ordinary crossing whose over and under members both lie within
+  0.7 arc of it join the under thread's outline to the over thread's outline (u19)? That closes j29 and about 74
+  other ordinary endings (`u19a_cmp.png`).
+- **j49: a look question for Levi.** Should under-tail gaps beside a fused joint join? v19 closes j49t and about
+  11 tail-end gaps. t19 / w19 close j49r and about 17 junction and tail gaps, with a dot at j50. Sheets:
+  `v19a_movers.png`, `w19a_1.png`, `w19a_2.png`.
+- **t81s's V and j71 move to K1490.** Both are cross-surface light with no cut.
+- **Residual: the border dragcheck's state lottery.** dragcheck_b failed twice at stops 1.2 and 0.14 because no
+  fresh load reached f9d72040. It needs more retries or a pinned state (probe, not src).
+
+**K1482 handle at stop:**
+- owner: nobody since 2026-11-19 06:00 (stage 19 done; j29 and j49 wait on Levi's look answers).
+- branch: worktree-agent-a5d6861178992f9ee (`.claude/worktrees/agent-a5d6861178992f9ee`), last commit: this
+  handoff.
+- evidence: `.claude/probes/K1482/s19/`, `.claude/probes/K1482/out/s19/`,
+  `.claude/probes/K1436/out/bar/k1482s19/`.
+- next: show Levi `u19a_cmp.png` (j29) and `v19a_movers.png` / `w19a_*.png` (j49), then land the chosen rule from
+  the patches.
+- brief: this file.
