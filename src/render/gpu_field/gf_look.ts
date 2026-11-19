@@ -527,8 +527,11 @@ const GAP_JOINT_RA = 1.5;
  * side's outline point is nearer the member surface and within reach, on a run of slots holding a side so flagged). c1 decided
  * per piece at each pixel; deciding per slot side keeps its closed joint lines without its flip specks (link A: its
  * 15 better sites, no new speck; docs/design/K1482_s15_slot_flag.md, .claude/probes/K1482/out/s15).
+ * s18 (un: the under chain and its kept indices): a side is also flagged when a member sample of the UNDER chain within
+ * GAP_JOINT_RA (arc) of a slot lies within the cut's reach of its outline point: the crossing sits on an arm of a fused
+ * joint, so the full cut's ending erased the arm's outline where it meets the joint's (link A j22/j88/t80s/t65s/t70s/t81s).
  */
-export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }, ex?: { uc: number; kmU: ArrayLike<number>; all?: { x: number[]; y: number[]; c: number[]; k: number[]; cs: number; grid: Map<number, number[]> } }): number[] {
+export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }, un?: { c: number; km: ArrayLike<number> }): number[] {
   const out = new Array<number>(ks.length).fill(0);
   const pt = { x: 0, y: 0 };
   const mx: number[] = [], my: number[] = [], nx: number[] = [], ny: number[] = [];
@@ -538,24 +541,18 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
     gapPointAt(so, k * so.arcPer, pt);
     if (mem(c, km[k])) { mx.push(pt.x); my.push(pt.y); } else { nx.push(pt.x); ny.push(pt.y); }
   }
-  // K1482 s18 PROTOTYPE knob: 1 = the slot's own under sample a member (both sides); 2 = an under-member sample within
-  // reach of the side's outline point; 4 = a member sample of a third chain within reach of it
-  const V18 = ((globalThis as { __k15?: { u18?: number } }).__k15?.u18 ?? 0) | 0;
-  const uMem: boolean[] = [], ux: number[] = [], uy: number[] = [];
-  if (ex && V18 & 3) {
+  const ux: number[] = [], uy: number[] = [];
+  if (un) {
     const R = Math.round(GAP_JOINT_RA / su.arcPer), seen = new Set<number>();
-    for (const k0 of ks) {
-      uMem.push(mem(ex.uc, ex.kmU[k0]));
-      if (V18 & 2) for (let q = k0 - R; q <= k0 + R; q++) {
-        let k = q;
-        if (su.closed) k = ((k % su.count) + su.count) % su.count; else if (k < 0 || k >= su.count) continue;
-        if (seen.has(k)) continue;
-        seen.add(k);
-        if (mem(ex.uc, ex.kmU[k])) { ux.push(su.positions[2 * k]); uy.push(su.positions[2 * k + 1]); }
-      }
+    for (const k0 of ks) for (let q = k0 - R; q <= k0 + R; q++) {
+      let k = q;
+      if (su.closed) k = ((k % su.count) + su.count) % su.count; else if (k < 0 || k >= su.count) continue;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      if (mem(un.c, un.km[k])) { ux.push(su.positions[2 * k]); uy.push(su.positions[2 * k + 1]); }
     }
   }
-  if (!mx.length && !uMem.some((v) => v) && !ux.length && !(V18 & 12 && ex?.all)) return out;
+  if (!mx.length && !ux.length) return out;
   const reach2 = (sc.fh + sc.mg + sc.fd) ** 2, off = sc.fh + GAP_JOINT_OB, nn2 = sc.fh * sc.fh, uxy = su.positions;
   const last = su.count - 1;
   const near = new Array<number>(ks.length).fill(0);
@@ -571,28 +568,7 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
       for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
       for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
       if (dM < reach2 && dM <= dN) { nb |= bit; if (dN >= nn2) bits |= bit; }
-      if (V18 & 1 && uMem[i]) bits |= bit;
-      if (V18 & 2) { let dU = Infinity; for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; dU = Math.min(dU, dx * dx + dy * dy); } if (dU < reach2) bits |= bit; }
-      if (V18 & 12 && ex?.all) {
-        const A = ex.all, gx = Math.floor(qx / A.cs), gy = Math.floor(qy / A.cs);
-        let hit = false;
-        for (let ix = gx - 1; ix <= gx + 1 && !hit; ix++) for (let iy = gy - 1; iy <= gy + 1 && !hit; iy++) {
-          const L = A.grid.get(ix * 100003 + iy);
-          if (!L) continue;
-          for (const m of L) {
-            if (A.c[m] === ex.uc) continue;
-            if (A.c[m] === c) {
-              if (!(V18 & 8)) continue;
-              let da = Math.abs(A.k[m] * so.arcPer - oC);
-              if (so.closed) da = Math.min(da, so.total - da);
-              if (da <= GAP_JOINT_RA) continue;
-            } else if (!(V18 & 4)) continue;
-            const dx = A.x[m] - qx, dy = A.y[m] - qy;
-            if (dx * dx + dy * dy < reach2) { hit = true; break; }
-          }
-        }
-        if (hit) bits |= bit;
-      }
+      for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } }
     }
     out[i] = bits; near[i] = nb;
   }
@@ -637,7 +613,6 @@ export class GfGapTable {
       const c = r.kcv[ch]; const sm = r.chainSamples[ch]!;
       return { positions: sm.positions, count: sm.count, closed: c.closed, total: G[c.geom * 4], arcPer: G[c.geom * 4 + 1] };
     };
-    let allM: { x: number[]; y: number[]; c: number[]; k: number[]; cs: number; grid: Map<number, number[]> } | null = null; // K1482 s18 prototype (u18 & 12)
     const cents = r.crossings.map((x) => {
       const so = sam(x.overChain), su = sam(x.underChain);
       if (!so || !su) return null;
@@ -777,65 +752,7 @@ export class GfGapTable {
           wr.push(km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))], Math.ceil(w / so.arcPer) + (off >= 0 ? packP : packN));
         }
       }
-      const V18p = ((globalThis as { __k15?: { u18?: number } }).__k15?.u18 ?? 0) | 0;
-      if (V18p & 12 && r.overMember && !allM) {
-        const tA = performance.now();
-        const cs = r.fillHalf + r.margin + r.fade;
-        allM = { x: [], y: [], c: [], k: [], cs, grid: new Map() };
-        for (let ch = 0; ch < nC; ch++) {
-          const S = sam(ch);
-          if (!S) continue;
-          const kmA = keptOf(ch, S);
-          // u18 & 256: only an open chain's END samples (within 0.3 arc of an end): a joint arm that ends there
-          const E = V18p & 256 ? (S.closed ? -1 : Math.ceil(0.3 / S.arcPer)) : S.count;
-          for (let k = 0; k < S.count; k++) if ((k <= E || k >= S.count - 1 - E) && r.overMember(ch, kmA[k])) {
-            const px = S.positions[2 * k], py = S.positions[2 * k + 1], key = Math.floor(px / cs) * 100003 + Math.floor(py / cs);
-            let L = allM.grid.get(key);
-            if (!L) allM.grid.set(key, (L = []));
-            L.push(allM.x.length);
-            allM.x.push(px); allM.y.push(py); allM.c.push(ch); allM.k.push(k);
-          }
-        }
-        (globalThis as { __k18ms?: number }).__k18ms = performance.now() - tA;
-      }
-      // K1482 s18 PROTOTYPE: u18 & 64 = the u2/u4 tests only at a crossing whose centre is within jc of an under joint
-      // vertex; u18 & 32 = such a crossing's whole window flags both sides
-      const K18 = (globalThis as { __k15?: { jd?: number; jc?: number; dbg?: number[][] }; __k15log?: number[][] });
-      let djC = Infinity;
-      if (jl) for (const jc of jl) {
-        let d = kArcOfCtrl(D, r.kcv[x.underChain], jc.ctrl) - uC;
-        if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
-        djC = Math.min(djC, Math.abs(d));
-      }
-      const atJ = djC < (K18.__k15?.jc ?? 0.3);
-      // u18 & 128: the tests only at a crossing whose WINDOW reaches within jw of an under joint vertex
-      let djW = Infinity;
-      if (jl && V18p & 128) for (const k of ks) for (const jc of jl) {
-        let d = kArcOfCtrl(D, r.kcv[x.underChain], jc.ctrl) - k * su.arcPer;
-        if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
-        djW = Math.min(djW, Math.abs(d));
-      }
-      const atW = djW < ((K18.__k15 as { jw?: number } | undefined)?.jw ?? 0.3);
-      const exOn = V18p && (V18p & 128 ? atW : !(V18p & 64) || atJ);
-      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, exOn ? { uc: x.underChain, kmU: keptOf(x.underChain, su), all: allM ?? undefined } : undefined) : null;
-      if (jfs && V18p & 32 && atJ) jfs.fill(3);
-      if (jfs && (V18p & 16 || K18.__k15?.dbg)) {
-        const jd = K18.__k15?.jd ?? (r.jointClear ?? 0) + r.fillHalf + r.margin + r.fade;
-        for (let i = 0; i < ks.length; i++) {
-          const k = ks[i];
-          let dj = Infinity;
-          if (jl) for (const jc of jl) {
-            let d = kArcOfCtrl(D, r.kcv[x.underChain], jc.ctrl) - k * su.arcPer;
-            if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
-            dj = Math.min(dj, Math.abs(d));
-          }
-          const b0 = jfs[i];
-          if (V18p & 16 && dj < jd) jfs[i] = 3;
-          const ux = su.positions[2 * k], uy = su.positions[2 * k + 1];
-          if (K18.__k15?.dbg?.some((p) => Math.hypot(p[0] - ux, p[1] - uy) < 0.8) && (K18.__k15log ??= []).length < 4000)
-            K18.__k15log.push([-1, x.overChain, x.underChain, k, +ux.toFixed(3), +uy.toFixed(3), +dj.toFixed(3), b0, jfs[i], r.overMember ? (r.overMember(x.underChain, keptOf(x.underChain, su)[k]) ? 1 : 0) : -1, +djC.toFixed(3), +jd.toFixed(3)]);
-        }
-      }
+      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, { c: x.underChain, km: keptOf(x.underChain, su) }) : null;
       for (let i = 0; i < ks.length; i++) {
         const k = ks[i];
         ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0);
@@ -876,7 +793,6 @@ export class GfGapTable {
     }
     this.nPos = nPos;
     this.ms = performance.now() - t0;
-    { const G18 = globalThis as { __k15?: { log?: number }; __k15log?: number[][]; __k18ms?: number }; if (G18.__k15?.log && (G18.__k15log ??= []).length < 400) G18.__k15log.push([this.ms, G18.__k18ms ?? -1]); } // K1482 s18 prototype timing
     return V;
   }
 }
