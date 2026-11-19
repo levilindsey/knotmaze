@@ -734,11 +734,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a453ce852efbe1ae6` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 10:58, 2 h cap ~12:58)
-  - branch: `worktree-agent-a453ce852efbe1ae6`, worktree `.claude/worktrees/agent-a453ce852efbe1ae6`; last commit: `ba0fb106`
-  - evidence: .claude/probes/K1482/out/s7/ (classes.txt: 41 faulted on master after stage 7's merge 53833035; rb_fold_00.png, gap_tiles_00.png, rest_tiles_00.png), .claude/probes/K1436/out/bar/k1482s7/bar.txt
-  - next: stage 8 (started 2026-11-18 11:00, cap about 13:00): the 17 crossing-gap sites in gf_look.ts (lkGap, lkCut, gapWindow). On its report: view its tiles, check the count against 41 and the STRICT bar, merge each confirmed fix, CI, live check of Levi's link. Stage 7 (merged 53833035) fixed the j58/t23s triangle (fold fix e51c69eb); 22 sites wait on K1490; the home build stays parked on worktree-agent-ad03e8b65a2afa540
-  - brief: `docs/design/K1482_s8_borders.md`
+  - owner: agent `a0d4a2de816fca20f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 12:45, 2 h cap ~14:45)
+  - branch: `worktree-agent-a0d4a2de816fca20f`, worktree `.claude/worktrees/agent-a0d4a2de816fca20f`; last commit: `c7d28b0a`
+  - evidence: .claude/probes/K1482/out/s8/ (classes_tip.txt: 36 faulted on master after stage 8's merge 363b6948; fixA_m0..m4.png, b_look3.png), .claude/probes/K1482/s8/
+  - next: stage 9 (started 2026-11-18 12:45, cap about 14:45): the 12 sites where the gap cuts the under arm's outline beside a fused joint (ticks j49 j55 j87, stubs j36 t79s, breaks j22 j29 t65s, pocket t80s, wedge t81s, sliver t70s, dot j88), a border-only rule in the outline's cut. On its report: view its tiles, check the count against 36 and the STRICT bar, merge, CI, live check of Levi's link (also owed for stage 7's fold fix and stage 8's fix A). Stage 8 (merged 363b6948): inside a baked gap window only that crossing's over thread cuts the outline (lkGap returns the outline's cut and the coverage's cut; fill look 0 px), dots j2/t1s t24s t46e and dash t39s gone; 22 sites wait on K1490; the home build stays parked on worktree-agent-ad03e8b65a2afa540
+  - brief: `docs/design/K1482_s9_borders.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
