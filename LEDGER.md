@@ -739,11 +739,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `agent-a7f542c2b821fc4e1` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 19:20, 2 h cap ~21:20)
-  - branch: `worktree-agent-a7f542c2b821fc4e1`, worktree `.claude/worktrees/agent-a7f542c2b821fc4e1`; last commit: `629da05e`
-  - evidence: .claude/probes/K1482/s14, .claude/probes/K1482/out/s14 (stage 13: s13, out/s13)
-  - next: stage 14: land c1 without its 5 specks and 4 worse sites; on its report view the sheets, merge, recount, check the deploy
-  - brief: `docs/design/K1482_s14_c1.md`
+  - owner: agent `agent-a3458badfbb729ef7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 20:35, 2.5 h cap ~23:05)
+  - branch: `worktree-agent-a3458badfbb729ef7`, worktree `.claude/worktrees/agent-a3458badfbb729ef7`; last commit: `bcdab45c`
+  - evidence: .claude/probes/K1482/s15, .claude/probes/K1482/out/s15 (stage 14: s14, out/s14; stage 13: s13, out/s13)
+  - next: stage 15: c1 keyed by a baked per-crossing flag (stage 14's 17 per-pixel variants all failed on flips); on its report view the sheets, merge, recount, check the deploy
+  - brief: `docs/design/K1482_s15_slot_flag.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -1130,10 +1130,6 @@ Every other item below waits on the trigger it names.
 - **K1504** · rp=gf j64 on Levi's link: a pinhole about 0.1 wide where chains 28 and 56 of one surface part
   (in the CPU mirror too, so geometry, not the look: .claude/probes/K1482/out/s7/j64_gm.png). Fill holes in
   one surface's union narrower than about a stroke width (Handoff K1482 s7)
-- **K1512** · K1482 j49's tick needs how far a fused joint's fan reaches along the OVER thread (today's fan
-  paints the over's outline across the under's faded tip); the window bake carries only the under thread's
-  joints, so it is a new baked number, after Muse Run M leaves the bake (docs/design/K1482_s10_borders.md
-  handoff, out/s10/pixels.txt)
 - **K1514** · K1482 mask case at j55, j36, t70s: today hides those stretches with the over thread's
   silhouette; map the slot's over polyline and hO into frame coordinates against gf's window
   (.claude/probes/K1482/out/s11/mask.txt); waits on stage 12's check of the today reference
@@ -2840,6 +2836,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1512** · K1482 j49's tick needs how far a fused joint's fan reaches along the OVER thread (today's fan paints the over's outline across the under's faded tip); the window bake carries only the under thread's joints, so it is a new baked number, after Muse Run M leaves the bake (docs/design/K1482_s10_borders.md handoff, out/s10/pixels.txt). Dropped: folded into K1482 stage 15 (the baked per-crossing flag) (2026-11-18).
 - **K1511** · Muse 26O. Done in 18031ec3 (2026-11-18).
 - **K1509** · Muse 26O. Done in 18031ec3 (2026-11-18).
 - **K1508** · Muse 26O. Done in 18031ec3 (2026-11-18).
