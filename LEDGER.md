@@ -2458,7 +2458,13 @@ Every other item below waits on the trigger it names.
   3.00..3.20, muse_default_tw; 18 px muse_hash) are form B's own fan/burial seam, not the look's gap: mirror
   ink 0.00 at (4.86,3.09) where today draws fill, lkGap-off viz removes only 32 px, gap=0/fl=0/cr=10 leave it
   unchanged. Fix belongs in the junction field (tables/eval/gf_glsl fan coverage at j64's fan edge, chain
-  56/28 ride), hands off in batch 26. K1503 stays open for it.
+  56/28 ride), hands off in batch 26. K1503 stays open for it. Run P (26P, Handoff 26P in
+  docs/design/K1464_muse_batch26.md): cause pinned to the near-null corner at j64 (r = 0 / 0.0064 <= 2aa);
+  a seam fill (eval seamFill / GLSL seamIn, hole narrower than a stroke) zeroes the speck box in the
+  mirror on both muse scenes, but bar 26P5 FAILS (new 358, mostly def): the gate fires at generic
+  r <= 2aa corners and ink moves through the composite. Not landed, per the run's Done 8; the WIP is
+  on branch muse-26p-wip (d0f31f43, pushed) with gf_k1517.test.ts; narrow the gate to corners whose
+  sector fill is actually absent, then re-bar. K1504's pinhole is the same seam (wider parting).
 - **K1519** · The K1436 bar is noisy run to run on g41_user_tw64: two loads of identical src in one physics
   hash gave 14 finds under STRICT=1 (frames differ by 1-2 levels; .claude/probes/K1482/out/s13/bar.txt,
   bar_sheet.png). It needs a margin or a median of loads before it can judge outline changes; g41_ring_tw42

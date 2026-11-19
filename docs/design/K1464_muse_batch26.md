@@ -717,3 +717,46 @@ build time on muse_hash and def within 3% of starting master (perf lock). 7. `np
 case for each fix (the pack digests re-frozen only where the fix moves them, each move named). 8. The guards
 (`hold.mjs` 60/60 on the two links, both dragchecks). If a fix cannot meet Done 4, do not land it: record
 what moved and stop.
+
+### Handoff 26P (Muse, 2026-11-18, no fix landed: the seam fill fixes j64 but moves ink at generic corners; K1517/K1504 stay open)
+
+Done 1 (cause, one cause for both): at j64 the corner is near-null (muse_hash k63 r = 0; muse_default_tw
+k137 r = 0.0064 <= 2aa). Form B's sector fill stops at V (r = 0 / r <= 2aa), so west of V the two arms'
+tubes leave the wedge between them uncovered: that one uncovered seam is the dark speck in the fill
+(mirror cov < 0.9 samples in the speck box on starting master) and, where the arms part wider, link A's
+~0.1 pinhole (chains 28/56). It is the field's fan coverage, not the look (look-side gap/fade probes in
+earlier runs left it unchanged; K1503 stays the field's).
+
+The fix (kept on branch `muse-26p-wip` at `d0f31f43`, NOT master): eval `seamFill` / GLSL `seamIn` --
+a near-null, non-through corner covers a point near it (rho <= r + (h + W/2 + 2aa)/sin(th/2)) when the
+point is outside both arms' tubes (each >= h - 2aa) and the hole is narrower than a stroke
+((dA - h) + (dB - h) <= W; K1504's wording), with seam depth `max(Dk, cap - rho)` feeding coverage
+only (`seamD` / fj `sd[]`), never ink. The sector keeps form B's reach (kRmax) at every corner and
+`tables.ts` is byte-identical to master: an earlier form that baked a seam reach into kRmax/kRV moved
+the sector disc at every near-null corner and failed the bar far worse; that form is abandoned. Mirror
+on the tip: speck box cov < 0.9 samples 0 on muse_default_tw and muse_hash (was nonzero on master);
+the wide eye at muse_hash (28.53, 11.50) stays open in the mirror; a synthetic j64-in-miniature case
+is pinned in `test/render/gf_k1517.test.ts`. All 12 live GLSL forms compile in headless Chrome
+(an inline `// K1517` comment had swallowed `float v = 0.0;` in four tier forms -- that also explains
+26P3's missing screen captures: the shader never switched). Program digests re-frozen in
+`gf_home_glsl.test.ts` (app `93029e67...`, probe `77b72a4e...`); pack/tables digests unmoved.
+
+Done 2-8 status: Done 5 FAILS and Done 4 with it. Bar `26P5` (`-Ref d0f31f43 -Base 6df067fd -Scenes
+muse_default_tw,muse_hash,def,ring -HomeFlag 1`, STRICT) prints `FAIL  new 358  grown 0  gone 0`:
+mirror rstray:plain 137 and vdip:plain 138, concentrated in **def**, plus screen rstray:tie 56. The
+seam gate as written fires at generic r <= 2aa corners, not just j64-class corners: seam coverage
+raises the corner surface's disc, and ink redistributes through the composite's transmittance chain
+(rstray + vdip pairs at the same junctions), and on screen the seam strip at muse_default_tw j64
+itself reads rstray:plain 138px and at muse_hash j68 rstray:ramp 169px. So per Done 8 the fix does
+not land. Bar `26P4` (pre-correction sector form) failed similarly (`FAIL new 333`); `26P`/`26P3`
+outputs under `.claude/probes/K1436/out/bar/`. Done 3's tip screen counts and 4x tiles were not
+produced (bar caps exist at `.claude/probes/K1436/out/bar/26P5/{base-6df067fd,ref-d0f31f43}/cap/`;
+the j64 sheet attempt's stances did not align, so no tile is claimed looked-at). Done 6: tables are
+untouched, so build time is master's by construction (the abandoned baked form measured within
+noise after its 4aa walk). Done 7: `npm test` green on the WIP tree (3199 passed, 9 skipped) with
+`gf_k1517.test.ts` added; it fails without the eval/GLSL change. Done 8's guards were not run (no
+landing). Next step for whoever resumes: narrow the seam gate so it cannot fire at generic corners --
+the distinguishing mark of j64 is that the sector fill is *absent* there (base coverage < 1 in the
+wedge on the corner's own surface), so gate the seam on the corner's sector terms not already
+covering the point, or on r = 0 exactly plus the grown j64 case only; then re-run the bar. Probes
+and scratch live in `.claude/probes/K1517/`.
