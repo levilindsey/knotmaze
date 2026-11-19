@@ -37,7 +37,7 @@ n2134_556      b3_2    23    0  3.80  1.00  0.90  worse: today and base fade the
 b_t54s         b3_2    23    0  2.25  0.85  0.98  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
 b_j70          b3_2    23    0  1.80  0.91  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
 b_j32          b3_2    22    0  1.40  0.56  0.92  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
-b_t16e         b3_2    22    0  0.53  0.90  0.94  worse: today's under tip fades out at the arc (light tip), base matches it; b3 runs it in hard (s10 counted this a join)
+b_t16e         b3_2    22    0  0.53  0.90  0.94  BETTER: today's under line runs into the over thread with no fade (b3_2, s10 cr_b3_t16e); base fades it; b3 joins. Least sure: today's tile sits off gf's geometry here
 b_t35e         b3_2    21    1  2.65  0.82  0.87  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
 b_j87          b3_3    21    0  0.40  0.98  0.91  BETTER: today abuts the over line with no fade (the over chain's joint fan); base leaves a ~4 px gap; b3 abuts
 b_t34e         b3_3    21    0  1.85  0.81  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
@@ -89,4 +89,4 @@ n1157_1169     b3_6    10    0  3.70  0.95  0.99  worse: today and base fade the
 b_t13e         b3_6    10    0  2.40  0.90  0.90  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
 b_j96          b3_7     9    1  1.95  0.98  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
 b_j83          b3_7     8    2  1.25  0.96  0.95  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
-# totals: 86 groups, better 1 (j87), same 0, worse 85
+# totals: 86 groups, better 2 (j87, t16e), same 0, worse 84

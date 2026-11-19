@@ -14,7 +14,7 @@ for sh, names in sheets:
     for n in names.strip().split(","): where[n] = sh.strip()
 WORSE = "worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade"
 V = {"b_j87": "BETTER: today abuts the over line with no fade (the over chain's joint fan); base leaves a ~4 px gap; b3 abuts",
-     "b_t16e": "worse: today's under tip fades out at the arc (light tip), base matches it; b3 runs it in hard (s10 counted this a join)",
+     "b_t16e": "BETTER: today's under line runs into the over thread with no fade (b3_2, s10 cr_b3_t16e); base fades it; b3 joins. Least sure: today's tile sits off gf's geometry here",
      "b_t34s": "worse (small): a 1-2 px fade closed at the over line", "b_t75e": "worse (small): a 1-2 px fade closed at the over line"}
 L = ["# K1482 s11 step 2: b3 (s10/patch_b3.json) vs base c198e005, link A, border look. Groups of >= 10 px changed ink",
      "# (s10 diffsites.py + s11 blobsites.py), judged on the 4x sheets b3_0..b3_7.png (today | base gf | b3 gf | diff).",
@@ -30,7 +30,8 @@ for k, v in sorted(ds.items(), key=lambda kv: -(kv[1]["gain"] + kv[1]["loss"])):
     m = np.median(np.array(vals), 0) if vals else (np.nan, np.nan, np.nan)
     vd = V.get(nm, WORSE); nb += vd.startswith("BETTER"); nw += vd.startswith("worse")
     L.append("%-14s %-5s %4d %4d %5.2f %5.2f %5.2f  %s" % (nm, where.get(nm, "?"), v["gain"], v["loss"], m[0], m[1], m[2], vd))
-L.append("# totals: %d groups, better %d (j87), same 0, worse %d" % (nb + nw, nb, nw))
+L.append("# totals: %d groups, better %d (j87, t16e), same 0, worse %d" % (nb + nw, nb, nw))
 open(out, "w").write("\n".join(L) + "\n")
 print("\n".join(L[-3:]))
+
 

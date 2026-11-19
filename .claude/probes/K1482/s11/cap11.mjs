@@ -15,6 +15,8 @@ const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), TRIES = +
 let HASH = process.env.HASH ?? "";
 // K1482 s5: PATCH=<json [[find, replace], ...]> rewrites the gf look program's source (probe-only term switches)
 // K1482 s7: PATCHF=<json> does the same to the field programs (sources holding "#define MAXP")
+// K1482 s11: PATCHT=<json> does the same to today's ribbon programs (sources holding "gapKeepAt")
+const PATCHT = process.env.PATCHT ? JSON.parse((await import("node:fs")).readFileSync(process.env.PATCHT, "utf8")) : [];
 const PATCHF = process.env.PATCHF ? JSON.parse((await import("node:fs")).readFileSync(process.env.PATCHF, "utf8")) : [];
 const PATCH = process.env.PATCH ? JSON.parse((await import("node:fs")).readFileSync(process.env.PATCH, "utf8")) : [];
 mkdirSync(outDir, { recursive: true });
@@ -22,14 +24,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({
   executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: false, userDataDir: profileDir, protocolTimeout: 1800000,
   args: ["--use-angle=d3d11", "--no-first-run", "--no-default-browser-check", "--window-position=2200,50", "--window-size=1660,1060",
-    "--disable-features=CalculateNativeWinOcclusion", ...(process.env.PATCH || process.env.PATCHF ? ["--disable-gpu-watchdog"] : []), "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding"],
+    "--disable-features=CalculateNativeWinOcclusion", ...(process.env.PATCH || process.env.PATCHF || process.env.PATCHT ? ["--disable-gpu-watchdog"] : []), "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding"],
 });
 const T0 = Date.now(); const T = () => ((Date.now() - T0) / 1000).toFixed(0) + "s";
 async function load(gf) {
   const page = await browser.newPage();
   page.on("pageerror", (e) => console.log(`pageerror ${e.message.slice(0, 200)}`)); page.on("console", (m) => { const t = m.text(); if (/ERROR|compile|shader|link/i.test(t) && m.type() !== "log") console.log(`console.${m.type()} ${t.slice(0, 600)}`); });
   await page.evaluateOnNewDocument((POOL0) => { window.__knotLoopMode = "continuous"; window.__lost = 0; if (POOL0) globalThis.__knotGfOpts = { pool: false }; try { localStorage.setItem("knotmaze.panelOpen", "0"); } catch {} const gc = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (...a) { if (!this.__h) { this.__h = 1; this.addEventListener("webglcontextlost", () => { if (this.isConnected) window.__lost++; }); } return gc.apply(this, a); }; }, process.env.POOL === "0");
-  if (PATCH.length || PATCHF.length) await page.evaluateOnNewDocument((PT, PF) => { const ss = WebGL2RenderingContext.prototype.shaderSource; window.__patchHits = {}; WebGL2RenderingContext.prototype.shaderSource = function (sh, src) { for (const [a, b] of src.includes("#define MAXP") ? PF : []) { const n = src.split(a).length - 1; window.__patchHits["F:" + a.slice(0, 40)] = (window.__patchHits["F:" + a.slice(0, 40)] ?? 0) + n; src = src.split(a).join(b); } if (src.includes("lkGap")) for (const [a, b] of PT) { const n = src.split(a).length - 1; window.__patchHits[a.slice(0, 40)] = (window.__patchHits[a.slice(0, 40)] ?? 0) + n; src = src.split(a).join(b); } return ss.call(this, sh, src); }; }, PATCH, PATCHF);
+  if (PATCH.length || PATCHF.length || PATCHT.length) await page.evaluateOnNewDocument((PT, PF, PTT) => { const ss = WebGL2RenderingContext.prototype.shaderSource; window.__patchHits = {}; WebGL2RenderingContext.prototype.shaderSource = function (sh, src) { for (const [a, b] of src.includes("#define MAXP") ? PF : []) { const n = src.split(a).length - 1; window.__patchHits["F:" + a.slice(0, 40)] = (window.__patchHits["F:" + a.slice(0, 40)] ?? 0) + n; src = src.split(a).join(b); } for (const [a, b] of src.includes("gapKeepAt") ? PTT : []) { const n = src.split(a).length - 1; window.__patchHits["T:" + a.slice(0, 40)] = (window.__patchHits["T:" + a.slice(0, 40)] ?? 0) + n; src = src.split(a).join(b); } if (src.includes("lkGap")) for (const [a, b] of PT) { const n = src.split(a).length - 1; window.__patchHits[a.slice(0, 40)] = (window.__patchHits[a.slice(0, 40)] ?? 0) + n; src = src.split(a).join(b); } return ss.call(this, sh, src); }; }, PATCH, PATCHF, PATCHT);
   await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
   let q = `${query}&phw=0&snd=none&prp=off`;
   if (gf) q += "&rp=gf"; else q = q.replace(/&gfh=1/, "");
