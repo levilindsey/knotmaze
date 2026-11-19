@@ -1,0 +1,51 @@
+# K1482 s11 step 1: link A border look at rest (fff8c9e5) on the starting commit c198e005 (origin/master, K1502 b0f4f9a7 + 3971ec64 in).
+# Frame raw/base/gf.png (hash fff8c9e5, same as s8/s10). Diffed per site box (48x48 device px, ink = RGB sum <= 73,
+# s11/boxdiff.py) against 880ec605 = s8 tip after its merge (s10 raw/m/gf.png, same hash; s8's own raw/tB frame is offset by
+# about a pixel everywhere, 223 sites at 10-25 px split evenly gain/loss, so it is not a usable reference): 10 sites moved > 8 px:
+#   t50s 108/3, t18e 103/1, j36 49/4, t18s 44/2, j50 20/2, j140 13/1, j148 8/5, t68s 7/6, t75e 4/6, j67 6/3 (gain/loss px).
+# Looked at on 4x tiles (base_0..3.png: today | m880 | base | ink diff, the old 36 + the movers) and 6x crops (base_moved.png,
+# base_moved_wide.png, z_j36.png, z_j50.png). All gains are K1502's reach windows running an outline on past a shallow crossing:
+#   t50s, j36 (top arm): the tail's outline arm now reaches the Y instead of stopping short / leaving a loose piece; t18e, j50
+#   (bottom): the line runs on down-right along the tail (as today's tail) instead of ending blunt; t18s: a few px at the left
+#   edge; j140 j148 t68s t75e j67: edge pixels, no change visible at 4x. None of them reads faulted on base.
+# j36 keeps its stub: s10's picks (2097,1033), (2096,1034), (2137,1024) sit in the lower part of the box, which did not change.
+# The other 35 of the old 36 did not change (<= 8 px, diff tiles grey only) and keep 880ec605's class.
+# site class owner
+j4 notch K1490
+j14 notch K1490
+j15 wedge K1490
+j22 break GAP
+j29 break GAP
+j36 stub GAP
+j41 notch K1490
+j47 notch K1490
+j49 tick GAP
+j50 wedge K1490
+j55 tick GAP
+j59 notch K1490
+j64 dot PIN
+j71 sliver K1470
+j82 wedge K1490
+j87 tick GAP
+j88 dot GAP
+j95 sliver K1490
+j143 wedge K1490
+j147 sliver K1490
+j158 wedge K1490
+t4s notch K1490
+t16e notch K1490
+t23e wedge K1490
+t43s sliver K1490
+t45s notch K1490
+t56s sliver K1490
+t58e notch K1490
+t59s wedge K1490
+t65s break GAP
+t70s sliver GAP
+t73e wedge K1490
+t79s stub GAP
+t80s pocket GAP
+t81s wedge GAP
+t84e wedge K1490
+# base total 36: wedge 10, notch 9, sliver 6, tick 3, break 3, dot 2, stub 2, pocket 1
+# by owner: K1490 22, GAP 12, K1470 1, PIN 1 (unchanged from 880ec605; K1502 fixed no counted site and broke none).
