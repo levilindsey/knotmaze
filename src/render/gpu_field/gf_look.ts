@@ -806,7 +806,15 @@ export class GfGapTable {
         djC = Math.min(djC, Math.abs(d));
       }
       const atJ = djC < (K18.__k15?.jc ?? 0.3);
-      const exOn = V18p && (!(V18p & 64) || atJ);
+      // u18 & 128: the tests only at a crossing whose WINDOW reaches within jw of an under joint vertex
+      let djW = Infinity;
+      if (jl && V18p & 128) for (const k of ks) for (const jc of jl) {
+        let d = kArcOfCtrl(D, r.kcv[x.underChain], jc.ctrl) - k * su.arcPer;
+        if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
+        djW = Math.min(djW, Math.abs(d));
+      }
+      const atW = djW < ((K18.__k15 as { jw?: number } | undefined)?.jw ?? 0.3);
+      const exOn = V18p && (V18p & 128 ? atW : !(V18p & 64) || atJ);
       const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, exOn ? { uc: x.underChain, kmU: keptOf(x.underChain, su), all: allM ?? undefined } : undefined) : null;
       if (jfs && V18p & 32 && atJ) jfs.fill(3);
       if (jfs && (V18p & 16 || K18.__k15?.dbg)) {
