@@ -739,11 +739,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: nobody since 2026-11-18 22:47 (merged)
-  - branch: mainline; last commit: `0cee0dc1`
-  - evidence: .claude/probes/K1482/s15, .claude/probes/K1482/out/s15 (stage 14: s14, out/s14; stage 13: s13, out/s13)
-  - next: stage 15 landed the baked joint flag (36 to 31 on link A: j55 j87 j82 j143 t79s fixed; bar PASS new 0 under load). Open: six sites smaller but faulted (j4 j36 j71 j158 t16e t73e), four 1 px seams (t25s/j60 2 px at 1596:1542, j36 2097:1035, j143/t67s 1968:388, j4/t2s 1646:231), the fill look moves 5 px (cause unconfirmed, lkFringe reading the flag is a guess), muse_hash build time unmeasured; at fade 1.2 flagged joint sides fade over 0.36 (show Levi if he asks). Next: stage 16 on the seams and the six, brief from docs/design/K1482_s15_slot_flag.md handoff
-  - brief: `docs/design/K1482_s15_slot_flag.md`
+  - owner: agent `agent-adb9685c1b245d815` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 22:50, 2 h cap ~00:50)
+  - branch: `worktree-agent-adb9685c1b245d815`, worktree `.claude/worktrees/agent-adb9685c1b245d815`; last commit: `2eba02fa`
+  - evidence: .claude/probes/K1482/s16, .claude/probes/K1482/out/s16 (stage 15: s15, out/s15)
+  - next: stage 16: the joint flag's leftovers (fill 5 px, four 1 px seams, six smaller sites, build time); stage 15 landed at 0cee0dc1 (36 to 31, bar PASS); on its report view the sheets, merge, recount, check the deploy
+  - brief: `docs/design/K1482_s16_leftovers.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
