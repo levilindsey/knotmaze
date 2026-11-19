@@ -1137,9 +1137,6 @@ Every other item below waits on the trigger it names.
   runs into the over's as a hard T with a ragged edge where the parent cut it short
   (.claude/probes/K1501/out/26M/tile_g41_user_tw64_x70_border.png, _x130_border.png, parent | fix; Muse viewed
   fill only). Same class as K1482's joint-side sites: judge after stage 13's rule
-- **K1520** · the K1436 bar never prunes: one ~1 GB build + src worktree per compared commit under
-  TEMP\k1436s3-prev (10 GB) filled the disk 2026-11-18 21:13 and ended Muse Run P's checks; prune at start,
-  refuse under 6 GB free (Muse Run Q part 1, docs/design/K1464_muse_batch26.md)
 
 ## Residuals (known, not fixed)
 
@@ -2845,6 +2842,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1520** · the K1436 bar never prunes: one ~1 GB build + src worktree per compared commit under TEMP\k1436s3-prev (10 GB) filled the disk 2026-11-18 21:13 and ended Muse Run P's checks; prune at start, refuse under 6 GB free (Muse Run Q part 1, docs/design/K1464_muse_batch26.md). Done in 7e5e87c9 (2026-11-18).
 - **K1512** · K1482 j49's tick needs how far a fused joint's fan reaches along the OVER thread (today's fan paints the over's outline across the under's faded tip); the window bake carries only the under thread's joints, so it is a new baked number, after Muse Run M leaves the bake (docs/design/K1482_s10_borders.md handoff, out/s10/pixels.txt). Dropped: folded into K1482 stage 15 (the baked per-crossing flag) (2026-11-18).
 - **K1511** · Muse 26O. Done in 18031ec3 (2026-11-18).
 - **K1509** · Muse 26O. Done in 18031ec3 (2026-11-18).
