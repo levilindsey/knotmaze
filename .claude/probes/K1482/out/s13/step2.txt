@@ -1,0 +1,55 @@
+# K1482 s13 step 2: remnant rules by PATCH on link A (K868 frozen state, hash fff8c9e5, border look, gf), judged on gf.
+# Frames (untracked, never committed): raw/m (master c198e005's src), raw/c1..c12 (PATCH runs of s11/cap11.mjs through
+# s13/cap13.ps1), raw/tip (a build of the c1 rule in gf_look.ts, FILL/FLS run). Ink = RGB sum <= 73.
+# Patches: s13/patch_c*.json ([[find, replace], ...] on the gf look program); c1 as a source diff: s13/c1_rule.diff.
+#
+# VERDICT: no candidate passes. c1 closes the line at 20 sites but adds 5 new specks (j36, j37 among them), so a site
+# turns worse; the rule was NOT committed and gf_look.ts is unchanged on the tip.
+#
+# c1 (the candidate): in lkGap, an over piece that is a fused joint's member (PSURF(j) >= 0 || PSURF(j) < -MAXP) and
+# belongs to the slot's over chain cS cuts the OUTLINE (g) with margin 0 and fade 0.3 (lkCut sc * (0, 0.3)), and when
+# such a member cut the pixel the N cut (K1458's lkNearOn) does the same. gA (coverage) is untouched.
+#   fill: 0 px differ against master (gf fill capture, same hash).
+#   ordinary crossings away from joints: 8 sampled, unchanged at fl 0 and at fl 1.2. At fl 1.2, 31 listed sites moved
+#     10 px or more of outline ink; NOT reviewed on tiles (moot once c1 failed).
+#   the count test (s13/count13.py, 20 sites, 48x48 box, 8-connected ink components): master 0/20 within the limit
+#     (each one component over: the cut tip apart from the joint's stroke), c1 20/20, the c1 build (raw/tip) 20/20.
+#     Sites: j21 j46 j71 j83 j87 j102 j120 j122 j126 j140 j158 t2s t16e t27s t30e t34s t36s t62e t73e t76e.
+#   new specks (count13.py --specks raw/m/gf.png): 5, so the pass rule ("no site turns worse") fails:
+#     j36  (2097,1031) 2 px, full-ink dot beside the stub (j36 is itself a "remnant goes" target: not clean)
+#     j37  (1988,1083) 3 px hairline
+#     t64e (1021,517) 1 px (sum 68 against master 115)
+#     t10s (1603,1017) 1 px (66 against 100)
+#     j16  (1090,1091) 1 px (64 against 114), beside the under arm's faded tip
+#   Sheets (4-6x, master | c1 [| tip]): raw/t_1.png (j36, j37), raw/t_1b.png (ink tinted), raw/t_1c.png (5x R30),
+#     raw/t_2.png (j126, t62e, t76e, t73e: closed, better), raw/t_sp.png (the three 1 px specks), raw/ovj36.png.
+#   Movers (outline ink XOR >= 10 px in the 48x48 box, 327 sites; frame-wide 2210 ink px differ): 23. Judged by eye
+#   at 4x, master | c1 (sheets/mv_1..3.png, R30):
+#     better 15: t21e j55 t2s j122 j4 j140 j83 j71 j102 t30e t34s j120 t36s j21 j87 (the under arm's outline now
+#       meets the joint's or the over pass's outline where master stops it a few px short with a faded tip)
+#     same 3: t42e t27s, and j46 = t16e (one place: the V closes, but into a hairline wedge)
+#     worse 4: j77, t64e (a detached stub turns solid and darker), t25s = j60 (one place: the arm joins along the
+#       over outline with a 1 px background sliver between), plus the specks above at j36, j37, t10s, j16
+#   The 4 sort-step "remnant goes" sites (j36, t79s, t70s, j88): none is among the 20 closures, and j36 gains a speck;
+#     c1's effect is of the "line closes" kind. t79s, t70s, j88 not judged on tiles.
+#
+# Diagnostics (c2 replaces master's lines like c1; c3-c12 patch the c1 source; each a PATCH run, same state).
+# Counts re-run at the end with count13.py (limits; --specks against raw/m), nearest site of each new speck:
+#   run  change                                               limits   new specks
+#   c1   members and N: margin 0, fade 0.3                    20/20    5: t64e t10s j36 j37 j16
+#   c2   members and N: margin 0.5, fade 0.5                  12/20    7: t64e x2, j70, j37, t34e, j42, j84
+#   c3   c1 with the N rule reverted (members only)            0/20    0
+#   c4   c1 with the member rule reverted (N only)            not run
+#   c5   N reduced only when a member is nearer than N + 1 px  20/20   5: as c1
+#   c6   N reduced only when N is on the nearest member's arc  20/20   5: as c1
+#   c7   the rule at the label site only (lkFringe as master)  20/20   5: as c1
+#   c8   fade 1.0                                             10/20    7: as c2
+#   c9   fade 0.1                                             20/20    5: as c1
+#   c10  non-member cS pieces cut no outline                  20/20    5: as c1
+#   c11  cS < 0 pixels cut no outline                         20/20    5: as c1
+#   c12  N always reduced (no member needed)                  20/20    5: j130 t64e t10s j36 j16 (j37's goes, j130's comes)
+# So the closures and the specks both come from the N cut's reduction at the label site (c3, c7); member choice (c5,
+# c6), fade (c9), non-member and window-less pixels (c10, c11) change nothing. The blank pixels around each speck are
+# cut by something outside lkGap's g (the under arm's own faded tip is identical in every variant): not identified
+# (the band pass, or a joint taper of the under arm). Next: attribute the pixels at (2097,1031) and (1988,1083) per
+# term before another rule.

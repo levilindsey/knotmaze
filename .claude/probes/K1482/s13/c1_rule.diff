@@ -1,0 +1,37 @@
+diff --git a/src/render/gpu_field/gf_look.ts b/src/render/gpu_field/gf_look.ts
+index f7cba3d1..67604a14 100644
+--- a/src/render/gpu_field/gf_look.ts
++++ b/src/render/gpu_field/gf_look.ts
+@@ -2176,6 +2176,12 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
+   // outline in a neighbour crossing's window and left a dot or dash of it beside the host's outline (link A t1s,
+   // t24s, t46e, t39s). y keeps every higher piece's cut for the coverage, so the fill look does not move.
+   int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;
++  // K1482 s13: an over piece that is a fused joint's member (its surface is the group's) cuts the OUTLINE only up to
++  // its own edge: no margin, a third of the fade. Its outline is the joint's, which the under arm's outline should
++  // meet; the full margin + fade left the arm's stroke ending in a faded tip a few px short of it (link A j55, j87,
++  // t21e, t2s, j4, j122 and 15 more ticks, s13 sheets). jm: the baked slot's over thread is such a member here, so
++  // lkNearOn's cut below takes the same reach. y keeps the full cut: the fill look does not move.
++  bool jm = false;
+   for (int j = 0; j < np; j++) {
+     if (!(pkey[j] > key + uZt)) continue;
+     vec2 qO = lookQ(j, p);
+@@ -2184,7 +2190,9 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
+     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
+     float cj = lkCut(pd[j], sinT, exg, wm, pxw, sc);
+     gA = max(gA, cj);
+-    if (cS < 0 || PC(j) == cS) g = max(g, cj);
++    bool mem = PSURF(j) >= 0 || PSURF(j) < -MAXP;
++    if (cS < 0 || PC(j) == cS) g = max(g, mem ? lkCut(pd[j], sinT, exg, wm, pxw, sc * vec2(0.0, 0.3)) : cj);
++    if (PC(j) == cS && mem) jm = true;
+     // K1417: no casing term (the composite clears the gap to the background in every look).
+   }
+   // K1458: the over thread past the candidate list's reach. A piece enters the list only within
+@@ -2200,7 +2208,7 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
+         float sinT = abs(tu.x * to.y - tu.y * to.x);
+         float exg = uExLive > 0.5 ? exAt(cO, lkArc(cO, N.yz)).x : 1.0;
+         float cN = lkCut(N.x, sinT, exg, wm, pxw, sc);
+-        g = max(g, cN);
++        g = max(g, jm ? lkCut(N.x, sinT, exg, wm, pxw, sc * vec2(0.0, 0.3)) : cN);
+         if (gA < 0.999) gA = max(gA, cN);
+       }
+     }
