@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1513.
+Next free ID: K1514.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -2451,6 +2451,12 @@ Every other item below waits on the trigger it names.
   (0d51331b, c1b63637), so its screen finds can move without a source change
 - **K1511** · K1482's cap.mjs waits forever when a PATCHF shader fails to compile (stage 10 lost a candidate
   to it): it should time out and print the compile error (.claude/probes/K1482/cap.mjs)
+- **K1513** · K1502 follow-up (Muse 26L, 2026-11-18): on Levi's link
+  (?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1, hash fff8c9e5, .claude/probes/K1482/cap.mjs) list the
+  sites whose border ink changes by more than 8 px with the home-off reach key windows (K=1.0) against master,
+  each on a 4x tile master|new named better/same/worse; the muse_hash j49 tail-join class (26L5 bar, 17 px) is
+  the one to watch - no site may turn worse. Also the census screen cut:plain at ring x68 (793 px) is the
+  lkGap centreline class of Handoff 26H, not the stub: gf fill already equals today there.
 
 ## Approved, to schedule (2026-10-11)
 
