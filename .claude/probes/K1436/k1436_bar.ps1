@@ -2,9 +2,13 @@
 #
 # HOW TO RUN (from any checkout of knotmaze, pwsh 7; what K1436 s3 ran, 2026-11-17):
 #   pwsh -NoProfile -File .claude/probes/K1436/k1436_bar.ps1 -Ref <commit> [-Base <commit>=origin/master] [-HomeFlag 1|0]
-#        [-Scenes def,ring,...] [-Port 5601] [-Tag <out dir name>=<ref sha>] [-Keep] [-NoPerfLock]
+#        [-Scenes def,ring,...] [-Port 5601] [-Tag <out dir name>=<ref sha>] [-Keep] [-NoPerfLock] [-PrevRoot <dir>] [-MinFreeGB <n>=6] [-PruneOnly]
 #   -NoPerfLock (K1507): skip the wait on $env:TEMP\claude-perf.lock and label the output "taken under load"
 #        (the captures run beside whatever holds the lock; bar.txt is stamped, the verdict still printed).
+#   K1520: at start, stale builds / src-<sha> worktrees (then `git worktree prune`) / k1436s3-profile-<sha>
+#        that are not this run's -Ref/-Base and that no live process names are deleted, then the bar refuses
+#        to start when C: still has under -MinFreeGB (6) GB free. -PruneOnly runs just that and exits 0.
+#        -PrevRoot names the builds root (its parent holds the profiles); the default is %TEMP%\k1436s3-prev.
 #   RAN (s3): -Ref cc1ee890 -Base cc1ee890 -Scenes ring,def -Port 5603 -Par 2 -Tag self1 -Keep   -> PASS (new 0 grown 0
 #        gone 0); ~16 min with a cold profile (base warm 117 s, captures 270 s; ref warm 14 s, captures 80 s) plus a
 #        30 min wait on another owner's perf lock. ring's two loads froze on DIFFERENT hashes: set STRICT=1 for real runs.
@@ -48,7 +52,10 @@ param(
   [int]$Par = 3,
   [string]$Tag = "",
   [switch]$Keep,
-  [switch]$NoPerfLock
+  [switch]$NoPerfLock,
+  [string]$PrevRoot = "",
+  [double]$MinFreeGB = 6,
+  [switch]$PruneOnly
 )
 $ErrorActionPreference = "Stop"
 # pwsh -File passes "-Scenes ring,def" as ONE string: split it
@@ -59,7 +66,7 @@ $mainNm = "C:\Users\lsl\Repositories\knotmaze\node_modules"
 $sceneDir = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes"
 $refSha = (git -C $repoTop rev-parse --short=8 $Ref).Trim(); $baseSha = (git -C $repoTop rev-parse --short=8 $Base).Trim()
 $outRoot = Join-Path $probeDir "out\bar\$(if ($Tag) { $Tag } else { $refSha })"; New-Item -ItemType Directory $outRoot -Force | Out-Null
-$buildRoot = Join-Path $env:TEMP "k1436s3-prev"; New-Item -ItemType Directory $buildRoot -Force | Out-Null
+$buildRoot = if ($PrevRoot) { $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($PrevRoot) } else { Join-Path $env:TEMP "k1436s3-prev" }; New-Item -ItemType Directory $buildRoot -Force | Out-Null
 $made = @()
 function Wait-Lock {
   if ($NoPerfLock) { Write-Host "taken under load (NoPerfLock: perf lock wait skipped)"; return }
@@ -70,6 +77,54 @@ function Wait-Lock {
     if (((Get-Date) - $t0).TotalMinutes -gt 60) { throw "perf lock held over 60 min: $(Get-Content $l)" }
     Start-Sleep 15
   }
+}
+# K1520: a folder is in use when another live process names it on its command line (a vite preview
+# names its --outDir build, Chrome names its --user-data-dir profile, a worktree server names its src).
+$script:liveCmds = $null
+function Test-BarLive([string]$folder) {
+  if ($null -eq $script:liveCmds) { $script:liveCmds = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessId -ne $PID -and $_.CommandLine } | ForEach-Object { $_.CommandLine }) }
+  foreach ($c in $script:liveCmds) { if ($c.IndexOf($folder, [StringComparison]::OrdinalIgnoreCase) -ge 0) { return $true } }
+  return $false
+}
+function Remove-BarTree([string]$folder, [bool]$isWorktree) {
+  try {
+    Get-ChildItem $folder -Recurse -Force -Attributes ReparsePoint -ErrorAction SilentlyContinue | ForEach-Object { $_.Delete() }
+    $nm = Join-Path $folder "node_modules"; if (Test-Path $nm) { (Get-Item $nm -Force).Delete() }
+    if ($isWorktree -and (Test-Path (Join-Path $folder ".git"))) {
+      git -C $repoTop worktree remove --force $folder 2>$null | Out-Null
+      if (Test-Path $folder) { [System.IO.Directory]::Delete($folder, $true) }
+    } else { [System.IO.Directory]::Delete($folder, $true) }
+    return -not (Test-Path $folder)
+  } catch { Write-Host "prune: kept $folder (delete failed: $($_.Exception.Message))"; return $false }
+}
+# K1520: at start, delete every stale build, src-<sha> worktree and k1436s3-profile-<sha> that is
+# not this run's -Ref/-Base and not in use by a live process; then `git worktree prune`.
+function Clear-StaleBarBuilds {
+  $keep = @($refSha, $baseSha); $removed = 0; $keptLive = 0
+  if (Test-Path $buildRoot) {
+    foreach ($dir in @(Get-ChildItem $buildRoot -Directory -Force -ErrorAction SilentlyContinue)) {
+      $isSrc = $dir.Name -like "src-*"; $sha = if ($isSrc) { $dir.Name.Substring(4) } else { $dir.Name }
+      if ($keep -contains $sha) { continue }
+      if (Test-BarLive $dir.FullName) { Write-Host "prune: keeping $($dir.FullName) (a live process names it)"; $keptLive++; continue }
+      if (Remove-BarTree $dir.FullName $isSrc) { Write-Host "prune: removed $($dir.FullName)"; $removed++ }
+    }
+    git -C $repoTop worktree prune | Out-Null
+  }
+  $profileParent = Split-Path $buildRoot -Parent
+  foreach ($dir in @(Get-ChildItem $profileParent -Directory -Filter "k1436s3-profile-*" -Force -ErrorAction SilentlyContinue)) {
+    $sha = $dir.Name.Substring("k1436s3-profile-".Length)
+    if ($keep -contains $sha) { continue }
+    if (Test-BarLive $dir.FullName) { Write-Host "prune: keeping $($dir.FullName) (a live process names it)"; $keptLive++; continue }
+    if (Remove-BarTree $dir.FullName $false) { Write-Host "prune: removed $($dir.FullName)"; $removed++ }
+  }
+  Write-Host "prune: $removed removed, $keptLive kept live (this run's $refSha / $baseSha kept)"
+}
+# K1520: refuse to start when C: has under -MinFreeGB free (checked after the prune, so stale
+# builds the prune just freed count toward the space).
+function Assert-BarFreeSpace {
+  $free = (Get-PSDrive C).Free; $need = [int64]($MinFreeGB * 1GB)
+  if ($free -lt $need) { throw ("k1436_bar: refusing to start: C: has {0:N2} GB free, under the {1} GB minimum (K1520). The prune above already removed stale bar builds; free more space (or delete {2} and {3}\k1436s3-profile-*) and re-run." -f ($free / 1GB), $MinFreeGB, $buildRoot, (Split-Path $buildRoot -Parent)) }
+  Write-Host ("C: free {0:N2} GB (minimum {1} GB)" -f ($free / 1GB), $MinFreeGB)
 }
 function Get-Jobs([string]$suffix) {
   $jobs = @()
@@ -132,6 +187,9 @@ function Invoke-Commit([string]$sha, [string]$dst) {
   }
   Write-Host "[$sha] screen scans $([int]((Get-Date) - $t2).TotalSeconds) s"
 }
+Clear-StaleBarBuilds
+Assert-BarFreeSpace
+if ($PruneOnly) { Write-Host "prune only: done"; exit 0 }
 $code = 1
 try {
   Invoke-Commit $baseSha (Join-Path $outRoot "base-$baseSha")
