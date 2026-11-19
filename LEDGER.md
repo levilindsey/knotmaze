@@ -1130,8 +1130,6 @@ Every other item below waits on the trigger it names.
 - **K1504** · rp=gf j64 on Levi's link: a pinhole about 0.1 wide where chains 28 and 56 of one surface part
   (in the CPU mirror too, so geometry, not the look: .claude/probes/K1482/out/s7/j64_gm.png). Fill holes in
   one surface's union narrower than about a stroke width (Handoff K1482 s7)
-- **K1507** · k1436_bar.ps1 waits on the perf lock even for a stage told not to take it (K1482 s8 ran its tip
-  half by hand with .claude/probes/K1482/s8/bar_ref.ps1): give the bar a flag to skip the wait
 - **K1512** · K1482 j49's tick needs how far a fused joint's fan reaches along the OVER thread (today's fan
   paints the over's outline across the under's faded tip); the window bake carries only the under thread's
   joints, so it is a new baked number, after Muse Run M leaves the bake (docs/design/K1482_s10_borders.md
@@ -2453,14 +2451,8 @@ Every other item below waits on the trigger it names.
   untracked beside it)
 - **K1506** · rp=gf's 'both' look now takes stage 8's outline cut and master's coverage cut (lkGap's two
   results, 7091c9a4): consistent, but nobody has looked at it on screen
-- **K1508** · .claude/probes/K1482/cap.mjs: the first shot can come before the view settles (edges shift by 1
-  px); a second render in the same state is right
-- **K1509** · .claude/probes/K1482/cap.mjs dies with '__knotGf is not defined' (line 105) on a today-only
-  shot, after writing today.png; .claude/probes/K1482/s9/cap9.ps1 with GF=0,TODAY=1 works
 - **K1510** · K1436 bar noise: census scene g41_user_tw64 settles to different physics hashes run to run
   (0d51331b, c1b63637), so its screen finds can move without a source change
-- **K1511** · K1482's cap.mjs waits forever when a PATCHF shader fails to compile (stage 10 lost a candidate
-  to it): it should time out and print the compile error (.claude/probes/K1482/cap.mjs)
 - **K1516** · Today's renderer: its junction field draws some arms straight for up to about 3 world units from
   the joint where the thread curves (j55, j36, j49, t65s, t70s, t16e, t2s on link A); cause not pinned
   (candidate: the arm's radial profile runs straight past its grid, joinery.ts near 1191, profArc in
@@ -2848,6 +2840,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1511** · K1482's cap.mjs waits forever when a PATCHF shader fails to compile (stage 10 lost a candidate to it): it should time out and print the compile error (.claude/probes/K1482/cap.mjs). Done in 18031ec3 (2026-11-18).
+- **K1509** · .claude/probes/K1482/cap.mjs dies with '__knotGf is not defined' (line 105) on a today-only shot, after writing today.png; .claude/probes/K1482/s9/cap9.ps1 with GF=0,TODAY=1 works. Done in 18031ec3 (2026-11-18).
+- **K1508** · .claude/probes/K1482/cap.mjs: the first shot can come before the view settles (edges shift by 1 px); a second render in the same state is right. Done in 18031ec3 (2026-11-18).
+- **K1507** · k1436_bar.ps1 waits on the perf lock even for a stage told not to take it (K1482 s8 ran its tip half by hand with .claude/probes/K1482/s8/bar_ref.ps1): give the bar a flag to skip the wait. Done in 18031ec3 (2026-11-18).
 - **K1501** · Muse 26M: every changed window side better or same on screen (def, ring, g41_ring_tw64, lightpaper 0 px; g41_user_tw64 9 clusters, fill viewed); no source change. Border look of two of them: K1518. Done in fe9a8596 (2026-11-18).
 - **K1513** · K1502 follow-up (Muse 26L, 2026-11-18): on Levi's link (?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1, hash fff8c9e5, .claude/probes/K1482/cap.mjs) list the sites whose border ink changes by more than 8 px with the home-off reach key windows (K=1.0) against master, each on a 4x tile master|new named better/same/worse; the muse_hash j49 tail-join class (26L5 bar, 17 px) is the one to watch - no site may turn worse. Dropped: answered by K1482 stage 11's recount on 314b1896: K1502 moved 10 sites on Levi's link by more than 8 px and broke none (out/s11/classes_base.txt); the x68 cut:plain class stays described in K1502 (2026-11-18).
 - **K1500** · rp=gf fades the thread away from the marker discs like today (Muse 26K, handoff 281a7c8c; tiles viewed). Done in 970b6ece (2026-11-18).

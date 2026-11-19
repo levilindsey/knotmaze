@@ -675,6 +675,23 @@ and second shots of link A identical in the site boxes of three sites. 5. Link A
 unchanged by all four (same hash fff8c9e5, 0 px against a capture taken with the old script). 6. `npm test`
 green (nothing in `src/` or `test/` changed).
 
+### Handoff 26O (Muse, 2026-11-18, done: every Done holds)
+
+Started 19:03 PST, stopped 19:45 PST. Starting master 7c19121e; probes only in 18031ec3 (no `src/` or `test/` change). Probes and captures under `.claude/probes/K1482/out/26O/` (old-script copy `cap_old.mjs`, `patch_bad.json`, `badpatch2.log`; preview of 7c19121e on :5492, profiles `%TEMP%\k26o-cap-profile` / `k26o-guards-profile`; perf lock held for the caps and guards, released at the end).
+
+Done 1 (K1507): `k1436_bar.ps1` takes `-NoPerfLock`: `Wait-Lock` returns at once with "taken under load (NoPerfLock: perf lock wait skipped)" and the compare's `bar.txt` is stamped "taken under load"; `bar_ref.ps1`'s header now says the by-hand half is not needed. Shown with a dummy lock file present: 1-scene (ring) self-bar `-Tag 26O_k1507 -Keep -NoPerfLock` finished in 160 s, PASS (new 0, grown 0), both halves printing the label (`out/bar/26O_k1507/bar.txt`); ring's two loads froze on different hashes (50dd4ffd / 0a0ee15e, the K1510 lottery) and the bar still passed.
+
+Done 2 (K1511): `cap.mjs` hooks `compileShader` into `window.__shaderErrors` (getShaderInfoLog + source head), captures the page console, and the gf-ready wait is capped at `FRAME_TIMEOUT_MS` (default 240000): on timeout it prints the console and shader lines and throws, so the run exits non-zero. Shown: `PATCHF` replacing `#define MAXP` with a deliberate `@@@` error exits 1 in 251 s with `shader compile error: ERROR: 0:6: '@' : invalid character` / `'K1511' : syntax error` printed (plus the app's own console warn; full text in `badpatch2.log`, a 20 s-timeout rerun).
+
+Done 3 (K1509): every `__knotGf` read in `cap.mjs` is fully optional-chained and the final pool line falls back to nulls when there is no gf. Shown: `GF=0,TODAY=1` on link A completes (exit 0, `today.png` + `sites_today.json`, pool `{tms:[], home:null, homeOn:null}`) after the usual two-hash reloads.
+
+Done 4 (K1508): before the first screenshot `cap.mjs` waits for the view to settle - two consecutive samples 250 ms apart with the same physics hash and the same view transform (`waitViewSettled`, logged as "view settled fff8c9e5"). Shown on link A at fff8c9e5: first (`new1`) against second (`new2`) shots differ by 0 px whole-frame, and 0 px in the 80 px boxes at j0/j1/j2.
+
+Done 5: link A's ordinary capture is unchanged: `new1` against the old script's `old1` (same build, same profile, same hash fff8c9e5) differs by 0 px over 24 and 0 px in the three site boxes; at the >0 threshold 14 background pixels differ by 1 level each (dark backdrop dither, the cross-load floor - two new-script loads are 0 px apart).
+
+Done 6: `npm test` green (256 files, 3197 passed, 9 skipped; tsc clean), nothing in `src/` or `test/` changed. Guards on the same build (one kept profile): `hold.mjs` 60 250 5000 PASS on `?3&xp=off&am=instant&rp=gf` (first composite 91.7 s cold; 60/60, edges min 102740) and on `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (40.0 s; 60/60, min 7028); `dragcheck.mjs` PASS for gf and for gfh (every stop 0 px over TOL 24). K1507, K1508, K1509 and K1511 closed in 18031ec3; K1464, K1451 and K1460 left open and untouched. Preview server (5492) stopped.
+
+
 ## Run P (26P): j64's speck and pinhole in the field (K1517, K1504)
 
 Added 2026-11-18. Run M traced the speck left at j64 (K1503) to the field, not the look: 51 of the 83 px in
