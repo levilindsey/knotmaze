@@ -739,10 +739,10 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `agent-adb9685c1b245d815` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 22:50, 2 h cap ~00:50)
-  - branch: `worktree-agent-adb9685c1b245d815`, worktree `.claude/worktrees/agent-adb9685c1b245d815`; last commit: `2eba02fa`
+  - owner: nobody since 2026-11-19 00:20 (merged)
+  - branch: mainline; last commit: `dfcbd69e`
   - evidence: .claude/probes/K1482/s16, .claude/probes/K1482/out/s16 (stage 15: s15, out/s15)
-  - next: stage 16: the joint flag's leftovers (fill 5 px, four 1 px seams, six smaller sites, build time); stage 15 landed at 0cee0dc1 (36 to 31, bar PASS); on its report view the sheets, merge, recount, check the deploy
+  - next: stage 16 landed (31 to 29 on link A; three of four 1 px seams and j36, t16e closed; fill 0 px; bar PASS). Left, each a separate cause: j4/t2s (1646,231) and j71 = a light pixel between the joint's own outlines, no cut involved; j158/t73e (1638-1640,574-576) = the bake's flag ends along the arc before the cut's window. By owner now: K1490 19, joint-side 8, K1470 1, PIN 1 (out/s16/classes_tip.txt). Next: stage 17 on those two causes plus the remaining 8 joint-side sites, brief from docs/design/K1482_s16_leftovers.md handoff; show Levi the short fade on joint sides at a large fade if he asks
   - brief: `docs/design/K1482_s16_leftovers.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
