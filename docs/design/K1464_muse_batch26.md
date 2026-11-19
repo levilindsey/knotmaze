@@ -760,3 +760,25 @@ the distinguishing mark of j64 is that the sector fill is *absent* there (base c
 wedge on the corner's own surface), so gate the seam on the corner's sector terms not already
 covering the point, or on r = 0 exactly plus the grown j64 case only; then re-run the bar. Probes
 and scratch live in `.claude/probes/K1517/`.
+
+## Run Q (26Q): the scan prunes its builds; then j64's seam, gated to j64-class corners (K1520, K1517, K1504)
+
+Added 2026-11-18. Two parts, each its own commit; do part 1 first and land it whatever part 2 does.
+
+**Part 1 (K1520, probes only).** At 21:13 on 2026-11-18 the disk filled (0.3 GB free) and ended Run P's
+checks: `$env:TEMP\k1436s3-prev` held a ~1 GB build plus a `src-<sha>` worktree for every commit the bar had
+ever compared (10 GB), and finished runs' profiles and preview roots were never removed. Fix in
+`k1436_bar.ps1` (and `scripts/preview.ps1` only if the layout needs it): at start, delete every build,
+`src-<sha>` worktree (with `git worktree prune`) and `k1436s3-profile-<sha>` that is not this run's `-Ref` or
+`-Base` and is not in use by a live process; refuse to start, with a clear message, when C: has under 6 GB
+free. Done: shown on a dummy root with three stale builds (two removed, the in-use one kept), the refusal
+shown, and a normal bar run still passes its own self-check.
+
+**Part 2 (K1517, K1504).** Resume your branch `muse-26p-wip` (d0f31f43; Handoff 26P's "Next step"): narrow
+the seam gate so it fires only where the corner's own sector fill does not already cover the point (or r = 0
+exactly plus the grown j64 case), so no generic r <= 2aa corner moves. Done: Run P's Done 2-8, unchanged,
+with Done 5's bar printing no new find and none grown; produce Done 3's 4x tiles this time (today | master gf
+| tip gf at j64 on the three scenes, fill and border) and look at each. A Claude agent's change to
+`gf_look.ts` and `gf_app.ts` (K1482 stage 15, the baked joint flag) is landing on master: rebase onto it
+first, stay out of those two files, and take your bar's base from master after that rebase. Two tries at the
+gate at most; if neither meets Done 4 and 5, do not land it: record what moved and stop.

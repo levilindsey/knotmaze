@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1520.
+Next free ID: K1521.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -739,10 +739,10 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `agent-a3458badfbb729ef7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 20:35, 2.5 h cap ~23:05)
-  - branch: `worktree-agent-a3458badfbb729ef7`, worktree `.claude/worktrees/agent-a3458badfbb729ef7`; last commit: `bcdab45c`
+  - owner: nobody since 2026-11-18 22:47 (merged)
+  - branch: mainline; last commit: `0cee0dc1`
   - evidence: .claude/probes/K1482/s15, .claude/probes/K1482/out/s15 (stage 14: s14, out/s14; stage 13: s13, out/s13)
-  - next: stage 15: c1 keyed by a baked per-crossing flag (stage 14's 17 per-pixel variants all failed on flips); on its report view the sheets, merge, recount, check the deploy
+  - next: stage 15 landed the baked joint flag (36 to 31 on link A: j55 j87 j82 j143 t79s fixed; bar PASS new 0 under load). Open: six sites smaller but faulted (j4 j36 j71 j158 t16e t73e), four 1 px seams (t25s/j60 2 px at 1596:1542, j36 2097:1035, j143/t67s 1968:388, j4/t2s 1646:231), the fill look moves 5 px (cause unconfirmed, lkFringe reading the flag is a guess), muse_hash build time unmeasured; at fade 1.2 flagged joint sides fade over 0.36 (show Levi if he asks). Next: stage 16 on the seams and the six, brief from docs/design/K1482_s15_slot_flag.md handoff
   - brief: `docs/design/K1482_s15_slot_flag.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
@@ -1137,6 +1137,9 @@ Every other item below waits on the trigger it names.
   runs into the over's as a hard T with a ragged edge where the parent cut it short
   (.claude/probes/K1501/out/26M/tile_g41_user_tw64_x70_border.png, _x130_border.png, parent | fix; Muse viewed
   fill only). Same class as K1482's joint-side sites: judge after stage 13's rule
+- **K1520** · the K1436 bar never prunes: one ~1 GB build + src worktree per compared commit under
+  TEMP\k1436s3-prev (10 GB) filled the disk 2026-11-18 21:13 and ended Muse Run P's checks; prune at start,
+  refuse under 6 GB free (Muse Run Q part 1, docs/design/K1464_muse_batch26.md)
 
 ## Residuals (known, not fixed)
 
