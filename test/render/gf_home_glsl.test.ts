@@ -55,9 +55,9 @@ describe("K1439 flag off: master's programs and tables", () => {
     // K1456: the app pass issues its full program first (the old constructor's plan order is gone);
     // the source SET is master's, pinned over the distinct sources, sorted (master's distinct
     // sources are the same four strings).
-    expect(sha(...[...new Set(app.srcs)].sort())).toBe("d32650dfe3657585663eb05353d8c416cbe4e94e121cc8f2ab71c9f9e63d09f0");
+    expect(sha(...[...new Set(app.srcs)].sort())).toBe("93029e6763c3f7c8ac4ee9e2ed07e82b858c5f8ef1f15a35e857fe9da368c83a"); // K1517: seamIn + seam depth (was d32650df)
     expect(probe.srcs.length).toBe(4);
-    expect(sha(...probe.srcs)).toBe("f6999871f5f6e70a8f310a9af5fc86a1e50a6be7c7c7fc4e5e7ad97bd59c2d0c");
+    expect(sha(...probe.srcs)).toBe("77b72a4e3bd9738bfa58d83b173a498175b34f4ae2280fb2114a43a2a1e22bc2"); // K1517: seamIn + seam depth (was f6999871)
     // { home: false } is the default
     expect(sha(...sources(false, false).srcs)).toBe(sha(...app.srcs));
     expect(app.pass.home).toBe(false);

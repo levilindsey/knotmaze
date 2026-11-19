@@ -44,7 +44,7 @@ describe("gf_split", () => {
       "float l2 = dx * dx + dy * dy; float u = l2 > 0.0 ? clamp(((x - ax) * dx + (y - ay) * dy) / l2, 0.0, 1.0) : 0.0;",
       "float fx = ax + dx * u; float fy = ay + dy * u; float ex = x - fx; float ey = y - fy; float d2 = ex * ex + ey * ey;",
       "float rx = x - K0.x; float ry = y - K0.y; float rho = sqrt(rx * rx + ry * ry);",
-      "bool sec = inSector(k, p); bool inR = rho <= K0.w && sec && K0.z > 0.0;", // K1407 23A: a null corner fills nothing
+      "bool sec = inSector(k, p); bool inR = (rho <= secReach(k, K0) && sec && K0.z > 0.0) || seamIn(k, p, rho); // K1517", // K1407 23A: a null corner fills nothing, K1517's seam aside
     ]) expect(count(src, line)).toBeGreaterThanOrEqual(2);
     // SPLITK: ps and the keys' loop, in pass 2 too (PC(j) is pc[j] outside the s10 cs tier, which split refuses)
     for (const line of [

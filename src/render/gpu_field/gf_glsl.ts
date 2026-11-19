@@ -260,8 +260,8 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
 /** K1407 c3: layers()'s vertex-cap line, last before the per-surface write (fj and km move it). */
 const VTX_LINE = "    if (v < 1.0 && D > -aa) { vec3 VX = vtx(S, p); float vxv = VX.x * ss(-aa, aa, D); if (vxv > v) { v = vxv; PR(wk = 6; wa = int(VX.y); wb = int(VX.z);) } } // K1407 c3: the vertex cap\n";
 function faceJoin(src: string, scalar: boolean): string {
-  const START = "  for (int e = 0; e < ns; e++) {\n    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n";
-  const END = "    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n";
+  const START = "  for (int e = 0; e < ns; e++) {\n    int S = sid[e]; float D = -BIG; float seamD = -BIG; /* K1517: the seam depth, coverage only */ float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n";
+  const END = "    SVW(e, v) SAW(e, ss(-aa, aa, max(D, seamD))) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n";
   const swap = (s: string, from: string, to: string, n: number) => {
     const c = s.split(from).length - 1;
     if (c !== n) throw new Error(`gfFs fj: expected ${n} of ${JSON.stringify(from.slice(0, 48))}, found ${c}`);
@@ -273,15 +273,15 @@ function faceJoin(src: string, scalar: boolean): string {
   const V = scalar ? " float v = sv[e];" : "";
   b = swap(b, "      if (PSURF(j) != S || !(pd[j] < h + aa)) continue;\n      float X = pd[j]; if (h - X > D) D = h - X;\n",
     `      if (!(pd[j] < h + aa)) continue;\n      int S = PSURF(j); int e = slotOf(S); if (e < 0) continue;${V}\n      float X = pd[j]; if (h - X > sa[e]) sa[e] = h - X;\n`, 1);
-  b = swap(b, "if (int(K1.z) != S || !kSec[i] || !(K0.z > 0.0)) continue;\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > D) D = Dk;\n",
-    `if (!kSec[i]) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue;${V}\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > sa[e]) sa[e] = Dk;\n`, 1);
+  b = swap(b, "if (int(K1.z) != S) continue;\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kIn[i] == 2 && Dk > D) D = Dk; // K1517: a seam fill's depth (its arc below still needs r > 0)\n      if (!kSec[i] || !(K0.z > 0.0)) continue;\n",
+    `int S = int(K1.z); int e = slotOf(S); if (e < 0) continue;${V}\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > sd[e]) sd[e] = Ds; } else if (kIn[i] == 2 && Dk > sa[e]) sa[e] = Dk; // K1517\n      if (!kSec[i] || !(K0.z > 0.0)) continue;\n`, 1);
   b = swap(b, "if (int(K1.z) != S || K1.x > 0.5) continue;\n", `if (K1.x > 0.5) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue; float D = sa[e];${V}\n`, 1);
   b = swap(b, "if (val > v) { v = val;", scalar ? "if (val > v) { v = val; sv[e] = val;" : "if (val > sv[e]) { sv[e] = val;", 3);
   // K1407 c3: the vertex cap reads its surface's final v and D, so it runs per slot after every face
   b = swap(b, VTX_LINE, "", 1);
-  src = src.slice(0, i0) + "  for (int e = 0; e < ns; e++) { sv[e] = 0.0; sa[e] = -BIG; } // K1362 s12 fj: v and D per surface slot\n" + b
+  src = src.slice(0, i0) + "  for (int e = 0; e < ns; e++) { sv[e] = 0.0; sa[e] = -BIG; sd[e] = -BIG; } // K1362 s12 fj: v and D per surface slot\n" + b
     + "  for (int e = 0; e < ns; e++) if (sv[e] < 1.0 && sa[e] > -aa) { vec3 VX = vtx(sid[e], p); float vxv = VX.x * ss(-aa, aa, sa[e]); if (vxv > sv[e]) sv[e] = vxv; } // K1407 c3 fj\n"
-    + "  for (int e = 0; e < ns; e++) sa[e] = ss(-aa, aa, sa[e]);\n" + src.slice(i1 + END.length);
+    + "  for (int e = 0; e < ns; e++) sa[e] = ss(-aa, aa, max(sa[e], sd[e]));\n" + src.slice(i1 + END.length);
   return swap(src, "void layers(vec2 p) {\n", "int slotOf(int id) { for (int i = 0; i < ns; i++) if (sid[i] == id) return i; return -1; }\nvoid layers(vec2 p) {\n", 1);
 }
 
@@ -379,7 +379,7 @@ const ZB_MARGIN = "(0.25 * uAA)";
 const ZB_LOOPS: [RegExp, (m: string) => string][] = [
   [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(m == j \|\| PSURF\(m\) != S\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, q\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
     () => `for (int m = 0; m < np; m++) { if (m == j || PSURF(m) != S) continue; if (!(pd[m] - (abs(h - X) + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
-  [/for \(int i = 0; i < nk && bur < 1\.0; i\+\+\) \{\s*(int k = kk\[i\]; vec4 K0 = F\(uOK \+ 6 \* k\); vec4 K1 = F\(uOK \+ 6 \* k \+ 1\); if \(int\(K1\.z\) != S\) continue;)\s*float rq = length\(q - K0\.xy\);\s*if \(rq > K0\.z && rq < K0\.w && inSector\(k, q\) && outsideArms\(k, PC\(j\), q\)\) bur = 1\.0;\s*\}/,
+  [/for \(int i = 0; i < nk && bur < 1\.0; i\+\+\) \{\s*(int k = kk\[i\]; vec4 K0 = F\(uOK \+ 6 \* k\); vec4 K1 = F\(uOK \+ 6 \* k \+ 1\); if \(int\(K1\.z\) != S\) continue;)\s*float rq = length\(q - K0\.xy\);\s*if \(rq > K0\.z && rq < secReach\(k, K0\) && inSector\(k, q\) && outsideArms\(k, PC\(j\), q\)\) bur = 1\.0;\s*\}/,
     (m) => `for (int i = 0; i < nk; i++) { ${/\{\s*(int k[^\n]*continue;)/.exec(m)![1]} float rp = length(p - K0.xy); float zr = abs(h - X) + ${ZB_MARGIN}; if (rp + zr > K0.z && rp - zr < K0.w) { zbR = true; break; } } // K1362 s15 zb`],
   // K1407 c1: the corner faces' loops skip the corner's own arms; P0 still routes on every piece of the surface (a
   // superset, so exact), and the other corners' fills (fillBur) are computed in P0 as in full
@@ -464,11 +464,11 @@ function lazyFaces(src: string): string {
     if (parts.length !== 2) throw new Error(`gfFs lz: expected one "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
     src = parts.join(b);
   };
-  rep("  for (int e = 0; e < ns; e++) {\n    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n",
+  rep("  for (int e = 0; e < ns; e++) {\n    int S = sid[e]; float D = -BIG; float seamD = -BIG; /* K1517: the seam depth, coverage only */ float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n",
     "  bool lzX = false; // K1362 s13 lz: the faces in sorted order, up to the first opaque place (plus the next on a near tie)\n" +
-    "  for (int lzI = 0; lzI < ns; lzI++) {\n    int e = SORD(lzI);\n    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n");
-  rep("    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n",
-    "    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n" +
+    "  for (int lzI = 0; lzI < ns; lzI++) {\n    int e = SORD(lzI);\n    int S = sid[e]; float D = -BIG; float seamD = -BIG; /* K1517: the seam depth, coverage only */ float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n");
+  rep("    SVW(e, v) SAW(e, ss(-aa, aa, max(D, seamD))) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n",
+    "    SVW(e, v) SAW(e, ss(-aa, aa, max(D, seamD))) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n" +
     "    if (lzX) break;\n" +
     "    if (D > 2.0 * aa) { if (!(lzI + 1 < ns) || skey[SORD(lzI)] - skey[SORD(lzI + 1)] >= 2.0 * uZt) break; lzX = true; }\n  }\n");
   return src;
@@ -547,7 +547,7 @@ function thruScalars(src: string): string {
  * buries the face skips every pieceD.
  */
 const KO_PIECES = "      for (int m = 0; m < np && bur < 1.0; m++) {\n        if (m == j || PSURF(m) != S) continue;\n        float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));\n        if (wb2 > bur) bur = wb2;\n      }\n";
-const KO_CORNERS = "      for (int i = 0; i < nk && bur < 1.0; i++) {\n        int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;\n        float rq = length(q - K0.xy);\n        if (rq > K0.z && rq < K0.w && inSector(k, q) && outsideArms(k, PC(j), q)) bur = 1.0;\n      }\n";
+const KO_CORNERS = "      for (int i = 0; i < nk && bur < 1.0; i++) {\n        int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;\n        float rq = length(q - K0.xy);\n        if (rq > K0.z && rq < secReach(k, K0) && inSector(k, q) && outsideArms(k, PC(j), q)) bur = 1.0;\n      }\n";
 function burialOrder(src: string): string {
   const parts = src.split(KO_PIECES + KO_CORNERS);
   if (parts.length !== 2) throw new Error(`gfFs ko: expected one piece-face burial, found ${parts.length - 1}`);
@@ -592,7 +592,7 @@ function cornerSurfaces(src: string): string {
   rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); vec4 K3 = F(uOK + 6 * k + 3);", "vec4 K0 = F(uOK + 6 * k); vec4 K3 = F(uOK + 6 * k + 3);", 1);
   rep("int e = entry(int(K1.z));", "int e = entry(kS);", 1);
   rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;", "if (kS != S) continue; vec4 K0 = F(uOK + 6 * k);");
-  rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i] || !(K0.z > 0.0)) continue;", "if (kS != S || !kSec[i]) continue; vec4 K0 = F(uOK + 6 * k); if (!(K0.z > 0.0)) continue;", 1); // K1407 23A: the r > 0 arc gate rides along
+  rep("if (!kSec[i] || !(K0.z > 0.0)) continue;", "if (!kSec[i]) continue; if (!(K0.z > 0.0)) continue;", 1); // K1517: the gate stands alone after the seam depth line (K1407 23A's r > 0 arc gate)
   rep("vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;", "if (kS != S) continue; vec4 K1 = F(uOK + 6 * k + 1); if (K1.x > 0.5) continue;");
   if (src.includes("int(K1.z) != S")) throw new Error("gfFs kg: a corner surface test still fetches K1");
   return src;
@@ -629,7 +629,7 @@ function tangentSkip(src: string, guardOnly: boolean): string {
  * probe never takes a tier.
  */
 function cornerMerge(src: string): string {
-  const svw = "    SVW(e, v) SAW(e, ss(-aa, aa, D))";
+  const svw = "    SVW(e, v) SAW(e, ss(-aa, aa, max(D, seamD)))";
   const end = src.indexOf(svw);
   const start = src.lastIndexOf("    for (int i = 0; i < nk; i++) {\n#ifdef KLEAN\n", end);
   if (end < 0 || src.indexOf(svw, end + 1) >= 0 || start < 0) throw new Error("gfFs: km found no ring-face loop");
@@ -641,7 +641,7 @@ function cornerMerge(src: string): string {
     for (int i = 0; i < nk; i++) {
       int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
       float rho = krho[i]; float Dk = rho - K0.z; bool ring = kSec[i];
-      if (ring && kIn[i] == 2 && Dk > D) D = Dk;
+      if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kIn[i] == 2 && Dk > D) D = Dk; // K1517
       ring = ring && rho > 1e-12 && K0.z > 0.0;
 #ifdef TANGENT
       bool tng = !(K1.x > 0.5); vec4 K4 = vec4(0.0); vec4 K5 = vec4(0.0);
@@ -694,7 +694,7 @@ function cornerInside(src: string): string {
   rep("kIn[nk] = !inR ? 0 : rho > K0.z - aa ? 2 : 1;", "kIn[nk] = !inR ? 0 : rho > K0.z ? 3 : rho > K0.z - aa ? 2 : 1;", 1);
   rep("kIn[i] = !inR ? 0 : rho > K0.z - aa ? 2 : 1;", "kIn[i] = !inR ? 0 : rho > K0.z ? 3 : rho > K0.z - aa ? 2 : 1;");
   rep("if (kIn[i] != 2) continue;", "if (kIn[i] < 2) continue;", 1);
-  rep("if (kIn[i] == 2 && Dk > D) D = Dk;", "if (kIn[i] >= 2 && Dk > D) D = Dk;");
+  rep("if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kIn[i] == 2 && Dk > D) D = Dk; // K1517: a seam fill's depth (its arc below still needs r > 0)", "if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kIn[i] >= 2 && Dk > D) D = Dk; // K1517");
   if (src.includes("vec4 K0 = F(uOK + 6 * k); vec4 K3 = F(uOK + 6 * k + 3); vec4 K4")) rep("vec4 K0 = F(uOK + 6 * k); vec4 K3 = F(uOK + 6 * k + 3); vec4 K4", "vec4 K4", 1);
   else rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); vec4 K3 = F(uOK + 6 * k + 3); vec4 K4", "vec4 K1 = F(uOK + 6 * k + 1); vec4 K4", 1);
   rep("if (KRI > K0.z && (key > labK || (key == labK && e < labE))) { labK = key; labE = e; labC =",
@@ -722,12 +722,14 @@ function cornerInside(src: string): string {
 const ONE_FACE_OLD = `    for (int i = 0; i < nk; i++) {
 #ifdef KLEAN
       int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
-      float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ) if (!ksJ || !(K0.z > 0.0)) continue; float Dk = rho - K0.z;
-      if (kiJ == 2 && Dk > D) D = Dk;
+      float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ) float Dk = rho - K0.z;
+      if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kiJ == 2 && Dk > D) D = Dk; // K1517
+      if (!ksJ || !(K0.z > 0.0)) continue;
 #else
-      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i] || !(K0.z > 0.0)) continue;
+      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
       float rho = krho[i]; float Dk = rho - K0.z;
-      if (kIn[i] == 2 && Dk > D) D = Dk;
+      if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kIn[i] == 2 && Dk > D) D = Dk; // K1517: a seam fill's depth (its arc below still needs r > 0)
+      if (!kSec[i] || !(K0.z > 0.0)) continue;
 #endif
       if (!(rho > 1e-12)) continue;
       vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;
@@ -771,15 +773,15 @@ const ONE_FACE_NEW = `    for (int fi = 0; fi < 3 * nk; fi++) { // K1456 26J: on
       float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ)
       float Dk = rho - K0.z;
       if (isArc) {
+        if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kiJ == 2 && Dk > D) D = Dk; // K1517
         if (!ksJ || !(K0.z > 0.0)) continue;
-        if (kiJ == 2 && Dk > D) D = Dk;
         if (!(rho > 1e-12)) continue;
       }
 #else
       float rho = krho[i]; float Dk = rho - K0.z;
       if (isArc) {
+        if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kIn[i] == 2 && Dk > D) D = Dk; // K1517
         if (!kSec[i] || !(K0.z > 0.0)) continue;
-        if (kIn[i] == 2 && Dk > D) D = Dk;
         if (!(rho > 1e-12)) continue;
       }
 #endif
@@ -978,6 +980,7 @@ FQ float sv[MAXS]; FQ float sa[MAXS]; IQ int sord[MAXS]; int ns;
 #define SORD(i) sord[i]
 #define SO1(x) x
 #endif
+float sd[MAXS]; // K1517: the seam fill's per-surface depth (coverage only; fj writes it, the rest use the seamD local)
 #ifdef SVSID
 #define SVW(e, x) sid[e] = floatBitsToInt(x);
 #define SVR(e) intBitsToFloat(sid[e])
@@ -1142,6 +1145,10 @@ vec2 footQ(int j, float x, float y) {
 }
 #endif
 
+bool outsideArms(int k, int own, vec2 p);
+bool seamIn(int k, vec2 p, float rho);
+bool seamNear(int k, vec2 q);
+float secReach(int k, vec4 K0);
 bool inSector(int k, vec2 p) {
   vec4 K0 = F(uOK + 6 * k); vec4 K2 = F(uOK + 6 * k + 2);
   float rx = p.x - K0.x; float ry = p.y - K0.y;
@@ -1154,7 +1161,7 @@ bool inSector(int k, vec2 p) {
 // K1362 s10: corner k's rho, sector and ring class at p, the scan's own lines (in place of krho, kSec, kIn)
 void kSK(int k, vec2 p, float rho, out bool sec, out int kin) {
   vec4 K0 = F(uOK + 6 * k);
-  sec = inSector(k, p); bool inR = rho <= K0.w && sec && K0.z > 0.0;
+  sec = inSector(k, p); bool inR = (rho <= secReach(k, K0) && sec && K0.z > 0.0) || seamIn(k, p, rho); // K1517
   kin = !inR ? 0 : rho > K0.z - uAA ? 2 : 1;
 }
 void kState(int k, vec2 p, out float rho, out bool sec, out int kin) {
@@ -1191,9 +1198,39 @@ bool outsideArms(int k, int own, vec2 p) {
   // own chain left out either way; a chain twice in K3 is tested once where the two passes tested it twice), so
   // the same pieces reach pieceD and the result is the same.
   for (int m = 0; m < np; m++) { int c = PC(m); if ((c == cA || c == cB) && c != own && pieceD(m, p) < lim2) return false; }
+  // (seamIn follows this function)
   return true;
 }
 
+// K1517 (26P): a near-null corner (r <= 2aa; a through pair's is never kept, and a through radius is
+// at least 0.16h) fills its seam: in its baked reach (tables' seamReach in kRmax) and outside both
+// arms' tubes, where the tubes leave the wedge between them uncovered. eval.ts's inR, line for line.
+// K1517: a corner's sector (form B) reach: kRmax, except a near-null corner, whose kRV carries it (its kRmax carries the seam reach).
+float secReach(int k, vec4 K0) { return K0.w; } // K1517: the sector keeps form B's reach (kRmax) at every corner
+
+float sCapD; // K1517: seamIn's cap (its depth arc), read by the Ds sites
+bool seamIn(int k, vec2 p, float rho) {
+  vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1);
+  if (K0.z > 2.0 * uAA || K1.x > 0.5) return false;
+  { vec4 K2 = F(uOK + 6 * k + 2); float cs = clamp(K2.x * K2.z + K2.y * K2.w, -1.0, 1.0); float cap = K0.z + (uH + 0.5 * uW + 2.0 * uAA) / max(0.1, sqrt(max(0.0, 0.5 * (1.0 - cs)))); if (rho > cap) return false; sCapD = cap; }
+  vec4 K3 = F(uOK + 6 * k + 3); int cA = int(K3.x); int cB = int(K3.y);
+  float dA = BIG; float dB = BIG;
+  for (int m = 0; m < np; m++) { if (PC(m) == cA) dA = min(dA, pd[m]); if (PC(m) == cB) dB = min(dB, pd[m]); }
+  float lim = uH - 2.0 * uAA;
+  return dA >= lim && dB >= lim && (dA - uH) + (dB - uH) <= uW && outsideArms(k, -1, p); // K1517: a hole narrower than a stroke (K1504)
+}
+
+// K1517: q in near-null corner k's seam strip (both arms' folded pieces near, as in seamFill): a
+// seam fill buries a face at q only there, not across the corner's whole reach. eval.ts's seamNear.
+bool seamNear(int k, vec2 q) {
+  vec4 K0 = F(uOK + 6 * k);
+  if (K0.z > 2.0 * uAA) return false;
+  vec4 K3 = F(uOK + 6 * k + 3); int cA = int(K3.x); int cB = int(K3.y);
+  float dA = BIG; float dB = BIG;
+  for (int m = 0; m < np; m++) { if (PC(m) == cA) dA = min(dA, pieceD(m, q)); if (PC(m) == cB) dB = min(dB, pieceD(m, q)); }
+  float lim = uH - 2.0 * uAA;
+  return dA >= lim * lim && dB >= lim * lim && (sqrt(dA) - uH) + (sqrt(dB) - uH) <= uW; // K1517: a hole narrower than a stroke (K1504)
+}
 #ifdef SCAP
 bool sOvf; // K1362 s9: a tier with fewer surface slots than pieces + corners: a pixel that needs one more goes to full
 #endif
@@ -1225,7 +1262,7 @@ float fillBur(int k, vec2 q, vec2 p, int S) {
   for (int i2 = 0; i2 < nk; i2++) {
     int k2 = kk[i2]; if (k2 == k) continue; vec4 L0 = F(uOK + 6 * k2); vec4 L1 = F(uOK + 6 * k2 + 1); if (int(L1.z) != S) continue;
     float rq = length(iq - L0.xy); float rqq = length(q - L0.xy);
-    if (!((rq > L0.z || rqq > L0.z) && rq < L0.w && inSector(k2, iq) && outsideArms(k2, -1, iq))) continue;
+    if (!((rq > L0.z || rqq > L0.z) && rq < (L0.z <= 2.0 * uAA ? L1.y : L0.w) && inSector(k2, iq) && outsideArms(k2, -1, iq))) continue;
     float b = rq > L0.z ? 1.0 : 0.0;
     vec2 dv = L0.xy - Q0.xy; float d2 = dot(dv, dv); float d = sqrt(d2);
     if (d > 1e-9) {
@@ -1305,7 +1342,7 @@ vec3 vtx(int S, vec2 p) {
         if (vb >= 1.0) break;
         int k3 = kk[i3]; vec4 G0 = F(uOK + 6 * k3); vec4 G1 = F(uOK + 6 * k3 + 1); if (int(G1.z) != S) continue;
         float rV = length(V - G0.xy);
-        if (rV > G0.z && rV < G0.w && inSector(k3, V) && outsideArms(k3, -1, V)) vb = 1.0;
+        if (rV > G0.z && rV < (G0.z <= 2.0 * uAA ? G1.y : G0.w) && inSector(k3, V) && outsideArms(k3, -1, V)) vb = 1.0;
       }
       float val = (1.0 - vb) * fV;
       if (val > best) { best = val; bA = float(PC(j)); bB = float(PC(m)); }
@@ -1372,7 +1409,7 @@ void layers(vec2 p) {
   if (ns > 2) gp1 = skey[SORD(1)] - skey[SORD(2)];
 #endif
   for (int e = 0; e < ns; e++) {
-    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)
+    int S = sid[e]; float D = -BIG; float seamD = -BIG; /* K1517: the seam depth, coverage only */ float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)
     for (int j = 0; j < np; j++) {
       if (PSURF(j) != S || !(pd[j] < h + aa)) continue;
       float X = pd[j]; if (h - X > D) D = h - X;
@@ -1392,7 +1429,7 @@ void layers(vec2 p) {
       for (int i = 0; i < nk && bur < 1.0; i++) {
         int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
         float rq = length(q - K0.xy);
-        if (rq > K0.z && rq < K0.w && inSector(k, q) && outsideArms(k, PC(j), q)) bur = 1.0;
+        if (rq > K0.z && rq < secReach(k, K0) && inSector(k, q) && outsideArms(k, PC(j), q)) bur = 1.0;
       }
       if (bur < 1.0) { float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(foldD(j, S, p, q))); if (wb2 > bur) bur = wb2; } // K1482 s7: a hairpin's own fold
       float val = (1.0 - bur) * band2(h - X);
@@ -1401,12 +1438,14 @@ void layers(vec2 p) {
     for (int i = 0; i < nk; i++) {
 #ifdef KLEAN
       int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
-      float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ) if (!ksJ || !(K0.z > 0.0)) continue; float Dk = rho - K0.z;
-      if (kiJ == 2 && Dk > D) D = Dk;
+      float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ) float Dk = rho - K0.z;
+      if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kiJ == 2 && Dk > D) D = Dk; // K1517
+      if (!ksJ || !(K0.z > 0.0)) continue;
 #else
-      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i] || !(K0.z > 0.0)) continue;
+      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
       float rho = krho[i]; float Dk = rho - K0.z;
-      if (kIn[i] == 2 && Dk > D) D = Dk;
+      if (seamIn(k, p, rho)) { float Ds = max(Dk, sCapD - rho); if (Ds > seamD) seamD = Ds; } else if (kIn[i] == 2 && Dk > D) D = Dk; // K1517: a seam fill's depth (its arc below still needs r > 0)
+      if (!kSec[i] || !(K0.z > 0.0)) continue;
 #endif
       if (!(rho > 1e-12)) continue;
       vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;
@@ -1442,7 +1481,7 @@ void layers(vec2 p) {
     }
 #endif
     if (v < 1.0 && D > -aa) { vec3 VX = vtx(S, p); float vxv = VX.x * ss(-aa, aa, D); if (vxv > v) { v = vxv; PR(wk = 6; wa = int(VX.y); wb = int(VX.z);) } } // K1407 c3: the vertex cap
-    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)
+    SVW(e, v) SAW(e, ss(-aa, aa, max(D, seamD))) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)
   }
 #ifndef LABRUN
   int top = -1;
@@ -1575,7 +1614,7 @@ void main() {
     for (int i = 0; i < nk; i++) {
       int k = kk[i]; vec4 K0 = F(uOK + 6 * k);
       float rx = x - K0.x; float ry = y - K0.y; float rho = sqrt(rx * rx + ry * ry);
-      bool sec = inSector(k, p); bool inR = rho <= K0.w && sec && K0.z > 0.0;
+      bool sec = inSector(k, p); bool inR = (rho <= secReach(k, K0) && sec && K0.z > 0.0) || seamIn(k, p, rho); // K1517
       kSec[i] = sec; krho[i] = rho; kIn[i] = !inR ? 0 : rho > K0.z - aa ? 2 : 1;
     }
 #else
@@ -1724,7 +1763,7 @@ void main() {
       }
       float rx = x - K0.x; float ry = y - K0.y; float rho = sqrt(rx * rx + ry * ry);
       if (!(rho > K0.z - aa - W) || rho > K0.w + W + 2.0 * aa) continue;
-      bool sec = inSector(k, p); bool inR = rho <= K0.w && sec && K0.z > 0.0;
+      bool sec = inSector(k, p); bool inR = (rho <= secReach(k, K0) && sec && K0.z > 0.0) || seamIn(k, p, rho); // K1517
 #ifdef TIER
       if (nk == MAXK) { ovf = true; break; } // the full program keeps this corner: it draws the pixel
 #endif

@@ -371,9 +371,9 @@ describe("gf tier forms, s12 face loop", () => {
       // "s": v loaded from the slot as each face starts, written back wherever it rises, so v == sv[e] throughout
       else { expect(count(body, " float v = sv[e];")).toBe(3); expect(count(body, "if (val > v) { v = val; sv[e] = val;")).toBe(3); expect(count(body, "if (val > v) {")).toBe(3); }
       // D finished (pieces and corners) before the tangent points read it, smoothed once at the end
-      const iT = body.indexOf("if (K1.x > 0.5) continue; int S = int(K1.z);"); const iK = body.indexOf("if (!kSec[i]) continue; int S = int(K1.z);");
+      const iT = body.indexOf("if (K1.x > 0.5) continue; int S = int(K1.z);"); const iK = body.indexOf("if (Ds > sd[e]) sd[e] = Ds;"); // K1517: the corner section's seam depth line
       expect(body.indexOf("if (h - X > sa[e]) sa[e] = h - X;")).toBeLessThan(iK); expect(iK).toBeLessThan(iT);
-      expect(body.indexOf("  for (int e = 0; e < ns; e++) sa[e] = ss(-aa, aa, sa[e]);\n")).toBeGreaterThan(iT);
+      expect(body.indexOf("  for (int e = 0; e < ns; e++) sa[e] = ss(-aa, aa, max(sa[e], sd[e]));\n")).toBeGreaterThan(iT); // K1517: smoothed with the seam depth
     }
   });
 
@@ -698,8 +698,8 @@ describe("gf tier forms, s15 depth classes", () => {
       const zb = gfFs(false, true, { ...tier, ramps: false, zc: true, zb: true });
       const loops = count(zb, "{ zbR = true; break; }");
       expect(loops).toBe(4); // piece faces: pieces and keys; corner faces; tangents (free: nk is const 0, the loops stay)
-      expect(count(zb, "pieceD(m, q)") + count(zb, "pieceD(m, T)")).toBe(0);
-      expect(count(zc, "pieceD(m, q)") + count(zc, "pieceD(m, T)")).toBe(3);
+      expect(count(zb, "pieceD(m, q)") + count(zb, "pieceD(m, T)")).toBe(2); // K1517: seamNear's two arm distances (fillBur/vtx call it in P0 as in full; the face burials it fed are routed)
+      expect(count(zc, "pieceD(m, q)") + count(zc, "pieceD(m, T)")).toBe(5); // K1517: + seamNear's two (was 3)
       expect(count(zb, "bur = 1.0;")).toBe(count(zc, "bur = 1.0;") - 1);
       expect(count(zb, "if (sOvf) { gl_FragDepth = 1.0; return; } if (zbR) { gl_FragDepth = 0.0; return; }")).toBe(1);
       expect(count(zb, "  zbR = false;\n")).toBe(1);

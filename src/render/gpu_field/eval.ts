@@ -145,6 +145,26 @@ export class GfEval {
     }
     this.mg = g; this.mramp = ramp;
   }
+  /** K1517 (26P): is (x, y) in near-null corner k's seam? In its baked reach, outside both arms'
+   * tubes, and near both arms' edges (each arm's gathered piece within h + W + 2aa): the seam is
+   * the strip where the two tubes fail to cover the wedge between them, so a point far from either
+   * arm, or deep in one tube (which covers it already), is not the seam. gf_glsl.ts's seamIn. */
+  private seamCap = 0; // K1517: the current seamFill call's cap (its depth arc), read by the Ds site
+  private seamFill(k: number, x: number, y: number, rho: number): boolean {
+    const T = this.T;
+    if (!(T.kR[k] <= 2 * T.aa) || T.kThru[k] !== 0) return false;
+    const cap = T.kR[k] + (T.h + 0.5 * T.W + 2 * T.aa) / Math.max(0.1, Math.sin(T.kTheta[k] / 2)); // K1517: the arms' gate below bounds rho to this anyway; the cap keeps the seam corner-local
+    if (!(rho <= cap)) return false;
+    this.seamCap = cap;
+    let dA = Infinity; let dB = Infinity;
+    for (let m = 0; m < this.np; m++) {
+      if (this.pc[m] === T.kCa[k] && this.pd[m] < dA) dA = this.pd[m];
+      if (this.pc[m] === T.kCb[k] && this.pd[m] < dB) dB = this.pd[m];
+    }
+    const lim = T.h - 2 * T.aa;
+    return dA >= lim && dB >= lim && (dA - T.h) + (dB - T.h) <= T.W && this.outsideArms(k, -1, x, y); // K1517: a hole narrower than a stroke (K1504)
+  }
+
   private mg = -1; private mramp = 1;
 
   /** member()'s depth at the last depth() call: today's window (tables.depthAt). */
@@ -444,7 +464,11 @@ export class GfEval {
       }
       const rx = x - T.kCx[k]; const ry = y - T.kCy[k]; const rho = Math.sqrt(rx * rx + ry * ry);
       if (!(rho > T.kR[k] - aa - W) || rho > T.kRmax[k] + W + 2 * aa) continue;
-      const sec = this.inSector(k, x, y); const inR = rho <= T.kRmax[k] && sec && T.kR[k] > 0; // K1407 23A: a null corner fills nothing (form B)
+      const sec = this.inSector(k, x, y); // K1407 23A: a null corner fills nothing (form B)
+      // K1517 (26P): a near-null corner (r <= 2aa, never a through pair: those are not kept, and a
+      // through radius is at least 0.16h) fills its seam: in its baked reach (tables' seamReach in
+      // kRmax) and outside both arms' tubes, where the tubes leave the wedge between them uncovered.
+      const inR = (rho <= T.kRmax[k] && sec && T.kR[k] > 0) || this.seamFill(k, x, y, rho); // K1517: the sector keeps form B's reach (kRV for near-null)
       this.kSec[nk] = sec ? 1 : 0; // form B's arc term reads the wedge alone, not the fill's far bound rV
       this.kk[nk] = k; this.krho[nk] = rho; this.kIn[nk] = !inR ? 0 : rho > T.kR[k] - aa ? 2 : 1; nk++;
     }
@@ -511,6 +535,7 @@ export class GfEval {
     const band2 = (D: number): number => band(D) * ss(-aa, aa, D);
     for (let e = 0; e < ns; e++) {
       const S = this.sid[e]; let D = -Infinity; let v = 0; let wk = 0; let wa = -1; let wb = 0;
+      let seamD = -Infinity; // K1517: the seam fill's depth: coverage only, never the ink terms' D
       for (let j = 0; j < this.np; j++) {
         if (this.psurf[j] !== S || !(this.pd[j] < h + aa)) continue;
         const X = this.pd[j]; if (h - X > D) D = h - X;
@@ -538,9 +563,12 @@ export class GfEval {
         if (val > v) { v = val; wk = this.pend[j] ? 3 : 1; wa = this.pc[j]; wb = this.ptx[j] * (y - this.pfy[j]) - this.pty[j] * (x - this.pfx[j]) >= 0 ? 1 : -1; }
       }
       for (let i = 0; i < this.nk; i++) {
-        const k = this.kk[i]; if (T.kG[k] !== S || !this.kSec[i] || !(T.kR[k] > 0)) continue; // K1407 23A: no arc at r = 0
+        const k = this.kk[i]; if (T.kG[k] !== S) continue; // K1517: the seam depth below; the arc still needs r > 0
         const rho = this.krho[i]; const Dk = rho - T.kR[k];
-        if (this.kIn[i] === 2 && Dk > D) D = Dk;
+        // K1517: at a seam-strip point the corner's depth feeds coverage only (seamD); elsewhere it feeds D as before
+        if (this.seamFill(k, x, y, rho)) { const Ds = Math.max(Dk, this.seamCap - rho); if (Ds > seamD) seamD = Ds; }
+        else if (this.kIn[i] === 2 && Dk > D) D = Dk;
+        if (!this.kSec[i] || !(T.kR[k] > 0)) continue; // K1407 23A: no arc at r = 0
         if (!(rho > 1e-12)) continue;
         const qx = T.kCx[k] + (T.kR[k] * (x - T.kCx[k])) / rho; const qy = T.kCy[k] + (T.kR[k] * (y - T.kCy[k])) / rho;
         const cA = T.kCa[k]; const cB = T.kCb[k]; // K1407 c1: the corner's own arms never bury its faces
@@ -578,7 +606,7 @@ export class GfEval {
         const vxv = this.vtx(S, x, y) * ss(-aa, aa, D);
         if (vxv > v) { v = vxv; wk = 6; wa = this.vtxA; wb = this.vtxB; }
       }
-      this.sv[e] = v; this.sa[e] = ss(-aa, aa, D); this.swk[e] = wk; this.swa[e] = wa; this.swb[e] = wb;
+      this.sv[e] = v; this.sa[e] = ss(-aa, aa, Math.max(D, seamD)); this.swk[e] = wk; this.swa[e] = wa; this.swb[e] = wb;
     }
     // the label: the top covering surface's max-key covering member
     let top = -1;
