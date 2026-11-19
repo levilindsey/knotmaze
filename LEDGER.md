@@ -734,11 +734,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a6169c726e1b88fb6` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 15:28, 2 h cap ~17:28)
-  - branch: `worktree-agent-a6169c726e1b88fb6`, worktree `.claude/worktrees/agent-a6169c726e1b88fb6`; last commit: `c198e005`
-  - evidence: .claude/probes/K1482/s10/, .claude/probes/K1482/out/s10/ (pixels.txt, candidates.txt, sh_b3.png)
-  - next: stage 11: recount on today's master, land s10's patch_b3 (the joint-group rule) after a site-by-site look at its 52 changed sites, then the mask case at j55, j36, t70s; j49 waits on K1512
-  - brief: `docs/design/K1482_s11_borders.md`
+  - owner: agent `ac1415bc6b7a1eb31` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 16:47, 1.25 h cap ~18:02)
+  - branch: `worktree-agent-ac1415bc6b7a1eb31`, worktree `.claude/worktrees/agent-ac1415bc6b7a1eb31`; last commit: `e8bcc71b`
+  - evidence: .claude/probes/K1482/out/s11/ (classes_base.txt, b3_sites.txt, narrow.txt, mask.txt, mask_wide.png, sep_0.png)
+  - next: stage 12: check whether the bg=none&cs=mono today frame of stages 9-11 is a valid reference (it shows straight ribbon stretches gf does not draw), rebuild the overlay for the 12 sites from a valid one; then the over-thread fan reach bake (K1512) and the mask case (K1514)
+  - brief: `docs/design/K1482_s12_reference.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
