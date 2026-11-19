@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1519.
+Next free ID: K1520.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -2471,6 +2471,10 @@ Every other item below waits on the trigger it names.
   ink 0.00 at (4.86,3.09) where today draws fill, lkGap-off viz removes only 32 px, gap=0/fl=0/cr=10 leave it
   unchanged. Fix belongs in the junction field (tables/eval/gf_glsl fan coverage at j64's fan edge, chain
   56/28 ride), hands off in batch 26. K1503 stays open for it.
+- **K1519** · The K1436 bar is noisy run to run on g41_user_tw64: two loads of identical src in one physics
+  hash gave 14 finds under STRICT=1 (frames differ by 1-2 levels; .claude/probes/K1482/out/s13/bar.txt,
+  bar_sheet.png). It needs a margin or a median of loads before it can judge outline changes; g41_ring_tw42
+  also froze on two different states. And bar_ref.ps1 cannot stand in when -Base also waits on the perf lock
 
 ## Approved, to schedule (2026-10-11)
 
