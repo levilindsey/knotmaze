@@ -1,0 +1,6 @@
+[
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "if ((cS < 0 || PC(j) == cS) && !(PC(j) == cU && abs(lkArc(PC(j), qO) - aU) < sx)) g = max(g, cj);"
+  ]
+]

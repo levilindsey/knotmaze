@@ -1,0 +1,16 @@
+[
+  [
+    [
+      "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;",
+      "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1; bool um10 = false; for (int j = 0; j < np; j++) { if (abs(pkey[j] - key) < 1e-5 && (PSURF(j) >= 0 || PSURF(j) < -MAXP)) um10 = true; }"
+    ]
+  ],
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "if ((cS < 0 || PC(j) == cS) && !um10) g = max(g, cj);"
+  ],
+  [
+    "g = max(g, cN);",
+    "if (!um10) g = max(g, cN);"
+  ]
+]

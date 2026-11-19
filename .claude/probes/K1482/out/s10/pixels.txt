@@ -1,0 +1,63 @@
+K1482 s10 step 1: the pixel read (link A, hash fff8c9e5, master 880ec605, DSF 2 device px)
+Removed run = today-mono (bg=none&cs=mono) outline with no gf ink, where s8's nogap patch has ink (nogap vs master, TINK=1).
+Debug frames: s10/patch_dbg.json (border shot: label, baked slot over chain, loop cut, N cut; fill shot: the loop's
+outline cutter chain, winM, the clearance scales). Crossing ids, window ends and today's uw/cuts from s8/gwprobe.ts.
+Columns: site pixel | label (outlined piece's chain) | baked slot (crossing, over chain, over-arc window [neg,pos] around
+its centre) | loop cut / N cut (x lane, 0..1) | cutter (the piece whose lkCut won in the loop; -1 = none, the N branch
+cut) | winM (kept fraction: arc to the nearest window end) | scales margin/fade | today: underWindows / chainCuts at the
+pixel's foot.
+
+j49 (tick)  under 71, over 75, crossing x325; J75 (75's fused joint) sits 0.4 arc down 75 from x325, J18 (tip) left.
+  (1830,1601) lab 71 | x325 over 75 at 84.71 [-1.02,+1.14] | loop 1.00 N 1.00 | cutter 75 | winM 0.51 | 1/1 | uw [-0.44,+0.56] (foot +0.63: outside) cuts [-0.85,+1.01] (inside)
+  (1829,1602) lab 71 | x325 over 75                         | loop 1.00 N 0.00 | cutter 75 | winM 0.52 | 1/1 | same foot, outside uw, inside cuts
+  (1793,1578) lab 71 | x325 over 75                         | loop 1.00 N 1.00 | cutter 75 | winM 0.70 | 1/1 | other side of x325, outside uw, inside cuts
+  -> gf cuts 71's lower outline right of 75 (between x325 and J75) with the loop's lkCut on 75, inside the baked
+     window x325 and chainCuts but past underWindows; the cut comes from the loop (the N branch agrees except at one
+     pixel), and today/nogap join 71's lower outline into 75's right outline there.
+
+j55 (tick)  under 58 over 58 (self crossing x252, 58 at 15.89 [-1.09,+1.24], caps 1.09/1.86).
+  (2100,353)  lab 58 | x252 over 58 | loop 0.87 N 0.87 | cutter 58 | winM 0.62 | 1/1 | uw [-0.50,+0.46] outside (off 0.59) cuts [-0.92,+0.92] inside
+  (2099,352)  lab 58 | x252 over 58 | loop 0.80 N 0.80 | cutter 58 | winM 0.60 | 1/1 | outside uw, inside cuts
+  (2135,325)  lab 58 | x252 over 58 | loop 0.00 N 0.73 | cutter -1 | winM 0.43 | 1/1 | outside uw, inside cuts
+  -> a self crossing next to 58's joint: the loop and the N branch cut 58's own outline on its over pass past
+     today's underWindows; at the third pixel only the N branch cuts (the loop finds no other piece).
+
+j36 (stub)  under 11 over 11 (self crossing x77, 11 at 7.39 [-1.31,+1.16], caps 2.42/1.16).
+  (2097,1033) lab 11 | x77 over 11 | loop 1.00 N 1.00 | cutter 11 | winM 0.82 | 1/1 | foot 0.29 from centre: INSIDE uw [-0.63,+0.64], inside cuts
+  (2096,1034) lab 11 | x77 over 11 | loop 0.87 N 0.87 | cutter 11 | winM 0.71 | 1/1 | inside uw, inside cuts
+  (2137,1024) lab 11 | x77 over 11 | loop 1.00 N 1.00 | cutter 11 | winM 0.86 | 1/1 | inside uw, inside cuts
+  -> deep inside every window (winM 0.7-0.9, inside today's underWindows too): the extent rule (a) cannot join it;
+     today's outline here is drawn by something gf does not cut with (fans / protect / the over polyline's cap).
+
+t70s (sliver)  two crossings: x41 (under 64, over 5, 5 at 39.30 [-0.94,+1.15], caps 2.36/1.19) and x40 (under 5,
+over 70, 70 at 3.88 [-0.99,+0.94], caps 0.99/1.43); chain 70's tip (s 0.00) is the joint end.
+  (1168,1233) lab 64 | x41 over 5  | loop 0.60 N 0.60 | cutter 5  | winM 0.54 | 1/1       | uw [-0.49,+0.47] outside (off 0.64), cuts +-0.89 inside
+  (1167,1232) lab 64 | x41 over 5  | loop 0.67 N 0.67 | cutter 5  | winM 0.55 | 1/1       | outside uw, inside cuts
+  (1215,1238) lab 5  | x40 over 70 | loop 0.87 N 0.13 | cutter 70 | winM 0.56 | 0.53/0.47 | foot 0.41: inside uw [-0.48,+0.47], inside cuts
+  -> two cuts: 64's outline under 5 past underWindows (loop = N), and 5's outline under 70 right at 70's tip, where
+     the loop's lkCut (70's piece, the joint end) cuts 0.87 while the N branch (the baked over chain, near 70's arc 0)
+     cuts only 0.13; the only site with sub-1 clearance scales.
+
+Summary: every cut comes from the loop's lkCut on the baked slot's over chain (the N branch agrees but for j55's
+third pixel and t70s's third); all twelve sit inside gf's window and today's chainCuts. Eight of twelve are past
+today's underWindows (j49, j55, t70s x41), four inside it (j36's three, t70s x40). Today side (which mechanism draws
+today's outline there, and whether today ends the cut at the joint): ttog.mjs same-state toggles, below.
+
+Today side (s10/ttog.mjs, bg=none&cs=mono, same frozen state; raw/tt/, sheets raw/tt_*.png). Toggles: t_nomask (the
+gap mask off), t_noprot (protect off: 0 px at every site), t_nofans (the fillet layer r.root.children[1] hidden),
+t_nojp (r.skipJointPairs: 0 px everywhere, not a real switch, uninformative).
+  j49: today's mask cuts 71 too (nofans: 71's lower outline ends in a faded tip right where 75's outline runs), and
+       75's outline there is drawn by J75's FAN alone (nofans removes the whole vertical stroke). The fan's ribbon is
+       laid over 71's faded tip, so the two outlines meet. gf draws 75's stroke in the same place and cuts 71's
+       outline margin (about 3 px) short of it: the tick.
+  j55, j36, t70s: today's mask removes the ribbon at the picks (nomask restores it), fans change nothing there;
+       today's geometry differs from gf at these (j55: today hides a whole stretch).
+  Today's over-polyline reach (CROSSING INSPECT oCaps, neg/pos, against gf's GAP_OVER_RANGE 3.4):
+       x325 1.702/0.574, x252 1.78/1.009, x77 1.974/2.417, x41 1.431/0.639, x40 1.109/1.098.
+  Each pick's nearest point on the over chain against today's reach (raw/m/gw_today.json chainSamples):
+       j49 x325: -0.76, -0.79, -0.49 (reach -1.70..+0.57) IN; j55 x252: -0.36, -0.39, -0.65 (-1.78..+1.01) IN;
+       j36 x77: +0.11, +0.13, -0.10 (-1.97..+2.42) IN; t70s x41: -0.68, -0.66 (-1.43..+0.64) IN.
+  -> candidate (a), the outline cut over today's shorter reach, cannot join any of the four: every pick's over
+     point lies inside today's reach. At j49 the difference is the fan: the over chain's fused joint J75 draws the
+     over arm across the under thread's cut tip, so no gap shows. Rule (b) follows that: no outline cut where the
+     cutting over piece belongs to a fused joint's group (the field's member(): pg >= 0).
