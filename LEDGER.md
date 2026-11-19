@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1511.
+Next free ID: K1513.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -1127,6 +1127,10 @@ Every other item below waits on the trigger it names.
   one surface's union narrower than about a stroke width (Handoff K1482 s7)
 - **K1507** · k1436_bar.ps1 waits on the perf lock even for a stage told not to take it (K1482 s8 ran its tip
   half by hand with .claude/probes/K1482/s8/bar_ref.ps1): give the bar a flag to skip the wait
+- **K1512** · K1482 j49's tick needs how far a fused joint's fan reaches along the OVER thread (today's fan
+  paints the over's outline across the under's faded tip); the window bake carries only the under thread's
+  joints, so it is a new baked number, after Muse Run M leaves the bake (docs/design/K1482_s10_borders.md
+  handoff, out/s10/pixels.txt)
 
 ## Residuals (known, not fixed)
 
@@ -2445,6 +2449,8 @@ Every other item below waits on the trigger it names.
   shot, after writing today.png; .claude/probes/K1482/s9/cap9.ps1 with GF=0,TODAY=1 works
 - **K1510** · K1436 bar noise: census scene g41_user_tw64 settles to different physics hashes run to run
   (0d51331b, c1b63637), so its screen finds can move without a source change
+- **K1511** · K1482's cap.mjs waits forever when a PATCHF shader fails to compile (stage 10 lost a candidate
+  to it): it should time out and print the compile error (.claude/probes/K1482/cap.mjs)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2818,7 +2824,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
-- **K1500** · rp=gf's crossing fade at the start and exit markers equals today's (start 5.1/9.4/30.1/40.7 px = today at fl 0/0.14/0.5/1.2, exit none in either; table/tiles/drag in .claude/probes/K1500/out/26K, docs/design/K1500_marker_fade.md). Done in 970b6ece (2026-11-18).
+- **K1500** · rp=gf fades the thread away from the marker discs like today (Muse 26K, handoff 281a7c8c; tiles viewed). Done in 970b6ece (2026-11-18).
 - **K1477** · rp=gf: the under thread's border stroke tapers to a point and stops past a crossing at ring x68 (19.4, 20.0; 963 px in K1436's screen scan), g41_ring_tw64 j24 (the same spot, 660 px) and x67 (18.0, 20.6; 296 px); today's stroke runs through, the fill matches. Dropped: cause found by Muse 26H (no fix landed); continued as K1502 (2026-11-18).
 - **K1476** · Muse 26G: a never-clearing gap window ends at the joint room; the long line is gone on muse_default_tw and muse_hash (a short speck remains at its left end, K1503; other scenes' changed sides: K1501). Done in 9ae14f27 (2026-11-18).
 - **K1498** · Crossing fade on dense mazes (both renderers): on Levi's link the fade at 1.2 runs about 12 device px, not the ~51 the value asks for, because today's fade is held back near junctions (crossing_gaps.ts: FADE_JOINT_FLOOR's clearance scale, and the gap window's end about 43 px from the crossing); with the clearance scale off it reaches 14.5 px, and the window is the harder stop (K1495, .claude/probes/K1495/out/prof_cause.txt). Dropped: Levi, 2026-11-18: keep as is. A high fade keeps today's junction limits in both renderers (2026-11-18).
