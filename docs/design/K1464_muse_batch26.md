@@ -797,3 +797,33 @@ Started 22:50 PST, stopped 23:34 PST. Starting master d860811c (K1482 s15 alread
 Why j64 still fails Done 5: the filled wedge is no longer an exposed edge, so the two tubes' inner outline ink sits farther than W + aa + 1.5 px from every exposed edge of gf's own raster — `rstray` by `k1433_lib`'s definition, whatever fills the hole, unless the fill also suppresses that inner outline ink. That is the next angle: at seam points, scale the surface's ink `v` by the seam's coverage in eval and in every GLSL form (`layers()`'s Ds sites), then re-run this mirror compare and the bar. Done 4 and 5 are therefore unmet and Done 3's screen tiles were not produced; Done 6 is master's by construction (tables untouched); Done 7 on the candidate: the focused suites pass (53 tests; `gf_k1517.test.ts` gains the theta-premise case; the program digests it moves are the ones the patch re-freezes in `gf_home_glsl.test.ts`: app `3c018dae…`, probe `69ddc209…b`). The candidate is kept whole as `.claude/probes/K1517/k1517_26q_gated.patch` (applies on 7e5e87c9); branch `muse-26p-wip` is untouched. The full bar was not run: its mirror half already fails Done 5 on both tries, and the brief's two-try cap is spent.
 
 **Done 8 / the guards** (preview of 7e5e87c9 on :5620, one kept profile `%TEMP%\k26q-guards-profile`): `hold.mjs` 60 250 5000 PASS on `?3&xp=off&am=instant&rp=gf` (first composite 57.5 s cold; 60/60, edges min 102830) and on `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (28.8 s; 60/60, min 7045); `dragcheck.mjs` PASS for gf and for gfh (every stop 0 px over TOL 24). `npm test` green on the final tree (256 files, 3198 passed, 9 skipped; tsc clean), which is master without the candidate. K1517, K1504, K1464, K1451 and K1460 left open and untouched; preview server (5620) stopped.
+
+## Run R (26R): the bar's run-to-run noise (K1519)
+
+Added 2026-11-19. Probes only. Two loads of identical `src/` in one physics hash gave 14 finds under
+`STRICT=1` on g41_user_tw64 (frames differ by 1-2 levels; `.claude/probes/K1482/out/s13/bar.txt`), and
+g41_ring_tw42 froze on two different states. Done: 1. the noise measured: the bar with `-Ref` = `-Base` =
+master, three times, on the 12 census scenes at `-HomeFlag 1`, finds per scene per run tabled. 2. the cause
+of the frame differences named (capture timing, a dither or animation term, antialias jitter), with the
+evidence. 3. the bar made deterministic or given the smallest margin or median-of-loads that brings the
+self-compare to 0 finds on every scene in three runs, while a planted fault (K1436's own self-check) is
+still found. 4. the state-freeze retries reported per scene, and a scene that cannot freeze on one state
+named and skipped with a printed warning. Close K1519 or record what is left.
+
+## Run S (26S): j64's seam, third angle (K1517, K1504)
+
+Added 2026-11-19. Handoff 26Q's next angle: at seam points scale the surface's ink by the seam's coverage,
+in eval and in every GLSL form, so the filled wedge leaves no inner outline ink for the scan's rstray.
+Resume from Handoff 26Q's candidate (the theta gate, with the promotion). Done: Run P's Done 2-8 unchanged
+(Done 3's 4x tiles produced and looked at). K1482 stages 15 and 16 are on master in `gf_look.ts` and
+`gf_app.ts` and a stage 17 agent is in those two files: stay out of them. Two tries at most; if neither
+meets Done 4 and 5, do not land it, record what moved and stop.
+
+## Run T (26T): the cold first load, A/B on a quiet machine (K1456)
+
+Added 2026-11-19. Run this only under the perf lock with no other Chrome of yours alive. Cold (fresh profile
+each load), interleaved, 5 pairs: master against master with 955de39d's change cherry-picked (the worker
+gets its sources 0.8 s after the load; `docs/design/K1456_s3_first_visit.md`, Handoff K1456 s3), time from
+navigation to the first gf composite on link A. Done: the table of 10 loads with medians and the paired
+differences; land the cherry-pick only if the paired median is at least 10% sooner and `npm test`, `hold.mjs`
+60/60 and both dragchecks pass; otherwise record the numbers and leave master as it is.
