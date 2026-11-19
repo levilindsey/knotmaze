@@ -2442,9 +2442,9 @@ Every other item below waits on the trigger it names.
   rise recorded at tables.ts:578 (16 -> 231 without home membership); then k1436_bar.ps1 -Scenes
   ring,g41_ring_tw64 at HomeFlag 1 and 0. The scan's cut find is separately the lkGap centreline cut outside
   the scan's legit zone, where gf's fill already equals today's.
-  - owner: nobody since 2026-11-18 16:14 (merged)
-  - branch: mainline; last commit: `3971ec64`
-  - next: Muse 26L landed the home-off reach windows (b0f4f9a7, 3971ec64; tiles x68, j24 viewed: the stroke runs through). Open: tables build time +29% on muse_hash (Run N, 26N), the census form-B stray at x68/j24/x67, and the Levi-link sweep (K1513; K1482 stage 11 recounts it)
+  - owner: nobody since 2026-11-18 19:14 (merged)
+  - branch: mainline; last commit: `b8e2027d`
+  - next: Muse 26N cut the build time (bit-identical tables; home on at or under 281a7c8c, home off def +3%, muse_hash +13%, ring +11%, fat +50%: the walk itself). Open: that home-off residue, the census form-B stray at x68/j24/x67
 - **K1503** · K1476 leftover (seen in .claude/probes/K1476/out/26G/tile_fix_1.png): after 9ae14f27 a short
   dark speck remains in the fill at the left end of where j64's line was, on muse_default_tw (a short dash)
   and muse_hash (a dot); today's fill has none. Check with K1501

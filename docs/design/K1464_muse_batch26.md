@@ -674,3 +674,29 @@ its first shot (two consecutive frames with the same physics hash and the same v
 and second shots of link A identical in the site boxes of three sites. 5. Link A's ordinary capture is
 unchanged by all four (same hash fff8c9e5, 0 px against a capture taken with the old script). 6. `npm test`
 green (nothing in `src/` or `test/` changed).
+
+## Run P (26P): j64's speck and pinhole in the field (K1517, K1504)
+
+Added 2026-11-18. Run M traced the speck left at j64 (K1503) to the field, not the look: 51 of the 83 px in
+the speck box (x 4.95..5.25, y 3.00..3.20; muse_default_tw 83 px, muse_hash 18) are form B's fan/burial
+seam, where the mirror reads ink 0.00 and cov 1.00 at (4.86, 3.09) (chain 56 buried at j64's fan edge on the
+chain 28 ride) and ink 0.95 at the speck (5.16, 3.09); today draws fill there (Handoff 26M, Done 3; K1517 in
+the ledger, which Handoff 26M calls K1515). At the same junction on Levi's link A
+(`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`) a pinhole about 0.1 wide shows where chains 28 and 56
+of one surface part, in the CPU mirror too (K1504; `.claude/probes/K1482/out/s7/j64_gm.png`). The hands-off on
+`tables.ts`, `eval.ts` and `gf_glsl.ts` is lifted for this run. A Claude agent is in `gf_look.ts` (K1482 stage
+13, the outline's cut): stay out of that file.
+
+Done: 1. The cause of each named in the code with the mirror's numbers at the speck and at the pinhole
+(which term buries chain 56, which leaves the hole), and whether they are one cause. 2. A count failing on
+starting master for each: dark px inside today's fill in the speck box on muse_default_tw and muse_hash (Run
+M's recipe, `.claude/probes/K1501/speckcount.py`), and background px inside one surface's union in a box
+around the pinhole on link A (hash fff8c9e5). 3. Fixed to 0 in the field, with 4x tiles today | master gf |
+tip gf at j64 on the three scenes, fill and border, each looked at. 4. Nothing else moves: on the 12 census
+scenes and link A, home off and on, every px that changes against starting master in the same physics hash
+lies in a box you list, and each box is shown at 4x and named better or same. 5. `k1436_bar.ps1` with
+`STRICT=1` on `muse_default_tw,muse_hash,def,ring` at `-HomeFlag 1`: no new find, none grown. 6. The tables
+build time on muse_hash and def within 3% of starting master (perf lock). 7. `npm test` green with a unit
+case for each fix (the pack digests re-frozen only where the fix moves them, each move named). 8. The guards
+(`hold.mjs` 60/60 on the two links, both dragchecks). If a fix cannot meet Done 4, do not land it: record
+what moved and stop.
