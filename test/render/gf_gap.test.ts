@@ -25,7 +25,9 @@ describe("K1423 lkGap shader: the cut is windowed by the baked winM", () => {
     expect(f).toContain("if (cS < 0) g = max(g, cj);");
     // K1482 s15: the slot's joint flag (the y fraction) cuts the outline with c1's reach on its flagged side
     expect(f).toContain("int jb = sl.x >= 0.0 ? int(fract(sl.x) * 8.0 + 0.5) : 0;");
-    expect(f).toContain("vec2 scJ = jf ? sc * vec2(0.0, 0.3) : sc;");
+    // K1482 s16: a flagged side's cut starts its fade a pixel inside the over's outline (margin -1 px through sc.x)
+    expect(f).toContain("vec2 scJ = jf ? vec2(uLkG > 0.0 ? -pxw / uLkG : 0.0, 0.3 * sc.y) : sc;");
+    expect(f).toContain("float e = d - uH - uLkG * sc.x;");
     expect(f).toContain("else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); g0 = max(g0, cj); }");
     // K1482 s16: the coverage's far-reach term is gated by the unflagged cut, so the flag never reaches the fill
     expect(f).toContain("if (gA < 0.999 && g0 < 0.999) gA = max(gA, cN);");

@@ -2237,7 +2237,12 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
   int jb = sl.x >= 0.0 ? int(fract(sl.x) * 8.0 + 0.5) : 0;
   bool jf = jb == 3;
   if (jb == 1 || jb == 2) { vec2 fU = lkFoot(cU, qU); jf = jb == ((tu.x * (p.y - fU.y) - tu.y * (p.x - fU.x)) >= 0.0 ? 1 : 2); }
-  vec2 scJ = jf ? sc * vec2(0.0, 0.3) : sc;
+  // K1482 s16: and its margin is -1 px (lkCut's e = d - uH - uLkG * sc.x, so sc.x = -pxw / uLkG): with no margin the
+  // short fade began at the over's outline, and the first pixel past it (inner about 0.87) kept 0.13-0.53 of the cut,
+  // a 1 px light line between the over's outline and the under's at the joint (link A j60, j36, j143, t16e, j146,
+  // j157, t70s). Starting the fade a pixel inside the outline leaves that pixel's ink whole; a long fade still runs
+  // past it, one pixel nearer. At margin 0 there is nothing to scale and the flagged cut keeps no margin.
+  vec2 scJ = jf ? vec2(uLkG > 0.0 ? -pxw / uLkG : 0.0, 0.3 * sc.y) : sc;
   // K1482 s16: g0 is the outline cut without the flag (g where jf is false), which alone gates the coverage's
   // far-reach term below. Gated by the flagged g (never above g0), a flagged side could take that term where g0
   // had already passed 0.999, so the flag reached the coverage and with it the fill look; gated by g0 the
