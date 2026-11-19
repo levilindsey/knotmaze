@@ -1,0 +1,19 @@
+# K1482 s8: the K1436 bar, STRICT=1, -Ref 7091c9a4 -Base ba0fb106 -HomeFlag 1 -Scenes ring,def,muse_hash,g41_user_tw64 -Tag k1482s8
+# base half by k1436_bar.ps1 (raw/bar.log); its ref half waited on Muse 26K perf lock, so it ran by hand on the same
+# served build (s8/bar_ref.ps1, raw/bar_ref.log). Each scene: base and ref captures froze at the same physics hash.
+base [ba0fb106] mirror scans 54 s
+base [ba0fb106] warm pass 104 s
+base [muse_hash] 108214 ms hash 733ee14a
+base [g41_user_tw64] 41282 ms hash 0d51331b
+base [def] 384968 ms hash 910ff135
+base [ring] 20089 ms hash 50dd4ffd
+base [ba0fb106] captures 465 s
+base [ba0fb106] screen scans 42 s
+ref  [7091c9a4] warm pass 109 s
+ref  [muse_hash] 108257 ms hash 733ee14a
+ref  [g41_user_tw64] 44349 ms hash 0d51331b
+ref  [def] 283905 ms hash 910ff135
+ref  [ring] 302433 ms hash 50dd4ffd
+ref  [7091c9a4] captures 303 s
+ref  [7091c9a4] screen scans 44 s
+PASS  new 0  grown 0  gone 0  (match radius 0.3, grow > 10% and >= 3 px)

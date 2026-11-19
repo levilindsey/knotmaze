@@ -110,9 +110,11 @@ the split, 5f09e4a3 the split confirmed.
   split build); ordinary crossings x84 x88 x52 0 px vs master at fl 0, 1.2 and 0.14.
 - `hold.mjs` (K1450) 60/60 PASS warm on link A (edges min 6854 / max 9593); `npm test` green (254 files, 3174
   tests).
-- The K1436 bar (STRICT=1, ring, def, muse_hash, g41_user_tw64): see the result line below. The bar's own run
-  waited on Muse's perf lock (26K) at the ref's captures, which this brief says not to wait on, so its ref half
-  ran by hand on the same served build with `s8/bar_ref.ps1` (the bar's lines and its compare, no lock wait).
+- The K1436 bar (STRICT=1, -Ref 7091c9a4 -Base ba0fb106, ring, def, muse_hash, g41_user_tw64): **PASS, new 0,
+  grown 0, gone 0**; every scene's base and ref captures froze at the same physics hash (`out/s8/bar.txt`). The
+  bar's own run waited on Muse's perf lock (26K) at the ref's captures, which this brief says not to wait on, so
+  its ref half ran by hand on the same served build with `s8/bar_ref.ps1` (the bar's lines and its compare, no
+  lock wait).
 - Sheets: `fixA_m0..m4.png` (the 17 GAP sites, master | tip | diff, 4x), `fixA_blobs_0..3.png` (every changed
   blob, named), `fixA_t18s.png`, `fixA_j88j2.png` (today | master | tip | diff), `j88_zoom.png` (nogap | master |
   tip, 10x), `fill_diff.png` (fix A's fill leak before the split). Attribution (b829a55d): `m_a/m_b.png` and
