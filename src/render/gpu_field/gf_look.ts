@@ -523,7 +523,8 @@ const GAP_JOINT_RA = 1.5;
  * side's OUTLINE takes stage 13's c1 reach (no margin, 0.3 of the fade). It does when, at the outline point beside
  * the slot's under sample (fillHalf + GAP_JOINT_OB off its centreline), the nearest over sample within GAP_JOINT_RA
  * of the crossing is a member of a fused joint's surface (mem: eval.ts member(), a group with ramp > 0) within the
- * cut's reach (fillHalf + margin + fade), and no non-member over sample lies within a fill half-width. c1 decided
+ * cut's reach (fillHalf + margin + fade), and no non-member over sample lies within a fill half-width (s17: or the
+ * side's outline point is nearer the member surface and within reach, on a run of slots holding a side so flagged). c1 decided
  * per piece at each pixel; deciding per slot side keeps its closed joint lines without its flip specks (link A: its
  * 15 better sites, no new speck; docs/design/K1482_s15_slot_flag.md, .claude/probes/K1482/out/s15).
  */
@@ -540,20 +541,35 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
   if (!mx.length) return out;
   const reach2 = (sc.fh + sc.mg + sc.fd) ** 2, off = sc.fh + GAP_JOINT_OB, nn2 = sc.fh * sc.fh, uxy = su.positions;
   const last = su.count - 1;
+  const near = new Array<number>(ks.length).fill(0);
   for (let i = 0; i < ks.length; i++) {
     const k = ks[i];
     const ka = su.closed ? (k + last) % su.count : Math.max(0, k - 1), kb = su.closed ? (k + 1) % su.count : Math.min(last, k + 1);
     let tx = uxy[2 * kb] - uxy[2 * ka], ty = uxy[2 * kb + 1] - uxy[2 * ka + 1];
     const tl = Math.sqrt(tx * tx + ty * ty) || 1; tx /= tl; ty /= tl;
-    let bits = 0;
+    let bits = 0, nb = 0;
     for (const [sd, bit] of [[1, 1], [-1, 2]] as const) {
       const qx = uxy[2 * k] - sd * ty * off, qy = uxy[2 * k + 1] + sd * tx * off; // the left normal is (-ty, tx)
       let dM = Infinity, dN = Infinity;
       for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
       for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
-      if (dM < reach2 && dM <= dN && dN >= nn2) bits |= bit;
+      if (dM < reach2 && dM <= dN) { nb |= bit; if (dN >= nn2) bits |= bit; }
     }
-    out[i] = bits;
+    out[i] = bits; near[i] = nb;
+  }
+  // K1482 s17: a side's flag spreads along the slots, both ways, while its outline point stays nearer the member surface
+  // than any non-member and within the cut's reach. The dN >= fh test alone ended the flag where the over thread's own
+  // non-member samples (just past its membership boundary) came within a fill half-width, short of the window's end:
+  // there the full cut erased the joint's outline (link A j158/t73e).
+  const ord = ks.map((k, i) => { let d = k - ks[0]; if (su.closed) d = ((d % su.count) + su.count + (su.count >> 1)) % su.count - (su.count >> 1); return [d, i]; }).sort((a, b) => a[0] - b[0]);
+  for (const bit of [1, 2]) {
+    for (let j = 0; j < ord.length;) {
+      if (!(near[ord[j][1]] & bit)) { j++; continue; }
+      let e = j, any = false;
+      while (e < ord.length && near[ord[e][1]] & bit) { any ||= (out[ord[e][1]] & bit) !== 0; e++; }
+      if (any) for (let q = j; q < e; q++) out[ord[q][1]] |= bit;
+      j = e;
+    }
   }
   return out;
 }
