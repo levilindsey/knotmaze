@@ -119,9 +119,9 @@ function chainAtInto(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0
   o.x = ax + dx * t; o.y = ay + dy * t; o.tx = dx / l; o.ty = dy / l;
 }
 
-/** K1451: a pin's key window is max(win, GF_REACH_K x its reach): the hat ends just above the tie depth zt
- * (0.13 amp > 0.1 amp) where the overlap ends. */
-export const GF_REACH_K = 1.15;
+/** K1451: a pin's key window is max(win, GF_REACH_K x its reach). K1502: GF_REACH_K 1.0 clamps it
+ * to the overlap's end (1.15 held the key past it and the look's gap shaved the neighbour: x154). */
+export const GF_REACH_K = 1.0;
 /** K1451: the overlap's end: the other pass's centreline farther than GF_REACH_SEP h (the two ribbons part). */
 export const GF_REACH_SEP = 2;
 /** K1451: the reach walk's step and cap, in h. */
