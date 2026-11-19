@@ -33,7 +33,10 @@
 #      ~100 device px per world unit, so a 1 css px fault is 3 px) in fill and border looks, and k1436_screen_scan.ts runs
 #      v2's band profile and strays on the screen's ink plus the cut / speck / spill look checks (labels from the mirror
 #      at the same pixel: a capture has none).
-#   Then k1436_bar_cmp.mjs matches finds by scene, scan, kind:class and site (0.3 world units). Any new or grown find is
+#   K1519: k1436_screen.mjs keeps only byte-stable frames (two identical redrawn shots) and records each
+#   scene's freeze tries in meta.json; k1436_bar_cmp.mjs reports them (FREEZE lines), skips a scene whose two
+#   hashes differ (SKIP line, not judged), and matches the rest by scene, scan, kind:class and site (0.3 world
+#   units). Any new or grown find is
 #   a FAIL. It waits (never takes) $env:TEMP\claude-perf.lock while another owner holds it (unless -NoPerfLock,
 #   which skips the wait and stamps the output "taken under load"), and deletes its worktrees,
 #   builds and Chrome profile when it ends unless -Keep.
@@ -58,6 +61,10 @@ param(
   [switch]$PruneOnly
 )
 $ErrorActionPreference = "Stop"
+# K1519: captures always freeze STRICT (retry to the K868 hash; a scene that cannot freeze is kept and the
+# comparator skips it with a warning), and k1436_screen.mjs keeps only byte-stable frames, so the bar judges
+# settled pictures, not a gf build still in flight.
+$env:STRICT = "1"
 # pwsh -File passes "-Scenes ring,def" as ONE string: split it
 $Scenes = @($Scenes | ForEach-Object { $_ -split "," } | Where-Object { $_ })
 $probeDir = $PSScriptRoot

@@ -80,11 +80,25 @@ async function once1(job, h = {}) {
   await page.addStyleTag({ content: "body * { visibility: hidden !important; } canvas { visibility: visible !important; }" });
   await sleep(2000);
   await page.evaluate(() => { const r = window.__knotRenderer(); r.threadLook = 0; });
-  await redraw(page, job);
-  const fill = await page.screenshot({ type: "png" });
+  // K1519: keep a screenshot only when two redrawn shots in a row are byte-identical. The freeze moves
+  // the physics (StepUntil), so gf rebuilds async; a shot while that build is in flight draws the stale
+  // load state (one g41_user_tw64 fill differed from settled at 505k px; border and tables identical).
+  // Settled frames are byte-identical across loads, so equality proves settle; 8 tries, then warn.
+  const stableShot = async (label) => {
+    let prev = null;
+    for (let k = 0; k < 8; k++) {
+      await redraw(page, job);
+      const cur = await page.screenshot({ type: "png" });
+      if (prev && Buffer.compare(Buffer.from(prev), Buffer.from(cur)) === 0) { if (k > 1) console.log(`[${job.name}] ${label} stable on shot ${k + 1}`); return { png: cur, shots: k + 1 }; }
+      prev = cur;
+      await sleep(600);
+    }
+    console.log(`[${job.name}] WARNING ${label} frame never byte-stable in 8 shots; keeping the last (K1519)`);
+    return { png: prev, shots: 8, unstable: true };
+  };
+  const fs2 = await stableShot("fill"); const fill = fs2.png;
   await page.evaluate(() => { const r = window.__knotRenderer(); r.threadLook = 1; r.borderColor = 0xffffff; });
-  await redraw(page, job);
-  const border = await page.screenshot({ type: "png" });
+  const bs2 = await stableShot("border"); const border = bs2.png;
   const meta = await page.evaluate(() => {
     if (!globalThis.__knotGf) return { view: window.__knotView(), dpr: window.devicePixelRatio, w: innerWidth, h: innerHeight, today: 1, lost: window.__lost };
     const T = globalThis.__knotGf.tables; const o = {};
@@ -100,24 +114,29 @@ async function once1(job, h = {}) {
       home: globalThis.__knotGf.home, switchedMs: globalThis.__knotGf.stats.switchedMs, lost: window.__lost, T: o };
   });
   await page.close();
+  meta.stable = { fill: fs2.shots, border: bs2.shots, unstable: !!(fs2.unstable || bs2.unstable) };
   return { hash, fill, border, meta, ms: Date.now() - t0 };
 }
 async function run(job) {
-  let got = null;
+  let got = null; const seen = [];
   for (let k = 0; k < TRIES; k++) {
     const P = await once(job);
     if (P.meta.lost) { console.log(`[${job.name}] webgl context lost (${P.meta.lost}), retry`); got = P; continue; }
     if (P.warm) { console.log(`[${job.name}] warm ${P.ms} ms`); return; }
+    seen.push(P.hash);
     if (!job.hash || P.hash === job.hash) { got = P; break; }
-    // s3: the frozen state is deterministic per build, so a reload lands on the same hash: a mismatch means the K868
-    // diag's hash is stale for this build (g41_user_tw42 lands on user_tw42's state), not a bad load. Keep it, say so.
+    // s3 kept a mismatch as deterministic; K1519: with STRICT the bar retries, and k1436_bar.ps1 now always
+    // sets STRICT, so a mismatch here means this load froze on another state, not a stale diag.
     if (process.env.STRICT !== "1") { console.log(`[${job.name}] hash ${P.hash} != ${job.hash} (kept: deterministic)`); got = P; break; }
     console.log(`[${job.name}] hash ${P.hash} != ${job.hash}, retry`); got = P;
   }
   if (!got?.fill) { console.log(`[${job.name}] NO CAPTURE`); return; }
+  const freeze = { expected: job.hash ?? null, seen, tries: seen.length, ok: !job.hash || got.hash === job.hash };
+  if (job.hash && !freeze.ok) console.log(`[${job.name}] WARNING cannot freeze on one state after ${seen.length} tries (saw ${seen.join(", ")}; expected ${job.hash}); the bar will skip this scene (K1519)`);
+  else if (seen.length > 1) console.log(`[${job.name}] froze on ${job.hash} after ${seen.length} tries (saw ${seen.join(", ")})`);
   const d = join(outDir, job.name); mkdirSync(d, { recursive: true });
   writeFileSync(join(d, "fill.png"), got.fill); writeFileSync(join(d, "border.png"), got.border);
-  writeFileSync(join(d, "meta.json"), JSON.stringify({ ...got.meta, hash: got.hash, job }));
+  writeFileSync(join(d, "meta.json"), JSON.stringify({ ...got.meta, hash: got.hash, job, freeze }));
   console.log(`[${job.name}] ${got.ms} ms hash ${got.hash}`);
 }
 const par = +parS; const q = [...jobs];

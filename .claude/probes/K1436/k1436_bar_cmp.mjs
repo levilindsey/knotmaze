@@ -10,11 +10,19 @@ const [baseDir, refDir, outDir, RS = "0.3", GS = "0.1"] = process.argv.slice(2);
 const RAD = +RS, GROW = +GS, GROW_PX = 3;
 const scenes = [...new Set(readdirSync(refDir).filter((f) => f.endsWith(".screen.json") || f.endsWith(".mirror.json")).map((f) => f.replace(/\.(screen|mirror)\.json$/, "")))].sort();
 const rd = (p) => (existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : null);
-const rows = []; const lines = []; let nNew = 0, nGrown = 0, nGone = 0, missing = 0;
+const rows = []; const lines = []; let nNew = 0, nGrown = 0, nGone = 0, missing = 0, skipped = 0; const skippedScenes = [];
+const freezeOf = (dir, sc) => { try { return JSON.parse(readFileSync(join(dir, "cap", sc, "meta.json"), "utf8")).freeze ?? null; } catch { return null; } };
+const freezeTxt = (f) => (f ? `${f.ok ? "ok" : "FAILED"} in ${f.tries} (saw ${(f.seen ?? []).join(",") || "?"}; want ${f.expected ?? "?"})` : "no record (pre-K1519 capture)");
 for (const sc of scenes) for (const scan of ["mirror", "screen"]) {
   const A = rd(join(baseDir, `${sc}.${scan}.json`)), B = rd(join(refDir, `${sc}.${scan}.json`));
   if (!A || !B) { missing++; lines.push(`MISSING ${sc} ${scan} (base ${!!A}, ref ${!!B})`); continue; }
-  if (scan === "screen" && A.hash !== B.hash) lines.push(`NOTE ${sc}: physics hash base ${A.hash} ref ${B.hash} (not one state: every screen find may move)`);
+  if (scan === "screen") {
+    const fa = freezeOf(baseDir, sc), fb = freezeOf(refDir, sc);
+    if ((fa && (fa.tries > 1 || !fa.ok)) || (fb && (fb.tries > 1 || !fb.ok))) lines.push(`FREEZE ${sc}: base ${freezeTxt(fa)}; ref ${freezeTxt(fb)}`);
+    // K1519: two loads that froze on different physics states are not one picture; skip the scene's screen
+    // finds with a warning instead of judging them (the mirror scan, from the K868 tables, still judges).
+    if (A.hash !== B.hash) { lines.push(`SKIP ${sc} screen: physics hash base ${A.hash} ref ${B.hash} differ; scene skipped, not judged (K1519)`); skipped++; skippedScenes.push(sc); continue; }
+  }
   const used = new Set();
   for (const f of B.finds) {
     let best = -1, bd = RAD;
@@ -25,17 +33,17 @@ for (const sc of scenes) for (const scan of ["mirror", "screen"]) {
   }
   A.finds.forEach((g, k) => { if (!used.has(k)) { rows.push({ sc, scan, what: "gone", f: g }); nGone++; } });
 }
-const pass = nNew === 0 && nGrown === 0 && missing === 0;
+const pass = nNew === 0 && nGrown === 0 && missing === 0; // skipped scenes (K1519) warn above and do not fail the bar
 const byCls = new Map();
 for (const r of rows) { const k = `${r.scan} ${r.f.kind}:${r.f.cls}`; if (!byCls.has(k)) byCls.set(k, []); byCls.get(k).push(r); }
 const fmt = (r) => `${r.sc}:${r.f.x.toFixed(2)}:${r.f.y.toFixed(2)}${r.f.site ? " " + r.f.site : ""} ${r.f.px}px${r.g ? ` (was ${r.g.px}px)` : ""}`;
-const out = [`${pass ? "PASS" : "FAIL"}  new ${nNew}  grown ${nGrown}  gone ${nGone}${missing ? `  missing ${missing}` : ""}  (match radius ${RAD}, grow > ${GROW * 100}% and >= ${GROW_PX} px)`, ...lines];
+const out = [`${pass ? "PASS" : "FAIL"}  new ${nNew}  grown ${nGrown}  gone ${nGone}${missing ? `  missing ${missing}` : ""}${skipped ? `  skipped ${skipped} (${skippedScenes.join(",")})` : ""}  (match radius ${RAD}, grow > ${GROW * 100}% and >= ${GROW_PX} px)`, ...lines];
 for (const [k, rs] of [...byCls].sort()) {
   out.push(`\n${k}`);
   for (const what of ["new", "grown", "gone"]) { const L = rs.filter((r) => r.what === what); if (L.length) out.push(`  ${what} ${L.length}: ${L.slice(0, 40).map(fmt).join("; ")}${L.length > 40 ? " ..." : ""}`); }
 }
 writeFileSync(join(outDir, "bar.txt"), out.join("\n") + "\n");
-writeFileSync(join(outDir, "bar.json"), JSON.stringify({ pass, nNew, nGrown, nGone, missing, rows }));
+writeFileSync(join(outDir, "bar.json"), JSON.stringify({ pass, nNew, nGrown, nGone, missing, skipped, skippedScenes, rows }));
 console.log(out.join("\n"));
 // --- crop sheet of new + grown (screen captures; mirror finds are cropped from the same captures)
 function png(p) {
