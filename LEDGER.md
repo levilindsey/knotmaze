@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1503.
+Next free ID: K1506.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -333,13 +333,6 @@ Next free ID: K1493.
   master; b88a4108 removed them from the tree, so checkouts are clean, but the blobs stay in history (every
   fresh clone downloads them). Dropping them needs a history rewrite and a force-push of master: do it (rebase
   everything after 82405bf9 without them), or leave it?
-- **K1498** · Crossing fade on dense mazes (both renderers): on Levi's link the fade at 1.2 runs about 12
-  device px, not the ~51 the value asks for, because today's fade is held back near junctions
-  (crossing_gaps.ts: FADE_JOINT_FLOOR's clearance scale, and the gap window's end about 43 px from the
-  crossing); with the clearance scale off it reaches 14.5 px, and the window is the harder stop (K1495,
-  .claude/probes/K1495/out/prof_cause.txt). Should a high fade reach further on dense mazes? Picture of
-  today's reach: .claude/probes/K1495/out/sheet_reach.png. Options: keep as it is; loosen the limits (a fade
-  may then run into a neighbouring junction)
 
 ## In progress
 
@@ -741,11 +734,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a59d82bf7d4d1b8cf` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 06:08, 2 h cap ~08:08)
-  - branch: `worktree-agent-a59d82bf7d4d1b8cf`, worktree `.claude/worktrees/agent-a59d82bf7d4d1b8cf`; last commit: `0b9913dc`
-  - evidence: .claude/probes/K1482/ (s5/notes.md, out/s3/classes_tip.txt, scene_tables.ts HOME1=2 = master's page); the stage writes .claude/probes/K1482/s7/
-  - next: stage 7's report (cap about 08:15 on 2026-11-18): view its tiles, check the sweep count against 46 and the STRICT bar, merge each confirmed family fix, CI, live check of Levi's link
-  - brief: `docs/design/K1482_s7_borders.md`
+  - owner: agent `a453ce852efbe1ae6` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 10:58, 2 h cap ~12:58)
+  - branch: `worktree-agent-a453ce852efbe1ae6`, worktree `.claude/worktrees/agent-a453ce852efbe1ae6`; last commit: `ba0fb106`
+  - evidence: .claude/probes/K1482/out/s7/ (classes.txt: 41 faulted on master after stage 7's merge 53833035; rb_fold_00.png, gap_tiles_00.png, rest_tiles_00.png), .claude/probes/K1436/out/bar/k1482s7/bar.txt
+  - next: stage 8 (started 2026-11-18 11:00, cap about 13:00): the 17 crossing-gap sites in gf_look.ts (lkGap, lkCut, gapWindow). On its report: view its tiles, check the count against 41 and the STRICT bar, merge each confirmed fix, CI, live check of Levi's link. Stage 7 (merged 53833035) fixed the j58/t23s triangle (fold fix e51c69eb); 22 sites wait on K1490; the home build stays parked on worktree-agent-ad03e8b65a2afa540
+  - brief: `docs/design/K1482_s8_borders.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -759,10 +752,10 @@ Next free ID: K1493.
   phase (955de39d: the worker gets its sources 0.8 s after the load, not 8-13 s) did not bring the first
   composite sooner (early 77-93 s, master 74-132 s); a second worker for the gating program was slower. What
   bounds the wait is that one program's own FXC compile, 56-123 s under load (Handoff K1456 s3)
-  - owner: nobody since 2026-11-18 03:09 (agent `aca0749f26e28002e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 01:50, 2 h cap ~03:50); stage 3 stopped at its handoff 2026-11-18 03:08; its probes and handoff are on master, its src (955de39d, the early compile start) is held on the branch: safe by every check but not faster under load)
-  - branch: `worktree-agent-aca0749f26e28002e`, worktree `.claude/worktrees/agent-aca0749f26e28002e` (src held: 955de39d early start, 857b5bb4 drops the gfcw=2 trial); last commit: `eca3a09a`
+  - owner: nobody since 2026-11-18 10:58 (merged; agent `aca0749f26e28002e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `41c13cf6`
   - evidence: .claude/probes/K1456/s3/ (ab.ps1, checks.ps1, nogf.mjs, out/), .claude/probes/K1456/s2/ (table.mjs, ctime.mjs, variants.mjs)
-  - next: Muse run 26J (queued: cut the compile time of layers()' corner code in gf_glsl.ts, the one program that gates the first composite, 56-123 s under load). Then, on a quiet machine under the perf lock, cold A/B of 955de39d (compile starts 0.8 s after load, not 8-13 s) against master: merge it only if the first composite comes sooner (under load: early 77-93 s, master 74-132 s, no gain; the early compile seems to compete with today's renderer's own compiles). Untried: deferring today's renderer's programs the rest look does not need; gf_split's two passes as two programs. A second worker for the gating program was slower (median 104.5 s) and is dropped
+  - next: Muse 26J landed 41c13cf6 (one loop for layers()' corner faces: the gating program's compile 21.4 -> 14.4 s; the halving bar unmet, Handoff 26J in docs/design/K1464_muse_batch26.md). Next: on a quiet machine under the perf lock, cold A/B of 955de39d (compile starts 0.8 s after load) against master, merge only if the first composite comes sooner; untried: deferring today's renderer's programs the rest look does not need; gf_split's two passes as two programs
   - brief: `docs/design/K1456_s3_first_visit.md`
 
 ## Next, in order
@@ -1112,15 +1105,6 @@ Every other item below waits on the trigger it names.
 - **K1473** · rp=gf: check pulses and the turn telegraph on screen. Their table (unit 9) uploaded as R32F from
   9b48e44f until K1472's fix (998be573), so the shader read zeros; nobody has looked since (gf_pass.ts
   setLook; test/render/gf_look_upload.test.ts counts mismatched uploads)
-- **K1476** · rp=gf: a stray dark line across the fill at j64 on the census scenes muse_default_tw and
-  muse_hash (world 5.6, 2.8; 362 and 182 px in K1436's screen scan), plus a notch at the junction's top edge
-  on muse_default_tw; today's fill has neither. Queued as Muse run 26G (docs/design/K1464_muse_batch26.md;
-  .claude/probes/K1436/out/s3/worklist_named.tsv, sheets/worklist_h1_1.png row 3)
-- **K1477** · rp=gf: the under thread's border stroke tapers to a point and stops past a crossing at ring x68
-  (19.4, 20.0; 963 px in K1436's screen scan), g41_ring_tw64 j24 (the same spot, 660 px) and x67 (18.0, 20.6;
-  296 px); today's stroke runs through, the fill matches. Likely the same class on Levi's link (K1482's sweep):
-  j138, t36s, t70s, j81, j139 (`.claude/probes/K1482/out/master/sheets/faults_00.png`). Queued as Muse run 26H
-  (docs/design/K1464_muse_batch26.md; .claude/probes/K1436/out/s3/sheets/worklist_h1_1.png rows 1, 2, 4)
 - **K1478** · rp=gf: the rest of K1436 s3's work list of screen faults (each tile viewed;
   .claude/probes/K1436/out/s3/worklist_named.tsv, sheets/worklist_h1_*.png and worklist_h0_*.png): muse_hash
   j81 wedge and stray arc (25.2, 23.5); g41_def_tw64 j148 smear plus three specks (13.0, 10.3; gfh=0 only, no
@@ -1138,6 +1122,9 @@ Every other item below waits on the trigger it names.
 - **K1499** · rp=gf has no fade at the start and exit markers: today's fades the thread away from the marker
   disc over a long stretch at fl 1.2, gf keeps the crisp fl 0 cut at every value (gf_look.ts has no marker-gap
   port; K1495 handoff in docs/design/K1495_fade_reach.md). Muse run 26K
+- **K1504** · rp=gf j64 on Levi's link: a pinhole about 0.1 wide where chains 28 and 56 of one surface part
+  (in the CPU mirror too, so geometry, not the look: .claude/probes/K1482/out/s7/j64_gm.png). Fill holes in
+  one surface's union narrower than about a stroke width (Handoff K1482 s7)
 
 ## Residuals (known, not fixed)
 
@@ -2447,6 +2434,12 @@ Every other item below waits on the trigger it names.
   rise recorded at tables.ts:578 (16 -> 231 without home membership); then k1436_bar.ps1 -Scenes
   ring,g41_ring_tw64 at HomeFlag 1 and 0. The scan's cut find is separately the lkGap centreline cut outside
   the scan's legit zone, where gf's fill already equals today's.
+- **K1503** · K1476 leftover (seen in .claude/probes/K1476/out/26G/tile_fix_1.png): after 9ae14f27 a short
+  dark speck remains in the fill at the left end of where j64's line was, on muse_default_tw (a short dash)
+  and muse_hash (a dot); today's fill has none. Check with K1501
+- **K1505** · K1482 s7's STRICT bar: one find gone in the CPU mirror at muse_hash 4.73,33.55 (probably the
+  fold fix e51c69eb), not looked at; view it at 4x (.claude/probes/K1436/out/bar/k1482s7/bar.txt, raw frames
+  untracked beside it)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2820,6 +2813,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1477** · rp=gf: the under thread's border stroke tapers to a point and stops past a crossing at ring x68 (19.4, 20.0; 963 px in K1436's screen scan), g41_ring_tw64 j24 (the same spot, 660 px) and x67 (18.0, 20.6; 296 px); today's stroke runs through, the fill matches. Dropped: cause found by Muse 26H (no fix landed); continued as K1502 (2026-11-18).
+- **K1476** · Muse 26G: a never-clearing gap window ends at the joint room; the long line is gone on muse_default_tw and muse_hash (a short speck remains at its left end, K1503; other scenes' changed sides: K1501). Done in 9ae14f27 (2026-11-18).
+- **K1498** · Crossing fade on dense mazes (both renderers): on Levi's link the fade at 1.2 runs about 12 device px, not the ~51 the value asks for, because today's fade is held back near junctions (crossing_gaps.ts: FADE_JOINT_FLOOR's clearance scale, and the gap window's end about 43 px from the crossing); with the clearance scale off it reaches 14.5 px, and the window is the harder stop (K1495, .claude/probes/K1495/out/prof_cause.txt). Dropped: Levi, 2026-11-18: keep as is. A high fade keeps today's junction limits in both renderers (2026-11-18).
 - **K1495** · rp=gf's crossing fade equals today's on Levi's link: both ramp about 12 px at fl 1.2, held there by today's own junction limits, which gf copies (table and sheets: .claude/probes/K1495/out/sheet_reach.png, prof_cause.txt); no src change. Done in 3c27a775 (2026-11-18).
 - **K1492** · rp=gf's border outline fades over the crossing gap's whole ramp and follows the Crossing fade slider; seen on Levi's live link at fl 0.14 and 1.2 (.claude/probes/K1492/live/crop_014_vs_12.png). Done in 3d7acffe (2026-11-18).
 - **K1474** · gf fill matched today: the composite kept destination alpha, so a transparent backdrop added its colour (21,27,40) to every section colour; fill look now writes coverage alpha (border/both keep old blend). Strict interiors max 1/4/0 on ?3/?7/?b, border 0 px outside panel. Done in 5c058f5c (2026-11-18).

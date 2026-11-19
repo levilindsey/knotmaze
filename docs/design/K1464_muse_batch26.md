@@ -516,3 +516,53 @@ at: smooth, no stairs, bands, ticks or dots. 5. Away from the markers nothing mo
 hash, 0 px against master outside a box of 3 world units around each marker, at `fl` 0.14 and 1.2, both
 looks. 6. `.claude/probes/K1458/dragcheck.mjs` (fill) and `.claude/probes/K1492/dragcheck_b.mjs` (border)
 pass. 7. `npm test` green. 8. The guards.
+
+## Run L (26L): K1502, the border stub past a crossing (the pin key windows with home off)
+
+Added 2026-11-18. Run H named the cause (Handoff 26H): past the crossing at ring x68 and g41_ring_tw64
+j24/x67 both pins' depth hats read 0, so the under surface wins by centreline distance and buries the over
+thread's edge ink; the reach key windows (K1451's `pinReach`, `GF_REACH_SEP`) are only baked with home on.
+This run lands the fix K1502 names, in `tables.ts` (and `eval.ts`, `gf_keys.ts` as its mirror needs): bake
+the reach key windows with home off too.
+
+Cautions. A Claude agent is in `gf_look.ts` (the crossing gap in the border look, K1482 stage 8): stay out
+of that file. Two Claude stages tried a wider change in this area, the page's home build, and it did not
+land (Handoff K1482 s6 on branch `worktree-agent-ad03e8b65a2afa540`: a wider pin key window ran past the
+overlap's end and the look's gap then shaved the neighbour's edge; `GF_REACH_K` 1.15 -> 1.0 cut that from
+59 to 6 px). Read that handoff's cause paragraph before choosing the window's length, and clamp a window to
+its overlap's end. `tables.ts:578` records the census stray rise without home membership (16 -> 231): that
+number is this run's guard.
+
+Done: 1. The number first, failing on master: K1436's screen scan px at ring x68 (963), g41_ring_tw64 j24
+(660) and x67 (296), `-HomeFlag 1` and `0`. 2. Fixed: each under 40 px at both flags, the stroke running
+through as today's does, 4x tiles today | master gf | new gf looked at. 3. `k1436_bar.ps1` with `STRICT=1`
+on `ring,g41_ring_tw64,def,muse_hash,g41_user_tw64` at `-HomeFlag 1` and `0`: no new find and none grown,
+or each one shown at 4x and named; a scene's two captures share a physics hash (re-take the one that does
+not). 4. The census stray count of `tables.ts:578` does not rise. 5. Levi's link
+(`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`, physics hash fff8c9e5, `.claude/probes/K1482/cap.mjs`):
+the list of the 327 sites whose border ink changes by more than 8 px against master, each on a 4x tile
+master | new, named better, same or worse; no site turns worse (if one does, stop there and report it, do
+not land). 6. The build time of the tables on link A does not rise by more than 10% (K1451's measure). 7.
+`npm test` green. 8. The guards.
+
+## Run M (26M): K1501 and K1503, the gap-window fix of Run G on the other scenes
+
+Added 2026-11-18. Run G's 9ae14f27 (a never-clearing gap window ends at the joint room, not its cap)
+changed 2-10 baked window sides on every census scene but fat (`.claude/probes/K1476/out/26G/triggers.txt`);
+only muse_default_tw and muse_hash were checked on screen. And at j64 on those two scenes a short dark speck
+remains in the fill at the left end of where the line was (`.claude/probes/K1476/out/26G/tile_fix_1.png`,
+second column: a short dash on muse_default_tw, a dot on muse_hash); today's fill has none (K1503).
+
+`gf_look.ts` is also a Claude agent's file for now (K1482 stage 8, the border look's use of the gap): start
+from master as it stands when you begin, keep the diff small and pull with rebase before each push.
+
+Done: 1. For def, ring, g41_ring_tw64, g41_user_tw64 and user_tw42.lightpaper: every window side 9ae14f27
+changed, exact (9ae14f27's parent against it, in one physics hash), with the px that moved on screen in a
+box around it, fill and border. 2. Each on a 4x tile today | parent gf | master gf, looked at and named
+better, same or worse against today's; a worse one is fixed or listed with its cause. 3. K1503: the speck's
+cause named in the code, a count failing on master (dark px inside the fill in the speck's box, both
+scenes), fixed to 0 with today's fill as the reference, 4x tiles. 4. `k1436_bar.ps1` with `STRICT=1` on
+`muse_default_tw,muse_hash,def,ring` at `-HomeFlag 1` and `0`: no new find, none grown. 5. Away from the
+changed sides nothing moves: 0 px against master in the same physics hash outside their boxes. 6.
+`.claude/probes/K1458/dragcheck.mjs` and `.claude/probes/K1492/dragcheck_b.mjs` pass. 7. `npm test` green.
+8. The guards.
