@@ -1,5 +1,7 @@
 # K1482 s8: the K1436 bar's ref half run by hand (the bar's own run waited on Muse's perf lock, which the s8 brief
 # says not to take or wait on; nothing else differs from k1436_bar.ps1 lines 112-126 and its compare).
+# K1507: this by-hand half is no longer needed - run k1436_bar.ps1 with -NoPerfLock instead (it skips the wait
+# and stamps its output "taken under load"). Kept for the record of what s8 ran.
 #   pwsh bar_ref.ps1 <refSha> <baseSha> <port> <tag>   (the bar already built, mirror-scanned and served the ref)
 param([string]$Ref, [string]$Base, [int]$Port, [string]$Tag, [int]$Par = 3)
 $ErrorActionPreference = "Stop"

@@ -2,7 +2,9 @@
 #
 # HOW TO RUN (from any checkout of knotmaze, pwsh 7; what K1436 s3 ran, 2026-11-17):
 #   pwsh -NoProfile -File .claude/probes/K1436/k1436_bar.ps1 -Ref <commit> [-Base <commit>=origin/master] [-HomeFlag 1|0]
-#        [-Scenes def,ring,...] [-Port 5601] [-Tag <out dir name>=<ref sha>] [-Keep]
+#        [-Scenes def,ring,...] [-Port 5601] [-Tag <out dir name>=<ref sha>] [-Keep] [-NoPerfLock]
+#   -NoPerfLock (K1507): skip the wait on $env:TEMP\claude-perf.lock and label the output "taken under load"
+#        (the captures run beside whatever holds the lock; bar.txt is stamped, the verdict still printed).
 #   RAN (s3): -Ref cc1ee890 -Base cc1ee890 -Scenes ring,def -Port 5603 -Par 2 -Tag self1 -Keep   -> PASS (new 0 grown 0
 #        gone 0); ~16 min with a cold profile (base warm 117 s, captures 270 s; ref warm 14 s, captures 80 s) plus a
 #        30 min wait on another owner's perf lock. ring's two loads froze on DIFFERENT hashes: set STRICT=1 for real runs.
@@ -28,7 +30,8 @@
 #      v2's band profile and strays on the screen's ink plus the cut / speck / spill look checks (labels from the mirror
 #      at the same pixel: a capture has none).
 #   Then k1436_bar_cmp.mjs matches finds by scene, scan, kind:class and site (0.3 world units). Any new or grown find is
-#   a FAIL. It waits (never takes) $env:TEMP\claude-perf.lock while another owner holds it, and deletes its worktrees,
+#   a FAIL. It waits (never takes) $env:TEMP\claude-perf.lock while another owner holds it (unless -NoPerfLock,
+#   which skips the wait and stamps the output "taken under load"), and deletes its worktrees,
 #   builds and Chrome profile when it ends unless -Keep.
 #
 # WHAT IT CANNOT SEE: anything outside the 12 K868 census scenes and their frozen states (motion, intros, the reveal,
@@ -44,7 +47,8 @@ param(
   [int]$Port = 5601,
   [int]$Par = 3,
   [string]$Tag = "",
-  [switch]$Keep
+  [switch]$Keep,
+  [switch]$NoPerfLock
 )
 $ErrorActionPreference = "Stop"
 # pwsh -File passes "-Scenes ring,def" as ONE string: split it
@@ -58,6 +62,7 @@ $outRoot = Join-Path $probeDir "out\bar\$(if ($Tag) { $Tag } else { $refSha })";
 $buildRoot = Join-Path $env:TEMP "k1436s3-prev"; New-Item -ItemType Directory $buildRoot -Force | Out-Null
 $made = @()
 function Wait-Lock {
+  if ($NoPerfLock) { Write-Host "taken under load (NoPerfLock: perf lock wait skipped)"; return }
   $l = Join-Path $env:TEMP "claude-perf.lock"; $t0 = Get-Date
   if (Test-Path $l) { Write-Host "waiting on the perf lock: $(Get-Content $l)" }
   while (Test-Path $l) {
@@ -133,6 +138,7 @@ try {
   Invoke-Commit $refSha (Join-Path $outRoot "ref-$refSha")
   node (Join-Path $probeDir "k1436_bar_cmp.mjs") (Join-Path $outRoot "base-$baseSha") (Join-Path $outRoot "ref-$refSha") $outRoot
   $code = $LASTEXITCODE
+  if ($NoPerfLock) { Write-Host "taken under load"; Add-Content (Join-Path $outRoot "bar.txt") "taken under load (NoPerfLock: perf lock wait skipped)" }
 } finally {
   if (-not $Keep) {
     foreach ($p in $made) {
