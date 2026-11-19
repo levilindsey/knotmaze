@@ -1,0 +1,46 @@
+# K1482 s16: link A border look at rest (fff8c9e5), tip 708da671 on its own build (raw/tip) against the start 2eba02fa
+# (raw/start), same hash. The base is out/s15/classes_tip.txt (31). s11/boxdiff (48x48 box, ink = RGB sum <= 73), start
+# vs tip: 16 of 327 sites move more than 4 ink px, none more than 8 (ink 531628 -> 531816). Of the 31: j36 5/0, t16e
+# 4/0, j71 2/0, every other <= 2 (noise: the tip against f3, the same rule patched into the start build, moves 21 sites
+# by up to 8 px with ink 531825 -> 531816).
+# fixed: j36 stub (the 1 px seam at 2099,1030 / 2100,1031 / 2099,1037-1038 closes), t16e notch (the light line at
+#        2269-2271,1135 / 2272,1136 closes). Both were the flagged cut's residual just outside the over's outline.
+# unchanged, still faulted (separate causes, not chased): j4 notch (seam4 at 1646,231) and j71 sliver: the joint's own
+#        outline, no cut; j158 wedge and t73e wedge: light pixels at 1638-1640,574-576 read jb 0 under an unflagged
+#        cut of 0.73-1.0 (the bake's flag ends along the arc before the cut's window does).
+# moved, seen by eye (sheets/tip_six_1.png, tip_six_z.png, tip_mov_1..3.png, tip_t68s_z.png): t25s/j60 (seam1 at
+#        1593,1540-1543 closes), j143's seam3 (1971,390) closes (j143 left the table in s15), j87, t16s, t50e, j109,
+#        t52s, t29e/j67 (1 px fills at joint seams and a chevron's inner vertex), j142/t66e/t71e/j138 (end-cap edges
+#        +-3, as tip vs f3), j148/t68s (edge jitter at one wedge: the null control n0 vs startg0 shows the same).
+#        None newly faulted. count13 limits 20/20; --specks against the start: 0 new.
+# site class owner
+j4 notch K1490
+j14 notch K1490
+j15 wedge K1490
+j22 break GAP
+j29 break GAP
+j41 notch K1490
+j47 notch K1490
+j49 tick GAP
+j50 wedge K1490
+j59 notch K1490
+j64 dot PIN
+j71 sliver K1470
+j88 dot GAP
+j95 sliver K1490
+j147 sliver K1490
+j158 wedge K1490
+t4s notch K1490
+t23e wedge K1490
+t43s sliver K1490
+t45s notch K1490
+t56s sliver K1490
+t58e notch K1490
+t59s wedge K1490
+t65s break GAP
+t70s sliver GAP
+t73e wedge K1490
+t80s pocket GAP
+t81s wedge GAP
+t84e wedge K1490
+# tip total 29 (base 31): wedge 8, notch 8, sliver 6, tick 1, break 3, dot 2, stub 0, pocket 1; by owner K1490 19, GAP 8, K1470 1, PIN 1
