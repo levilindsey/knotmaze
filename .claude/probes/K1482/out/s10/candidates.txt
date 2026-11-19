@@ -1,0 +1,40 @@
+K1482 s10 step 2: candidate rules as PATCHF patches on lkGap's x lane (outline cut), link A, hash fff8c9e5,
+master 880ec605 frames raw/m/ (not committed), patched frames raw/c*/ (not committed). Tools: s10/cap10.ps1 (capture),
+s10/diffsites.py (ink changes by nearest site), s9/sheet9.py (4x tiles + ink diff), s10/crop4.py.
+Recapture noise floor: about 1230 ink pixels lost and 1250 gained between two captures of the same state
+(the background grain flips pixels across the ink threshold), spread one to nine pixels per site.
+
+(a) the outline's cut uses today's shorter extent: NOT PATCHED, refuted by measurement (pixels.txt, "Today side"):
+    every pick's nearest point on the over chain lies inside today's over-polyline reach (oCaps) at all four sites,
+    so a cut over today's reach removes the same pixels. Cannot join j49, j55, j36 or t70s.
+
+(b) the cut ends where a fused joint's room begins. Three forms:
+    patch_b.json, patch_b2.json: used pg[j] (the piece-group array). It does not exist in the app's look program
+      (PGRP: membership lives in PSURF(j)), the shader fails to compile and cap.mjs waits forever. No result.
+    patch_b3.json (over side): no x cut from a piece of the baked over chain that is a fused joint's member or ramp
+      (PSURF(j) >= 0 || PSURF(j) < -MAXP), and no N-branch cut when such a piece was seen. Ran (hits 2/2/2, hash ok).
+      Diff vs master (diff_b3_top.txt): 3800 ink px changed, gained 2570 lost 1230 (about 1300 net gained over the
+      noise floor), 52 named sites with >= 10 px.
+      The four: j49 no change (1/1 px), j55 2/6, j36 4/5, t70s 6/0: none joins (sh_b3.png, looked at).
+      Other gap sites: j87 (tick) JOINS: gain 22 px, the short arm's outline now runs into the long thread's
+      (cr_b3_j87.png: gf | b3 | c columns). t79s 2, j22 3/3, j29 0/3, t80s 1/1, t81s 1: no change.
+      Elsewhere: t16e gains 24 px, a stub's outline that ended about 3 px short of the arch now joins it
+      (cr_b3_t16e.png); 51 more sites change by >= 10 px, none looked at yet.
+      Why the four do not join: the cutting piece at each is not a member or ramp of a fused joint's group (at j49,
+      J75 sits 0.4 arc down 75 from x325, past the field's membership ramp, while today's FAN for J75 reaches over
+      71's faded tip). Result: FAIL (the four stay cut); fixes j87.
+    patch_b4.json (under side): no x cut at all where the outlined (under) piece is a member or ramp. Capture did
+      not finish (no frame after 6+ min, compile failure suspected, not diagnosed); killed. No result.
+
+(c) the cut applies only to the thread that actually passes under (patch_c.json: no x cut from the outlined
+    thread's own chain within sx of the pixel's arc, today's selfEx skip): ran (hits 2, hash ok). Diff vs master
+    (diff_c_top.txt): 2489 ink px changed, gained 1258 lost 1231 = the noise floor; no site above 9 px; the four
+    unchanged on the sheet (sh_c.png, looked at). Result: NO-OP, as predicted: s8's rule already lets only the baked
+    crossing's over chain cut the outline, and at each of the four that over chain is the true over thread.
+
+Conclusion for the next stage: the faults at the four are outline cut by the TRUE over thread of a real crossing,
+inside today's reach; today hides the same cut at j49 with J75's fan (the joint's over arm laid across the under
+thread's tip) and at j55/j36/t70s its mask removes the ribbon there. A rule that joins them must know where a fused
+joint's fan reaches along the over chain (an arc distance from the crossing to the over chain's nearest joint),
+which the window bake does not carry (gapWindow's joint room uses the under chain's joints only): a new baked
+number, which the brief says to stop and report rather than add.

@@ -1,0 +1,14 @@
+[
+  [
+    "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;",
+    "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1; bool jm10 = false;"
+  ],
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "bool mem10 = PSURF(j) >= 0 || PSURF(j) < -MAXP; if ((cS < 0 || PC(j) == cS) && !mem10) g = max(g, cj); if (PC(j) == cS && mem10) jm10 = true;"
+  ],
+  [
+    "g = max(g, cN);",
+    "if (!jm10) g = max(g, cN);"
+  ]
+]
