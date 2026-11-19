@@ -1,0 +1,45 @@
+# miss9.py: today-only outline px (tbn frame) with no master gf ink within D px, R=28 box. Cause-B sites starred; full list = all 327 sites (top 60 shown).
+## D=3, the 12 sites + controls j6 j102 j24 j110 j50 t23e
+  j24    missing  277 of today  497
+  j50    missing  265 of today  718
+* j36    missing  187 of today  514
+* j55    missing  144 of today  626
+  t23e   missing  125 of today  671
+* t65s   missing  103 of today  524
+* t70s   missing   92 of today  601
+* t79s   missing   76 of today  608
+* j49    missing   74 of today  561
+* j88    missing   28 of today  554
+  j110   missing   23 of today  580
+  j102   missing   21 of today  679
+* t81s   missing    0 of today  572
+* t80s   missing    0 of today  404
+* j87    missing    0 of today  528
+  j6     missing    0 of today  608
+* j29    missing    0 of today  511
+* j22    missing    0 of today  504
+bg [21, 27, 40] TH 12 D 3 R 28: cause-B mean 58.7 (n 12); others median 125 p90 277 (n 6)
+## D=3, all sites
+bg [21, 27, 40] TH 12 D 3 R 28: cause-B mean 58.7 (n 12); others median 59 p90 224 (n 315)
+## D=7, the 12 sites + controls j6 j102 j24 j110 j50 t23e
+  j50    missing  103 of today  718
+* j36    missing   69 of today  514
+  j24    missing   53 of today  497
+* t70s   missing   36 of today  601
+* j55    missing   30 of today  626
+* t79s   missing   11 of today  608
+* j49    missing    7 of today  561
+* t65s   missing    1 of today  524
+* t81s   missing    0 of today  572
+* t80s   missing    0 of today  404
+  t23e   missing    0 of today  671
+* j88    missing    0 of today  554
+* j87    missing    0 of today  528
+  j6     missing    0 of today  608
+* j29    missing    0 of today  511
+* j22    missing    0 of today  504
+  j110   missing    0 of today  580
+  j102   missing    0 of today  679
+bg [21, 27, 40] TH 12 D 7 R 28: cause-B mean 12.8 (n 12); others median 0 p90 103 (n 6)
+## D=7, all sites
+bg [21, 27, 40] TH 12 D 7 R 28: cause-B mean 12.8 (n 12); others median 0 p90 86 (n 315)
