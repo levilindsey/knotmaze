@@ -1,0 +1,179 @@
+{
+ "query": "3.FGH1HtvQeDjm6e4BII&xp=off&am=instant",
+ "steps": [
+  {
+   "nm": "u0",
+   "note": "as cap.mjs",
+   "updates": 153
+  },
+  {
+   "nm": "rf",
+   "note": "+rebuildFillets(true)",
+   "updates": 242
+  },
+  {
+   "nm": "tp",
+   "note": "+update()+tickPaint(0)",
+   "updates": 292
+  },
+  {
+   "nm": "u1",
+   "note": "+1 update()",
+   "updates": 337
+  },
+  {
+   "nm": "u30",
+   "note": "+30 update()",
+   "updates": 412
+  }
+ ],
+ "freeze": {
+  "h": "fff8c9e5",
+  "simT": 20.016666666666172
+ },
+ "rc0": {
+  "geomRev": 169,
+  "rebuilds": 168,
+  "key": "169|6|1|0.8|0.88|0.14|[]|[]|bw0.38|uw0"
+ },
+ "rc1": {
+  "geomRev": 220,
+  "rebuilds": 219,
+  "key": "220|6|1|0.8|0.88|0.14|[]|[]|bw0.38|uw0"
+ },
+ "rc2": {
+  "geomRev": 257,
+  "rebuilds": 257,
+  "key": "257|6|1|0.8|0.88|0.14|[]|[]|bw0.38|uw0"
+ },
+ "rc3": {
+  "geomRev": 308,
+  "rebuilds": 308,
+  "key": "308|6|1|0.8|0.88|0.14|[]|[]|bw0.38|uw0"
+ },
+ "children": [
+  {
+   "i": 0,
+   "label": "",
+   "type": "e",
+   "n": 86,
+   "renderable": true,
+   "visible": true
+  },
+  {
+   "i": 1,
+   "label": "",
+   "type": "e",
+   "n": 1,
+   "renderable": true,
+   "visible": true
+  },
+  {
+   "i": 2,
+   "label": "",
+   "type": "e",
+   "n": 0,
+   "renderable": true,
+   "visible": true
+  },
+  {
+   "i": 3,
+   "label": "",
+   "type": "e",
+   "n": 0,
+   "renderable": true,
+   "visible": true
+  },
+  {
+   "i": 4,
+   "label": "",
+   "type": "e",
+   "n": 0,
+   "renderable": true,
+   "visible": true
+  },
+  {
+   "i": 5,
+   "label": "",
+   "type": "e",
+   "n": 1,
+   "renderable": true,
+   "visible": true
+  }
+ ],
+ "junctions": {
+  "j36": {
+   "arms": [
+    {
+     "chain": 11,
+     "slot": 4,
+     "dir": -1
+    },
+    {
+     "chain": 11,
+     "slot": 4,
+     "dir": 1
+    },
+    {
+     "chain": 50,
+     "slot": 0,
+     "dir": 1
+    }
+   ],
+   "particles": [
+    419,
+    1235
+   ]
+  },
+  "j55": {
+   "arms": [
+    {
+     "chain": 21,
+     "slot": 2,
+     "dir": -1
+    },
+    {
+     "chain": 58,
+     "slot": 46,
+     "dir": -1
+    },
+    {
+     "chain": 58,
+     "slot": 46,
+     "dir": 1
+    }
+   ],
+   "particles": [
+    548,
+    1477
+   ]
+  },
+  "j87": {
+   "arms": [
+    {
+     "chain": 38,
+     "slot": 34,
+     "dir": -1
+    },
+    {
+     "chain": 84,
+     "slot": 50,
+     "dir": -1
+    },
+    {
+     "chain": 84,
+     "slot": 50,
+     "dir": 1
+    }
+   ],
+   "particles": [
+    863,
+    2887
+   ]
+  }
+ },
+ "post": {
+  "simT": 20.016666666666172,
+  "h": "fff8c9e5"
+ }
+}
