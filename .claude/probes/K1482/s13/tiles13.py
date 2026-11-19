@@ -1,7 +1,7 @@
 # K1482 s13: tiles of named sites from one or more frames, side by side per site, rows = sites.
 # python tiles13.py <out.png> <sites.json> <R> <Z> <sites comma list> <label=frame.png> ... [--grid 10] [--ink]
 # --grid N draws a faint device-pixel grid every N px; --ink paints ink pixels (RGB sum <= 73) red on a copy.
-# A site may be given as name@dx,dy to shift its centre.
+# A site may be given as name@dx:dy to shift its centre.
 import sys, json
 import numpy as np
 from PIL import Image, ImageDraw
@@ -21,7 +21,7 @@ sheet = Image.new("RGB", (len(frames) * (W + 6) + 6, len(names) * (W + 6)), "whi
 for r, nm in enumerate(names):
     dx = dy = 0
     if "@" in nm:
-        nm, off = nm.split("@"); dx, dy = (int(v) for v in off.split(","))
+        nm, off = nm.split("@"); dx, dy = (int(v) for v in off.split(":"))
     cx, cy = int(round(S[nm]["x"])) + dx, int(round(S[nm]["y"])) + dy
     for c, (lbl, F) in enumerate(frames):
         im = F[cy - R:cy + R, cx - R:cx + R].copy()

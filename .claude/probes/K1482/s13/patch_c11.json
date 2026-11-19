@@ -1,0 +1,6 @@
+[
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, mem ?",
+    "if (PC(j) == cS) g = max(g, mem ?"
+  ]
+]

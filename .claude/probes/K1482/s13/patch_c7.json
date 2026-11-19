@@ -1,0 +1,22 @@
+[
+  [
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {",
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU, bool red13) {"
+  ],
+  [
+    "g = max(g, mem ? lkCut(pd[j],",
+    "g = max(g, mem && red13 ? lkCut(pd[j],"
+  ],
+  [
+    "g = max(g, jm ? lkCut(N.x,",
+    "g = max(g, jm && red13 ? lkCut(N.x,"
+  ],
+  [
+    "vec2 g = lkGap(kU, p, fq, PC(jU));",
+    "vec2 g = lkGap(kU, p, fq, PC(jU), false);"
+  ],
+  [
+    "lkGap(lkKb, p, lq, lab)",
+    "lkGap(lkKb, p, lq, lab, true)"
+  ]
+]

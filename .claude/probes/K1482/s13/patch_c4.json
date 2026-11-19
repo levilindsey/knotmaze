@@ -1,0 +1,6 @@
+[
+  [
+    "g = max(g, mem ? lkCut(pd[j], sinT, exg, wm, pxw, sc * vec2(0.0, 0.3)) : cj);",
+    "g = max(g, cj);"
+  ]
+]

@@ -1,0 +1,14 @@
+[
+  [
+    "bool jm = false;",
+    "bool jm = false; float dm13 = 1e9; float am13 = -1e9;"
+  ],
+  [
+    "if (PC(j) == cS && mem) jm = true;",
+    "if (PC(j) == cS && mem) { jm = true; if (pd[j] < dm13) { dm13 = pd[j]; am13 = lkArc(PC(j), qO); } }"
+  ],
+  [
+    "g = max(g, jm ? lkCut(N.x,",
+    "g = max(g, jm && abs(lkArc(cO, N.yz) - am13) < 0.05 ? lkCut(N.x,"
+  ]
+]
