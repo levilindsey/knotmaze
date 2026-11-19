@@ -1,0 +1,34 @@
+# K1482 s19: link A border look at rest (fff8c9e5), tip 24a9f83b2 on its own build (raw/tip) against the start
+# be41ee3ec (raw/start), same hash. src and test are unchanged from the start (git diff be41ee3ec 24a9f83b2 -- src
+# test is empty), so this is the s18 table again. Every site seen at 4x, start | tip | gains/losses
+# (sheets/cls_1.png, cls_2.png): every tile +0 -0 except j15 +1 (one end-cap edge pixel). k1482s19-grp (48x48,
+# ink = RGB sum <= 73) start vs tip: 3 groups, +3 -1 ink px in all, at end caps t39e, t52e, t29e (frame noise).
+# count13 --specks against the start: 1 "new" speck, (1692,336) 1 px, RGB sum 74 -> 73 at the ink threshold; the
+# same-src dev control (raw/ctl) shows the same speck, so it is frame noise, not a change. count13: 20/20 within
+# limit. Fill look 0 px.
+# Owners: K1490 = the cross-surface joint rule (waits on Levi); GAP = an ordinary crossing gap's end at a site
+# (look question, see the handoff); PIN = j64 (Muse).
+# site class owner
+j4 notch K1490
+j14 notch K1490
+j15 wedge K1490
+j29 break GAP (xi291's ordinary cut, c67 over c66; u19 = the look question)
+j41 notch K1490
+j47 notch K1490
+j49 tick GAP (xi325's under-pass gap, c75 over c71, beside g50; v19 / w19 = the look question)
+j50 wedge K1490
+j59 notch K1490
+j64 dot PIN
+j71 sliver K1490 (was K1470: no cut; the light lies between c67's and c30's outlines at jn71, two surfaces)
+j95 sliver K1490
+j147 sliver K1490
+t4s notch K1490
+t23e wedge K1490
+t43s sliver K1490
+t45s notch K1490
+t56s sliver K1490
+t58e notch K1490
+t59s wedge K1490
+t81s wedge K1490 (the V at 909-912,1168-1170: no cut; light between labs 45 and 5 at jn19, two surfaces)
+t84e wedge K1490
+# tip total 22 (start 22): wedge 6, notch 8, sliver 5, tick 1, break 1, dot 1; by owner K1490 19, GAP 2, PIN 1
