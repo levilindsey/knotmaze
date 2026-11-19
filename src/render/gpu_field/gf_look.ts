@@ -2054,8 +2054,13 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   // self crossing: its own thread is no over pass within sx of that arc (today's gapSegFull skip).
   float aU = lkArc(cU, qU);
   float sx = 2.0 * uH + uLkG + uLkF + ${lkF(GAP_EXIT_PAD)};
+  // K1482 s8: inside a window the bake names, only that crossing's over thread cuts (today's slot cuts by its
+  // own over pass alone). Any higher piece used to cut there too: a tucked tail's host, which is a fused joint
+  // and no crossing (crossing_gaps.ts isJointPair), cut the tail's outline in a neighbour crossing's window and
+  // left a dot or dash of it beside the host's outline (link A t1s, t24s, t46e, t39s).
+  int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;
   for (int j = 0; j < np; j++) {
-    if (!(pkey[j] > key + uZt)) continue;
+    if (!(pkey[j] > key + uZt) || (cS >= 0 && PC(j) != cS)) continue;
     vec2 qO = lookQ(j, p);
     vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
