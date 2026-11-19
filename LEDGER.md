@@ -739,11 +739,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: nobody since 2026-11-19 02:04 (merged; agent `a5430e2070cd377bc` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `e6eab6bb`
-  - evidence: .claude/probes/K1482/s17, .claude/probes/K1482/out/s17, out/s16/classes_tip.txt
-  - next: stage 17 landed (29 to 27 on link A: j158/t73e fixed, a dozen 1 px joint seams inked; fill 0 px; bar PASS). By owner: K1490 17, GAP 8, K1470 1, PIN 1 (out/s17/classes_tip.txt). Two causes left, named in Handoff K1482 s17: (a) the 8 GAP sites (j22 j29 j49 j88 t65s t70s t80s t81s): a crossing cut's ending removes ink on an unflagged slot whose over thread is not a member of the fused joint beside it; at j22, j88, t80s the joint is on the UNDER chain, which the flag never reads (out/s17/eval_red.txt): stage 18 starts there; (b) j4 (likely j71): a light line between two separate near-tangent surfaces at a V, needs a cross-surface contact rule in gf_glsl.ts/eval.ts, overlaps K1490, waits on Levi's K1490 answer
-  - brief: `docs/design/K1482_s17_joint_outlines.md`
+  - owner: agent `a077003d003b40d70` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 02:05, 2 h cap ~04:05)
+  - branch: `worktree-agent-a077003d003b40d70`, worktree `.claude/worktrees/agent-a077003d003b40d70`; last commit: `2e70be908`
+  - evidence: .claude/probes/K1482/s18, .claude/probes/K1482/out/s18, out/s17/classes_tip.txt, out/s17/eval_red.txt
+  - next: stage 18 running (the 8 GAP sites, under-member flag first); on its report view the sheets, merge, recount, check the deploy. j4's cross-surface line waits on Levi's K1490 answer
+  - brief: `docs/design/K1482_s18_cut_endings.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
