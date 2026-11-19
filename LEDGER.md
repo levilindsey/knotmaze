@@ -734,11 +734,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a78ef819b8f18362f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 13:55, 2 h cap ~15:55)
-  - branch: `worktree-agent-a78ef819b8f18362f`, worktree `.claude/worktrees/agent-a78ef819b8f18362f`; last commit: `880ec605`
-  - evidence: .claude/probes/K1482/out/s9/ (b_ov_a.png, b_ov_b.png, b_today_tbn.png, tday.txt), .claude/probes/K1482/out/s8/classes_tip.txt (36 faulted on master), .claude/probes/K1482/out/live/live_sites.png (live 363b694: stage 7's and 8's seven sites clean)
-  - next: stage 10 (started 2026-11-18 13:57, cap about 15:57): the same 12 joint-side cuts, read at the pixel with a shader debug output, candidate rules by patch judged on 4x tiles. On its report: view its tiles, check the count against 36 and the STRICT bar, merge, CI, live check. Stage 9 (merged 880ec605, no source change) found no number separating the 12 from clean near-joint crossings and suspects they were assigned to the wrong crossings; stage 8 (merged 363b6948) fixed the dots and the dash, confirmed on the live link; 22 sites wait on K1490; the home build stays parked on worktree-agent-ad03e8b65a2afa540
-  - brief: `docs/design/K1482_s10_borders.md`
+  - owner: agent `a6169c726e1b88fb6` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 15:28, 2 h cap ~17:28)
+  - branch: `worktree-agent-a6169c726e1b88fb6`, worktree `.claude/worktrees/agent-a6169c726e1b88fb6`; last commit: `c198e005`
+  - evidence: .claude/probes/K1482/s10/, .claude/probes/K1482/out/s10/ (pixels.txt, candidates.txt, sh_b3.png)
+  - next: stage 11: recount on today's master, land s10's patch_b3 (the joint-group rule) after a site-by-site look at its 52 changed sites, then the mask case at j55, j36, t70s; j49 waits on K1512
+  - brief: `docs/design/K1482_s11_borders.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
