@@ -810,6 +810,23 @@ self-compare to 0 finds on every scene in three runs, while a planted fault (K14
 still found. 4. the state-freeze retries reported per scene, and a scene that cannot freeze on one state
 named and skipped with a printed warning. Close K1519 or record what is left.
 
+### Handoff 26R (Muse, 2026-11-19, fix landed in d4cf70ea; K1519 stays open for the three full fixed runs and the planted screen pair)
+
+Started 00:22 PST, stopped 02:06 PST. Starting master 3cdb7cd9; probes only (k1436_screen.mjs, k1436_bar_cmp.mjs, k1436_bar.ps1), no src/ or test/ change. Master moved under the run (9aee8202, then K1482 s17/s18 docs), so the fixed subset bar ran on 9aee8202 (same src/); perf lock never held by another owner, Levi's browser shared the GPU throughout.
+
+Done 1 (the noise, one full run on the old bar, STRICT=1, HomeFlag 1, Par 3, tag 26R_self1): FAIL new 4 grown 1 gone 185, every judged difference on g41_user_tw64's screen scan; the other 11 scenes repeat exactly (base/ref screen finds and hashes identical: muse_hash 2/2, g41_def_tw42 15/15, g41_ring_tw64 3/3, lightpaper 10/10, def 0/0, fat 0/0, g41_def_tw64 10/10, g41_user_tw42 10/10, muse_default_tw 0/0, ring 1/1, g41_ring_tw42 3/3; mirror finds identical on all 12). g41_user_tw64: base 192 screen finds (spill:plain 125) against ref 11, same hash 0d51331b, same mirror 3. A 1-scene pilot (26R_pilot1) on the same scene passed 0/0. Three full runs were not completed: one full bar takes ~35 min under Par 3, past what the stop line leaves beside the fix and guards.
+
+Done 2 (the cause: capture timing, not dither, animation or AA jitter). The settled frame is unique: pilot base, self1 ref and fix1 frames for g41_user_tw64 are byte-identical files (SHA-256 1051FCCE…), tables bit-identical (0 element diffs), views identical floats, borders byte-identical even in the bad pair. The bad base fill differs from settled at 505,236 px (225,882 by >24, max 253) across the whole knot. The freeze's StepUntil moves the physics, gf rebuilds async, and the old redraw waited only for composites +2, which stale frames satisfy: the fill shot (first after the freeze) drew the load's pre-freeze state, the border shot seconds later drew the frozen state. s13's 1-2 level residue is the tail of the same race at lower contention.
+
+Done 3 (fixed, partially verified). k1436_screen.mjs keeps a screenshot only when two redrawn shots are byte-identical (8 tries, then warns and keeps the last; meta.stable records the shot count), k1436_bar.ps1 always sets STRICT=1, and the comparator's thresholds are unchanged. Fixed subset bar (26R_fix1: g41_user_tw64, g41_ring_tw42, ring, def, Par 3): PASS new 0 grown 0 gone 0 on the judged scenes (ring_tw42 skipped, below); user64 base reads the settled 11 finds, stable in 2 shots. Comparator sensitivity proven synthetically: an injected 809 px cut:plain at ring x68 in the ref screen.json still FAILs (new 1). The planted pair itself (17053a36 against a3a9a6b4, ring + g41_ring_tw64) produced clean base screens (1 and 4 finds) but the faulted old build's warm/captures never finished in 30 min (pre-fc520c2d cold loads under contention), so its screen FAIL stands unmeasured; re-run it on a quiet machine.
+
+Done 4 (freeze retries, reported and skipped). meta.json now records freeze {expected, seen, tries, ok}; the comparator prints FREEZE lines for any scene that needed a retry or failed, and SKIP (not judged, bar unaffected) when the pair's hashes differ. In 26R_fix1: g41_ring_tw42 base FAILED in 4 (076a1b2a x4; want f7b1dff2), ref ok in 1 (f7b1dff2) — two loads of one build froze on different states, so the scene is named and skipped; g41_user_tw64 froze ok in 3 and 2 (c1b63637 first). No scene is silently judged across states any more.
+
+Guards (preview of 9aee8202 on :5633, one kept profile %TEMP%\k26r-guards-profile): hold.mjs 60 250 5000 PASS on ?3&xp=off&am=instant&rp=gf (first composite 93.1 s cold under the planted run's contention; 60/60, edges min 102899) and on the fat gfh=1 link (49.7 s; 60/60, min 7026); dragcheck.mjs PASS for gf and for gfh (every stop 0 px over TOL 24). npm test green (256 files, 3198 passed, 9 skipped; tsc clean; no test changed — probes only).
+
+Left: three full 12-scene fixed-bar runs at HomeFlag 1 (expect PASS with any unfreezable scene skipped by name), and the planted pair's screen FAIL on a quiet machine. K1519 stays open for those two measurements; K1464, K1451 and K1460 left open and untouched. Preview servers (5628, 5629, 5631, 5633) stopped; the bar's -Keep builds/profiles stay in %TEMP%\k1436s3-prev / k1436s3-profile-*.
+
+
 ## Run S (26S): j64's seam, third angle (K1517, K1504)
 
 Added 2026-11-19. Handoff 26Q's next angle: at seam points scale the surface's ink by the seam's coverage,
