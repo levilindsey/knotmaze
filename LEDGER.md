@@ -739,11 +739,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `agent-ac8618d194aa1ac8d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 17:32, 2 h cap ~19:32)
-  - branch: `worktree-agent-ac8618d194aa1ac8d`, worktree `.claude/worktrees/agent-ac8618d194aa1ac8d`; last commit: `0b9f19a4`
-  - evidence: .claude/probes/K1482/s13, .claude/probes/K1482/out/s13
-  - next: stage 13: the outline remnant beside a fused joint, judged on gf alone; on its report view the sheets, merge, recount
-  - brief: `docs/design/K1482_s13_remnants.md`
+  - owner: agent `agent-a7f542c2b821fc4e1` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 19:20, 2 h cap ~21:20)
+  - branch: `worktree-agent-a7f542c2b821fc4e1`, worktree `.claude/worktrees/agent-a7f542c2b821fc4e1`; last commit: `629da05e`
+  - evidence: .claude/probes/K1482/s14, .claude/probes/K1482/out/s14 (stage 13: s13, out/s13)
+  - next: stage 14: land c1 without its 5 specks and 4 worse sites; on its report view the sheets, merge, recount, check the deploy
+  - brief: `docs/design/K1482_s14_c1.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
