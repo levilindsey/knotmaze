@@ -1,0 +1,45 @@
+# K1482 s17: link A border look at rest (fff8c9e5), tip 40c448105 on its own build (raw/tip) against the start
+# ae3155eac (raw/start), same hash. The base is out/s16/classes_tip.txt (29). s11/boxdiff (48x48 box, ink = RGB sum
+# <= 73), start vs tip: 4 of 327 sites move more than 9 ink px, 31 more than 3 (ink 531758 -> 532328); losses at most 4.
+# Every faulted site and every mover seen at 4x (sheets/cls_1..6.png, mov_1..3.png) and the spots at 10x (cls_z.png,
+# mov_z.png); seams by s16/seamfind.py.
+# fixed: j158 wedge and t73e wedge (one spot): the light pixels at 1638,574-576 / 1639,575 / 1637,577 are inked on
+#        the tip (40c448105, the flag spread along its run of slots).
+# moved, still faulted: j4 notch: the 1 px seam at 1641-1645,229 / 1642-1643,230 closes, the diagonal light line
+#        between the joint's own outlines (1648,231 -> 1652,237) stays (step 2's cause: two surfaces, no cut).
+#        t81s wedge: the V's tip at 904-906,1170-1173 fills (909-912,1168-1170 stay), the GAP spot at 904-912,1130-1134
+#        is unchanged.
+# moved, not faulted: j86/j123 (one spot, 1500-1505,1006-1009), t1s, j9, j102, j126, j1, j120, t0e, t34s, t51e, j47:
+#        1 px light seams between a joint's outlines inked (the step-1 rule's other closes); j148/t68s, j142/t66e,
+#        j100, j138, t71e: end-cap edge pixels +-3/4, frame noise (s16 saw the same sites flip under a null control).
+#        None newly faulted, none worse. count13 --specks against the start: 0 new. Fill look 0 px.
+# site class owner
+j4 notch K1490
+j14 notch K1490
+j15 wedge K1490
+j22 break GAP
+j29 break GAP
+j41 notch K1490
+j47 notch K1490
+j49 tick GAP
+j50 wedge K1490
+j59 notch K1490
+j64 dot PIN
+j71 sliver K1470
+j88 dot GAP
+j95 sliver K1490
+j147 sliver K1490
+t4s notch K1490
+t23e wedge K1490
+t43s sliver K1490
+t45s notch K1490
+t56s sliver K1490
+t58e notch K1490
+t59s wedge K1490
+t65s break GAP
+t70s sliver GAP
+t80s pocket GAP
+t81s wedge GAP
+t84e wedge K1490
+# tip total 27 (base 29): wedge 6, notch 8, sliver 6, tick 1, break 3, dot 2, stub 0, pocket 1; by owner K1490 17, GAP 8,
+# K1470 1, PIN 1

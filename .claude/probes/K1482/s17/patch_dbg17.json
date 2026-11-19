@@ -1,0 +1,38 @@
+[
+  [
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {",
+    "float dbGL = 0.0; float dbGL0 = 0.0; float dbGN = 0.0; float dbGN0 = 0.0; float dbInk = 0.0; float dbMk = 0.0; int dbCS = -1; int dbLab = -1; int dbFl = 0; int dbJb = 0; bool dbL = false; bool dbFr = false; bool dbRec = false;\nfloat dbQ(float v) { return floor(15.0 * clamp(v, 0.0, 1.0) + 0.5); }\nvec2 lkGap(float key, vec2 p, vec2 qU, int cU) {"
+  ],
+  [
+    "vec2 scJ = jf ? vec2(uLkG > 0.0 ? -pxw / uLkG : 0.0, 0.3 * sc.y) : sc;",
+    "vec2 scJ = jf ? vec2(uLkG > 0.0 ? -pxw / uLkG : 0.0, 0.3 * sc.y) : sc; float dgn = 0.0; float dgn0 = 0.0; bool nv = false;"
+  ],
+  [
+    "else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); g0 = max(g0, cj); }",
+    "else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); g0 = max(g0, cj); }"
+  ],
+  [
+    "if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {",
+    "float dgl = g; float dgl0 = cS < 0 ? g : g0;\n  if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {"
+  ],
+  [
+    "g = max(g, jf ? lkCut(N.x, sinT, exg, wm, pxw, scJ) : cN);",
+    "nv = true; dgn0 = cN; dgn = jf ? lkCut(N.x, sinT, exg, wm, pxw, scJ) : cN; g = max(g, dgn);"
+  ],
+  [
+    "return vec2(g, gA);",
+    "if (dbRec) { dbGL = dgl; dbGL0 = dgl0; dbGN = dgn; dbGN0 = dgn0; dbCS = cS; dbJb = jb; dbFl = 64 + (jf ? 4 : 0) + (jb != 0 ? 8 : 0) + (nv ? 16 : 0) + (wm > -pxw ? 32 : 0); }\n  return vec2(g, gA);"
+  ],
+  [
+    "vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0);",
+    "dbL = true; dbLab = lab; dbInk = ink; dbRec = true; vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); dbRec = false; dbFl += 1; if (lkJb >= 0) { dbFl += 2; dbMk = lkMarker(lab, lkArc(lab, lq), p); if (dbMk > 0.0) dbFl += 128; }"
+  ],
+  [
+    "vec2 g = lkGap(kU, p, fq, PC(jU));",
+    "dbFr = true; dbLab = PC(jU); dbInk = ink; dbRec = true; vec2 g = lkGap(kU, p, fq, PC(jU)); dbRec = false;"
+  ],
+  [
+    "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);",
+    "  if (dbL || dbFr) { o0 = vec4(0.0, 1.0, 0.0, 0.0); o1 = vec4((16.0 * dbQ(dbGL) + dbQ(dbGL0)) / 255.0, (16.0 * dbQ(dbGN) + dbQ(dbGN0)) / 255.0, (4.0 * floor(63.0 * clamp(dbInk, 0.0, 1.0) + 0.5) + float(dbJb)) / 255.0, 1.0); o2 = vec4(float(dbLab + 1) / 255.0, float(dbCS + 1) / 255.0, float(dbFl) / 255.0, 1.0); } else { o0 = vec4(0.0); o1 = vec4(0.0); o2 = vec4(0.0); }"
+  ]
+]
