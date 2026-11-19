@@ -1,0 +1,1 @@
+[["bool jf = jb == 3;", "bool jf = false;"], ["if (jb == 1 || jb == 2) {", "if (false) {"]]

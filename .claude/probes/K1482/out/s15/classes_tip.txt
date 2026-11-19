@@ -1,0 +1,44 @@
+# K1482 s15: link A border look at rest (fff8c9e5), tip 61e8ab9e (raw/tip) against master (raw/m), same hash.
+# The base is out/s11/classes_base.txt (36). Of its 36, these moved >= 5 ink px on the tip (s11/boxdiff, 48x48 box,
+# gain/loss): j4 28/0, j15 5/0, j29 8/0, j36 44/1, j55 40/4, j71 17/1, j82 14/1, j87 30/0, j143 20/0, j158 13/3,
+# t16e 33/1, t73e 11/3, t79s 18/1, t81s 9/0, t84e 3/2. The 11 at >= 10 px were judged by eye at 5x
+# (sheets/cls_1.png, cls_2.png: master | tip | ink diff); the others keep their class (no change visible).
+# fixed: j55 tick (the right line closes), j87 tick (closes), j82 wedge (closes), j143 wedge (the bottom gap closes),
+#        t79s stub (the stub joins the line)
+# smaller, still faulted: j4 notch (a ragged edge stays), j36 stub (a 1 px seam stays at 2097:1035), j71 sliver (a thin
+#        light line stays), j158 wedge (narrower), t16e notch (a thin light line stays), t73e wedge (partly filled)
+# No site of the 327 reads newly faulted on the 49 movers' tiles (sheets/tip_1..7.png) and count13 --specks finds 0 new.
+# site class owner
+j4 notch K1490
+j14 notch K1490
+j15 wedge K1490
+j22 break GAP
+j29 break GAP
+j36 stub GAP
+j41 notch K1490
+j47 notch K1490
+j49 tick GAP
+j50 wedge K1490
+j59 notch K1490
+j64 dot PIN
+j71 sliver K1470
+j88 dot GAP
+j95 sliver K1490
+j147 sliver K1490
+j158 wedge K1490
+t4s notch K1490
+t16e notch K1490
+t23e wedge K1490
+t43s sliver K1490
+t45s notch K1490
+t56s sliver K1490
+t58e notch K1490
+t59s wedge K1490
+t65s break GAP
+t70s sliver GAP
+t73e wedge K1490
+t80s pocket GAP
+t81s wedge GAP
+t84e wedge K1490
+# tip total 31 (base 36): wedge 8, notch 9, sliver 6, tick 1, break 3, dot 2, stub 1, pocket 1
+# by owner: K1490 20, GAP 9, K1470 1, PIN 1
