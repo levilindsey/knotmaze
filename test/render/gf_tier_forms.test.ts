@@ -746,3 +746,15 @@ describe("gf tier forms, s15 depth classes", () => {
     }
   });
 });
+
+describe("K1456 26J oneFaceLoop", () => {
+  it("the full program walks the corner faces in one loop; tiers, the probe and no-tangent forms keep the two loops", () => {
+    const full = gfFs(false, true);
+    expect(full).toContain("for (int fi = 0; fi < 3 * nk; fi++)");
+    expect(full.split("fillBur(k, pt, p, S)").length - 1).toBe(1);
+    expect(full.split("for (int side = 0; side < 2; side++)").length - 1).toBe(0);
+    for (const tier of GF_TIERS) expect(gfFs(false, true, { ...tier, kz: undefined })).not.toContain("3 * nk");
+    expect(gfFs(true, true)).not.toContain("3 * nk");
+    expect(gfFs(false, false)).not.toContain("3 * nk");
+  });
+});

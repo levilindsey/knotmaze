@@ -225,6 +225,7 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
     if (tier.zb) src = zBur(src);
     if (tier.zf) src = zFast(src);
   }
+  if (!probe && tangentTerms && !tier && !form.split && !form.reg && !form.pack && !form.unroll) src = oneFaceLoop(src); // K1456 26J: the full program only
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
@@ -699,6 +700,105 @@ function cornerInside(src: string): string {
   return src;
 }
 
+
+/**
+ * K1456 26J: layers()'s corner faces in one loop. The arc faces and the tangent-point faces were two loops over
+ * kk, each with its own piece-burial loop and fillBur call; the driver compiler inlines fillBur at every call
+ * site, and the copies are most of the full look program's compile time (.claude/probes/K1456/s2/ctime.mjs on
+ * master's dumped sources: 21.4 s median for the full look program, one fillBur site measured at about 5 s).
+ * One loop walks the faces in the old order (every arc, fi < nk, then every tangent point in (corner, side)
+ * order), so D is final before a tangent face reads it, v keeps the same running maximum with the same first
+ * winner on a tie, and each face is the same statements on the same values (same guards, burial and fillBur
+ * arguments, same band factors); fillBur and the burial appear once. Programs without tangent terms keep the
+ * old text, as do probe programs, every tier program (the tiers own forms anchor on the two loops) and the
+ * split, reg, pack and unroll forms: their sources are unchanged. Only the tier-less full program, the one
+ * that gates the first composite, is rewritten.
+ */
+const ONE_FACE_OLD = `    for (int i = 0; i < nk; i++) {
+#ifdef KLEAN
+      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
+      float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ) if (!ksJ || !(K0.z > 0.0)) continue; float Dk = rho - K0.z;
+      if (kiJ == 2 && Dk > D) D = Dk;
+#else
+      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i] || !(K0.z > 0.0)) continue;
+      float rho = krho[i]; float Dk = rho - K0.z;
+      if (kIn[i] == 2 && Dk > D) D = Dk;
+#endif
+      if (!(rho > 1e-12)) continue;
+      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;
+      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces
+      float bur = 0.0;
+      for (int m = 0; m < np && bur < 1.0; m++) {
+        if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
+        float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
+        if (wb2 > bur) bur = wb2;
+      }
+      if (bur < 1.0) bur = max(bur, fillBur(k, q, p, S));
+      float val = (1.0 - bur) * band2(Dk); // K1407 c1: buried by other arms' tubes and other corners' fills
+      if (val > v) { v = val; PR(wk = 2; wa = k; wb = 0;) }
+    }
+#ifdef TANGENT
+    for (int i = 0; i < nk; i++) {
+      int k = kk[i]; vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;
+      vec4 K4 = F(uOK + 6 * k + 4); vec4 K5 = F(uOK + 6 * k + 5);
+      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: as the arc
+      for (int t = 0; t < 2; t++) {
+        vec2 T = t == 1 ? K5.xy : K4.zw;
+        float dT = length(p - T); if (!(dT < W + aa)) continue;
+        float bur = 0.0;
+        for (int m = 0; m < np && bur < 1.0; m++) {
+          if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
+          float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, T)));
+          if (wb2 > bur) bur = wb2;
+        }
+        if (bur < 1.0) bur = max(bur, fillBur(k, T, p, S));
+        float val = (1.0 - bur) * band(dT) * ss(-aa, aa, D); // K1407 c1: buried as the arc
+        if (val > v) { v = val; PR(wk = 4; wa = k; wb = t;) }
+      }
+    }
+#endif`;
+const ONE_FACE_NEW = `    for (int fi = 0; fi < 3 * nk; fi++) { // K1456 26J: oneFaceLoop, the corner faces in the old order
+      bool isArc = fi < nk;
+      int i = isArc ? fi : (fi - nk) / 2;
+      int t = isArc ? 0 : (fi - nk) - 2 * i;
+      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
+#ifdef KLEAN
+      float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ)
+      float Dk = rho - K0.z;
+      if (isArc) {
+        if (!ksJ || !(K0.z > 0.0)) continue;
+        if (kiJ == 2 && Dk > D) D = Dk;
+        if (!(rho > 1e-12)) continue;
+      }
+#else
+      float rho = krho[i]; float Dk = rho - K0.z;
+      if (isArc) {
+        if (!kSec[i] || !(K0.z > 0.0)) continue;
+        if (kIn[i] == 2 && Dk > D) D = Dk;
+        if (!(rho > 1e-12)) continue;
+      }
+#endif
+      vec4 K4 = F(uOK + 6 * k + 4); vec4 K5 = F(uOK + 6 * k + 5);
+      vec2 T = t == 1 ? K5.xy : K4.zw;
+      float dT = length(p - T);
+      if (!isArc && (K1.x > 0.5 || !(dT < W + aa))) continue;
+      vec2 pt = isArc ? K0.xy + (K0.z * (p - K0.xy)) / rho : T;
+      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces
+      float bur = 0.0;
+      for (int m = 0; m < np && bur < 1.0; m++) {
+        if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
+        float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, pt)));
+        if (wb2 > bur) bur = wb2;
+      }
+      if (bur < 1.0) bur = max(bur, fillBur(k, pt, p, S));
+      float val = isArc ? (1.0 - bur) * band2(Dk) : (1.0 - bur) * band(dT) * ss(-aa, aa, D); // K1407 c1: buried as the arc
+      if (val > v) { v = val; PR(wk = isArc ? 2 : 4; wa = k; wb = isArc ? 0 : t;) }
+    }`;
+function oneFaceLoop(src: string): string {
+  const parts = src.split(ONE_FACE_OLD);
+  if (parts.length !== 2) return src; // no tangent terms (a gated rewrite is excluded in gfFs, not here)
+  return parts.join(ONE_FACE_NEW);
+}
 function gfSrc(probe: boolean, tangentTerms: boolean, tier?: GfTier): string {
   const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
@@ -1046,10 +1146,11 @@ void kSG(int k, float rho, out bool sec, out int kin) {
 bool outsideArms(int k, int own, vec2 p) {
   float lim = uH - 2.0 * uAA; float lim2 = lim * lim;
   vec4 K3 = F(uOK + 6 * k + 3);
-  for (int side = 0; side < 2; side++) {
-    int c = side == 0 ? int(K3.x) : int(K3.y); if (c == own) continue;
-    for (int m = 0; m < np; m++) if (PC(m) == c && pieceD(m, p) < lim2) return false;
-  }
+  int cA = int(K3.x); int cB = int(K3.y);
+  // K1456 26J: one pass over the pieces in place of one per arm: the same set is tested (both arms' chains, the
+  // own chain left out either way; a chain twice in K3 is tested once where the two passes tested it twice), so
+  // the same pieces reach pieceD and the result is the same.
+  for (int m = 0; m < np; m++) { int c = PC(m); if ((c == cA || c == cB) && c != own && pieceD(m, p) < lim2) return false; }
   return true;
 }
 
