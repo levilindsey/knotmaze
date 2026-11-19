@@ -59,7 +59,7 @@ export interface GfTables {
    * K1451: each pin's KEY depth window on its left (s below the pin) and right side: max(win, GF_REACH_K x the arc
    * over which the crossing's other pass stays within GF_REACH_SEP h of this pass), so the keys' depth hat spans the
    * whole ribbon overlap of a shallow or curved crossing (pinReach). Only the piece keys read it (eval.ts keyDepth,
-   * gf_glsl.ts depth()); membership and the corner depths keep win (depthAt). Home off: win everywhere (master's keys).
+   * gf_glsl.ts depth()); membership and the corner depths keep win (depthAt). K1502: baked in both modes.
    */
   pinWL: Float64Array; pinWR: Float64Array;
   /** Arms, sorted by chain: root s, direction, span L, cap Lcut (Infinity = none), group. */
@@ -575,11 +575,12 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
   let nPin = 0; for (const p of pinsOf) { p.sort((u, v) => u.s - v.s); nPin += p.length; }
   const pinS = new Float64Array(nPin); const pinZ = new Float64Array(nPin); const pinTheta = new Float64Array(nPin); const cPin0 = new Int32Array(nC); const cPinN = new Int32Array(nC);
   { let q = 0; pinsOf.forEach((P, c) => { cPin0[c] = q; cPinN[c] = P.length; for (const p of P) { pinS[q] = p.s; pinZ[q] = p.z; pinTheta[q] = p.theta; q++; } }); }
-  // K1451: each pin's key window per side, from the reach of its crossing's overlap. Home membership only (K1451
-  // s2): with home off (the shipped default) the wider keys raised the bar census's stray ink 16 -> 231 (member()
-  // without home splits a crossing's ribbons into blocks the wider hat re-orders), so home off keeps win.
+  // K1451: each pin's key window per side, from the reach of its crossing's overlap. K1502 (26L):
+  // baked with home off too (home off kept win, and past a shallow crossing both hats read 0, so the under
+  // surface buried the over edge: K1477). The unclipped stray rise (16 -> 231, K1451 s2) is held by the
+  // assemble clip below, which now runs in both modes; GF_NOCLIP=1 keeps the raw windows for probes.
   const pinWL = new Float64Array(nPin).fill(win); const pinWR = new Float64Array(nPin).fill(win);
-  if (opts.home ?? GF_HOME) {
+  {
     const RW = { cV0, cNV, cClosed, cLen, cS0, vx, vy, vs };
     const reachPrep = new Map<number, { mx: Float64Array; my: Float64Array; hl: Float64Array }>();
     let q = 0;
@@ -1101,7 +1102,8 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
   const aHome = new Float64Array(nA); for (let i = 0; i < nA; i++) aHome[i] = P.arms[i].home;
   // K1451 s3: a pin's reach window stops where a junction's arm or home begins on its chain (and stays win when the
   // pin lies inside one), so the key depth equals member()'s depth wherever membership splits ribbons into blocks.
-  const [wL2, wR2] = P.homeOn === true && !GF_NOCLIP ? clipPinWindows(P, aHome) : [pinWL, pinWR];
+  // K1502: the clip runs with home off too, on the same aHome extents, so the home-off keys stop at the same arms.
+  const [wL2, wR2] = !GF_NOCLIP ? clipPinWindows(P, aHome) : [pinWL, pinWR];
 
   return {
     h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
