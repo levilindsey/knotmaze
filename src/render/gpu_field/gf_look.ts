@@ -528,7 +528,7 @@ const GAP_JOINT_RA = 1.5;
  * per piece at each pixel; deciding per slot side keeps its closed joint lines without its flip specks (link A: its
  * 15 better sites, no new speck; docs/design/K1482_s15_slot_flag.md, .claude/probes/K1482/out/s15).
  */
-export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }): number[] {
+export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }, ex?: { uc: number; kmU: ArrayLike<number>; all?: { x: number[]; y: number[]; c: number[] } }): number[] {
   const out = new Array<number>(ks.length).fill(0);
   const pt = { x: 0, y: 0 };
   const mx: number[] = [], my: number[] = [], nx: number[] = [], ny: number[] = [];
@@ -538,7 +538,24 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
     gapPointAt(so, k * so.arcPer, pt);
     if (mem(c, km[k])) { mx.push(pt.x); my.push(pt.y); } else { nx.push(pt.x); ny.push(pt.y); }
   }
-  if (!mx.length) return out;
+  // K1482 s18 PROTOTYPE knob: 1 = the slot's own under sample a member (both sides); 2 = an under-member sample within
+  // reach of the side's outline point; 4 = a member sample of a third chain within reach of it
+  const V18 = ((globalThis as { __k15?: { u18?: number } }).__k15?.u18 ?? 0) | 0;
+  const uMem: boolean[] = [], ux: number[] = [], uy: number[] = [];
+  if (ex && V18 & 3) {
+    const R = Math.round(GAP_JOINT_RA / su.arcPer), seen = new Set<number>();
+    for (const k0 of ks) {
+      uMem.push(mem(ex.uc, ex.kmU[k0]));
+      if (V18 & 2) for (let q = k0 - R; q <= k0 + R; q++) {
+        let k = q;
+        if (su.closed) k = ((k % su.count) + su.count) % su.count; else if (k < 0 || k >= su.count) continue;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        if (mem(ex.uc, ex.kmU[k])) { ux.push(su.positions[2 * k]); uy.push(su.positions[2 * k + 1]); }
+      }
+    }
+  }
+  if (!mx.length && !uMem.some((v) => v) && !ux.length && !(V18 & 4 && ex?.all)) return out;
   const reach2 = (sc.fh + sc.mg + sc.fd) ** 2, off = sc.fh + GAP_JOINT_OB, nn2 = sc.fh * sc.fh, uxy = su.positions;
   const last = su.count - 1;
   const near = new Array<number>(ks.length).fill(0);
@@ -554,6 +571,9 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
       for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
       for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
       if (dM < reach2 && dM <= dN) { nb |= bit; if (dN >= nn2) bits |= bit; }
+      if (V18 & 1 && uMem[i]) bits |= bit;
+      if (V18 & 2) { let dU = Infinity; for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; dU = Math.min(dU, dx * dx + dy * dy); } if (dU < reach2) bits |= bit; }
+      if (V18 & 4 && ex?.all) { const A = ex.all; for (let m = 0; m < A.x.length; m++) { if (A.c[m] === c || A.c[m] === ex.uc) continue; const dx = A.x[m] - qx, dy = A.y[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } } }
     }
     out[i] = bits; near[i] = nb;
   }
@@ -598,6 +618,7 @@ export class GfGapTable {
       const c = r.kcv[ch]; const sm = r.chainSamples[ch]!;
       return { positions: sm.positions, count: sm.count, closed: c.closed, total: G[c.geom * 4], arcPer: G[c.geom * 4 + 1] };
     };
+    let allM: { x: number[]; y: number[]; c: number[] } | null = null; // K1482 s18 prototype (u18 & 4)
     const cents = r.crossings.map((x) => {
       const so = sam(x.overChain), su = sam(x.underChain);
       if (!so || !su) return null;
@@ -737,7 +758,17 @@ export class GfGapTable {
           wr.push(km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))], Math.ceil(w / so.arcPer) + (off >= 0 ? packP : packN));
         }
       }
-      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }) : null;
+      const V18p = ((globalThis as { __k15?: { u18?: number } }).__k15?.u18 ?? 0) | 0;
+      if (V18p & 4 && r.overMember && !allM) {
+        allM = { x: [], y: [], c: [] };
+        for (let ch = 0; ch < nC; ch++) {
+          const S = sam(ch);
+          if (!S) continue;
+          const kmA = keptOf(ch, S);
+          for (let k = 0; k < S.count; k++) if (r.overMember(ch, kmA[k])) { allM.x.push(S.positions[2 * k]); allM.y.push(S.positions[2 * k + 1]); allM.c.push(ch); }
+        }
+      }
+      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, V18p ? { uc: x.underChain, kmU: keptOf(x.underChain, su), all: allM ?? undefined } : undefined) : null;
       for (let i = 0; i < ks.length; i++) {
         const k = ks[i];
         ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0);
