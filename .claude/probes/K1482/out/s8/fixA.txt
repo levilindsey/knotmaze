@@ -1,0 +1,20 @@
+# K1482 s8 fix A (4833334e, lkGap: inside a baked window only the named crossing's over chain cuts), on screen.
+# Link A at rest, border look, both frames hash fff8c9e5: master ba0fb106 (raw/m/gf.png) vs tip d077956a (raw/tA/gf.png).
+# Whole frame: 31610 px differ, none by more than 40 levels; dark ink 526295 -> 526699.
+# blobs.py (ink in one frame and none within 1 px in the other, >= 3 px): 25 blobs, 0 px lost, 159 px gained.
+# site_diff R=18 (the site's own box): 14 sites change (t1s t39s t24s t43s t1e t26s t41s t51e t55s t77s t83e t36e j61 t42s),
+#   the same 14 the onlyslot patch changed; A-only 0 everywhere.
+# Sheets: fixA_m0..m4.png (the 17 GAP sites, master | tip | diff, R=32 4x), fixA_blobs_0..3.png (every changed blob,
+#   master | tip | diff, R=20 4x), fixA_t18s.png and fixA_j88j2.png (today | master | tip | diff, 5x), j88_zoom.png
+#   (nogap | master | tip, raw colours, 10x).
+# Read by eye:
+#   fixed: t1s dot (also j2's tile: the same dot, 22 px above j2), t24s dot, t46e dot (the outline runs on to its fade),
+#          t39s dash (the hook closes; j88's tile shows it at its bottom edge).
+#   still faulted, unchanged: j88 dot (j88_zoom: the under
+#          thread's outline ends short of the joint with a dark tip; nogap joins it), ticks j49 j55 j87, stubs j36 t79s,
+#          breaks j22 j29 t65s, pocket t80s, wedge t81s, sliver t70s.
+#   clean on master, changed, still clean: t77s t1e t55s t26s t36e t41s t51e t83e t16e t25e t42s (a faint island
+#          inside a tucked tail's hook joins the hook: the hook closes), t18s (the over thread's outline runs into the V),
+#          t25s t53e t45s t49e j114 j100 (3-4 px more of a fade ramp).
+#   K1490's, changed: t43s (the dot inside the sliver joins it; the sliver stays), t16e, t45s (notch unchanged).
+# GAP sites: 17 on master -> 12 (dots j2 t1s t24s t46e and dash t39s fixed).
