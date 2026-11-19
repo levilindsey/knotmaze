@@ -1,0 +1,30 @@
+# K1482 s11: the K1436 bar, STRICT=1, -Ref b0490d9d -Base c198e005 -HomeFlag 1 -Scenes ring,def,muse_hash,g41_user_tw64 -Port 5824 -Tag k1482s11
+# (tip src identical to base: no src change this stage). No perf lock was held by another owner.
+[plugin builtin:vite-reporter] 
+[c198e005] mirror scans 38 s
+[muse_hash] warm 79710 ms
+[g41_user_tw64] warm 7347 ms
+[def] warm 154368 ms
+[ring] warm 158486 ms
+[c198e005] warm pass 159 s
+[muse_hash] 111559 ms hash 733ee14a
+[g41_user_tw64] 45191 ms hash 0d51331b
+[def] 240325 ms hash 910ff135
+[ring] hash 0a0ee15e != 50dd4ffd, retry
+[ring] 21169 ms hash 50dd4ffd
+[c198e005] captures 317 s
+[c198e005] screen scans 46 s
+[plugin builtin:vite-reporter] 
+[b0490d9d] mirror scans 38 s
+[muse_hash] warm 55560 ms
+[g41_user_tw64] warm 7342 ms
+[def] warm 106045 ms
+[ring] warm 110705 ms
+[b0490d9d] warm pass 112 s
+[muse_hash] 112240 ms hash 733ee14a
+[g41_user_tw64] 43989 ms hash 0d51331b
+[def] 242117 ms hash 910ff135
+[ring] 276684 ms hash 50dd4ffd
+[b0490d9d] captures 278 s
+[b0490d9d] screen scans 48 s
+PASS  new 0  grown 0  gone 0  (match radius 0.3, grow > 10% and >= 3 px)

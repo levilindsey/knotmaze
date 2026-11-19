@@ -1,0 +1,21 @@
+# K1482 s11 step 4 (optional, partial): the mask case j55, j36, t70s (+ j49 for reference). Today's renderer at link A's
+# frozen state (hash fff8c9e5), mono look (&bg=none&cs=mono, TODAY=1 GF=0), with today's gap-mask shader patched
+# through cap11.mjs's new PATCHT hook (sources holding "gapKeepAt"; 10 hits = every ribbon program):
+#   today   unpatched (raw/tbn)
+#   nofade  patchT_nofade.json: fadeP = 0 (margin kept)
+#   silonly patchT_sil.json: margin = 0, fadeP = 0 (only the over silhouette, d < hO, and its 1 px ramp hide)
+#   nomask  patchT_nomask.json: gapKeepAt returns 1 (no crossing gap at all)
+# Sheet: out/s11/mask_0.png (4x: today | nofade | silonly | nomask | gf | diff), mask_wide.png (2x, R=90: j55, j36).
+#
+# j55  nomask shows the under thread crossing the tile up-right; today hides all of it in the tile; nofade and
+#      silonly bring back only a short end stub at the tile's right edge (silonly a little longer). The stretch is
+#      hidden by the SILHOUETTE term (within hO of the slot's over polyline), not margin or fade.
+# j36  nomask shows an arc from top right to bottom left across the horizontal thread; today keeps two faded stubs;
+#      silonly lengthens both stubs a little and hides the rest: SILHOUETTE.
+# t70s nomask adds a thread at the tile's top left; nofade and silonly change nothing there: SILHOUETTE.
+# j49  (fan case, for reference) nomask adds the thread at top right; silonly returns a 1-2 px bit: SILHOUETTE.
+#
+# Not done: what gf would have to hide to match. Today's ribbons do not overlay gf's lines at these sites
+# (mask_wide.png: the same curls sit several px apart and today has long straight stretches gf does not), so the
+# hidden stretch cannot be mapped pixel for pixel; the next step is to draw the slot's over polyline (texel 4/9 SAMP
+# range) and hO in frame coordinates for these three slots and compare with gf's window there. No border patch tried.

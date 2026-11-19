@@ -1,0 +1,92 @@
+# K1482 s11 step 2: b3 (s10/patch_b3.json) vs base c198e005, link A, border look. Groups of >= 10 px changed ink
+# (s10 diffsites.py + s11 blobsites.py), judged on the 4x sheets b3_0..b3_7.png (today | base gf | b3 gf | diff).
+# d/h: arc from the crossing to the over chain's joint root along its home interval, in h (dbg3, patch_dbg11c.json),
+# median over the group's pixels; sin: the crossing's sinT; cj: the loop's cut there.
+# name          sheet gain loss   d/h   sin    cj  verdict
+n966_939       b3_0    64    0  2.65  0.83  0.98  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j41          b3_0    42    0  1.90  0.42  0.97  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j122         b3_0    40    0  1.20  0.70  0.98  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1669_468      b3_0    39    0  2.70  0.93  0.89  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n2225_512      b3_0    38    1  3.67  0.86  0.89  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1902_1263     b3_0    39    0  3.75  0.74  0.93  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t21e         b3_0    38    0  0.25  0.91  0.88  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j58          b3_0    37    1  1.30  0.99  0.90  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1268_583      b3_0    37    0  3.40  0.91  0.86  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t44e         b3_0    37    0  1.65  0.95  0.88  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j60          b3_0    37    0  3.50  0.94  0.88  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1578_503      b3_0    35    1  3.85  1.00  0.92  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1699_442      b3_1    34    0  2.60  0.74  0.99  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j157         b3_1    34    0  1.30  0.88  0.93  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1363_1235     b3_1    33    0  2.15  0.94  0.87  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1110_1661     b3_1    31    0  3.55  0.98  0.85  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t2s          b3_1    30    0  0.53  0.90  0.82  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t34s         b3_1    29    0  3.45  0.82  0.85  worse (small): a 1-2 px fade closed at the over line
+b_j42          b3_1    28    1  1.20  0.71  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1802_834      b3_1    28    0  3.20  0.96  0.98  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1482_1157     b3_1    28    0  3.60  0.99  0.91  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n2210_886      b3_1    27    0  3.20  0.93  0.87  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1478_153      b3_1    26    0  2.55  0.98  0.95  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t75e         b3_1    21    5  2.15  0.85  0.90  worse (small): a 1-2 px fade closed at the over line
+b_j93          b3_2    25    0  1.60  0.94  0.92  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1242_613      b3_2    25    0  3.45  0.90  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j94          b3_2    25    0  1.15  0.86  0.98  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n2192_536      b3_2    24    0  3.75  0.85  0.83  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1421_1179     b3_2    24    0  2.65  0.91  0.82  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1784_178      b3_2    23    0  3.75  0.77  0.91  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n2134_556      b3_2    23    0  3.80  1.00  0.90  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t54s         b3_2    23    0  2.25  0.85  0.98  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j70          b3_2    23    0  1.80  0.91  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j32          b3_2    22    0  1.40  0.56  0.92  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t16e         b3_2    22    0  0.53  0.90  0.94  BETTER: today's under line runs into the over thread with no fade (b3_2, s10 cr_b3_t16e); base fades it; b3 joins. Least sure: today's tile sits off gf's geometry here
+b_t35e         b3_2    21    1  2.65  0.82  0.87  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j87          b3_3    21    0  0.40  0.98  0.91  BETTER: today abuts the over line with no fade (the over chain's joint fan); base leaves a ~4 px gap; b3 abuts
+b_t34e         b3_3    21    0  1.85  0.81  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t6e          b3_3    20    0  1.60  0.97  0.84  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1201_867      b3_3    20    0  3.20  0.70  0.74  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j105         b3_3    20    0  1.45  0.89  0.91  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j21          b3_3    18    1  1.25  0.89  0.92  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j84          b3_3    19    0  1.17  0.57  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1863_1353     b3_3    19    0  3.10  0.91  0.83  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t25s         b3_3    19    0  0.45  0.70  0.90  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j158         b3_3    18    0  1.67  0.96  0.95  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j140         b3_3    17    0  3.25  0.88  0.89  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1966_988      b3_3    17    0  2.55  0.95  0.99  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n2023_1129     b3_4    17    0  3.00  0.96  0.87  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j153         b3_4    17    0  1.10  0.91  0.93  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t36e         b3_4    17    0  3.65  0.76  0.85  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1081_1354     b3_4    17    0  3.70  1.00  0.74  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t74e         b3_4    16    0  2.60  0.93  0.88  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j35          b3_4    16    0  1.20  0.94  0.94  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1336_1318     b3_4    16    0  2.08  0.98  0.99  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t56e         b3_4    15    0  2.25  0.98  0.73  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1766_495      b3_4    15    0  2.40  0.90  0.93  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t64e         b3_4    15    0  0.80  0.98  0.90  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t30e         b3_4    15    0  0.65  0.86  0.75  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t51e         b3_4    13    1  3.10  0.87  0.85  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j146         b3_5    12    2  2.75  0.97  0.88  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j102         b3_5    14    0  0.55  0.94  0.89  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t81e         b3_5    14    0  2.50  0.98  0.89  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t75s         b3_5    13    0  3.80  0.93  0.86  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1505_1334     b3_5    12    1  2.55  0.95  0.78  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j53          b3_5    13    0  1.15  0.87  0.78  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1481_152      b3_5    11    1  2.70  0.98  0.82  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1342_164      b3_5    12    0  3.95  0.98  0.77  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j130         b3_5    12    0  2.98  0.98  0.91  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1602_564      b3_5    12    0  3.10  0.99  0.97  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j120         b3_5    12    0  2.65  0.99  0.79  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j80          b3_5    12    0  1.98  0.93  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t27s         b3_6    11    1  3.20  0.98  0.74  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t85e         b3_6    12    0  2.83  0.92  0.92  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t42e         b3_6    11    0  2.55  0.93  0.85  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j69          b3_6    11    0  1.15  0.98  0.85  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t38s         b3_6    11    0  2.70  0.97  0.84  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t13s         b3_6    10    1  1.33  0.94  0.88  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t21s         b3_6    10    0  0.88  0.99  0.83  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j79          b3_6    10    0  3.25  0.88  0.67  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1386_601      b3_6    10    0  2.33  0.79  0.79  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1799_834      b3_6    10    0  3.20  0.98  0.43  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+n1157_1169     b3_6    10    0  3.70  0.95  0.99  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_t13e         b3_6    10    0  2.40  0.90  0.90  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j96          b3_7     9    1  1.95  0.98  1.00  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+b_j83          b3_7     8    2  1.25  0.96  0.95  worse: today and base fade the under line out at the over line; b3 runs it in hard, a T with no fade
+# totals: 86 groups, better 2 (j87, t16e), same 0, worse 84

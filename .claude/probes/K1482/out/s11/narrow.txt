@@ -1,0 +1,30 @@
+# K1482 s11 step 3: narrowing b3 (no outline cut from an over piece that is a fused member, PSURF >= 0) so that no
+# site is worse. b3 itself: 86 groups >= 10 px, 2 better (j87, t16e), 84 worse (b3_sites.txt). Each candidate captured on
+# link A (cap11.ps1, PATCHF), diffed against base c198e005 (s10 diffsites.py, s11 blobsites.py, MIN=10).
+#
+# n1 patch_n1.json  skip only if the under chain has a candidate piece in the over piece's group (PSURF(m) == S)
+#    11 groups: j122 t21e n1110_1661 n1478_153 j84 n1481_152 t27s t64e t30e t21s j83 - all b3-worse sites;
+#    j87 and t16e unchanged. FAIL.
+# n2 patch_n2.json  skip only if the slot's clearance scales are reduced (min(sc) < 1, a fused joint of the under
+#    chain near, today's marginScale/fadeScale)
+#    24 groups: n1482_1157 t75e n1863_1353 j140 t34s n2023_1129 j35 n1766_495 j146 t81e t64e t75s n1505_1334
+#    n1342_164 j130 j120 t27s t85e t42e t30e t13s n1157_1169 t13e j83 - all b3-worse; j87 and t16e unchanged. FAIL.
+# n3 patch_n3.json  skip only if the under chain has an ARM in the over piece's group (chain-level joint pair,
+#    arm table uOArm)
+#    24 groups: n966_939 j122 n1902_1263 t21e n1268_583 t44e n1363_1235 n1110_1661 n1482_1157 n1478_153 t75e
+#    n1242_613 t34e j84 t36e t64e t30e n1481_152 t27s t85e t13s t21s j79 j83 - all b3-worse; j87 and t16e unchanged. FAIL.
+#
+# What membership is at these sites (dbg2/dbg3 frames, patch_dbg11b/c.json, read by dbgread11.py): at 77 of the 86
+# groups the over piece is a member through its HOME interval only (K1438: depth near 0, past the arm's fused length
+# aL, within aHome), j87 and t16e included. The numbers the shader has there, the better sites against the worse:
+#   d/h (arc from the crossing to the over chain's joint root): better j87 0.40, t16e 0.53; worse t21e 0.25, t25s
+#     0.45, t2s 0.53, j102 0.55, t30e 0.65 ... up to 3.95. No threshold keeps j87 without t21e, nor t16e without t2s
+#     (equal d); a band would be a fit to two sites, not a rule (sep_0.png: the eight small-d sites).
+#   sinT: j87 0.98; worse t64e 0.98, j69 0.98, t81e 0.98, ... (0.42-1.00). Does not separate.
+#   cj (the loop's cut at the pixel): j87 0.91; worse 0.43-1.00. Does not separate.
+#   arm length aL / home reach: j87 aL 0, aHome 1.9h; t16e aL 0; worse t21e aL 0, 1.85h; t2s aL 0, 1.95h. Does not separate.
+# Result: no narrowing in numbers the shader has keeps j87's or t16e's join without a worse site. What separates
+# them is likely today's fan reach along the OVER chain from its joint (today joins at j87, t16e and fades at t21e,
+# t2s at about the same arc): a new baked number in the gap window bake (Muse's), not added.
+# Given up: the joins at j87 and t16e (the two better sites). Nothing lands in src/.
+
