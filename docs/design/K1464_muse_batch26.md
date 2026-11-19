@@ -604,3 +604,38 @@ scenes), fixed to 0 with today's fill as the reference, 4x tiles. 4. `k1436_bar.
 changed sides nothing moves: 0 px against master in the same physics hash outside their boxes. 6.
 `.claude/probes/K1458/dragcheck.mjs` and `.claude/probes/K1492/dragcheck_b.mjs` pass. 7. `npm test` green.
 8. The guards.
+
+## Run N (26N): K1502's build time (the reach walk with home off)
+
+Added 2026-11-18. Run L landed the home-off reach key windows (b0f4f9a7, 3971ec64) and the tables build rose:
+muse_hash 12.38 -> 15.97 ms (+29%), ring +52%, fat +58%, def +7.7% (Handoff 26L, Done 6; alternating medians
+of 7, home off; `.claude/probes/K1502/k1502_buildtime*`). This run brings it back without changing one baked
+number. Handoff 26L names the angle: fewer pins walked (K1451's lane, Run E), not a faster walk.
+
+A Claude agent is in `gf_look.ts` (K1482 stage 11, the border outline's cut): stay out of that file.
+
+Done: 1. The number first, on master: the tables build time on muse_hash, ring, fat and def, home off and
+home on, alternating medians of 7 against 281a7c8c (take the perf lock). 2. Fixed: each scene within 10% of
+281a7c8c at both flags, or the remaining cost attributed line by line with the reason it cannot go. 3. The
+baked tables are bit-identical to master's on the six census scenes and on link A's scene at both flags (pack
+digests and a full compare of the window arrays): no pixel can move. 4. `npm test` green, the K1502 unit case
+included. 5. The guards (`hold.mjs` 60/60 on the two links, both dragchecks).
+
+## Run O (26O): probe tooling leftovers (K1507, K1508, K1509, K1511)
+
+Added 2026-11-18. Four small faults in the probes cost the Claude stages time today. No `src/` change in this
+run; the probes live under `.claude/probes/` (untracked: commit only the files the ledger items name, with
+`git add -f` on exact paths).
+
+Done: 1. K1507: `.claude/probes/K1436/k1436_bar.ps1` takes a `-NoPerfLock` switch that skips the wait on
+`$env:TEMP\claude-perf.lock` and labels its output "taken under load"; `.claude/probes/K1482/s8/bar_ref.ps1`'s
+by-hand half is then not needed (say so in its header). Shown: a 1-scene bar run with the switch while a
+dummy lock file exists, finishing without waiting. 2. K1511: `.claude/probes/K1482/cap.mjs` gives up after
+240 s without a frame and prints the page's shader compile error (console and `getShaderInfoLog`) when a
+`PATCHF` patch does not compile. Shown: a patch with a deliberate syntax error exits non-zero inside 5 minutes
+with the error line printed. 3. K1509: `cap.mjs` no longer dies with `__knotGf is not defined` on a today-only
+shot (`GF=0,TODAY=1`); shown by that run completing. 4. K1508: `cap.mjs` waits for the view to settle before
+its first shot (two consecutive frames with the same physics hash and the same view transform); shown: first
+and second shots of link A identical in the site boxes of three sites. 5. Link A's ordinary capture is
+unchanged by all four (same hash fff8c9e5, 0 px against a capture taken with the old script). 6. `npm test`
+green (nothing in `src/` or `test/` changed).
