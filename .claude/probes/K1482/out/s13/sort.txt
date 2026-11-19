@@ -1,0 +1,38 @@
+# K1482 s13 step 1: the 12 sites sorted on master gf (link A, hash fff8c9e5, src = c198e005's, no src change since).
+# Frames: raw/m/gf.png. Sheets (untracked): raw/oz_1..6.png (6x, R36, plain | overlay), raw/ov_1..6.png (4x, R70).
+# Overlay: chain centrelines (coloured, labelled), crossings (white xN), window ends (green, signed rem in world units),
+# joint room starts (cyan), fused joints (magenta X). Numbers from s13/remnant.ts on raw/m/gw_gf.json -> raw/m/rem.json.
+# rem = (under joint arc - jointClear) - window half-width, per window side, world units (42.59 px each).
+#   rem > 0: the window ends short of the joint room, the stretch between is drawn (a candidate remnant);
+#   rem <= 0: the window already reaches the room (K1476 extends it to max(room, all + pad)).
+#
+# FINDING: the brief's remnant (an outline left between the window's end and the joint room) is rarely there. Of the
+# window sides near the 12 sites only 6 have rem > 0, and most are under 1 world unit; at the fault crossings the
+# window already reaches the room (rem <= 0), or the fused joint is on the OVER chain (j49: J75 on 75; j87: x235's
+# under joint 5.91 away), which the bake's under-chain room never sees. What the picture shows at the 12 is the
+# crossing cut's own ending (margin + fade) next to the joint's outline: a faded tip, a 2-6 px break, or a short
+# stroke left between two cuts.
+#
+# site  class(s11)  fix                     nearest window sides (rem, world)            what is on screen
+# j49   tick        the line closes         x316 -/+ 0/-1.96, x326 + -0.21, x315 + 1.77   under arm's outline stops a few px short
+#                                                                                      of the over joint's outline (J75 on over 75)
+# j55   tick        the line closes         x33 + -1.19, x251 - 0.03                     tip of the cut outline 4-6 px off the joint stroke
+# j87   tick        the line closes         x163 -0.62, x200 -0.64/-0.83, x348 -0.19/-1.75 cut tip beside the joint's outline (1427,824)
+# j36   stub        the remnant goes        x76 -0.70, x77 +2.41/+1.46                   a short stroke left between two cuts (x77 rem > 0)
+# t79s  stub        the remnant goes        x132 -1.80, x274 -0.18, x331 -1.03, x340 -0.48 detached top stub beside the joint
+# j22   break       the line closes         x56 -1.59, x57 -0.50, x58 +0.03              a 2-4 px break where the arm meets the joint
+# j29   break       the line closes         all sides -0.16 .. -2.58                     break at the joint, window reaches the room
+# t65s  break       the line closes         x42 0, x199 +0.94, others < 0                break; x199's 0.94 (40 px) stretch drawn
+# t80s  pocket      the line closes         x133 +0.32 (14 px), x157 -0.55, x339 -1.66   blunt end of the over arm's stroke short of
+#                                                                                      the curve (a pocket between)
+# t81s  wedge       neither (shape)         x73 - 0, x94 -0.04, others < 0              a wedge in the fused joint's outline: not a
+#                                                                                      cut ending, not this stage's rule
+# t70s  sliver      the remnant goes        x42 0, x258 0, x123 +0.65, x40 +/-           a thin sliver of outline beside the joint
+# j88   dot         the remnant goes        x119 -1.46/-1.57, x310 -0.34                 a detached dot of outline
+#
+# Count: the remnant goes 4 (j36, t79s, t70s, j88); the line closes 7 (j49, j55, j87, j22, j29, t65s, t80s); neither 1
+# (t81s).
+# Consequence for step 2: no under-chain room rule can reach these (the rem is <= 0 where the faults are). A rule must
+# work in the shader from data the look already has (no bake change before 26M): the cutting over piece's joint
+# membership (psurf/pg), winM, the slot. The detached pieces (stub, dot, sliver) are what a "remnant goes" rule removes:
+# an outline component cut on both sides inside a short arc.
