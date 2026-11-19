@@ -136,7 +136,11 @@ export const GF_REACH_CAP = 10;
  * the walk returns gap). An open chain's walk holds its end point past the end (chainAt clamps), as the probe did.
  * Returns the last arc still inside (0 = the first step is out).
  */
-export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0" | "vx" | "vy" | "vs">, c: number, s0: number, dir: number, p: number, sp: number, h: number, gap: number, from = 0, prep?: Map<number, { mx: Float64Array; my: Float64Array; hl: Float64Array }>): number {
+/** K1502 26N: one partner chain's reach prep (per build): segment midpoints and half-lengths,
+ * plus per-block (REACH_BLK segments) vertex-bbox centres and radii for the stretch search's jump. */
+export interface ReachPrep { mx: Float64Array; my: Float64Array; hl: Float64Array; bx: Float64Array; by: Float64Array; br: Float64Array }
+const REACH_BLK = 4;
+export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0" | "vx" | "vy" | "vs">, c: number, s0: number, dir: number, p: number, sp: number, h: number, gap: number, from = 0, prep?: Map<number, ReachPrep>): number {
   const step = GF_REACH_STEP * h; const cap = GF_REACH_CAP * h; const sep = GF_REACH_SEP * h; const sep2 = sep * sep;
   const vx = T.vx; const vy = T.vy; const vs = T.vs;
   const v0 = T.cV0[p]; const nseg = T.cNV[p] - 1; const closed = T.cClosed[p] === 1;
@@ -146,16 +150,24 @@ export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | 
   // segment distance; the 1e-9 margin sits far above the computations' rounding). Rejected segments keep
   // dd = Infinity, so d and kp - which update only on dd < d, in scan order - are bit-identical.
   let smx: Float64Array | null = null; let smy: Float64Array | null = null; let shl: Float64Array | null = null;
+  let sbx: Float64Array | null = null; let sby: Float64Array | null = null; let sbr: Float64Array | null = null;
   if (prep) {
     const got = prep.get(p);
-    if (got) { smx = got.mx; smy = got.my; shl = got.hl; }
+    if (got) { smx = got.mx; smy = got.my; shl = got.hl; sbx = got.bx; sby = got.by; sbr = got.br; }
     else {
       smx = new Float64Array(nseg); smy = new Float64Array(nseg); shl = new Float64Array(nseg);
       for (let k = 0; k < nseg; k++) {
         const v = v0 + k; const dx = vx[v + 1] - vx[v]; const dy = vy[v + 1] - vy[v];
-        smx[k] = vx[v] + dx / 2; smy[k] = vy[v] + dy / 2; shl[k] = 0.5 * Math.sqrt(dx * dx + dy * dy);
+        smx[k] = vx[v] + dx / 2; smy[k] = vy[v] + dy / 2; shl[k] = 0.5 * (vs[v + 1] - vs[v]);
       }
-      prep.set(p, { mx: smx, my: smy, hl: shl });
+      const nb = Math.ceil(nseg / REACH_BLK); sbx = new Float64Array(nb); sby = new Float64Array(nb); sbr = new Float64Array(nb);
+      for (let b = 0; b < nb; b++) {
+        const k0 = b * REACH_BLK; const k1 = Math.min(nseg, k0 + REACH_BLK);
+        const cx = (smx[k0] + smx[k1 - 1]) / 2; const cy = (smy[k0] + smy[k1 - 1]) / 2; let r = 0;
+        for (let k = k0; k < k1; k++) { const ddx = smx[k] - cx; const ddy = smy[k] - cy; const rr = Math.sqrt(ddx * ddx + ddy * ddy) + shl[k]; if (rr > r) r = rr; }
+        sbx[b] = cx; sby[b] = cy; sbr[b] = r;
+      }
+      prep.set(p, { mx: smx, my: smy, hl: shl, bx: sbx, by: sby, br: sbr });
     }
   }
   if (nseg < 1) return 0;
@@ -234,6 +246,23 @@ export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | 
         let kk = a - v0;
         for (let guard = 0; guard <= nseg; guard++) {
           const s0a = vs[a] + off; if (s0a >= ue) break;
+          // K1502 26N: jump a whole prep block whose every segment is too far to beat d
+          // (|Q - centre| - radius lower-bounds its segment distances; the margin sits far
+          // above the computations' rounding, as in the per-segment prune below). A skipped
+          // segment updates neither d nor kp, exactly as a pruned segment does not.
+          if (sbx && sby && sbr && kk % REACH_BLK === 0 && kk + REACH_BLK <= nseg && vs[a + REACH_BLK - 1] + off < ue) {
+            const b = kk / REACH_BLK; const bdx = Q.x - sbx[b]; const bdy = Q.y - sby[b];
+            if (Math.sqrt(bdx * bdx + bdy * bdy) >= (sqrtD + sbr[b]) * (1 + 1e-9)) {
+              firstSeg = false;
+              let ended = false;
+              for (let j = 0; j < REACH_BLK; j++) {
+                if (a + 1 < v0 + nseg) { a++; kk++; } else if (closed) { a = v0; kk = 0; off += T.cLen[p]; } else { ended = true; break; }
+              }
+              guard += REACH_BLK - 1;
+              if (ended) break;
+              continue;
+            }
+          }
           let dd: number;
           if (smx && smy && shl) {
             const hl = shl[kk]; const dmx = Q.x - smx[kk]; const dmy = Q.y - smy[kk];
@@ -326,7 +355,8 @@ export interface GfPrefix {
   nC: number; cV0: Int32Array; cNV: Int32Array; cClosed: Uint8Array; cLen: Float64Array; cS0: Float64Array;
   cPin0: Int32Array; cPinN: Int32Array; cArm0: Int32Array; cArmN: Int32Array;
   nV: number; vx: Float64Array; vy: Float64Array; vs: Float64Array; pinS: Float64Array; pinZ: Float64Array;
-  pinWL: Float64Array; pinWR: Float64Array;
+  /** K1502 26N: each pin's crossing partner (chain index, its pin arc); assemble walks the reach from these. */
+  pinPC: Int32Array; pinPS: Float64Array;
   pinTheta: Float64Array; chainIds: Int32Array; rootsOff: Int32Array; rootsS: Float64Array; rootsJ: Int32Array;
   nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array;
   arms: GfArm[]; junctions: FieldScene["junctions"]; jGroup: Int32Array;
@@ -574,29 +604,15 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
   }
   let nPin = 0; for (const p of pinsOf) { p.sort((u, v) => u.s - v.s); nPin += p.length; }
   const pinS = new Float64Array(nPin); const pinZ = new Float64Array(nPin); const pinTheta = new Float64Array(nPin); const cPin0 = new Int32Array(nC); const cPinN = new Int32Array(nC);
-  { let q = 0; pinsOf.forEach((P, c) => { cPin0[c] = q; cPinN[c] = P.length; for (const p of P) { pinS[q] = p.s; pinZ[q] = p.z; pinTheta[q] = p.theta; q++; } }); }
+  const pinPC = new Int32Array(nPin); const pinPS = new Float64Array(nPin);
+  { let q = 0; pinsOf.forEach((P, c) => { cPin0[c] = q; cPinN[c] = P.length; for (const p of P) { pinS[q] = p.s; pinZ[q] = p.z; pinTheta[q] = p.theta; pinPC[q] = p.pc; pinPS[q] = p.ps; q++; } }); }
   // K1451: each pin's key window per side, from the reach of its crossing's overlap. K1502 (26L):
   // baked with home off too (home off kept win, and past a shallow crossing both hats read 0, so the under
   // surface buried the over edge: K1477). The unclipped stray rise (16 -> 231, K1451 s2) is held by the
   // assemble clip below, which now runs in both modes; GF_NOCLIP=1 keeps the raw windows for probes.
-  const pinWL = new Float64Array(nPin).fill(win); const pinWR = new Float64Array(nPin).fill(win);
-  {
-    const RW = { cV0, cNV, cClosed, cLen, cS0, vx, vy, vs };
-    const reachPrep = new Map<number, { mx: Float64Array; my: Float64Array; hl: Float64Array }>();
-    let q = 0;
-    pinsOf.forEach((P, c) => {
-      const n = P.length;
-      for (let i = 0; i < n; i++, q++) {
-        const p = P[i];
-        // the arc to the next pin each way (a window past it is cut at the pin gap anyway); open chain: no limit
-        let gL = Infinity; let gR = Infinity;
-        if (cClosed[c]) { gL = n > 1 ? p.s - P[(i + n - 1) % n].s : cLen[c]; if (gL <= 0) gL += cLen[c]; gR = n > 1 ? P[(i + 1) % n].s - p.s : cLen[c]; if (gR <= 0) gR += cLen[c]; }
-        else { if (i > 0) gL = p.s - P[i - 1].s; if (i + 1 < n) gR = P[i + 1].s - p.s; }
-        pinWL[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, -1, p.pc, p.ps, h, gL, win / GF_REACH_K, reachPrep));
-        pinWR[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, 1, p.pc, p.ps, h, gR, win / GF_REACH_K, reachPrep));
-      }
-    });
-  }
+  // K1502 26N: the reach walk itself runs in assembleGfTables, where the arm clip distances
+  // are known on every path (cold, pooled, the worker's), so a side the clip cuts to win is
+  // never walked and no walk runs past its clip distance. The prefix only stores partners.
   const t2 = now();
 
   // 3. Groups (union-find over junctions whose roots a crossing-free run joins) and the arm table:
@@ -637,7 +653,7 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
   return {
     h, W, aa, sigma, zt, amp, win, rc, gridK: opts.gridK, cr: look.cuspRadius ?? 3,
     nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
-    nV, vx, vy, vs, pinS, pinZ, pinWL, pinWR, nA, aSR, aDir, aL, aLcut, aG,
+    nV, vx, vy, vs, pinS, pinZ, pinPC, pinPS, nA, aSR, aDir, aL, aLcut, aG,
     arms: armsT, junctions: scene.junctions, jGroup, pinTheta, chainIds, rootsOff, rootsS, rootsJ,
     homeOn: opts.home ?? GF_HOME,
     ms: { vtx: t1 - t0, pins: t2 - t1, arms: t3 - t2 },
@@ -1028,33 +1044,43 @@ const GF_NOCLIP: boolean = (globalThis as { process?: { env?: Record<string, str
  * 21.86,18.64 and 16.17,18.39): the over pin 0.09-0.46 short of a home tail lost its long window to the s3 cut, and
  * the tie smear beside the over thread (master's grey wedge) came back. An UNDER pin keeps the s3 cut: run into a
  * home tail, its key dives where member() (win depth) keeps the piece home, a hard edge (muse_hash 12.79,10.46). */
-function clipPinWindows(P: Pick<GfPrefix, "nC" | "cClosed" | "cLen" | "cPin0" | "cPinN" | "pinS" | "pinZ" | "pinWL" | "pinWR" | "win" | "cArm0" | "cArmN" | "aSR" | "aDir" | "aL">, aHome: Float64Array): [Float64Array, Float64Array] {
-  const { nC, cClosed, cLen, cPin0, cPinN, pinS, pinZ, win, cArm0, cArmN, aSR, aDir, aL } = P;
-  const wL = Float64Array.from(P.pinWL); const wR = Float64Array.from(P.pinWR);
+/** K1502 26N: each pin's distance to the nearest arm interval on its chain, per side:
+ * the clipPinWindows cut, factored out so assemble's reach walk can skip and cap by it
+ * (a pin inside an interval reads 0 on both sides). Same arithmetic, same order. */
+function pinClipDistances(P: Pick<GfPrefix, "nC" | "cClosed" | "cLen" | "cPin0" | "cPinN" | "pinS" | "pinZ" | "cArm0" | "cArmN" | "aSR" | "aDir" | "aL">, aHome: Float64Array): { dL: Float64Array; dR: Float64Array } {
+  const { nC, cClosed, cLen, cPin0, cPinN, pinS, pinZ, cArm0, cArmN, aSR, aDir, aL } = P;
+  const dL = new Float64Array(pinS.length).fill(Infinity); const dR = new Float64Array(pinS.length).fill(Infinity);
   for (let c = 0; c < nC; c++) {
     const a0 = cArm0[c]; const an = cArmN[c]; if (an === 0) continue;
     const closed = cClosed[c] === 1; const len = cLen[c];
     const md = (v: number): number => ((v % len) + len) % len;
     for (let q = cPin0[c]; q < cPin0[c] + cPinN[c]; q++) {
-      if (!(wL[q] > win) && !(wR[q] > win)) continue;
-      const s = pinS[q]; const over = pinZ[q] > 0; let dR = Infinity; let dL = Infinity;
+      const s = pinS[q]; const over = pinZ[q] > 0; let ddR = Infinity; let ddL = Infinity;
       for (let i = a0; i < a0 + an; i++) {
         const ext = Math.max(aL[i], aHome[i]); if (!(ext > 0)) continue;
         const e2 = aSR[i] + aDir[i] * ext; let lo = Math.min(aSR[i], e2); let hi = Math.max(aSR[i], e2);
-        if (closed ? md(s - lo) <= hi - lo : s >= lo && s <= hi) { dR = 0; dL = 0; break; }
+        if (closed ? md(s - lo) <= hi - lo : s >= lo && s <= hi) { ddR = 0; ddL = 0; break; }
         if (over) { if (!(aL[i] > 0)) continue; const e3 = aSR[i] + aDir[i] * aL[i]; lo = Math.min(aSR[i], e3); hi = Math.max(aSR[i], e3); }
-        if (closed) { dR = Math.min(dR, md(lo - s)); dL = Math.min(dL, md(s - hi)); }
-        else if (lo > s) dR = Math.min(dR, lo - s); else dL = Math.min(dL, s - hi);
+        if (closed) { ddR = Math.min(ddR, md(lo - s)); ddL = Math.min(ddL, md(s - hi)); }
+        else if (lo > s) ddR = Math.min(ddR, lo - s); else ddL = Math.min(ddL, s - hi);
       }
-      wR[q] = Math.max(win, Math.min(wR[q], dR)); wL[q] = Math.max(win, Math.min(wL[q], dL));
+      dR[q] = ddR; dL[q] = ddL;
     }
+  }
+  return { dL, dR };
+}
+function clipPinWindows(win: number, pinWL: Float64Array, pinWR: Float64Array, dist: { dL: Float64Array; dR: Float64Array }): [Float64Array, Float64Array] {
+  const wL = Float64Array.from(pinWL); const wR = Float64Array.from(pinWR);
+  for (let q = 0; q < pinWL.length; q++) {
+    if (!(wL[q] > win) && !(wR[q] > win)) continue;
+    wR[q] = Math.max(win, Math.min(wR[q], dist.dR[q])); wL[q] = Math.max(win, Math.min(wL[q], dist.dL[q]));
   }
   return [wL, wR];
 }
 /** The tables from a prefix and its corners (all of them, in order).
  * With a merged chunk-bin slice set, bins take it; else bins run whole. */
 export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfChunkMeta; bins: { cellCh0: Int32Array; cellChN: Int32Array; cellChList: Int32Array } } | null, ms: { vtx: number; pins: number; arms: number; corners: number }, t0: number): GfTables {
-  const { h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN, nV, vx, vy, vs, pinS, pinZ, pinWL, pinWR, nA, aSR, aDir, aL, aLcut, aG } = P;
+  const { h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN, nV, vx, vy, vs, pinS, pinZ, pinPC, pinPS, nA, aSR, aDir, aL, aLcut, aG } = P;
   const nK = K.length;
   const kCx = new Float64Array(nK); const kCy = new Float64Array(nK); const kR = new Float64Array(nK); const kRmax = new Float64Array(nK);
   const kEax = new Float64Array(nK); const kEay = new Float64Array(nK); const kEbx = new Float64Array(nK); const kEby = new Float64Array(nK); const kG = new Int32Array(nK);
@@ -1100,17 +1126,48 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
   // K1438: from the arms themselves (P.arms is armTab.arms on every path: cold, pooled, the worker's), so no
   // caller copies a new field.
   const aHome = new Float64Array(nA); for (let i = 0; i < nA; i++) aHome[i] = P.arms[i].home;
+  // K1451: each pin's key window per side, from the reach of its crossing's overlap (pinReach; in
+  // the prefix until K1502 26N, which moved it here where the arm clip distances are known on
+  // every path - cold, pooled, the worker's). A side the clip below cuts to win (its distance
+  // <= win, a pin inside an arm included) is never walked, and no walk runs past its clip
+  // distance: the cap sits one walk step past the clip distance, so it never hides a reach the clip
+  // would keep (GF_REACH_K is 1.0, so d / GF_REACH_K is d). Walked values are then cut by the
+  // same distances, so the baked windows are bit-identical to walking every side in full.
+  // GF_NOCLIP=1 keeps the raw windows for probes: every side walked, no clip.
+  const tw0 = now();
+  const pinWL = new Float64Array(pinS.length).fill(win); const pinWR = new Float64Array(pinS.length).fill(win);
+  const clipDist = GF_NOCLIP ? null : pinClipDistances(P, aHome);
+  {
+    const RW = { cV0, cNV, cClosed, cLen, cS0, vx, vy, vs };
+    const reachPrep = new Map<number, ReachPrep>();
+    const step = GF_REACH_STEP * h; const from = win / GF_REACH_K;
+    const capL = (d: number): number => d / GF_REACH_K + step;
+    for (let c = 0; c < nC; c++) {
+      const n = cPinN[c]; const b = cPin0[c];
+      for (let i = 0; i < n; i++) {
+        const q = b + i; const s = pinS[q];
+        // the arc to the next pin each way (a window past it is cut at the pin gap anyway); open chain: no limit
+        let gL = Infinity; let gR = Infinity;
+        if (cClosed[c]) { gL = n > 1 ? s - pinS[b + ((i + n - 1) % n)] : cLen[c]; if (gL <= 0) gL += cLen[c]; gR = n > 1 ? pinS[b + ((i + 1) % n)] - s : cLen[c]; if (gR <= 0) gR += cLen[c]; }
+        else { if (i > 0) gL = s - pinS[b + i - 1]; if (i + 1 < n) gR = pinS[b + i + 1] - s; }
+        const dL = clipDist ? clipDist.dL[q] : Infinity; const dR = clipDist ? clipDist.dR[q] : Infinity;
+        if (dL > win) pinWL[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, s, -1, pinPC[q], pinPS[q], h, Math.min(gL, capL(dL)), from, reachPrep));
+        if (dR > win) pinWR[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, s, 1, pinPC[q], pinPS[q], h, Math.min(gR, capL(dR)), from, reachPrep));
+      }
+    }
+  }
+  const walkMs = now() - tw0;
   // K1451 s3: a pin's reach window stops where a junction's arm or home begins on its chain (and stays win when the
   // pin lies inside one), so the key depth equals member()'s depth wherever membership splits ribbons into blocks.
   // K1502: the clip runs with home off too, on the same aHome extents, so the home-off keys stop at the same arms.
-  const [wL2, wR2] = !GF_NOCLIP ? clipPinWindows(P, aHome) : [pinWL, pinWR];
+  const [wL2, wR2] = clipDist ? clipPinWindows(win, pinWL, pinWR, clipDist) : [pinWL, pinWR];
 
   return {
     h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
     nV, vx, vy, vs, pinS, pinZ, pinWL: wL2, pinWR: wR2, nA, aSR, aDir, aL, aLcut, aG, aHome, homeOn: P.homeOn === true,
     nK, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
-    ms: { vtx: ms.vtx, pins: ms.pins, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
+    ms: { vtx: ms.vtx, pins: ms.pins + walkMs, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
   };
 }
 

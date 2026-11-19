@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { FieldScene } from "../../src/render/field/scene";
-import { buildTables } from "../../src/render/gpu_field/tables";
+import { buildGfPrefix, buildTables, GF_REACH_K, pinReach, type ReachPrep } from "../../src/render/gpu_field/tables";
 
 const dir = join(__dirname, "field", "scenes");
 const load = (n: string): FieldScene => {
@@ -33,5 +33,31 @@ describe("K1502 reach key windows with home off", () => {
       }
     }
     expect(widened).toBeGreaterThan(0);
+  });
+
+  // K1502 26N: the prep path (per-segment prune + block jumps in the stretch search) must
+  // return the no-prep reach on every side: a skipped segment updates neither d nor kp.
+  it("pinReach with prep returns the no-prep reach on every pin side", () => {
+    let sides = 0;
+    for (const n of ["j_cross.json", "oblique30.json", "acute20.json", "curved.json"]) {
+      const P = buildGfPrefix(load(n), { aa: AA, home: false });
+      const RW = { cV0: P.cV0, cNV: P.cNV, cClosed: P.cClosed, cLen: P.cLen, cS0: P.cS0, vx: P.vx, vy: P.vy, vs: P.vs };
+      const prep = new Map<number, ReachPrep>();
+      const from = P.win / GF_REACH_K;
+      for (let c = 0; c < P.nC; c++) {
+        const cnt = P.cPinN[c]; const b = P.cPin0[c];
+        for (let i = 0; i < cnt; i++) {
+          const q = b + i;
+          for (const dir of [-1, 1] as const) {
+            const gap = P.cClosed[c] ? P.cLen[c] : Infinity;
+            const withPrep = pinReach(RW, c, P.pinS[q], dir, P.pinPC[q], P.pinPS[q], P.h, gap, from, prep);
+            const noPrep = pinReach(RW, c, P.pinS[q], dir, P.pinPC[q], P.pinPS[q], P.h, gap, from, undefined);
+            expect(withPrep).toBe(noPrep);
+            sides++;
+          }
+        }
+      }
+    }
+    expect(sides).toBeGreaterThan(0);
   });
 });
