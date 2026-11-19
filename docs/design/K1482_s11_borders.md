@@ -70,3 +70,40 @@ last 35 minutes for the bar, the hold check and the handoff.
 comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP, append
 `### Handoff K1482 s11` here, commit, and report: the two class tables, the sheets' paths (each site named),
 the numbers, which commits are confirmed on screen, a `Ledger items` list and K1482's handle fields.
+
+### Handoff K1482 s11
+
+Stopped at 16:45 (started 15:28), no `src/` change: no rule landed. Tip = origin/master 314b1896 + probe files.
+
+- **Step 1, recount** (`out/s11/classes_base.txt`, sheets `base_0..3.png`, `base_moved.png`, `base_moved_wide.png`,
+  `z_j36.png`, `z_j50.png`): starting commit c198e005, hash fff8c9e5 (as s8/s10). K1502 moved 10 sites by more than
+  8 px (t50s, t18e, j36's top arm, t18s, j50 ...): its reach windows run an outline on past shallow crossings; none
+  reads faulted. Count 36, unchanged: wedge 10, notch 9, sliver 6, tick 3, break 3, dot 2, stub 2, pocket 1 (K1490 22,
+  GAP 12, K1470 1, PIN 1). Tip: the same 36, by construction (tip `src/` = c198e005's).
+- **Step 2, b3 on the new master** (`out/s11/b3_sites.txt`, sheets `b3_0..b3_7.png`, 12 groups each, today | base gf
+  | b3 gf | ink diff; `sep_0.png`, `zoom_t16e.png`): ink changes 2341 px (gain 2194, loss 147), 86 groups of >= 10
+  px. Better 2: j87 (today meets the over thread; base leaves a 2-3 px gap; b3 meets it), t16e (the same; least
+  sure, today's tile sits off gf's geometry there). Same 0. Worse 84: everywhere else b3 runs the under line hard
+  into the over line as a T where today and base fade it out before it.
+- **Step 3, narrowing** (`out/s11/narrow.txt`; patches `s11/patch_n1..n3.json`, debug `patch_dbg11*.json`,
+  `dbgread11.py`): n1 (the under chain has a candidate piece in the over piece's group) 11 groups, n2 (the slot's
+  clearance scales below 1) 24, n3 (the under chain has an arm in that group) 24: all of them b3-worse sites, and
+  none keeps j87 or t16e. FAIL. At 77 of the 86 groups the over piece is a member through its HOME interval only.
+  The numbers the shader has do not separate the two better sites: arc from the crossing to the over chain's
+  joint root j87 0.40 h, t16e 0.53 h against worse t21e 0.25, t25s 0.45, t2s 0.53, j102 0.55; sinT and the cut
+  overlap too. Given up: j87's and t16e's joins. What likely separates them is today's fan reach along the OVER
+  chain (s10's finding at j49): a new baked number in the window bake, not added (not mine).
+- **Step 4 (optional, partial)** (`out/s11/mask.txt`, `mask_0.png`, `mask_wide.png`; cap11.mjs gains `PATCHT`, today's
+  gap-mask programs; `s11/patchT_*.json`): at j55, j36, t70s (and j49) today's hiding is the over SILHOUETTE term
+  (margin and fade zeroed bring back only short end stubs at j55 and j36; nomask shows the whole under ribbon).
+  Today's ribbons do not overlay gf's lines at these sites, so what gf would have to hide is not mapped; no
+  border patch tried.
+- **Step 5**: not run; no `src/` change, so the Crossing fade is master's.
+- **Done**: counts above (36 = 36). Fill look: 0 px by construction (tip `src/` = starting commit's). `hold.mjs`
+  60/60 PASS warm on link A (min 6855 edges, max 8260). `npm test` green on the tip (256 files, 3187 tests).
+  K1436 bar STRICT=1 `-Tag k1482s11` (`-Ref b0490d9d -Base c198e005`): **PASS**, new 0, grown 0, gone 0 (`out/s11/bar.txt`).
+- **Confirmed on screen**: none (no rule built).
+- **Next**: the joins at j49, j87, t16e need the over chain's fused-joint fan reach baked into gf's window (the
+  window bake, Muse's area): measure it at those three against the worse sites (t21e, t2s) first. The mask case
+  needs the slot's over polyline and hO drawn in frame coordinates at j55, j36, t70s, then a comparison with gf's
+  window there.
