@@ -22,7 +22,11 @@ describe("K1423 lkGap shader: the cut is windowed by the baked winM", () => {
     const f = lookForm(gfFs(false, true));
     expect(f).toContain("int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;");
     expect(f).toContain("gA = max(gA, cj);");
-    expect(f).toContain("if (cS < 0 || PC(j) == cS) g = max(g, cj);");
+    expect(f).toContain("if (cS < 0) g = max(g, cj);");
+    // K1482 s15: the slot's joint flag (the y fraction) cuts the outline with c1's reach on its flagged side
+    expect(f).toContain("int jb = sl.x >= 0.0 ? int(fract(sl.x) * 8.0 + 0.5) : 0;");
+    expect(f).toContain("vec2 scJ = jf ? sc * vec2(0.0, 0.3) : sc;");
+    expect(f).toContain("else if (PC(j) == cS) g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj);");
     expect(f).toContain("ink *= 1.0 - g.x * (1.0 - aT); cov *= 1.0 - g.y * (1.0 - aT);");
   });
 });
@@ -180,6 +184,26 @@ describe("K1423 GfGapTable", () => {
     // far from both crossings no over pass is named
     expect(V[ent(2) + 1]).toBe(-1);
     expect(V[ent(18) + 1]).toBe(-1);
+  });
+  it("K1482 s15: a slot beside a joint member's over pass carries its side's joint flag in y's fraction", () => {
+    // the eye wall past x 10.55 is a fused joint's surface (ramp 0 at the crossing itself, as eval.ts member() has it)
+    const mem = (c: number, k: number) => c === 0 && over.positions[2 * k] >= 10.55;
+    const V = new GfGapTable().values({ ...src, overMember: mem });
+    const y = (x: number) => V[4 * (over.count + Math.round(x / under.arcPer)) + 1];
+    // the wall rides at y 0.28-0.3, left of the under thread (its tangent is +x): bit 1 only, the chain stays 0
+    for (const x of [11, 11.3]) { expect(y(x)).toBe(0.125); expect(Math.round(y(x))).toBe(0); }
+    // at the crossing the nearest member is past the cut's reach (fillHalf + margin + fade); at 10.6 a non-member
+    // over sample lies within a fill half-width of the outline point: no flag either way
+    expect(y(10)).toBe(0);
+    expect(y(10.6)).toBe(0);
+    // mirrored below the under thread, the same wall flags the right side (bit 2)
+    const flip = (P: Float32Array) => P.map((v, i) => (i % 2 ? -v : v));
+    const oF = flip(over.positions), uF = flip(under.positions);
+    const VF = new GfGapTable().values({ ...src, chainSamples: [{ positions: oF, count: over.count }, { positions: uF, count: under.count }], overMember: mem });
+    expect(VF[4 * (over.count + 110) + 1]).toBe(0.25);
+    // without a membership the slots name the chain alone
+    const V0 = new GfGapTable().values(src);
+    expect(V0[4 * (over.count + 110) + 1]).toBe(0);
   });
 });
 describe("K1460 s3: a kink loop's self-crossing window (setupUnder's split and selfEx)", () => {

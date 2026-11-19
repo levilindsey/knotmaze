@@ -416,8 +416,6 @@ export interface GfGapSource extends GfLookSource {
   jointClear?: number;
   /** K1482 s15: whether chain c's kept sample k (a field vertex) belongs to a fused joint's surface (eval.ts member(): a group, ramp > 0). */
   overMember?: (c: number, k: number) => boolean;
-  /** K1482 s15 prototype: the member's group (-1 none). */
-  memberGroup?: (c: number, k: number) => number;
 }
 // crossing_gaps.ts's march constants, kept by value here (MARCH_STEP, GAP_EXIT_PAD, the uCap floors/reach).
 const GAP_MARCH_STEP = 0.07;
@@ -514,128 +512,50 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
   return sc6;
 }
 
-// K1482 s15 prototype knobs (globalThis.__k15): on, R (over arc reach), ex (open-chain end exclusion), all
-interface K15 { on?: boolean; R?: number; ex?: number; all?: boolean; foot?: boolean; D?: number; frac?: number; log?: boolean; slot?: boolean; SR?: number; gate?: boolean; at?: "a" | "s"; near?: number; RA?: number; nn?: number; cmp?: boolean; side?: boolean; rp?: number; ob?: number; sw?: boolean; best?: boolean; offs?: number[]; bias?: number }
-const k15 = (): K15 => (globalThis as { __k15?: K15 }).__k15 ?? {};
-/** K1482 s15: per slot (wr: the slots the crossing wins, k, foot arc, |off|, kept index, scan + pack, 5 a slot; ss: the
- * scan centre arcs), the joint flag: the slot's over pass belongs to a fused joint's surface. */
-export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: Int32Array, wr: readonly number[], ss: readonly number[], su?: GapSamples, uxy?: ArrayLike<number>, sc?: { fh: number; mg: number; fd: number }): number[] {
-  const o = k15(); const n5 = wr.length / 5;
-  const zero = (): number[] => new Array<number>(n5).fill(0);
-  if (o.on === false) return zero();
-  const ex = o.ex ?? -1;
-  if (!so.closed && ex >= 0 && (oC < ex || so.total - oC < ex)) return zero();
-  if (!o.slot) return new Array<number>(n5).fill(gapJointFlag(mem, c, so, oC, km, wr));
-  if (o.gate && !gapJointFlag(mem, c, so, oC, km, wr)) return zero();
-  const SR = o.SR ?? 0, Dm = o.D ?? Infinity;
-  const out = zero();
-  if ((o.near || o.side) && su && uxy) {
-    // the named pass's member samples (over arc within RA of the crossing) within `near` of the slot's under sample
-    const RA = o.RA ?? 1.5; const pt = { x: 0, y: 0 };
-    const mx: number[] = [], my: number[] = [], nx: number[] = [], ny: number[] = [];
-    for (let q = Math.round((oC - RA) / so.arcPer); q <= Math.round((oC + RA) / so.arcPer); q++) {
-      let k = q;
-      if (so.closed) k = ((k % so.count) + so.count) % so.count; else if (k < 0 || k >= so.count) continue;
-      gapPointAt(so, k * so.arcPer, pt);
-      if (mem(c, km[k])) { mx.push(pt.x); my.push(pt.y); } else { nx.push(pt.x); ny.push(pt.y); }
-    }
-    if (!mx.length) return out;
-    if (o.side && sc) {
-      // per side of the under thread (bit 1: left of its tangent, bit 2: right): at the outline point beside the slot's
-      // sample, the nearest over sample is a member within the cut's reach (and no non-member within nn)
-      const reach = sc.fh + sc.mg + sc.fd + (o.rp ?? 0), off = sc.fh + (o.ob ?? 0.04);
-      const last = su!.count - 1;
-      for (let i = 0; i < n5; i++) {
-        if (wr[5 * i + 2] > Dm) continue;
-        const k = wr[5 * i];
-        const ka = su!.closed ? (k + last) % su!.count : Math.max(0, k - 1), kb = su!.closed ? (k + 1) % su!.count : Math.min(last, k + 1);
-        let tx = uxy[2 * kb] - uxy[2 * ka], ty = uxy[2 * kb + 1] - uxy[2 * ka + 1];
-        const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
-        let bits = 0;
-        if (o.best) {
-          // the side takes the reduced cut where that is nearer c1's (members reduced, the rest full) than master's,
-          // summed over points across the outline band
-          const F = (d: number): number => Math.max(0, Math.min(1, (sc.fh + sc.mg + sc.fd - d) / sc.fd));
-          const Fr = (d: number): number => Math.max(0, Math.min(1, (sc.fh + 0.3 * sc.fd - d) / (0.3 * sc.fd)));
-          for (const [sd, bit] of [[1, 1], [-1, 2]] as const) {
-            let eF = 0, eM = 0;
-            for (const ob of o.offs ?? [-0.02, 0.04, 0.1]) {
-              const of = sc.fh + ob;
-              const qx = uxy[2 * k] - sd * ty * of, qy = uxy[2 * k + 1] + sd * tx * of;
-              let dM = Infinity, dN = Infinity;
-              for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
-              for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
-              dM = Math.sqrt(dM); dN = Math.sqrt(dN);
-              const c1 = Math.max(F(dN), Fr(dM)), ms = F(Math.min(dN, dM)), fl = Fr(Math.min(dN, dM));
-              eF += Math.abs(fl - c1); eM += Math.abs(ms - c1);
-            }
-            if (eF + (o.bias ?? 0) < eM) bits |= bit;
-          }
-          out[i] = bits;
-          continue;
-        }
-        for (const [sd, bit] of [[1, 1], [-1, 2]] as const) {
-          const qx = uxy[2 * k] - sd * ty * off, qy = uxy[2 * k + 1] + sd * tx * off; // left normal (-ty, tx)
-          let dM = Infinity, dN = Infinity;
-          for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
-          for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
-          dM = Math.sqrt(dM); dN = Math.sqrt(dN);
-          if (dM < reach && dM <= dN && (o.nn === undefined || dN >= o.nn)) bits |= bit;
-        }
-        out[i] = bits;
-      }
-      return out;
-    }
-    const n2 = (o.near ?? 0) ** 2, nn = o.nn ?? -1, nn2 = nn * nn;
-    for (let i = 0; i < n5; i++) {
-      if (wr[5 * i + 2] > Dm) continue;
-      const k = wr[5 * i], ux = uxy[2 * k], uy = uxy[2 * k + 1];
-      let dM = Infinity, dN = Infinity;
-      for (let m = 0; m < mx.length; m++) { const dx = mx[m] - ux, dy = my[m] - uy; dM = Math.min(dM, dx * dx + dy * dy); }
-      for (let m = 0; m < nx.length; m++) { const dx = nx[m] - ux, dy = ny[m] - uy; dN = Math.min(dN, dx * dx + dy * dy); }
-      if (dM < n2 && (nn < 0 || dN >= nn2) && (!o.cmp || dM <= dN)) out[i] = 1;
-    }
-    return out;
+/** K1482 s15: the joint flag's outline point, past the fill edge (scene units). */
+const GAP_JOINT_OB = 0.04;
+/** K1482 s15: the over arc around the crossing (each way) whose samples the joint flag reads. */
+const GAP_JOINT_RA = 1.5;
+/**
+ * K1482 s15: the bake's joint flag for each slot a crossing wins (ks: the slots' under sample indices on su; km: the
+ * over chain's kept index of each over sample). GfGapTable writes it into the slot's y fraction (over chain + 0.125 * bits) and lkGap reads it: per side
+ * of the under thread (bit 1: left of its tangent at the slot, bit 2: right), whether the crossing's cut of that
+ * side's OUTLINE takes stage 13's c1 reach (no margin, 0.3 of the fade). It does when, at the outline point beside
+ * the slot's under sample (fillHalf + GAP_JOINT_OB off its centreline), the nearest over sample within GAP_JOINT_RA
+ * of the crossing is a member of a fused joint's surface (mem: eval.ts member(), a group with ramp > 0) within the
+ * cut's reach (fillHalf + margin + fade), and no non-member over sample lies within a fill half-width. c1 decided
+ * per piece at each pixel; deciding per slot side keeps its closed joint lines without its flip specks (link A: its
+ * 15 better sites, no new speck; docs/design/K1482_s15_slot_flag.md, .claude/probes/K1482/out/s15).
+ */
+export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }): number[] {
+  const out = new Array<number>(ks.length).fill(0);
+  const pt = { x: 0, y: 0 };
+  const mx: number[] = [], my: number[] = [], nx: number[] = [], ny: number[] = [];
+  for (let q = Math.round((oC - GAP_JOINT_RA) / so.arcPer); q <= Math.round((oC + GAP_JOINT_RA) / so.arcPer); q++) {
+    let k = q;
+    if (so.closed) k = ((k % so.count) + so.count) % so.count; else if (k < 0 || k >= so.count) continue;
+    gapPointAt(so, k * so.arcPer, pt);
+    if (mem(c, km[k])) { mx.push(pt.x); my.push(pt.y); } else { nx.push(pt.x); ny.push(pt.y); }
   }
-  for (let i = 0; i < n5; i++) {
-    if (wr[5 * i + 2] > Dm) continue;
-    const a = o.at === "s" ? ss[i] : wr[5 * i + 1];
-    const i0 = Math.round((a - SR) / so.arcPer), i1 = Math.round((a + SR) / so.arcPer);
-    for (let q = i0; q <= i1; q++) {
-      let k = q;
-      if (so.closed) k = ((k % so.count) + so.count) % so.count; else if (k < 0 || k >= so.count) continue;
-      if (mem(c, km[k])) { out[i] = 1; break; }
+  if (!mx.length) return out;
+  const reach2 = (sc.fh + sc.mg + sc.fd) ** 2, off = sc.fh + GAP_JOINT_OB, nn2 = sc.fh * sc.fh, uxy = su.positions;
+  const last = su.count - 1;
+  for (let i = 0; i < ks.length; i++) {
+    const k = ks[i];
+    const ka = su.closed ? (k + last) % su.count : Math.max(0, k - 1), kb = su.closed ? (k + 1) % su.count : Math.min(last, k + 1);
+    let tx = uxy[2 * kb] - uxy[2 * ka], ty = uxy[2 * kb + 1] - uxy[2 * ka + 1];
+    const tl = Math.sqrt(tx * tx + ty * ty) || 1; tx /= tl; ty /= tl;
+    let bits = 0;
+    for (const [sd, bit] of [[1, 1], [-1, 2]] as const) {
+      const qx = uxy[2 * k] - sd * ty * off, qy = uxy[2 * k + 1] + sd * tx * off; // the left normal is (-ty, tx)
+      let dM = Infinity, dN = Infinity;
+      for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
+      for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
+      if (dM < reach2 && dM <= dN && dN >= nn2) bits |= bit;
     }
+    out[i] = bits;
   }
   return out;
-}
-const jointBits = (v: number): number => { const o = k15(); if (!o.side) return v ? 3 : 0; return o.sw ? ((v & 1) << 1) | ((v & 2) >> 1) : v; };
-/** K1482 s15: a crossing's joint flag: its over pass belongs to a fused joint's surface near the crossing. */
-export function gapJointFlag(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: Int32Array, wr: readonly number[]): number {
-  const o = k15();
-  const R = o.R ?? 0;
-  const at = (a: number): boolean => {
-    let k = Math.round(a / so.arcPer);
-    if (so.closed) k = ((k % so.count) + so.count) % so.count; else k = Math.max(0, Math.min(so.count - 1, k));
-    return mem(c, km[k]);
-  };
-  let nm = 0, n = 0;
-  if (o.foot) {
-    const Dm = o.D ?? Infinity;
-    for (let i = 0; i < wr.length; i += 5) { if (wr[i + 2] > Dm) continue; n++; if (at(wr[i + 1])) nm++; }
-  } else {
-    const i0 = Math.round((oC - R) / so.arcPer), i1 = Math.round((oC + R) / so.arcPer);
-    let last = -1;
-    for (let i = i0; i <= i1; i++) {
-      let k = i;
-      if (so.closed) k = ((k % so.count) + so.count) % so.count; else if (k < 0 || k >= so.count) continue;
-      const kv = km[k]; if (kv === last) continue; last = kv;
-      n++; if (mem(c, kv)) nm++;
-    }
-  }
-  if (nm === 0) return 0;
-  if (o.all) return nm === n ? 1 : 0;
-  return nm >= (o.frac ?? 0) * n ? 1 : 0;
 }
 
 export class GfGapTable {
@@ -654,7 +574,6 @@ export class GfGapTable {
    */
   values(r: GfGapSource, out?: Float32Array): Float32Array {
     const t0 = performance.now();
-    if (k15().log && r.overMember) (globalThis as { __k15log?: unknown[] }).__k15log = [];
     const D = r.kd;
     const G = D.geom;
     const nC = r.chainSamples.length;
@@ -769,7 +688,7 @@ export class GfGapTable {
       const step = so.arcPer;
       const kc = Math.round(uC / su.arcPer);
       const km = keptOf(x.overChain, so);
-      const wr: number[] = [], wS: number[] = []; // K1482 s15: per slot this crossing wins: k, the foot arc a, |off|, kept index, scan + pack; the scan centre
+      const ks: number[] = [], wr: number[] = []; // K1482 s15: the slots this crossing wins (under sample) and their y, z (kept index, scan + pack)
       for (const dir of [1, -1]) {
         let a = oC;
         for (let j = dir > 0 ? 0 : 1; j <= su.count; j++) {
@@ -798,30 +717,16 @@ export class GfGapTable {
           else { s = (lo + hi) / 2; w = (hi - lo) / 2; }
           if (so.closed) s = ((s % so.total) + so.total) % so.total;
           // the shader scans the field's vertices, which are the kept samples: bake their index
-          wS.push(s);
-          wr.push(k, a, Math.abs(off), km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))], Math.ceil(w / so.arcPer) + (off >= 0 ? packP : packN));
+          ks.push(k);
+          wr.push(km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))], Math.ceil(w / so.arcPer) + (off >= 0 ? packP : packN));
         }
       }
-      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, wr, wS, su, su.positions, { fh: r.fillHalf, mg: r.margin, fd: r.fade }) : null;
-      const jf = jfs ? jfs.reduce((p, q) => p + q, 0) : 0;
-      const K = k15();
-      if (K.log && r.overMember) {
-        const L = ((globalThis as { __k15log?: unknown[] }).__k15log ??= []);
-        gapPointAt(so, oC, gpt);
-        const mA: number[] = [];
-        for (let i = Math.round((oC - 1.5) / so.arcPer); i <= Math.round((oC + 1.5) / so.arcPer); i++) {
-          let q = i; if (so.closed) q = ((q % so.count) + so.count) % so.count; else if (q < 0 || q >= so.count) continue;
-          if (r.overMember(x.overChain, km[q])) mA.push(+(i * so.arcPer - oC).toFixed(3));
-        }
-        let fm = 0; const fo: number[] = [];
-        for (let i = 0; i < wr.length; i += 5) { let q = Math.round(wr[i + 1] / so.arcPer); if (so.closed) q = ((q % so.count) + so.count) % so.count; q = Math.max(0, Math.min(so.count - 1, q)); if (r.overMember(x.overChain, km[q])) { fm++; fo.push(+wr[i + 2].toFixed(3)); } }
-        L.push({ i: cents.indexOf(e), oc: x.overChain, uc: x.underChain, oC: +oC.toFixed(3), uC: +uC.toFixed(3), x: +gpt.x.toFixed(3), y: +gpt.y.toFixed(3), f: jf, n: wr.length / 5, fm, fo, mA, tot: +so.total.toFixed(3), cl: so.closed, fh: r.fillHalf, mg: r.margin, fd: r.fade, fs: jfs ? wr.filter((_, q) => q % 5 === 0).flatMap((k, q) => jfs[q] ? [+su.positions[2 * k].toFixed(3), +su.positions[2 * k + 1].toFixed(3)] : []) : [] });
-      }
-      for (let i = 0; i < wr.length; i += 5) {
-        const k = wr[i];
-        ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jointBits(jfs[i / 5]) : 0);
-        ent.o[3 * k + 1] = wr[i + 3];
-        ent.o[3 * k + 2] = wr[i + 4];
+      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }) : null;
+      for (let i = 0; i < ks.length; i++) {
+        const k = ks[i];
+        ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0);
+        ent.o[3 * k + 1] = wr[2 * i];
+        ent.o[3 * k + 2] = wr[2 * i + 1];
       }
     }
     let nPos = 0;
@@ -2326,9 +2231,9 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
   // outline in a neighbour crossing's window and left a dot or dash of it beside the host's outline (link A t1s,
   // t24s, t46e, t39s). y keeps every higher piece's cut for the coverage, so the fill look does not move.
   int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;
-  // K1482 s15: the slot's joint flag (the over chain's fraction, GfGapTable gapJointFlag): the crossing's over pass
-  // is a fused joint's surface, so its cut of the OUTLINE takes no margin and 0.3 of the fade (stage 13's c1, decided
-  // per crossing instead of per piece)
+  // K1482 s15: the slot's joint flag (the over chain's fraction, GfGapTable's gapJointFlags; bits 1 left of the under
+  // tangent, 2 right, 3 both): on a flagged side the crossing's cut of the OUTLINE takes no margin and 0.3 of the fade
+  // (stage 13's c1, decided per slot side in the bake instead of per piece here)
   int jb = sl.x >= 0.0 ? int(fract(sl.x) * 8.0 + 0.5) : 0;
   bool jf = jb == 3;
   if (jb == 1 || jb == 2) { vec2 fU = lkFoot(cU, qU); jf = jb == ((tu.x * (p.y - fU.y) - tu.y * (p.x - fU.x)) >= 0.0 ? 1 : 2); }
