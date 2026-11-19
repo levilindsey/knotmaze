@@ -1,0 +1,4 @@
+PASS  new 0  grown 0  gone 1  (match radius 0.3, grow > 10% and >= 3 px)
+
+mirror rstray:plain
+  gone 1: muse_hash:4.73:33.55 128px

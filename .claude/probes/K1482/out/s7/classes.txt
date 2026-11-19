@@ -4,6 +4,8 @@
 #   to 0 (out/s7/gap_tiles_00.png, rest_tiles_00.png): the fault is outline the gap's cut leaves behind, outside my files.
 # PIN = j64: the mirror draws it too: chains 28 and 56 (one surface, group 64) part at the junction and their union leaves a pinhole ~0.1 wide; the outline rings it (out/s7/j64_gm.png, world 5.14,3.16).
 # Fixed on the tip by b765b461 (fold burial, out/s7/fix1_tiles_00.png): j58 (tick), t23s (dash).
+# Rebased 2026-11-18 on 6edee1d7 (tip 82ea4625): tip vs 6edee1d7 changes j58 and t23s only (16 px each, ink lost; rb_fold_00.png).
+# 6edee1d7 vs 0b9913dc (Muse 9ae14f27, gap windows): 13 sites gain ink (mm_tiles_00.png); j81, j138 and t18e read fixed there by eye, so 41 on the rebased tip (unconfirmed by a re-sweep).
 # site class px owner
 j2 dot 10 GAP
 j4 notch 6 K1490

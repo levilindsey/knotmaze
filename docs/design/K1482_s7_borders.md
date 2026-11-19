@@ -82,3 +82,87 @@ comes first. A compaction is not a stop: re-read this brief and `git log`. On st
 `### Handoff K1482 s7` here, commit, and report: the sweep's faulted count by class, the sheets' paths (each
 site named), the numbers, which commits are confirmed on screen, a `Ledger items` list and K1482's handle
 fields.
+
+### Handoff K1482 s7
+
+Claude agent, 2026-11-18. The coordinator narrowed the finish line on resume: no work on the gap family, which
+the next stage takes from here. Branch `worktree-agent-a59d82bf7d4d1b8cf`, rebased on origin/master 6edee1d7.
+
+**Landed.**
+- e51c69eb: the fold fix (`eval.ts`, `gf_glsl.ts` `foldD`). A hairpin's side face is now buried by the
+  piece's own far segments, the ones turned more than 120 degrees from the nearest. This applies only inside
+  another piece of the same surface. It fixes j58 (a tick) and t23s (a dash). Muse's 41c13cf6 (one corner-face
+  loop) does not touch the fold line, which sits in the side-face loop: the full program holds `foldD` once
+  and the `3 * nk` loop. Re-frozen pins in `test/render/gf_home_glsl.test.ts`.
+- 82ea4625: the class table, `.claude/probes/K1482/out/s7/classes.txt`. It is a probe-only commit.
+
+**Confirmed on screen (rebased tip 82ea4625 against 6edee1d7, link A, both at hash fff8c9e5).**
+- `out/s7/rb_fold_00.png` (master | tip | diff): j58 and t23s each lose their 16-pixel fault; t23e is
+  unchanged (a K1490 wedge).
+- The site diff at a 1-pixel threshold changes no other site of the 327, so no clean site turns faulty.
+- `out/s7/mm_tiles_00.png` and `mm_gap3.png` show 0b9913dc against 6edee1d7. Muse's 9ae14f27 adds ink at 13
+  sites. To my eye it fixes three gap sites: j81 (a wedge), j138 (a sliver) and t18e (a stub).
+
+**Faulted count on the tip.** 41 by eye, not re-swept.
+- By class: wedge 10, notch 9, sliver 6, dot 6, tick 3, stub 2, break 3, dash 1, pocket 1.
+- By owner: K1490 22, GAP 17, K1470 1 (j71), PIN 1 (j64).
+
+**Checks.**
+- The K1436 bar ran with `STRICT=1`, Ref 82ea4625, Base 6edee1d7, Tag k1482s7 (`.claude/probes/K1436/out/
+  bar/k1482s7/bar.txt`). Result: PASS, new 0, grown 0, gone 1. The gone find is the mirror rstray at
+  muse_hash 4.73,33.55 (128 px), likely the fold fix in `eval.ts`; it was not viewed.
+- Each scene's two captures share a hash: ring 50dd4ffd, def 910ff135, muse_hash 733ee14a, g41_user_tw64
+  0d51331b. ring and g41 needed the script's retry: their first loads gave 0a0ee15e and c1b63637.
+- `hold.mjs`: 60/60 warm on link A. Edge pixels ranged from 6759 to 8608; no fallback.
+- `npm test`: 254 files, 3173 passed, 18 skipped.
+
+**The gap family, for the next stage.**
+
+*Sites (17 on the tip).*
+- dots: j2, j88, t1s, t24s, t46e
+- ticks: j49, j55, j87
+- stubs: j36, t79s
+- dash: t39s
+- breaks: j22, j29, t65s
+- pocket: t80s
+- wedge: t81s
+- sliver: t70s
+
+A site is "GAP" when switching the cut off restores the outline. Switch it off with the patch
+`.claude/probes/K1482/s5/patch/nogap.json`, which replaces `float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) :
+0.0;` with `float lkg = 0.0;` (3 sources; `lkFringe` stays on). Run it through `cap.mjs` with
+`$env:PATCH=<absolute path>` and `HASH=fff8c9e5`. Sheets of master | nogap | diff: `out/s7/gap_tiles_00.png`
+and `rest_tiles_00.png`. Context: `ctx_tiles_00.png`, `dots_*.png`, `brk_gm.png`.
+
+*What `lkGap` does at each class, as seen on those sheets.* Green in the diff is ink that nogap restores.
+- **Dot, dash:** a short island of under-thread outline is left between two cuts, or between a cut and
+  another end. At t1s, chain 28 (under) is cut by chain 41's gap at margin distance 0.43-0.50, and the island
+  sits before chain 1's start. The mirror has no gap, which is why it draws these sites solid.
+- **Tick, stub:** the cut removes a corner wedge where one outline joins another at a junction. The end left
+  behind is a soft, faded tip: the window-end fade `fs` in `lkCut`, plus 8877d612's fade over the whole ramp.
+  So the gap is cutting at a join, not at a crossing.
+- **Break:** a few-pixel cut in the middle of an outline with no visible over thread at that point.
+- **Pocket, wedge, sliver:** the same cut beside an oblique crossing.
+
+*What I would change in `gf_look.ts`, and why.* These are untested hypotheses; check each at the sites with
+the patch loop above.
+1. **Ticks and stubs:** do not let a piece of the same surface, or of the joined arm, cut at a junction.
+   `lkGap` cuts by every piece with `pkey[j] > key + uZt`, and a key order alone does not mean "crosses over".
+   Muse's K1477/K1502 found that form B's key order makes the border stub past a crossing, and that the reach
+   key windows (`pinReach`) are baked only with home on (`tables.ts:582`), while the page builds home off.
+   Separate the two causes first: rebuild with those windows baked, and see whether the ticks and stubs go.
+2. **Dots and dashes:** when two gap windows on one under thread leave less than about 2W of outline between
+   them, or between a window and a thread end, merge them in the bake. That is `gapWindow`, gf_look.ts:440,
+   called near :610. This is the job the K1458/K1476 window extension already half does.
+3. **Breaks and slivers:** check whether the over piece that cuts is itself buried at that point. A cut should
+   not show where its over thread is not drawn. Also check the fade floor `max(sinT, 0.2)` in `lkCut` at
+   oblique crossings.
+
+Compare each site with today's renderer (`rp` default) before choosing a look.
+
+**j64 (pin).** Chains 28 and 56 (one surface, group 64) part at the junction, and their union leaves a pinhole
+about 0.1 wide that the outline rings (`out/s7/j64_gm.png`, world 5.14,3.16). The mirror draws it too, so it
+comes from the field's geometry, not the look. Open decision: fill holes in one surface's union narrower than
+about W in the key/composite, or accept it.
+
+**Not mine, left as filed.** K1490 (22 sharp-V wedges and notches) and K1470 (j71).
