@@ -1,0 +1,3 @@
+# K1482 s9: hold.mjs (K1450) on link A (rp=gf&gfh=1), master c7d28b0a build on 5780 (the tip's src is identical: no src change this stage), s9/hold9.ps1
+# warm run 8 frames: PASS (min 6939 max 8999); then 60 frames, gap 250 ms:
+PASS: all 60 frames show the maze (edges min 7076 at frame 27, max 8569)
