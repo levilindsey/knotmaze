@@ -1,0 +1,29 @@
+# K1482 s9: the K1436 bar, STRICT=1, -Ref fc45aeeb -Base c7d28b0a -HomeFlag 1 -Scenes ring,def,muse_hash,g41_user_tw64 -Port 5781 -Tag k1482s9
+# (tip src identical to base: no src change this stage). Muse 26K's perf lock (12:27) was stale (> 30 min), so the bar went on: no bar_ref.ps1 needed.
+[c7d28b0a] mirror scans 59 s
+waiting on the perf lock: 26K K1500 marker fade captures 2026-11-18T12:27:07.6669393-08:00
+[muse_hash] warm 70400 ms
+[c7d28b0a] warm pass 146 s
+[muse_hash] 129333 ms hash 733ee14a
+[g41_user_tw64] 46987 ms hash 0d51331b
+[def] 285721 ms hash 910ff135
+[ring] hash 0a0ee15e != 50dd4ffd, retry
+[ring] 20820 ms hash 50dd4ffd
+[c7d28b0a] captures 382 s
+[c7d28b0a] screen scans 46 s
+[fc45aeeb] mirror scans 38 s
+waiting on the perf lock: 26K K1500 marker fade captures 2026-11-18T12:27:07.6669393-08:00
+[muse_hash] warm 58424 ms
+[fc45aeeb] warm pass 115 s
+[muse_hash] 112177 ms hash 733ee14a
+[g41_user_tw64] hash c1b63637 != 0d51331b, retry
+[g41_user_tw64] hash c1b63637 != 0d51331b, retry
+[g41_user_tw64] hash c1b63637 != 0d51331b, retry
+[g41_user_tw64] hash c1b63637 != 0d51331b, retry
+[g41_user_tw64] 42135 ms hash c1b63637
+[def] 390004 ms hash 910ff135
+[ring] 408568 ms hash 50dd4ffd
+[fc45aeeb] captures 409 s
+[fc45aeeb] screen scans 50 s
+PASS  new 0  grown 0  gone 0  (match radius 0.3, grow > 10% and >= 3 px)
+NOTE g41_user_tw64: physics hash base 0d51331b ref c1b63637 (not one state: every screen find may move)

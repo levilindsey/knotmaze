@@ -1,0 +1,27 @@
+x9 rm 9 stroke 0.00 dark 1.00 bg 0.00 meanRGB [28, 31, 45] jo -0.78 ju -7.6 site j6
+x11 rm 14 stroke 0.00 dark 1.00 bg 0.00 meanRGB [25, 28, 41] jo 0.87 ju -11.78 site t67s
+x23 rm 0
+x30 rm 18 stroke 0.17 dark 0.83 bg 0.00 meanRGB [29, 30, 41] jo 0.89 ju 5.65 site j9
+x57 rm 0
+x59 rm 12 stroke 0.92 dark 0.08 bg 0.00 meanRGB [40, 29, 35] jo -0.86 ju 2.96 site j24
+x72 rm 12 stroke 0.83 dark 0.17 bg 0.00 meanRGB [40, 29, 39] jo -0.79 ju -2.59 site j102
+x77 rm 25 stroke 0.24 dark 0.76 bg 0.00 meanRGB [30, 30, 43] jo -0.45 ju 4.34 site j36
+x127 rm 0
+x141 rm 2 stroke 0.00 dark 1.00 bg 0.00 meanRGB [22, 28, 42] jo 0.87 ju -12.41 site j46
+x161 rm 0
+x165 rm 12 stroke 0.00 dark 1.00 bg 0.00 meanRGB [30, 31, 47] jo 0.79 ju 10.65 site j54
+x182 rm 9 stroke 0.00 dark 1.00 bg 0.00 meanRGB [28, 30, 45] jo -0.75 ju 2.14 site t23e
+x186 rm 0
+x198 rm 1 stroke 0.00 dark 1.00 bg 0.00 meanRGB [28, 31, 46] jo 0.89 ju 3.25 site j134
+x201 rm 0
+x230 rm 0
+x235 rm 17 stroke 0.00 dark 1.00 bg 0.00 meanRGB [28, 30, 44] jo -0.76 ju 5.91 site j87
+x252 rm 9 stroke 0.00 dark 1.00 bg 0.00 meanRGB [29, 31, 45] jo -0.74 ju 9 site j55
+x273 rm 13 stroke 0.31 dark 0.69 bg 0.00 meanRGB [38, 30, 43] jo 0.7 ju -6.52 site j110
+x289 rm 0
+x291 rm 37 stroke 0.00 dark 1.00 bg 0.00 meanRGB [28, 30, 45] jo -0.85 ju 1.68 site j29
+x306 rm 24 stroke 0.00 dark 1.00 bg 0.00 meanRGB [27, 29, 42] jo 0.78 ju -6.18 site j4
+x318 rm 19 stroke 0.26 dark 0.74 bg 0.00 meanRGB [30, 30, 40] jo -0.66 ju -5.74 site j50
+x325 rm 8 stroke 0.38 dark 0.62 bg 0.00 meanRGB [29, 28, 40] jo -0.77 ju -10.02 site j49
+x330 rm 3 stroke 0.00 dark 1.00 bg 0.00 meanRGB [20, 26, 39] jo -0.94 ju -2.51 site j1
+x331 rm 1 stroke 0.00 dark 1.00 bg 0.00 meanRGB [32, 32, 49] jo -0.89 ju -1.69 site t79s
