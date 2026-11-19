@@ -1,0 +1,22 @@
+[
+  [
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {",
+    "float lkMemR(int c, float s) { int smg = mg; float smr = mramp; float smz = mz; vec4 KB = keyBin(c, s); float z = depth(c, s, KB); member(c, s, KB, mz); float r = mg >= 0 ? mramp : 0.0; mg = smg; mramp = smr; mz = smz; return r; }\nvec4 lkCutOn(int c, float s, float w, vec2 p, float aU, float sx, vec2 tu, float wm, float pxw, vec2 sc) { vec4 C0 = F(uOCh + 3 * c); int cV0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5; int k0 = int(s + 0.5); if (!closed && F(uOV + cV0).z < 0.0) k0 += 1; int n = min(int(w) + 1, 40); float per = closed ? F(uOV + cV0 + nseg).z : 0.0; float reach = uH + uLkG + uLkF + 2.0 * pxw; float gS = 0.0; float anyM = 0.0; for (int i = -40; i <= 40; i++) { if (i < -n) continue; if (i > n) break; int q = k0 + i; if (closed) q = pmod(q, nseg); else if (q < 0 || q >= nseg) continue; vec4 A = F(uOV + cV0 + q); vec4 B = F(uOV + cV0 + q + 1); vec2 d = B.xy - A.xy; float l2 = dot(d, d); float t = l2 > 0.0 ? clamp(dot(p - A.xy, d) / l2, 0.0, 1.0) : 0.0; if (aU >= 0.0) { float da = mix(A.z, B.z, t) - aU; if (per > 0.0) da -= per * floor(da / per + 0.5); if (abs(da) < sx) continue; } float dd = length(p - A.xy - d * t); if (dd > reach) continue; vec2 to = lkTanS(c, vec2(float(q), t)); float sinT = abs(tu.x * to.y - tu.y * to.x); float exg = uExLive > 0.5 ? exAt(c, mix(A.z, B.z, t)).x : 1.0; float r = min(lkMemR(c, A.z), lkMemR(c, B.z)); if (r > 0.0) anyM = 1.0; gS = max(gS, lkCut(dd, sinT, exg, wm, pxw, sc * mix(vec2(1.0), vec2(0.0, 0.3), r))); } return vec4(gS, anyM, float(k0), float(n)); }\nvec2 lkGap(float key, vec2 p, vec2 qU, int cU) {"
+  ],
+  [
+    "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;",
+    "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1; vec4 S13 = vec4(0.0, 0.0, 0.0, -1.0); if (cS >= 0 && cS != cU && uGwLive > 0.5 && wm > -pxw) S13 = lkCutOn(cS, sl.y, sl.z, p, -1.0, sx, tu, wm, pxw, sc); bool scan13 = S13.y > 0.5; int nsg13 = cS >= 0 ? int(F(uOCh + 3 * cS).y) - 1 : 1; bool cl13 = cS >= 0 && F(uOCh + 3 * cS).z > 0.5;"
+  ],
+  [
+    "if (cS < 0 || PC(j) == cS) g = max(g, cj);",
+    "bool mem13 = PSURF(j) >= 0 || PSURF(j) < -MAXP; bool own13 = false; if (scan13 && PC(j) == cS) { int dq = int(qO.x) - int(S13.z); if (cl13) dq = pmod(dq + nsg13 / 2, nsg13) - nsg13 / 2; own13 = abs(dq) <= int(S13.w); } float cjo = own13 ? 0.0 : (cS < 0 && mem13 ? lkCut(pd[j], sinT, exg, wm, pxw, sc * vec2(0.0, 0.3)) : cj); if (cS < 0 || PC(j) == cS) g = max(g, cjo);"
+  ],
+  [
+    "if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {",
+    "if (scan13) g = max(g, S13.x);\n  if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {"
+  ],
+  [
+    "g = max(g, cN);",
+    "g = max(g, scan13 ? 0.0 : cN);"
+  ]
+]

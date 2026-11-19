@@ -1,0 +1,40 @@
+== count13 limits
+FAIL j102: 6 components > 4
+FAIL j126: 4 components > 3
+FAIL t62e: 4 components > 3
+FAIL t76e: 4 components > 3
+16/20 sites within their limit
+== count13 --specks vs master
+NEW SPECK (1021,517) 1 px, 37 px from t64e
+NEW SPECK (2097,1031) 2 px, 19 px from j36
+NEW SPECK (1989,1084) 1 px, 27 px from j37
+3 new specks
+== movers (>= 10 px)
+sites 327 off-frame 0 over 9 px: 26 | ink a 527154 b 528539
+j55    gain   35 loss    2
+t21e   gain   35 loss    1
+j122   gain   28 loss    6
+t2s    gain   25 loss    2
+t16e   gain   24 loss    1
+j46    gain   24 loss    0
+j60    gain   21 loss    3
+t25s   gain   21 loss    2
+j4     gain   20 loss    1
+j140   gain   18 loss    1
+t30e   gain   14 loss    2
+j71    gain   14 loss    1
+j83    gain   12 loss    3
+t34s   gain   14 loss    0
+t36s   gain   12 loss    2
+j87    gain   13 loss    0
+j109   gain    6 loss    6
+t53s   gain    7 loss    5
+j32    gain    9 loss    2
+t68s   gain    6 loss    5
+j21    gain    5 loss    5
+j62    gain    3 loss    7
+j120   gain    8 loss    2
+j148   gain    4 loss    6
+t44e   gain    9 loss    1
+t52s   gain    6 loss    4
+sheets: 4 at .claude/probes/K1482/out/s14/sheet_v3_N.png
