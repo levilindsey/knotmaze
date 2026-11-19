@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1506.
+Next free ID: K1509.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -669,10 +669,10 @@ Next free ID: K1493.
   loops; seen on live b4e0a08e, a3a9a6b4 and b423013a, never on a warm profile. Likely Levi's "the entire maze
   blinks in and out". Fix: one target per program, plus a no-loop guard
   (docs/design/K1468_gf_cold_load_gpu_hang.md; probes .claude/probes/K1468/)
-  - owner: nobody since 2026-11-17 23:23 (merged; agent `ad4db178a3a26c189` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `af53913c`
+  - owner: nobody since 2026-11-18 12:44 (merged; agent `ad4db178a3a26c189` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `0a328fcc`
   - evidence: .claude/probes/K1468/s2/ (warm.ps1, interleave.ps1, summarize.mjs), rest.mjs, probe build 182fb101 (#k1468p=div|alu)
-  - next: Muse run 26I (docs/design/K1464_muse_batch26.md, queued behind 26E-26H): link A's rAF interval on master is 24.5 ms against ae2b4dfb's 18.0 (409 against 561 composites per 10 s, two clean rounds under the lock); not the packed target (the old RGBA8 targets ran 27.7-28.7 ms); bisect 158f75be, e820cadd, 01933aa3 with .claude/probes/K1468/s2/attr.ps1, then remove it. Still owed after that: item 2, the pixel A/B (the coordinator's check of the merged fringe fix on link A: tip against master 11-46k px, the same as master against master and tip against tip, so K1482's cap.mjs captures differ load to load, mostly by 1-2 levels, the start marker's edges included)
+  - next: Muse 26I (handoff 0a328fcc): the link A frame-time gap does not reproduce on master (interval 18.6 ms against ae2b4dfb's 24.1), no fix needed. Still owed: item 2 of the brief, the pixel A/B and its freeze recipe
   - brief: `docs/design/K1468_s2_frame_time.md`
 - **K1469** · Verify Muse 26B's K1459 fix on screen (01c72dfc, live in aad94eb7: the reveal's interior cut at
   junctions by today's own cuts, lkJCut): only its unit test and a rest frame were checked, because pinned gf
@@ -1125,6 +1125,8 @@ Every other item below waits on the trigger it names.
 - **K1504** · rp=gf j64 on Levi's link: a pinhole about 0.1 wide where chains 28 and 56 of one surface part
   (in the CPU mirror too, so geometry, not the look: .claude/probes/K1482/out/s7/j64_gm.png). Fill holes in
   one surface's union narrower than about a stroke width (Handoff K1482 s7)
+- **K1507** · k1436_bar.ps1 waits on the perf lock even for a stage told not to take it (K1482 s8 ran its tip
+  half by hand with .claude/probes/K1482/s8/bar_ref.ps1): give the bar a flag to skip the wait
 
 ## Residuals (known, not fixed)
 
@@ -2440,6 +2442,10 @@ Every other item below waits on the trigger it names.
 - **K1505** · K1482 s7's STRICT bar: one find gone in the CPU mirror at muse_hash 4.73,33.55 (probably the
   fold fix e51c69eb), not looked at; view it at 4x (.claude/probes/K1436/out/bar/k1482s7/bar.txt, raw frames
   untracked beside it)
+- **K1506** · rp=gf's 'both' look now takes stage 8's outline cut and master's coverage cut (lkGap's two
+  results, 7091c9a4): consistent, but nobody has looked at it on screen
+- **K1508** · .claude/probes/K1482/cap.mjs: the first shot can come before the view settles (edges shift by 1
+  px); a second render in the same state is right
 
 ## Approved, to schedule (2026-10-11)
 
