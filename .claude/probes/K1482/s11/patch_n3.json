@@ -1,0 +1,4 @@
+[["vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {", "bool inGrp10(int c, int S) { int a0 = int(F(uOCh + 3 * c + 1).w); int an = int(F(uOCh + 3 * c + 2).x); for (int i = a0; i < a0 + an; i++) { if (int(F(uOArm + 2 * i + 1).x) == S) return true; } return false; }\nvec2 lkGap(float key, vec2 p, vec2 qU, int cU) {"],
+ ["int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;", "int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1; bool jm10 = false;"],
+ ["if (cS < 0 || PC(j) == cS) g = max(g, cj);", "int S10 = PSURF(j); bool mem10 = S10 >= 0 && inGrp10(cU, S10); if ((cS < 0 || PC(j) == cS) && !mem10) g = max(g, cj); if (PC(j) == cS && mem10) jm10 = true;"],
+ ["g = max(g, cN);", "if (!jm10) g = max(g, cN);"]]
