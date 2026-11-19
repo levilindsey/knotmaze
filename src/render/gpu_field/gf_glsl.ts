@@ -389,12 +389,17 @@ const ZB_LOOPS: [RegExp, (m: string) => string][] = [
     () => `for (int m = 0; m < np; m++) { if (PSURF(m) != S) continue; if (!(pd[m] - (dT + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
 ];
 const ZB_OVF = "if (sOvf) { gl_FragDepth = 1.0; return; }";
+const ZB_FOLD = "      if (bur < 1.0) { float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(foldD(j, S, p, q))); if (wb2 > bur) bur = wb2; } // K1482 s7: a hairpin's own fold\n";
 function zBur(src: string): string {
   for (const [re, f] of ZB_LOOPS) {
     const m = re.exec(src); if (!m) { if (re === ZB_LOOPS[0][0]) throw new Error("gfFs zb: the piece faces' burial loop moved"); continue; }
     src = src.replace(re, f(m[0]));
     if (re.exec(src)) throw new Error("gfFs zb: a burial loop appears twice");
   }
+  // K1482 s7: the fold burial applies only where p is inside another piece m of S (pd[m] < h), and the piece loop
+  // above routes every such face to P1 (pd[m] - |h - X| - margin < h), so P0 drops the line
+  if (src.split(ZB_FOLD).length !== 2) throw new Error("gfFs zb: the fold burial moved");
+  src = src.replace(ZB_FOLD, "");
   if (src.split(ZB_OVF).length !== 2) throw new Error("gfFs zb: the overflow route moved");
   src = src.replace(ZB_OVF, `${ZB_OVF} if (zbR) { gl_FragDepth = 0.0; return; } // K1362 s15 zb: a face P0 cannot prove unburied`);
   src = src.replace("float band2(float D)", "bool zbR; // K1362 s15 zb\nfloat band2(float D)");
@@ -1087,6 +1092,41 @@ float pieceD(int j, vec2 p) {
   }
   return d2;
 }
+// K1482 s7: a hairpin's own fold (eval.ts foldD, statement for statement): piece j buries its side face's point q
+// by its own segments turned more than 120 degrees from p's nearest one, only where p lies inside another piece of
+// surface S (a junction); BIG otherwise
+float foldD(int j, int S, vec2 p, vec2 q) {
+#ifdef PLH
+  int qlo = PLO(j); int qhi = PHI(j);
+#else
+  int qlo = plo[j]; int qhi = phi[j];
+#endif
+  if (!(qhi - qlo > 1)) return BIG;
+  bool inOther = false;
+  for (int m = 0; m < np; m++) if (m != j && PSURF(m) == S && pd[m] < uH) { inOther = true; break; }
+  if (!inOther) return BIG;
+  int c = PC(j); vec4 C0 = F(uOCh + 3 * c); int v0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
+  vec2 t = vec2(0.0); float dp = BIG;
+  for (int r = qlo; r <= qhi; r++) {
+    int k = r; if (closed) k = pmod(k, nseg); else if (k < 0 || k >= nseg) continue;
+    vec4 A = F(uOV + v0 + k); vec4 B = F(uOV + v0 + k + 1);
+    vec2 a = A.xy; vec2 dd = B.xy - a;
+    float l2 = dot(dd, dd); float u = l2 > 0.0 ? clamp(dot(p - a, dd) / l2, 0.0, 1.0) : 0.0;
+    vec2 e = p - a - dd * u; float e2 = dot(e, e);
+    if (e2 < dp) { dp = e2; t = dd; }
+  }
+  float tl = length(t); float d2 = BIG;
+  for (int r = qlo; r <= qhi; r++) {
+    int k = r; if (closed) k = pmod(k, nseg); else if (k < 0 || k >= nseg) continue;
+    vec4 A = F(uOV + v0 + k); vec4 B = F(uOV + v0 + k + 1);
+    vec2 a = A.xy; vec2 dd = B.xy - a;
+    float l2 = dot(dd, dd); if (!(dot(dd, t) < -0.5 * sqrt(l2) * tl)) continue;
+    float u = l2 > 0.0 ? clamp(dot(q - a, dd) / l2, 0.0, 1.0) : 0.0;
+    vec2 e = q - a - dd * u; float e2 = dot(e, e);
+    if (e2 < d2) d2 = e2;
+  }
+  return d2;
+}
 #ifdef PKQ
 // K1362 s10: piece j's foot point, rebuilt from its nearest segment (pkq) by the scan's own lines (as stage 7's
 // pass 2 rebuilds it), in place of the scan's pfx / pfy arrays
@@ -1354,6 +1394,7 @@ void layers(vec2 p) {
         float rq = length(q - K0.xy);
         if (rq > K0.z && rq < K0.w && inSector(k, q) && outsideArms(k, PC(j), q)) bur = 1.0;
       }
+      if (bur < 1.0) { float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(foldD(j, S, p, q))); if (wb2 > bur) bur = wb2; } // K1482 s7: a hairpin's own fold
       float val = (1.0 - bur) * band2(h - X);
       if (val > v) { v = val; PR(wk = pend[j] ? 3 : 1; wa = PC(j); wb = ptx[j] * (p.y - pfy[j]) - pty[j] * (p.x - pfx[j]) >= 0.0 ? 1 : -1;) }
     }

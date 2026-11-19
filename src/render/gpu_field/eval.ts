@@ -189,6 +189,39 @@ export class GfEval {
     return true;
   }
 
+  /**
+   * K1482 s7: a hairpin's own fold. Piece j buries its side face's point (qx, qy) by its own segments, as another
+   * piece would, only at a junction (p inside another piece of surface S) and only by segments turned more than
+   * 120 degrees from p's nearest segment (the fold's other run, never a bend's next segment). Returns the squared
+   * distance from q to those segments, BIG when the rule does not apply. Off everywhere else: form B never buries a
+   * piece by its whole fold (K1362 s1: 132 census finds were that self-burial).
+   */
+  private foldD(j: number, S: number, x: number, y: number, qx: number, qy: number): number {
+    if (!(this.phi[j] - this.plo[j] > 1)) return Infinity;
+    let inOther = false;
+    for (let m = 0; m < this.np; m++) if (m !== j && this.psurf[m] === S && this.pd[m] < this.T.h) { inOther = true; break; }
+    if (!inOther) return Infinity;
+    const T = this.T; const c = this.pc[j]; const v0 = T.cV0[c]; const nseg = T.cNV[c] - 1; const closed = T.cClosed[c] === 1;
+    let tx = 0; let ty = 0; let dp = Infinity;
+    for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
+      let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
+      const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
+      const l2 = dx * dx + dy * dy; const u = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+      const ex = x - ax - dx * u; const ey = y - ay - dy * u; const e2 = ex * ex + ey * ey;
+      if (e2 < dp) { dp = e2; tx = dx; ty = dy; }
+    }
+    const tl = Math.sqrt(tx * tx + ty * ty); let d2 = Infinity;
+    for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
+      let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
+      const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
+      const l2 = dx * dx + dy * dy; if (!(dx * tx + dy * ty < -0.5 * Math.sqrt(l2) * tl)) continue;
+      const u = l2 > 0 ? Math.min(1, Math.max(0, ((qx - ax) * dx + (qy - ay) * dy) / l2)) : 0;
+      const ex = qx - ax - dx * u; const ey = qy - ay - dy * u; const e2 = ex * ex + ey * ey;
+      if (e2 < d2) d2 = e2;
+    }
+    return d2;
+  }
+
   private pieceD(j: number, x: number, y: number): number {
     const T = this.T; const c = this.pc[j]; const v0 = T.cV0[c]; const nseg = T.cNV[c] - 1; const closed = T.cClosed[c] === 1;
     let d2 = Infinity;
@@ -500,6 +533,7 @@ export class GfEval {
           const rq = Math.hypot(qx - T.kCx[k], qy - T.kCy[k]);
           if (rq > T.kR[k] && rq < T.kRmax[k] && this.inSector(k, qx, qy) && this.outsideArms(k, this.pc[j], qx, qy)) bur = 1;
         }
+        if (bur < 1) { const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.foldD(j, S, x, y, qx, qy))); if (wb2 > bur) bur = wb2; } // K1482 s7: a hairpin's own fold
         const val = (1 - bur) * band2(h - X);
         if (val > v) { v = val; wk = this.pend[j] ? 3 : 1; wa = this.pc[j]; wb = this.ptx[j] * (y - this.pfy[j]) - this.pty[j] * (x - this.pfx[j]) >= 0 ? 1 : -1; }
       }

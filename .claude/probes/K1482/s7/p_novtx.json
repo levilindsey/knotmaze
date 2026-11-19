@@ -1,0 +1,1 @@
+[["vec3 VX = vtx(S, p);","vec3 VX = vec3(0.0);"],["vec3 VX = vtx(sid[e], p);","vec3 VX = vec3(0.0);"]]
