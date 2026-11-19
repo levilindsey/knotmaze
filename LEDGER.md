@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1515.
+Next free ID: K1517.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -333,6 +333,11 @@ Next free ID: K1493.
   master; b88a4108 removed them from the tree, so checkouts are clean, but the blobs stay in history (every
   fresh clone downloads them). Dropping them needs a history rewrite and a force-push of master: do it (rebase
   everything after 82405bf9 without them), or leave it?
+- **K1515** · At fused junctions today's renderer draws straight fan strokes through the junction where
+  rp=gf's border look follows the threads' curves (j55, j36, j87, t16e, t2s on his link; K1482 stage 12).
+  Which should the border look show there? Picture: .claude/probes/K1482/out/s12/step1_a.png (today | flat
+  today | gf). Options: keep gf's curves as they are; make gf draw today's straight strokes. Until answered
+  gf's own picture is the reference (stage 13)
 
 ## In progress
 
@@ -2457,6 +2462,11 @@ Every other item below waits on the trigger it names.
   (0d51331b, c1b63637), so its screen finds can move without a source change
 - **K1511** · K1482's cap.mjs waits forever when a PATCHF shader fails to compile (stage 10 lost a candidate
   to it): it should time out and print the compile error (.claude/probes/K1482/cap.mjs)
+- **K1516** · Today's renderer: its junction field draws some arms straight for up to about 3 world units from
+  the joint where the thread curves (j55, j36, j49, t65s, t70s, t16e, t2s on link A); cause not pinned
+  (candidate: the arm's radial profile runs straight past its grid, joinery.ts near 1191, profArc in
+  junction_field.ts, fits only j36 and t2s). Next probe: dump junction 55's profile rows against its thread's
+  centreline (.claude/probes/K1482/out/s12/step1_fans.png)
 
 ## Approved, to schedule (2026-10-11)
 
