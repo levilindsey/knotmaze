@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1514.
+Next free ID: K1515.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -1131,6 +1131,9 @@ Every other item below waits on the trigger it names.
   paints the over's outline across the under's faded tip); the window bake carries only the under thread's
   joints, so it is a new baked number, after Muse Run M leaves the bake (docs/design/K1482_s10_borders.md
   handoff, out/s10/pixels.txt)
+- **K1514** · K1482 mask case at j55, j36, t70s: today hides those stretches with the over thread's
+  silhouette; map the slot's over polyline and hO into frame coordinates against gf's window
+  (.claude/probes/K1482/out/s11/mask.txt); waits on stage 12's check of the today reference
 
 ## Residuals (known, not fixed)
 
@@ -2454,12 +2457,6 @@ Every other item below waits on the trigger it names.
   (0d51331b, c1b63637), so its screen finds can move without a source change
 - **K1511** · K1482's cap.mjs waits forever when a PATCHF shader fails to compile (stage 10 lost a candidate
   to it): it should time out and print the compile error (.claude/probes/K1482/cap.mjs)
-- **K1513** · K1502 follow-up (Muse 26L, 2026-11-18): on Levi's link
-  (?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1, hash fff8c9e5, .claude/probes/K1482/cap.mjs) list the
-  sites whose border ink changes by more than 8 px with the home-off reach key windows (K=1.0) against master,
-  each on a 4x tile master|new named better/same/worse; the muse_hash j49 tail-join class (26L5 bar, 17 px) is
-  the one to watch - no site may turn worse. Also the census screen cut:plain at ring x68 (793 px) is the
-  lkGap centreline class of Handoff 26H, not the stub: gf fill already equals today there.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2833,6 +2830,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1513** · K1502 follow-up (Muse 26L, 2026-11-18): on Levi's link (?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1, hash fff8c9e5, .claude/probes/K1482/cap.mjs) list the sites whose border ink changes by more than 8 px with the home-off reach key windows (K=1.0) against master, each on a 4x tile master|new named better/same/worse; the muse_hash j49 tail-join class (26L5 bar, 17 px) is the one to watch - no site may turn worse. Dropped: answered by K1482 stage 11's recount on 314b1896: K1502 moved 10 sites on Levi's link by more than 8 px and broke none (out/s11/classes_base.txt); the x68 cut:plain class stays described in K1502 (2026-11-18).
 - **K1500** · rp=gf fades the thread away from the marker discs like today (Muse 26K, handoff 281a7c8c; tiles viewed). Done in 970b6ece (2026-11-18).
 - **K1477** · rp=gf: the under thread's border stroke tapers to a point and stops past a crossing at ring x68 (19.4, 20.0; 963 px in K1436's screen scan), g41_ring_tw64 j24 (the same spot, 660 px) and x67 (18.0, 20.6; 296 px); today's stroke runs through, the fill matches. Dropped: cause found by Muse 26H (no fix landed); continued as K1502 (2026-11-18).
 - **K1476** · Muse 26G: a never-clearing gap window ends at the joint room; the long line is gone on muse_default_tw and muse_hash (a short speck remains at its left end, K1503; other scenes' changed sides: K1501). Done in 9ae14f27 (2026-11-18).
