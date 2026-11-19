@@ -877,3 +877,25 @@ Medians: master 54.55 s (50.87, 51.41, 54.55, 59.15, 80.34), early 48.62 s (43.2
 
 Decision: the paired median (4.4%) is under the 10% bar, so the cherry-pick does not land and master stays at 7fe5ee2a6. The landing guards were still run on that master build (preview on :5642, one kept profile `%TEMP%\k26t-guards-profile`): `hold.mjs` 60 250 5000 PASS on `?3&xp=off&am=instant&rp=gf` (first composite 50.7 s cold; 60/60, edges min 102885) and on `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (61.8 s; 60/60, min 6936); `dragcheck.mjs` PASS for gf and for gfh (every stop 0 px over TOL 24). `npm test` green on master (256 files, 3198 passed, 9 skipped; tsc clean; the cherry-pick's own `gf_compile.test.ts` was also green before the revert). K1456 stays open: the early start is proven to reach the worker at 0.6 s and proven not to move the first composite by the bar on this machine - the wait is still the one program's FXC compile (Run 26J's lane). K1464, K1451 and K1460 left open and untouched. Preview server (5642) stopped; the two preview builds and the kept guard profile stay in `$env:TEMP`.
 
+
+## Run U (26U): j64's seam, finish try 2 (K1517, K1504)
+
+Added 2026-11-19. Handoff 26S's try 2 (`.claude/probes/K1517/k1517_26s_try2.patch`, branch `muse-26s-tip`)
+left one new find: muse_hash rstray:plain 20 px at (5.01, 3.18), just outside the seam cap (rho 0.227
+against cap 0.218). Rebase the candidate on today's master (K1482 stages 17 and 18 landed in `gf_look.ts`
+only) and close that find by the cap's extent (the cap following the corner's true reach, with a soft end),
+not by a scan exemption. Done: Run P's Done 2-8 unchanged, the mirror scans 0 new / 0 grown on
+muse_default_tw, muse_hash, def and ring, the bar PASS, Done 3's 4x tiles of j64 (fill and border) produced
+and looked at. A Claude agent works in `gf_look.ts` and `gf_app.ts`: stay out of them. Two tries at most;
+if neither holds, do not land, record what moved and stop.
+
+## Run V (26V): the bar's freeze, and its three clean runs (K1519)
+
+Added 2026-11-19. Probes only. Handoff 26R left: two loads of one build freeze g41_ring_tw42 on different
+states (076a1b2a against f7b1dff2), and in a later run ring and g41_user_tw64 did not freeze at all
+(`.claude/worktrees/agent-a077003d003b40d70/.claude/probes/K1436/out/bar/k1482s18/bar.txt`). Done: 1. the
+cause of a scene freezing on two states named with evidence (what differs before the freeze: step count,
+sleep, a timer). 2. the freeze made to reach one state per scene, or the scene's recipe changed so it does;
+no scene skipped in the result. 3. the bar with `-Ref` = `-Base` = master, three full runs on the 12 census
+scenes: 0 new, 0 grown, 0 gone, 0 skipped in each. 4. the planted pair (K1436's self-check) still found.
+Close K1519 or record what is left.
