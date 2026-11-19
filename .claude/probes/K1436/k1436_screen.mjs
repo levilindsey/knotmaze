@@ -69,6 +69,16 @@ async function once1(job, h = {}) {
   }
   const hash = await page.evaluate(async (t) => {
     await window.__knotPhysFreeze(true);
+    // K1519: __knotStepUntil steps 1/60 s frames (two 1/120 SUBSTEPs), so from a live state whose
+    // substep count has the other parity than the wanted frame's it overshoots by one substep
+    // (40.0250 instead of 40.0167): two loads of one build froze on two states, chosen by how many
+    // substeps the load's live frames happened to run. Align the parity first (in-thread only:
+    // credit the step accumulator one SUBSTEP so the first stepped frame runs three substeps).
+    try {
+      const ps = window.__knotPS();
+      const want = Math.round((t + 0.008) * 120);
+      if ((await window.__knotPhysDump())?.kind === "in-thread" && Math.round(ps.simTime * 120) % 2 !== want % 2) ps.accumulator = (ps.accumulator ?? 0) + 1 / 120;
+    } catch {}
     await window.__knotStepUntil(t);
     const r = window.__knotRenderer();
     r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0;
