@@ -62,9 +62,11 @@ export const GF_KRMIN: number = ENV20?.GF_KRMIN !== undefined ? +ENV20.GF_KRMIN 
  * arm is under (pinZ < 0), the partner's spine over +-3h. Env GF_KXB=0 turns it off for Node probes. Only the retry
  * reads it, so `gfk=0` tables equal master's. */
 export const GF_KXB: boolean = ENV20?.GF_KXB !== "0";
-/** K1482 s26: the bound's trigger depth (h units). Link A's retry arcs enter an over pass's tube at j50 (0.277 h)
- * and t6e (0.084 h); the next is j96's 0.005 h (not kept). Env GF_KXTOL for Node probes. */
-export const GF_KXTOL: number = ENV20?.GF_KXTOL !== undefined ? +ENV20.GF_KXTOL : 0.05;
+/** K1482 s26: the bound's trigger depth (h units): an intrusion one can see. Link A's retry arcs enter an over
+ * pass's tube at j50 (0.277 h, about 4.7 px: the arc drawn through the crossing) and t6e (0.084 h, 1.4 px, no
+ * visible defect; at 0.05 its clean round shrank from 1.54 to 1.43 h, a change where master was not wrong); the
+ * next is j96's 0.005 h (not kept). Env GF_KXTOL for Node probes. */
+export const GF_KXTOL: number = ENV20?.GF_KXTOL !== undefined ? +ENV20.GF_KXTOL : 0.15;
 /** K1482 s26: only passes OVER the cut arm count (an arc drawn over an under pass is the right look: t30e, t21s).
  * Env GF_KXZ=0 counts under passes too, for Node probes. */
 export const GF_KXZ: boolean = ENV20?.GF_KXZ !== "0";
