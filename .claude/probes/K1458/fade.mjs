@@ -16,11 +16,13 @@
 import puppeteer from "puppeteer-core";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { alignFreezeParity } from "../freeze_parity.mjs";
 const [, , base, outDir, profileDir, flArg = "0,1.2", varArg = "gf,gfh"] = process.argv;
 if (!base || !outDir || !profileDir) { console.error("usage: fade.mjs <base> <outDir> <profileDir> [fl] [variants]"); process.exit(2); }
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), MINX = +(process.env.MINX ?? 12), PASS = +(process.env.PASS ?? 0.85);
-// K1460: TRIES loads per page until its physics hash equals the reference page's (loads settle in one of two
-// states); DOTS = the most dots (gf-only one-pixel spikes inside the under thread's faded span) a side may have
+// K1475: alignFreezeParity lands every load on one physics state (the substep parity fix), so
+// TRIES below stays as a net that should never fire; DOTS = the most dots (gf-only one-pixel
+// spikes inside the under thread's faded span) a side may have
 const TRIES = +(process.env.TRIES ?? 8), DOTS = +(process.env.DOTS ?? 2);
 const FLS = flArg.split(",").map(Number), VARS = varArg.split(",").filter(Boolean);
 mkdirSync(outDir, { recursive: true });
@@ -41,6 +43,7 @@ async function load(mode, fl) {
   await page.goto(linkOf(mode, fl), { waitUntil: "load", timeout: 900000 });
   await page.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
   if (mode !== "today") await page.waitForFunction(() => (globalThis.__knotGf?.stats?.composites ?? 0) > 0, { timeout: 900000, polling: 300 });
+  await alignFreezeParity(page, SIMT);
   const hash = await page.evaluate(async (t) => {
     await window.__knotPhysFreeze(true);
     await window.__knotStepUntil(t);

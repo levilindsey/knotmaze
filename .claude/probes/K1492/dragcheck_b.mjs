@@ -10,6 +10,7 @@
 import puppeteer from "puppeteer-core";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { alignFreezeParity } from "../freeze_parity.mjs";
 const [, , base, fadeDir, profileDir, mode = "gf", stopArg = "0,0.5,1.2,0.14", start = "0.14"] = process.argv;
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), TOL = +(process.env.TOL ?? 24), MAXPX = +(process.env.MAXPX ?? 200);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -26,12 +27,14 @@ try {
   await page.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; });
   await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
   const link = `${base}/?3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&fl=${start}&rp=gf${mode === "gfh" ? "&gfh=1" : ""}${process.env.TLK ? "&tlk=" + process.env.TLK : ""}`;
-  // two loads of one link can settle in different states (fade.mjs's shots alternate between two hashes),
-  // so each stop's reference is a fresh load at that fade in the dragged page's state, retried until it matches
+  // K1475: alignFreezeParity lands every load on one physics state (the substep parity fix), so
+  // each stop's reference is a fresh load at that fade in the dragged page's state; the retry
+  // below stays as a net that should never fire.
   const prep = async (pg, url) => {
     await pg.goto(url, { waitUntil: "load", timeout: 900000 });
     await pg.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
     await pg.waitForFunction(() => (globalThis.__knotGf?.stats?.composites ?? 0) > 0, { timeout: 900000, polling: 300 });
+    await alignFreezeParity(pg, SIMT);
     const h = await pg.evaluate(async (t) => {
       await window.__knotPhysFreeze(true);
       await window.__knotStepUntil(t);
