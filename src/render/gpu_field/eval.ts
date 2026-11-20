@@ -54,7 +54,7 @@ export class GfEval {
   // pieces
   private pc = new Int32Array(MAXP); private ps = new Float64Array(MAXP); private pd = new Float64Array(MAXP);
   private pfx = new Float64Array(MAXP); private pfy = new Float64Array(MAXP); private plo = new Int32Array(MAXP); private phi = new Int32Array(MAXP);
-  private pz = new Float64Array(MAXP); private pkey = new Float64Array(MAXP); private pg = new Int32Array(MAXP); private pramp = new Float64Array(MAXP);
+  private pz = new Float64Array(MAXP); private pkey = new Float64Array(MAXP); private pg = new Int32Array(MAXP); private pramp = new Float64Array(MAXP); private phb = new Int32Array(MAXP);
   private ptx = new Float64Array(MAXP); private pty = new Float64Array(MAXP); private pend = new Uint8Array(MAXP);
   private psurf = new Int32Array(MAXP);
   private np = 0;
@@ -143,8 +143,10 @@ export class GfEval {
       const r = this.homeRamp(Math.abs(z));
       if (r > 0 && !(g === hg && ramp >= r)) { g = hg; ramp = r; }
     }
-    this.mg = g; this.mramp = ramp;
+    this.mg = g; this.mramp = ramp; this.mhb = g < 0 ? hg : -1;
   }
+  /** K1482 s28: member()'s home group for a piece left out of every group (its arm's home, too deep in z), else -1. */
+  private mhb = -1;
   private mg = -1; private mramp = 1;
 
   /** member()'s depth at the last depth() call: today's window (tables.depthAt). */
@@ -407,7 +409,7 @@ export class GfEval {
     let nr = 0; const rIdx = [0, 0]; // the ramping pieces
     for (let j = 0; j < np; j++) {
       this.pz[j] = this.depth(this.pc[j], this.ps[j]); this.pkey[j] = this.pz[j] - this.pd[j] * zK;
-      this.member(this.pc[j], this.ps[j], this.mz); this.pg[j] = this.mg; this.pramp[j] = this.mramp;
+      this.member(this.pc[j], this.ps[j], this.mz); this.pg[j] = this.mg; this.pramp[j] = this.mramp; this.phb[j] = this.mhb;
       if (this.mg >= 0) this.pkey[j] -= this.tipSink(this.pc[j], this.ps[j]);
       if (this.mg >= 0 && this.mramp > 0 && this.mramp < 1) {
         if (nr < MAXR) rIdx[nr++] = j;
@@ -482,6 +484,7 @@ export class GfEval {
   /** Surfaces of the current configuration, their keys, cover, labels, coverage and ink. */
   private layers(x: number, y: number): void {
     const T = this.T; const h = T.h; const aa = T.aa; const W = T.W;
+    const kxh = T.homeOn && T.kExt !== undefined && (globalThis as any).process?.env?.GF_S28 !== "0"; // K1482 s28: retryForm's programs (home membership with the retry)
     let ns = 0;
     const entry = (id: number): number => {
       for (let i = 0; i < ns; i++) if (this.sid[i] === id) return i;
@@ -534,6 +537,18 @@ export class GfEval {
           if (rq > T.kR[k] && rq < T.kRmax[k] && this.inSector(k, qx, qy) && this.outsideArms(k, this.pc[j], qx, qy)) bur = 1;
         }
         if (bur < 1) { const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.foldD(j, S, x, y, qx, qy))); if (wb2 > bur) bur = wb2; } // K1482 s7: a hairpin's own fold
+        // K1482 s28 (with the retry): a piece outside every group (S < 0) that is heading into group B (its ramp's
+        // group, or its arm's home group while too deep in z to join) inks no deeper inside B's tubes of other chains
+        // than their own band (p within h - W of one): its outline meets theirs in a mitred corner instead of running
+        // on over B's fill to the square end where the piece joins B (j47, t45s, j59's stub)
+        if (bur < 1 && S < 0 && kxh) {
+          const B = this.pg[j] >= 0 ? this.pg[j] : this.phb[j];
+          for (let m = 0; m < this.np && bur < 1 && B >= 0; m++) {
+            if (this.psurf[m] !== B || this.pc[m] === this.pc[j]) continue;
+            const wb2 = 1 - ss(h - W - aa, h - W + aa, this.pd[m]);
+            if (wb2 > bur) bur = wb2;
+          }
+        }
         const val = (1 - bur) * band2(h - X);
         if (val > v) { v = val; wk = this.pend[j] ? 3 : 1; wa = this.pc[j]; wb = this.ptx[j] * (y - this.pfy[j]) - this.pty[j] * (x - this.pfx[j]) >= 0 ? 1 : -1; }
       }

@@ -165,6 +165,38 @@ export function retryForm(src: string): string {
   src = src.split("if (kIn[i] == 3 && (key > labK").join("if (kIn[i] == 3 && KXT(k) && (key > labK");
   src = src.split("if (kIn[i] == 3) { scov[e] = true;").join("if (kIn[i] == 3 && KXT(k)) { scov[e] = true;");
   if (/Dk > (D|sa\[e\])\)|KRI > K0\.z\)|KRI > K0\.z && \(|kIn\[i\] == 3\)|kIn\[i\] == 3 && \(/.test(src)) throw new Error("gfFs home: a corner raise or cover without its retry test is left");
+  return homeBurial(src);
+}
+
+/**
+ * K1482 s28 (part of retryForm): eval.ts layers()'s home burial. A piece outside every group in its configuration
+ * carries the group it is heading into in its surface id, -1 - j - MAXP * (B + 1) (the id PGRP already gave a
+ * ramping piece): B = its ramp's group (pg >= 0), else its arm's home group while member() leaves it out for depth
+ * (mhb; pg = -2 - mhb in the pg array, packed + 32769 by the split). Its faces are buried by B's tubes of other
+ * chains, so its outline ends at theirs (j47). zb's P0 routes such a face to P1 by the same bound as its piece loop.
+ */
+function homeBurial(src: string): string {
+  const rep = (a: string, b: string, n?: number): void => {
+    const parts = src.split(a);
+    if (n !== undefined && parts.length - 1 !== n) throw new Error(`gfFs s28: expected ${n} "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep("int mg; float mramp;\n", "int mg; float mramp; int mhb; // K1482 s28: the home group of a piece left out for depth\n", 1);
+  rep("  mg = g; mramp = ramp;\n}\n", "  mg = g; mramp = ramp; mhb = g < 0 ? hg : -1;\n}\n", 1);
+  rep("pg[j] = mg;", "pg[j] = mg >= 0 ? mg : -2 - mhb;");
+  rep(": mg >= 0 && pr >= 1.0 ? mg : -1 - j)", ": mg >= 0 && pr >= 1.0 ? mg : -1 - j - MAXP * ((mg >= 0 ? mg : mhb) + 1))");
+  rep("psurf[j] = mem ? pg[j] : -1 - j;", "psurf[j] = mem ? pg[j] : -1 - j - MAXP * ((pg[j] >= 0 ? pg[j] : -2 - pg[j]) + 1);");
+  rep("uint(pg[j] + 1) << 16", "uint(pg[j] + 32769) << 16");
+  rep("pg[j] + 1 >= 65536", "pg[j] + 32769 >= 65536 || pg[j] + 32769 < 0");
+  rep("pg[j] = int(E.x >> 16) - 1;", "pg[j] = int(E.x >> 16) - 32769;");
+  if (/-1 - j\)|\? pg\[j\] : -1 - j;|pg\[j\] \+ 1\b|int\(E\.x >> 16\) - 1;/.test(src)) throw new Error("gfFs s28: an own surface id or pg pack without the home group is left");
+  // the term reads only pd[] (exact, no loop over segments), so zb's P0 computes it as P1 does: no route needed
+  // (bx's form reads fb, its band2(h - X) computed before the loops)
+  const VAL = ["      float val = (1.0 - bur) * band2(h - X);\n", "      float val = (1.0 - bur) * fb;\n"].filter((s) => src.includes(s));
+  if (VAL.length !== 1) throw new Error(`gfFs s28: the piece face's value moved (${VAL.length} forms)`);
+  const HB = "      if (bur < 1.0 && S < -MAXP) { int B = (-1 - j - S) / MAXP - 1; for (int m = 0; m < np && bur < 1.0; m++) { if (PSURF(m) != B || PC(m) == PC(j)) continue;" +
+    " float wb2 = 1.0 - ss(h - W - aa, h - W + aa, pd[m]); if (wb2 > bur) bur = wb2; } } // K1482 s28: home burial\n";
+  rep(VAL[0], HB + VAL[0], 1);
   return src;
 }
 
