@@ -324,8 +324,8 @@ export class Joinery {
       }
     }
     if ((U.uKPaint[0] > 0.5 && c.paintOn) || U.uKFx2[2] > 0.5) {
-      // mode: 0 composed, 1 untraveled, 2 quiet (K1139 S3b).
-      const st = kPaintAt(D, U, c, actrl, an, px, this.r.paintTmp, pm > 1.5);
+      // mode: 0 composed, 1 untraveled (K81).
+      const st = kPaintAt(D, U, c, actrl, an, px, this.r.paintTmp);
       if (pm > 0.5) st.p = 0;
       kComposePaint(U, out, st, kGlow(D, U, c, actrl));
     }
@@ -335,8 +335,7 @@ export class Joinery {
   // Append one ARM STRIP row (arm_strip.ts table layout): texel k = the
   // material of `chain` at arc arc0 + arcStep * k (ctrl seed seed0 +
   // seedStep * k), paint edges antialiased over px; mode 1 = the
-  // untraveled material (K81), 2 = its quiet row (K1139 S3b). Returns
-  // the row.
+  // untraveled material (K81). Returns the row.
   private writeStripRow(
     chain: number,
     arc0: number,

@@ -21,12 +21,6 @@
 //                                       the reveal glow still brighten the
 //                                       section color - what a routed
 //                                       joint's web wears off its band;
-//                                       2 (K1139 S3b) = QUIET: the
-//                                       untraveled material without the
-//                                       crest trains (floor and hover
-//                                       kept) - what a pulse-banded
-//                                       joint's base and band material
-//                                       wear, the fan drawing the crest;
 //                                       3/4/5 (K1220 S4) = a tapered root
 //                                       arm's K620 paint (C side / O side /
 //                                       centre; 6/7/8 untraveled), which
@@ -220,10 +214,9 @@ highp float kStripPx;
 // shader's section at the two bracketing samples, lerped - its own
 // Gouraud; seed = a ctrl near the arc), the appearance FX that tint (burn /
 // roots - the joinery wears no stripes or transparency: its gate fades
-// it), then the gameplay paint and the reveal glow (G2.3). mode (K81,
-// K1139 S3b): 0 composed; 1 untraveled - the paint without its gold
-// amount (pulses and the glow kept); 2 quiet - untraveled without the
-// crest trains (floor and hover kept), what a pulse-banded fan reads.
+// it), then the gameplay paint and the reveal glow (G2.3). mode (K81):
+// 0 composed; 1 untraveled - the paint without its gold amount (pulses
+// and the glow kept).
 vec3 chainMaterial(int ch, highp float a, highp float seedIn, highp float mode) {
   KChain c = kChain(ch);
   // The ctrl search seed, normalized onto the chain (rings wrap, runs clamp).
@@ -272,7 +265,7 @@ vec3 chainMaterial(int ch, highp float a, highp float seedIn, highp float mode) 
     }
   }
   if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
-    highp vec4 st = kPaintAt(c, actrl, an, kStripPx, pm > 1.5);
+    highp vec4 st = kPaintAt(c, actrl, an, kStripPx);
     if (pm > 0.5) st.x = 0.0;
     m = kComposePaintFlat(m, st, kGlow(c, actrl));
   }

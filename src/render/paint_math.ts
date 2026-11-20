@@ -1563,7 +1563,7 @@ export function kPulseV(
 // no end fade. The crest trains fade to the floor over PULSE_RIDGE_FADE
 // either side of the ridge, where the two sides meet (|gA - gB| / 2 is
 // the distance from it), so the field is continuous there whichever way
-// each side runs. bumpScale 0 is the quiet field (the floor alone).
+// each side runs. bumpScale scales the crest trains (the ridge fade).
 export function kPulseV2(
   U: KUniforms,
   d: number,
@@ -1627,10 +1627,6 @@ function kCov(sd: number, px: number): number {
 }
 
 // GLSL twin: kPaintAt - the declaration's paint at (ctrl, arc) of chain c.
-// K1139 S3b: quiet (the junction arm strips' third row mode, arm_strip.ts)
-// keeps the crest's floor and any hover but drops the crest trains
-// (bumpScale 0), so a pulse-banded fan's base and band material carry no
-// radial bars under the band; the fan shader draws the crest itself.
 export function kPaintAt(
   D: KData,
   U: KUniforms,
@@ -1638,8 +1634,7 @@ export function kPaintAt(
   ctrl: number,
   arc: number,
   px: number,
-  out: KPaintState,
-  quiet = false
+  out: KPaintState
 ): KPaintState {
   out.p = 0;
   out.band = false;
@@ -1717,12 +1712,8 @@ export function kPaintAt(
       // K1139 S4: a two-ended arm (its far end's distance in T1.w).
       const v =
         (flags & PULSE_FLAG.TWO) !== 0
-          ? kPulseV2(U, d, span, P[o + 3], P[o + 7], inward, (flags & PULSE_FLAG.INWARD_B) !== 0, hovered, quiet ? 0 : 1)
-          : quiet
-            ? d < 0 || d > span
-              ? 0
-              : kPulseCrest(U, P[o + 3] + d, inward, hovered, cont ? 1 : Math.min(1, Math.max(0, (span - d) / PAINT_CONST.PULSE_END_WINDOW)), 0)
-            : kPulseV(U, d, span, inward, hovered, P[o + 3], cont);
+          ? kPulseV2(U, d, span, P[o + 3], P[o + 7], inward, (flags & PULSE_FLAG.INWARD_B) !== 0, hovered)
+          : kPulseV(U, d, span, inward, hovered, P[o + 3], cont);
       if (v > PAINT_CONST.PULSE_MIN_V) {
         out.band = true;
         out.v = v;

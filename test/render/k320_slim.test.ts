@@ -117,7 +117,12 @@ describe("K320 stage 1: char budgets", () => {
     // (58,440 -> 59,001 and 74,855 -> 75,416) and to the strips
     // (33,695 -> 34,256), measured here; the junction field (40,097) and
     // the still pluck (20,507) keep their text.
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(59_050);
+    // K1223 (2026-11-19): the pulses' dead quiet path leaves the paint
+    // code (kPaintAt's quiet arg and kPulseCrestQuiet, the CPU mirror's
+    // quiet flag, arm-strip row mode 2): the section pair drops 379
+    // (59,041 -> 58,662 and 75,503 -> 75,124) and the strips 497
+    // (35,572 -> 35,075), measured here; budgets follow the measurement.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(58_700);
     // K1139 S5 (2026-11-05): the head-carry uniform (uKHead, in the
     // shared KNOT_UNIFORMS_GLSL) and its CREST_RAMP branch in
     // kPulseCrestK bring the section-explore fragment to 75,456 and
@@ -127,13 +132,13 @@ describe("K320 stage 1: char budgets", () => {
     // K268 far-flag fix (2026-11-10): the profile's flags held in a
     // global (exProfFl) for the far branch's cover add 47 (75,456 ->
     // 75,503 measured here); the explore variants only.
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(75_503);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(75_150);
     // K1220 S4 (2026-11-06): the root arm's per-side K620 paint in
     // chainMaterial (the root table read, its two foot sections and the
     // spur's, the ease blend; modes 3-8) adds 1,276 to the strips
     // (34,296 -> 35,572 measured here); budget follows the measurement.
     // One cold compile of arm-strip (and its explore variant) per player.
-    expect(STRIP_FRAG.length).toBeLessThanOrEqual(35_600);
+    expect(STRIP_FRAG.length).toBeLessThanOrEqual(35_100);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
     // K815: the fans' flank coordinate (aFlank + the fanEdge block) adds

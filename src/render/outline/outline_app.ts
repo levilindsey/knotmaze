@@ -287,7 +287,7 @@ vec3 appMaterial(int ch, highp float a, highp float side01, int scn, highp float
   }
 #endif
   if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
-    highp vec4 st = kPaintAt(c, actrl, an, uPx, false);
+    highp vec4 st = kPaintAt(c, actrl, an, uPx);
     m = kComposePaintFlat(m, st, kGlow(c, actrl));
   }
 #if KRV

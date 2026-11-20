@@ -1408,10 +1408,6 @@ describe("kPulseV2 (K1139 S4)", () => {
         } else {
           expect(got.band).toBe(false);
         }
-        // Quiet: the floor alone.
-        const q = kPaintAt(D, U, c, 11, arc, 0.02, st, true);
-        const wantQ = kPulseV2(U, arc - aJ, span, Math.fround(dA), Math.fround(dB), false, inwB, false, 0);
-        if (wantQ > PAINT_CONST.PULSE_MIN_V) expect(q.v).toBeCloseTo(wantQ, 12);
       }
       expect(lit).toBeGreaterThan(4);
       // Without the TWO flag the same item is the one-ended arm, bit for bit.

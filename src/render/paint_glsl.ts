@@ -780,11 +780,11 @@ vec3 kSectionAtArc(KChain c, highp float a, highp float seed) {
 // the arms (kPulseV in the paint core) and the junction fan's pulse
 // bands (junction_field.ts), which carry no paint items of their own:
 // the band holds distJ, inward and hover, so the fan evaluates this at
-// dG = distJ + tau with endWin 1. kPulseCrestQuiet is the same field
-// with its trains removed (the strips' quiet rows, arm_strip.ts: floor
-// and hover kept, no crest bars under a band). Needs
-// KNOT_UNIFORMS_GLSL + PAINT_CONST_GLSL + kSmooth (PAINT_GATE_THREAD),
-// all of which precede it in every program that includes it.
+// dG = distJ + tau with endWin 1. Needs
+// KNOT_UNIFORMS_GLSL + PAINT_CONST_GLSL + kSmooth
+//
+// (PAINT_GATE_THREAD), all of which precede it in every program
+// that includes it.
 export const PULSE_CREST_GLSL = /* glsl */ `
 // The pulse trains' reach window (K75): full strength out to reach - fade
 // from the junction, smoothly gone at reach. The hover stops there too
@@ -803,7 +803,7 @@ int kHcLook() {
 }
 
 // Brightness at global distance dG; bumpK scales the crest trains (1 on
-// the arms and the fan's bands, 0 in a strip's quiet row). A High
+// the arms, faded to 0 at a two-ended arm's ridge). A High
 // contrast prototype has no trains and no breath: one steady level out
 // to the reach (the looks shape it; prototypes skip mirror parity).
 highp float kPulseCrestK(highp float dG, bool inward, bool hovered, highp float endWin, highp float bumpK) {
@@ -821,9 +821,6 @@ highp float kPulseCrestK(highp float dG, bool inward, bool hovered, highp float 
 }
 highp float kPulseCrest(highp float dG, bool inward, bool hovered, highp float endWin) {
   return kPulseCrestK(dG, inward, hovered, endWin, 1.0);
-}
-highp float kPulseCrestQuiet(highp float dG, bool inward, bool hovered, highp float endWin) {
-  return kPulseCrestK(dG, inward, hovered, endWin, 0.0);
 }
 `;
 
@@ -889,7 +886,7 @@ highp float kTeleAcross(highp float side) {
 
 // (p, band, v, rim): the gold ramp amount, a pulse band and its strength,
 // and the hover glow along the thread (K145; kRimAcross shapes it across).
-highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px, bool quiet) {
+highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px) {
   highp vec4 st = vec4(0.0);
   kFrayHere = 0.0;
   if (uKPaint.x < 0.5) return st;
@@ -958,11 +955,7 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px,
       bool inwP = (flags & IF_INWARD) != 0;
       bool hovP = (flags & IF_HOVER) != 0;
       highp float v = (flags & ${PULSE_FLAG.TWO}) != 0
-        ? kPulseV2(d, span, T0.w, T1.w, inwP, (flags & ${PULSE_FLAG.INWARD_B}) != 0, hovP, quiet ? 0.0 : 1.0)
-        : quiet
-        ? (d < 0.0 || d > span
-            ? 0.0
-            : kPulseCrestQuiet(T0.w + d, inwP, hovP, T1.z > 0.5 ? 1.0 : clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0)))
+        ? kPulseV2(d, span, T0.w, T1.w, inwP, (flags & ${PULSE_FLAG.INWARD_B}) != 0, hovP, 1.0)
         : kPulseV(d, span, inwP, hovP, T0.w, T1.z > 0.5);
       if (v > PULSE_MIN_V) {
         // 2 = a hovered choice under a High contrast prototype (K111 stage
