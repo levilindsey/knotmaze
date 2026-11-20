@@ -484,7 +484,7 @@ export class GfEval {
   /** Surfaces of the current configuration, their keys, cover, labels, coverage and ink. */
   private layers(x: number, y: number): void {
     const T = this.T; const h = T.h; const aa = T.aa; const W = T.W;
-    const kxh = T.homeOn && T.kExt !== undefined && (globalThis as any).process?.env?.GF_S28 !== "0"; // K1482 s28: retryForm's programs (home membership with the retry)
+    const kxh = T.homeOn && T.kExt !== undefined; // K1482 s28: retryForm's programs (home membership with the retry)
     let ns = 0;
     const entry = (id: number): number => {
       for (let i = 0; i < ns; i++) if (this.sid[i] === id) return i;
@@ -540,12 +540,16 @@ export class GfEval {
         // K1482 s28 (with the retry): a piece outside every group (S < 0) that is heading into group B (its ramp's
         // group, or its arm's home group while too deep in z to join) inks no deeper inside B's tubes of other chains
         // than their own band (p within h - W of one): its outline meets theirs in a mitred corner instead of running
-        // on over B's fill to the square end where the piece joins B (j47, t45s, j59's stub)
+        // on over B's fill to the square end where the piece joins B (j47, t45s, j59's stub). Only against a piece m out
+        // of every crossing's depth window (z 0, a junction's plane): where m dips under the piece at a crossing, the
+        // piece's outline is the over-pass line and stays (t56s, |z| >= 0.024 there; the stubs' partners sit at 0)
         if (bur < 1 && S < 0 && kxh) {
           const B = this.pg[j] >= 0 ? this.pg[j] : this.phb[j];
           for (let m = 0; m < this.np && bur < 1 && B >= 0; m++) {
             if (this.psurf[m] !== B || this.pc[m] === this.pc[j]) continue;
-            const wb2 = 1 - ss(h - W - aa, h - W + aa, this.pd[m]);
+            let wb2 = 1 - ss(h - W - aa, h - W + aa, this.pd[m]);
+            if (!(wb2 > bur)) continue;
+            wb2 *= 1 - ss(0.004, 0.02, Math.abs(this.pz[m]));
             if (wb2 > bur) bur = wb2;
           }
         }

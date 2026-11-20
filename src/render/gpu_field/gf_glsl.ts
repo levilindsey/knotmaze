@@ -173,7 +173,9 @@ export function retryForm(src: string): string {
  * carries the group it is heading into in its surface id, -1 - j - MAXP * (B + 1) (the id PGRP already gave a
  * ramping piece): B = its ramp's group (pg >= 0), else its arm's home group while member() leaves it out for depth
  * (mhb; pg = -2 - mhb in the pg array, packed + 32769 by the split). Its faces are buried by B's tubes of other
- * chains, so its outline ends at theirs (j47). zb's P0 routes such a face to P1 by the same bound as its piece loop.
+ * chains, so its outline ends at theirs (j47), but only by pieces out of every crossing's depth window (z 0): where
+ * the partner dips under the piece at a crossing, the piece's outline is the over-pass line (t56s). The term reads
+ * pd[], ps[] and the depth tables (exact in P0 too), so zb's P0 needs no route for it.
  */
 function homeBurial(src: string): string {
   const rep = (a: string, b: string, n?: number): void => {
@@ -194,8 +196,10 @@ function homeBurial(src: string): string {
   // (bx's form reads fb, its band2(h - X) computed before the loops)
   const VAL = ["      float val = (1.0 - bur) * band2(h - X);\n", "      float val = (1.0 - bur) * fb;\n"].filter((s) => src.includes(s));
   if (VAL.length !== 1) throw new Error(`gfFs s28: the piece face's value moved (${VAL.length} forms)`);
+  // (m's depth only where the term would raise bur: the partner must sit out of every crossing's window, t56s)
   const HB = "      if (bur < 1.0 && S < -MAXP) { int B = (-1 - j - S) / MAXP - 1; for (int m = 0; m < np && bur < 1.0; m++) { if (PSURF(m) != B || PC(m) == PC(j)) continue;" +
-    " float wb2 = 1.0 - ss(h - W - aa, h - W + aa, pd[m]); if (wb2 > bur) bur = wb2; } } // K1482 s28: home burial\n";
+    " float wb2 = 1.0 - ss(h - W - aa, h - W + aa, pd[m]); if (!(wb2 > bur)) continue;" +
+    " wb2 *= 1.0 - ss(0.004, 0.02, abs(depth(PC(m), ps[m], keyBin(PC(m), ps[m])))); if (wb2 > bur) bur = wb2; } } // K1482 s28: home burial\n";
   rep(VAL[0], HB + VAL[0], 1);
   return src;
 }
