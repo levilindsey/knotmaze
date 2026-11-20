@@ -52,16 +52,22 @@ export const GF_KRMAX: number = ENV20?.GF_KRMAX !== undefined ? +ENV20.GF_KRMAX 
 export const GF_KSAG: number = ENV20?.GF_KSAG !== undefined ? +ENV20.GF_KSAG : 0.35;
 /** K1482 s22: and one of radius under GF_KRMIN h (muse_hash's 0.02 h and 0.09 h retries were the bar's rstray at j64\n * and a vdip:tie; a near-null arc is no rounding, only a different ink). Env GF_KSAG / GF_KRMIN for Node probes. */
 export const GF_KRMIN: number = ENV20?.GF_KRMIN !== undefined ? +ENV20.GF_KRMIN : 0.1;
-/** K1482 s26: the retry's third bound. The crossing pass that cut an arm (the partner of a pin on either arm's
- * chain within the extended arm) bounds the retry ball like the arms' own far parts: the ball stops where it would
- * enter that pass's tube, so its arc meets the crossing's near outline instead of running through it (j50). Env
- * GF_KXB=0 turns it off for Node probes. Only the retry (pass 1) reads it, so `gfk=0` tables equal master's. */
+/** K1482 s26: the retry's third bound, for a retry corner whose DRAWN arc (between its two tangent points) runs
+ * more than GF_KXTOL h into the tube of a crossing pass over its own chain next to the junction (j50: the arc's
+ * buriers skip the corner's own chains, so nothing hides that arc where the pass should cover it). Such a corner is
+ * grown again with that pass as a third bound beside the arms' far parts: the growth stops where the drawn arc
+ * would enter the tube. Every other retry corner keeps its unbounded growth exactly (s26's first form, the whole
+ * ball against every own-chain pass, shrank t34e, t30e and t21s, rounds Levi took, to points). The crossing passes:
+ * per pin on either arm's chain within the extended arm whose partner is A's or B's chain and whose depth on the
+ * arm is under (pinZ < 0), the partner's spine over +-3h. Env GF_KXB=0 turns it off for Node probes. Only the retry
+ * reads it, so `gfk=0` tables equal master's. */
 export const GF_KXB: boolean = ENV20?.GF_KXB !== "0";
-/** K1482 s26: the third bound counts only a crossing pass of the corner's OWN chains (a chain crossing itself next
- * to the junction): the arc's buriers skip those chains, so nothing else hides a ball inside that tube. Over every
- * crossing pass it shrank nearly all 109 of link A's retry corners (Levi took the rounding); own chains move 18.
- * Env GF_KXBS=0 bounds by every crossing pass, for Node probes. */
-export const GF_KXBS: boolean = ENV20?.GF_KXBS !== "0";
+/** K1482 s26: the bound's trigger depth (h units). Link A's retry arcs enter an over pass's tube at j50 (0.277 h)
+ * and t6e (0.084 h); the next is j96's 0.005 h (not kept). Env GF_KXTOL for Node probes. */
+export const GF_KXTOL: number = ENV20?.GF_KXTOL !== undefined ? +ENV20.GF_KXTOL : 0.05;
+/** K1482 s26: only passes OVER the cut arm count (an arc drawn over an under pass is the right look: t30e, t21s).
+ * Env GF_KXZ=0 counts under passes too, for Node probes. */
+export const GF_KXZ: boolean = ENV20?.GF_KXZ !== "0";
 /**
  * K1482 s23: the retry's switch. The page turns it on with `gfh=1` unless `gfk=0` (frame_loop.ts; K1524, Levi
  * 2026-11-19: "take the rounding"). Off, a Node build's default (K1536): no retry corner is solved, no kExt and no
@@ -759,8 +765,9 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
     const L = vs[hi] - vs[lo]; const t = L > 0 ? Math.min(1, Math.max(0, (s - vs[lo]) / L)) : 0;
     XY[0] = vx[lo] + (vx[hi] - vx[lo]) * t; XY[1] = vy[lo] + (vy[hi] - vy[lo]) * t;
   };
-  // The crossing passes that cut A or B: per pin on the arm's chain at arm distance [0, L + 2h], its partner's
-  // spine over [ps - 3h, ps + 3h] as segments (x0, y0, x1, y1). Null when there is none.
+  // The crossing passes that cut A or B: per pin on the arm's chain at arm distance [0, L + 2h] whose partner is A's
+  // or B's chain and passes over the arm (GF_KXZ), the partner's spine over [ps - 3h, ps + 3h] as segments
+  // (x0, y0, x1, y1). Null when there is none.
   const crossSpines = (A: ArmT, B: ArmT): Float64Array | null => {
     const seg: number[] = []; const NS = 18;
     for (const Ar of [A, B]) {
@@ -769,7 +776,8 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
         const d = armDistOf(Ar, P.pinS[k]);
         if (!(d >= 0 && d <= Ar.L + 2 * h)) continue;
         const pc = P.pinPC[k]; if (!(pc >= 0 && pc < P.nC)) continue;
-        if (GF_KXBS && pc !== A.c && pc !== B.c) continue;
+        if (pc !== A.c && pc !== B.c) continue;
+        if (GF_KXZ && !(P.pinZ[k] < 0)) continue;
         const ps = P.pinPS[k];
         chainXY(pc, ps - 3 * h); let x0 = XY[0]; let y0 = XY[1];
         for (let i = 1; i <= NS; i++) { chainXY(pc, ps - 3 * h + (6 * h * i) / NS); seg.push(x0, y0, XY[0], XY[1]); x0 = XY[0]; y0 = XY[1]; }
@@ -785,6 +793,22 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       const ex = ax + dx * t - x; const ey = ay + dy * t - y; const dd = ex * ex + ey * ey; if (dd < d2) d2 = dd;
     }
     return Math.sqrt(d2);
+  };
+  // The DRAWN arc's gap to those tubes: the ball of centre (x, y) and radius rho = dc - h between its
+  // tangent points on A's and B's outlines (the short way round, the side its fill sits on), sampled at ARC_N + 1
+  // points by normalized lerp of the two foot directions (no trig), nearest spine distance minus h.
+  const ARC_N = 12;
+  const arcGap = (S: Float64Array, x: number, y: number, fax: number, fay: number, fbx: number, fby: number, dcA: number, dcB: number): number => {
+    const rho = 0.5 * (dcA + dcB) - h;
+    if (!(rho > 0)) return segDist(S, x, y) - h;
+    const ax = (fax - x) / (dcA || 1); const ay = (fay - y) / (dcA || 1); const bx = (fbx - x) / (dcB || 1); const by = (fby - y) / (dcB || 1);
+    let m = Infinity;
+    for (let i = 0; i <= ARC_N; i++) {
+      const t = i / ARC_N; const ux = ax + (bx - ax) * t; const uy = ay + (by - ay) * t; const ul = Math.sqrt(ux * ux + uy * uy);
+      if (!(ul > 1e-9)) continue;
+      const d = segDist(S, x + (rho * ux) / ul, y + (rho * uy) / ul); if (d < m) m = d;
+    }
+    return m - h;
   };
   const CF = new CornerGrowth();
   // Form B's solveEq at rho = h: Newton on the true feet (footInWindow over each arm's window).
@@ -956,11 +980,14 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       // K1482 s20: pass 1 retries a non-through pair that pass 0 gave no fillet, on arms a crossing cut short
       // extended past the cut (extArm). Its corner is home membership's only (ext 1): the cut arm's pieces join
       // the group out to aHome there, so the outlines meet in a V or a notch the retry rounds. Pass 0's corner
-      // stays home-off's (ext 2).
+      // stays home-off's (ext 2). Pass 2 grows pass 1's corner again under GF_KXB's bound when its drawn arc runs
+      // into an own over pass's tube (kxHit), and replaces it.
       const got: (GfCorner | null)[] = [null, null];
-      for (let pass = 0; pass < 2; pass++) {
+      let kxHit = false;
+      for (let pass = 0; pass < 3; pass++) {
       let A = A0; let B = B0;
-      if (pass === 1) {
+      if (pass === 2 && !kxHit) break;
+      if (pass >= 1) {
         const c0 = got[0];
         if (thru || !P.kRetry || !(GF_KEXT > 0) || (c0 && c0.r > 1e-9)) break; // K1482 s23: only with the switch
         A = extArm(A0); B = extArm(B0);
@@ -999,9 +1026,8 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       const denOf = (p: Q): number => { const ax = p.x - p.fax; const ay = p.y - p.fay; const bx = p.x - p.fbx; const by = p.y - p.fby; return 1 + (ax * bx + ay * by) / ((Math.sqrt(ax * ax + ay * ay) || 1) * (Math.sqrt(bx * bx + by * by) || 1)); };
       const denV = denOf(V);
       const mCut = (dc: number): number => { const c0 = dc - 0.05 * h - 1e-12 * (1 + dc); return c0 > 0 ? c0 * c0 : -1; };
-      // K1482 s26 (GF_KXB): the retry's third bound, the spines of the crossing passes that cut either arm (each
-      // pin on A's or B's chain within the extended arm, its partner sampled over +-3h), as point pairs.
-      const XS = pass === 1 && GF_KXB ? crossSpines(A, B) : null;
+      // K1482 s26 (GF_KXB): pass 2's third bound, the own over passes that cut either arm (crossSpines).
+      const XS = pass === 2 ? crossSpines(A, B) : null;
       const wOf = (p: Q): number => {
         const fSteep = ss01(((Math.abs(denV) > 1e-12 ? denOf(p) / denV : 0) - 0.3) / 0.4); if (fSteep === 0) return 0;
         const fSlack = ss01(Math.min(A.L - W - p.ua, B.L - W - p.ub) / (0.5 * h)); if (fSlack === 0) return 0;
@@ -1009,7 +1035,10 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
         const dcA = Math.hypot(p.x - p.fax, p.y - p.fay); const mA = marginAt(SA, p.ua, p.x, p.y, dcA, mCut(dcA)); if (mA <= -0.05 * h) return 0;
         const dcB = Math.hypot(p.x - p.fbx, p.y - p.fby); const mB = marginAt(SB, p.ub, p.x, p.y, dcB, mCut(dcB)); if (mB <= -0.05 * h) return 0;
         let mX = 0;
-        if (XS) { mX = segDist(XS, p.x, p.y) - Math.max(dcA, dcB); if (mX <= -0.05 * h) return 0; }
+        if (XS) {
+          mX = arcGap(XS, p.x, p.y, p.fax, p.fay, p.fbx, p.fby, dcA, dcB);
+          if (mX <= -0.05 * h) return 0;
+        }
         return ss01(1 + Math.min(0, mA, mB, mX) / (0.05 * h)) * fSteep * fSlack * fA * fB;
       };
       const dN = r0 / NODES; let r = 0; let pua = V.ua; let pub = V.ub; let qCF: Q | null = null; let cfZero = false;
@@ -1061,7 +1090,7 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       if (!(r > 1e-9)) { // K1407 23A: form B keeps a null corner (r = 0): its tangent terms ink a disc at V.
         // A through pair's null is not kept: the reference's fillet pick requires r > 0, so a null through
         // corner draws nothing (its eye band would ink the open eye).
-        if (!thru) got[pass] = { thru, rv: 0, cx: V.x, cy: V.y, r: 0, rmax: (2 * aa) / Math.max(0.1, Math.sin(th / 2)), eax: -V.nax, eay: -V.nay, ebx: -V.nbx, eby: -V.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: V.sa, sb: V.sb };
+        if (!thru) got[pass === 2 ? 1 : pass] = { thru, rv: 0, cx: V.x, cy: V.y, r: 0, rmax: (2 * aa) / Math.max(0.1, Math.sin(th / 2)), eax: -V.nax, eay: -V.nay, ebx: -V.nbx, eby: -V.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: V.sa, sb: V.sb };
         continue;
       }
       if (thru && r < 0.16 * h) continue; // K1407 23A: a through radius this small is the integral's noise (form B's reads 0-0.05h there); its pick passes, so the eye stays open
@@ -1070,7 +1099,11 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       else { trackInto(QQB, J, A, B, pua, pub, h + r, TRACK + 1, 4 * dN / t2, hA, hB, snH, csH); q = QQB; }
       const rV = Math.hypot(V.x - q.x, V.y - q.y);
       const rmax = rV + (2 * aa) / Math.max(0.1, Math.sin(th / 2));
-      got[pass] = { thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb };
+      got[pass === 2 ? 1 : pass] = { thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb };
+      if (pass === 1 && GF_KXB) { // the trigger: does this drawn arc run into an own over pass's tube?
+        const XO = crossSpines(A, B);
+        if (XO) kxHit = arcGap(XO, q.x, q.y, q.fax, q.fay, q.fbx, q.fby, Math.hypot(q.x - q.fax, q.y - q.fay), Math.hypot(q.x - q.fbx, q.y - q.fby)) < -GF_KXTOL * h;
+      }
       }
       const c0 = got[0]; const c1 = got[1];
       if (c1 && c1.r > 1e-9 && c1.r >= GF_KRMIN * h && c1.r <= GF_KRMAX * h && c1.r * (1 / Math.max(1e-6, Math.sin(c1.theta / 2)) - 1) <= GF_KSAG * h) { c1.ext = 1; K.push(c1); if (c0) { c0.ext = 2; K.push(c0); } }
