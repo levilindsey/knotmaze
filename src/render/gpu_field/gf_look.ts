@@ -530,6 +530,9 @@ const GAP_JOINT_RA = 1.5;
  * s18 (un: the under chain and its kept indices): a side is also flagged when a member sample of the UNDER chain within
  * GAP_JOINT_RA (arc) of a slot lies within the cut's reach of its outline point: the crossing sits on an arm of a fused
  * joint, so the full cut's ending erased the arm's outline where it meets the joint's (link A j22/j88/t80s/t65s/t70s/t81s).
+ * s24: the under rule applies only where no non-member over sample lies within the cut's reach of the outline point.
+ * Nearer, the point sits in the crossing proper, and the short cut ran the arm's outline square across the gap into
+ * the over thread's (link A t81s's tick, dN 0.45-0.50 against s18's sites at 0.68 and up; K1527).
  */
 export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }, un?: { c: number; km: ArrayLike<number> }): number[] {
   const out = new Array<number>(ks.length).fill(0);
@@ -568,13 +571,9 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
       for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
       for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
       if (dM < reach2 && dM <= dN) { nb |= bit; if (dN >= nn2) bits |= bit; }
-      const K24 = (globalThis as { __k15?: { u24?: number; log?: boolean; dn?: number } }).__k15; const ob = bits & bit;
-      const dnT = K24 && K24.dn !== undefined ? (K24.dn < 0 ? reach2 : K24.dn * K24.dn) : 0;
-      if (!(K24 && K24.u24 === 1) && dN >= dnT) for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } }
-      if (K24 && K24.log && un && !ob) {
-        let uIn = 0; for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) uIn++; }
-        if (uIn) { const G = globalThis as unknown as { __k15log?: Record<string, number[]> }; (G.__k15log ??= {})[`${c}:${un.c}:${k}:${sd}`] = [uxy[2 * k], uxy[2 * k + 1], qx, qy, uIn, ux.length, mem(un.c, un.km[k]) ? 1 : 0, Math.sqrt(dM), Math.sqrt(dN)]; }
-      }
+      // s18's under rule, s24: only past the over thread's own cut reach (dN >= reach2); nearer, the outline point is
+      // in the crossing proper and the flag's short cut squared the arm's outline off across the gap (t81s's tick)
+      if (dN >= reach2) for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } }
     }
     out[i] = bits; near[i] = nb;
   }
