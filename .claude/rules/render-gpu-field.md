@@ -32,6 +32,10 @@ strokes toward today's, and do not use today's border strokes as a bar.
   home membership (ink only: no D raise, no cover; `retryForm`). Two gates: radius >= GF_KRMIN h, sag r(1/sin(th/2) - 1) <= GF_KSAG h.
   Off, the tables carry no `kExt`/`*Alt` field and equal master's (`gf_k1482_switch.test.ts`). K1524 decides whether
   it becomes the default or goes.
+- GAP JOINT FLAGS (K1482 s24): s18's UNDER rule in `gapJointFlags` holds about 270 V-corner joint sites on link A
+  (an arm's outline meets the joint's outline: j63, j15, j148, t57e). Gating it on dN >= reach removed t81s's tick
+  but opened all of them (3902 px at 274 places, backed out in e745e2f9a). dN, dM and an offset-fold proxy do not
+  separate t81s from them. Diff a gap-flag change over all of link A's border look; the mirror has no gap cuts.
 
 ## The pass on the Pixel (stage 4, `K1362_s4_shader.md`)
 

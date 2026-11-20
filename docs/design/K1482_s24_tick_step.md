@@ -81,9 +81,37 @@ stop: re-read this brief and `git log`. On stopping: commit WIP, append `### Han
 and report: the commits to land by SHA in order, the numbers, the sheets' absolute paths, a `Ledger items`
 list and K1482's handle fields. Never push, never edit `LEDGER.md`.
 
-### Handoff K1482 s24 (WIP notes, 16:40)
+### Handoff K1482 s24 (final, 17:00): nothing lands in src; t81s and t4s stay open
+
+Outcome. The dN reach gate (0f9fe328b) removed t81s's tick, switch off and on, but it opened the outline at about
+270 joint corners of link A (border look, gf_b2 against master's: 3902 px removed at 274 places, luminance step > 6,
+nothing added; 678 px at a step > 12; the same 678 px with gfk=1; fill 150 px off and 0 px on, the load floor).
+At j63, j15, j148 and t57e an arm's outline now fades out before the joint's outline it should meet (the s18
+failure again). e745e2f9a backs it out: src and tests equal master, so no bar or perf guard was run.
+- Why the gate failed: the flags that hold those corners have dN 0.2-0.75, which overlaps t81s's (0.39-0.59). The
+  over thread's membership (dM finite or none) does not separate them either, and neither does an offset-fold
+  proxy (q nearer than 0.9 of the offset to another under sample; it is true for 3436 of the 9631 flags, and j63 and
+  j64 are among them). So the 16:40 note's "s18 sites dN >= 0.68" held only at the sites s18 tested.
+- What t81s is (`.claude/probes/K1482/out/s24/t81s_flags_gf_fill.png`): chain 45's spine makes a sharp V bend at
+  k 355-360, and its +1 side is the bend's INNER side. The +1 outline points run down the pink V edge, pile up at
+  the V tip (903-906, 1128-1135; k 355-364 within 3 px of each other) and then run along purple's upper edge. The
+  under rule flags k 348-367 there. The tick is the inner corner of chain 45's own bend at the V tip, where its
+  outline meets the over thread's band. It is not a crossing-proper effect.
+- Next idea (untested): the tick may be the RADIAL STEP where a side's flag changes between neighbouring slots
+  inside the over thread's reach. The cut contour jumps there from fh + 0.3 fd to fh + mg + fd. To test it, log
+  every slot's bits for crossing 9 (both sides, both rules) and plot them on the crop. If that is the cause, the fix
+  is to blend the reach across the change, not to remove the flag. Any such change must be diffed over the whole of
+  link A against master's gf_b2 (the floor is 1063 px, 764 of them at j160/j39): the gate's damage was invisible at
+  the two sites.
+- t4s (unchanged by the gate): chain 4's arm extension end v0 sits on chain 66's spine. Its disc partly buries
+  chain 66's -1 band through that side's swallowtail outline points (self-burial is off), which leaves the step and
+  the hole at (2177,634). Options:
+  - (a) In eval.ts's burial loop and gf_glsl.ts's copy, ignore another piece's burial where its pieceD < h - 2aa at
+    a point the piece's own fold covers. The GLSL loop text is regex-transformed (zBur, burialExit, burialOrder), so
+    keep the loop's text shape.
+  - (b) Pull the extension end off the bar's spine by W + 2aa. This is broad.
 
 - t81s: chain 45's +1 outline pokes across the 9-over-45 crossing gap. gapJointFlags' s18 UNDER rule flags slots `9:45:*:+1` (chain 45's group-103 home samples lie within reach of q), so lkGap gives that side the short joint cut and the outline ends square against chain 9's band. With the under rule off (`__k15.u24=1`) the tick goes and the outline ends along the fill edge, but the under rule moves 399 places (4749 px, luminance step > 6, floor 1063 px of which 764 at j160/j39), so it cannot go wholesale.
-- Discriminator: dN (q to the over chain's nearest non-member sample). t81s's flags have dN 0.45-0.50 (q inside the over thread's own cut reach fh+mg+fd = 0.61); the s18 sites have dN >= 0.68. Trying: the under rule only when dN >= reach (`__k15.dn=-1`, WIP knob in gf_look.ts).
+- (16:40 notes, kept as written; superseded by the final notes above.) Discriminator: dN (q to the over chain's nearest non-member sample). t81s's flags have dN 0.45-0.50 (q inside the over thread's own cut reach fh+mg+fd = 0.61); the s18 sites have dN >= 0.68. Trying: the under rule only when dN >= reach (`__k15.dn=-1`, WIP knob in gf_look.ts). WRONG over the whole link: see above.
 - t4s is NOT the under-rule class (the u24=1 capture leaves it unchanged). It is chain 4's start (a T on chain 66, group 12): the bottom reflex corner (about 2178.5,639.5 device) has no corner record (only k11, the top one, r 0); the ink there is chain 66's -1 side plus a vertex cap 6/4/66, and the band's inner edge should be a radius-W arc but has a hole at (2177,634) (side term ink 0.03 at h-d 0.108 < W) and extra ink at (2176,633).
 - Tools: `.claude/probes/K1482/s24/` (cap24.ps1, card24.py sheets, inkd24.py diffs with a luminance step, geo24.ts mirror terms). Outputs: `.claude/probes/K1482/out/s24/`.
