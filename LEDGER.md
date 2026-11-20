@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1544.
+Next free ID: K1545.
 
 ## Waiting on Levi
 
@@ -664,9 +664,9 @@ Next free ID: K1544.
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `a4d78a2ab`
+  - branch: mainline; last commit: `7ace06b05`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 26Y passed its gate 2026-11-19 14:17 (K1461 closed in 6ba929f17; its border numbers filed as a residual). 26W (K1467: closed items' probe output leaves the index) passed its gate 2026-11-19 23:57 (K1467 closed in c25ee74d1; tracked probe bytes went from 1,085,186,846 to 515,196,231, re-counted by the coordinator at a4d78a2ab, which also read test/repo/probe_budget.test.ts and found no lock, listener, Chrome or scratch worktree of the run left). It pushed 33f755fc1 (3525 files leave the index: a worktree that pulls loses them from disk, the main checkout keeps them) and a4144e2cf (a probe-budget test in npm test and the force-add rule in .claude/rules/probes.md). 26Z is running since 2026-11-19 23:58:11 (4 h cap 03:58; a4d78a2ab pushed, a src/ change; not gated yet); 26Z2 follows batch 27's 27C, 27E and 27F (K1531's handle has the chain's state; 26Z2 is held with a # in queue.txt while K1482 stages run): 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26W, 26Z and 26Z2 have reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held while K1482's stages edit tables.ts: K1502
+  - next: 26Y passed its gate 2026-11-19 14:17 (K1461 closed in 6ba929f17; its border numbers filed as a residual). 26W (K1467: closed items' probe output leaves the index) passed its gate 2026-11-19 23:57 (K1467 closed in c25ee74d1; tracked probe bytes went from 1,085,186,846 to 515,196,231, re-counted by the coordinator at a4d78a2ab, which also read test/repo/probe_budget.test.ts and found no lock, listener, Chrome or scratch worktree of the run left). It pushed 33f755fc1 (3525 files leave the index: a worktree that pulls loses them from disk, the main checkout keeps them) and a4144e2cf (a probe-budget test in npm test and the force-add rule in .claude/rules/probes.md). 26Z (K1223: the dead quiet path leaves the paint code) passed its gate 2026-11-20 03:20 and K1223 is closed in a4d78a2ab: the coordinator re-ran its grep (no line left), read the commit's file list and the callers of kPaintAt (none passes a quiet flag) and saw its deploy succeed; link A and the pulse, telegraph and gold path states moved 0-3 px, at the floor; the plain link has no 0 px floor (K1544). Left: 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf), held with a # in queue.txt while K1482 stages run; it follows batch 27's 27C, 27F and 27G (K1531's handle has the chain's state). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26Z2 has reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held while K1482's stages edit tables.ts: K1502
   - brief: `docs/design/K1464_muse_batch26.md`
 - **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
@@ -791,7 +791,7 @@ Next free ID: K1544.
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
   - branch: mainline; last commit: `40ee10834`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 27A passed its gate 2026-11-19 16:24 and 27B (K1529; 434a34092, 2a287c5c5) at 21:26. 27D (K1479) passed its gate at 22:56 (7b5d80a78, 40ee10834; probes only: ab.mjs aligns the freeze parity, the bar and the s3 census count g41_user_tw42 and user_tw42.lightpaper once; the coordinator read the diff and the control bar's record, PASS 0/0/0 deduped 1 in .claude/probes/K1436/out/bar/27D_ctrl/bar.txt in the main checkout, and did not re-run its 10-load sets). Left in this batch: 27C (K1494), after batch 26's 26Z (running since 2026-11-19 23:58:11, cap 03:58; 26W passed its gate at 23:57); then 27F (K1539's cure in K1482/cap.mjs, and one tracked guard script for the corner stages, which clears GF_KRETRY for npm test) and 27G (K1537: the start marker's glow ring after a WebGL context loss), queued 2026-11-19 23:55 and 2026-11-20 01:25 (27E, for K1543, was withdrawn before the chain reached it: the cause was found); then 26Z2 (it edits gf_look.ts or gf_pass.ts, K1482's file area: held with a # before its line in queue.txt since 2026-11-19 21:24 while K1482 stages run back to back; take the # off when the gpu_field slot is free; queue.txt.bak-s24 is the order before it moved last). A run that outlives the 4 h cap but ends by itself is adopted and gated by the restart. Both Muse briefs say to pull before a ledger add (27B's duplicate K1536 became K1539). On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Check that no run removes another owner's lock.
+  - next: 27A passed its gate 2026-11-19 16:24 and 27B (K1529; 434a34092, 2a287c5c5) at 21:26. 27D (K1479) passed its gate at 22:56 (7b5d80a78, 40ee10834; probes only: ab.mjs aligns the freeze parity, the bar and the s3 census count g41_user_tw42 and user_tw42.lightpaper once; the coordinator read the diff and the control bar's record, PASS 0/0/0 deduped 1 in .claude/probes/K1436/out/bar/27D_ctrl/bar.txt in the main checkout, and did not re-run its 10-load sets). Left in this batch: 27C (K1494), running since 2026-11-20 03:20:52 (4 h cap 07:20; batch 26's 26Z passed its gate at 03:20); then 27F (K1539's cure in K1482/cap.mjs, and one tracked guard script for the corner stages, which clears GF_KRETRY for npm test) and 27G (K1537: the start marker's glow ring after a WebGL context loss), queued 2026-11-19 23:55 and 2026-11-20 01:25 (27E, for K1543, was withdrawn before the chain reached it: the cause was found); then 26Z2 (it edits gf_look.ts or gf_pass.ts, K1482's file area: held with a # before its line in queue.txt since 2026-11-19 21:24 while K1482 stages run back to back; take the # off when the gpu_field slot is free; queue.txt.bak-s24 is the order before it moved last). A run that outlives the 4 h cap but ends by itself is adopted and gated by the restart. Both Muse briefs say to pull before a ledger add (27B's duplicate K1536 became K1539). On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Check that no run removes another owner's lock.
   - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
@@ -1030,10 +1030,6 @@ Every other item below waits on the trigger it names.
 - **K1214** · K1139's cost in play (22M, 04ff7cad; desktop, fabric 7 moves): S3+S4 add p95 +1.13 ms
   (spread 0.20), S5 and master nothing; the fan's fragment shader carries 2/3-3/4 (GPU 6.15→6.82 ms). Next:
   re-time after K1211's S5 rewrites the fan's light, and the phone in K1097's pass. `.claude/probes/K1214/`
-- **K1223** · Quiet path, dead since K1211 S6 (13aab452): kPaintAt's quiet arg and kPulseCrestQuiet
-  (`paint_glsl.ts`), the quiet flag (`paint_math.ts`), mode 2 in `arm_strip.ts` and joinery's writeStripRow,
-  the quiet tests in `paint_gameplay.test.ts`. A Muse fix run after the junction stages: it moves K320's
-  section and strip pins, 0 px on a re-shoot.
 - **K1231** · Dark edges inside junctions step at MSAA coverage levels: loop ji 123's and x4 ji 101's eye
   edges, and cross ji 65's, loop ji 64's and 106's dark edges, alike in 7474d09b, master and K1218 S6's
   branch; and x4 ji 101's violet sliver at the eye's upper left, in all three. Unattributed (K1218 S6's
@@ -2578,6 +2574,14 @@ Every other item below waits on the trigger it names.
   (Handoff 26X). Left by 27B: outside the view-pinning Done; the retry design is documented in cap.mjs's
   header.
   Muse run 27F is queued for it (docs/design/K1531_muse_batch27.md).
+- **K1544** · Captures of the plain knot link `?3&xp=off&am=instant` have no 0 px floor: two loads of ONE
+  build, asleep, at one physics hash (0cbb8f07) differ by 193,124 px (today's renderer) and 101,249 px (rp=gf
+  fill) over 24 levels in the thread area, so K1223's 0 px re-shoot could not be read on it (Muse run 26Z;
+  link A and the pulse states gave 0-3 px). Muse's reading, a rest state that depends on the path under static
+  friction with a hash too coarse to tell, is not checked: dumps of two loads' particle positions would say
+  whether the state or the draw differs. Until then take 0 px checks on link A or the bar's scenes (`###
+  Handoff 26Z` in docs/design/K1464_muse_batch26.md; captures .claude/probes/K1223/out/26Z, main checkout,
+  untracked)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2957,6 +2961,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1223** · Quiet path, dead since K1211 S6 (13aab452): kPaintAt's quiet arg and kPulseCrestQuiet (`paint_glsl.ts`), the quiet flag (`paint_math.ts`), mode 2 in `arm_strip.ts` and joinery's writeStripRow, the quiet tests in `paint_gameplay.test.ts`. Done in a4d78a2ab (2026-11-20).
 - **K1542** · rp=gf: the home burial (K1482 stage 28, 2ae8a96d1) takes 2 antialias px off t56s, a clean corner, on link A (1040,267 on the stage's frame: outline 18,20,27 to paper 29,31,47; nothing to see at 6x). Done in d20c2a809 (2026-11-20).
 - **K1543** · `npm test` fails 3 of the 7 tests in test/render/gf_k1482_switch.test.ts whenever env `GF_KRETRY=1` is set: the file pins the Node default off (run alone with and without the variable, 2026-11-20). Done in 0aadaa385 (2026-11-20).
 - **K1467** · Tracked probe output 1034.9 MB (9530 files) -> 491.3 MB (6005) by git rm --cached only in 33f755fc1; disk and history keep every file (last tracking commit 40ee10834); fresh worktrees 1061.6 -> 517.5 MB. Remains: open IDs K1482 100.2, K1395 72.5, K1407 59.8, K863 56.4, K1451 39.3 MB and 36.6 MB live-named closed sheets; guard test/repo/probe_budget.test.ts in a4144e2cf (after-total + 100 MB, names git rm --cached). Done in 33f755fc1 (2026-11-19).
