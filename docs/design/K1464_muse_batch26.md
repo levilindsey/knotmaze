@@ -977,6 +977,24 @@ each in a row: 10/10 PASS, 0 retries, 0 "no fresh load" lines; `fade.mjs` 10 run
 hash every time (its FAIL on K1494's standing side counts is not this run's question: report the counts).
 4. `npm test` green. 5. K1475 closed, K1461's fade part struck, each with the commit.
 
+### Handoff 26X (Muse, 2026-11-19, done: every Done holds)
+
+Started 09:49 PST, stopped 12:31 PST. Starting master 14126acce; fix on master in 67fb28720 (probes only, no `src/` or `test/` change; no deploy, `.claude/`-only push). Perf lock held 09:56-~11:44 for the sequences below, lost as stale mid-sequence (another agent removed it) and re-taken 11:53 for the fade tail and the holds; Levi's browser and other agents' Chromes shared the GPU throughout. Preview of 14126acce on :5490; probes and captures under `.claude/probes/K1475/out/26X/` (`parity_base.json`, `parity_aligned.json`, `runs/`).
+
+Done 1 (the same parity, with numbers). `.claude/probes/K1475/k1475_parity.mjs` replicates dragcheck's load + freeze (seed 3, phw=0, SIMT 20) 12 times on the master preview: the frozen state is decided by the live substep count's parity before the freeze, with no other variable (kind in-thread on every load; pending 0.00417 on every load). Even before (10 loads: sub 16/18/600) -> stepped to 2402, hash f9d72040; odd before (2 loads: sub 17) -> 2401, hash 49c20566. One substep apart, exactly 26V's mechanism (`__knotStepUntil` steps 1/60 frames of two SUBSTEPs, so the reachable frame past 20 s is 2402 on the even path by float accumulation, 2401 on the odd path). K550's worker nondeterminism is not the cause (these links are phw=0).
+
+Done 2 (fixed by construction, 67fb28720). `.claude/probes/freeze_parity.mjs`'s `alignFreezeParity(page, SIMT)` ports k1436_screen's alignment: freeze, then credit the step accumulator one SUBSTEP when `Math.round(ps.simTime * 120)` parity differs from the target's (in-thread only), so the first stepped frame runs three substeps and every load lands on substep 2402 / f9d72040. Called before the freeze+StepUntil evaluate in `.claude/probes/K1458/dragcheck.mjs`, `.claude/probes/K1492/dragcheck_b.mjs` and `.claude/probes/K1458/fade.mjs`; their hash-retry loops stay as nets. The same probe with ALIGN=1: 12/12 loads on f9d72040, including 7 whose before-parity was odd.
+
+Done 3 (master's preview, one kept profile `%TEMP%\k26x-guards-profile`, 10 runs each in a row; logs `out/26X/runs/`). dragcheck.mjs gf: 10/10 PASS, 0 "no fresh load" lines, 40 fresh-load lines (exactly one per stop), every dragged and fresh state f9d72040. dragcheck.mjs gfh: 10/10 PASS, same counts. dragcheck_b.mjs (gf, TLK unset): 10/10 PASS, same counts. The retry nets never fired. fade.mjs 10/10 runs: every load (today, gf, gfh at fl 0 and 1.2) on f9d72040, 0 retry lines, `sameState true` on every comparison; the verdict stays FAIL on K1494's standing counts only, as the brief pre-answers: fl=0 678/679 sides pass (median |d-today| 0.0000-0.0001 world), fl=1.2 439/451-453 (median 0.0007-0.0009, p90 0.0131), reported not judged here.
+
+Done 4: `npm test` green (256 files, 3199 passed, 9 skipped; tsc clean; no test changed).
+
+Done 5: K1475 closed in 67fb28720 and K1461's fade part struck with the same commit (both ledger edits land with this handoff).
+
+Guards (same preview and kept profile): `hold.mjs` 60 250 5000 PASS on `?3&xp=off&am=instant&rp=gf` (first composite 2.4 s warm; 60/60, edges min 102736) and on `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (3.0 s; 60/60, min 7155).
+
+K1464, K1451 and K1460 left open and untouched. Perf lock released; preview server (5490) stopped.
+
 ## Run Y (26Y): border.mjs and drag.mjs measure what they aim at (K1461's other two parts)
 
 Added 2026-11-19. Probes only. `border.mjs` (K1458's tools) dies with "Target closed" while measuring, so
