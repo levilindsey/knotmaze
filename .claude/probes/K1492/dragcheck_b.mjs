@@ -6,13 +6,15 @@
 // shot_<mode>_<v>.png outside the panel. A stop passes when <= MAXPX pixels differ by more than TOL levels.
 //
 //   node .claude/probes/K1458/dragcheck.mjs <base> <fadeOutDir> <profileDir> <gf|gfh> [stops=0,0.5,1.2,0.14] [start=0.14]
-//     env SIMT=20 DSF=2 TOL=24 MAXPX=200
+//     env SIMT=20 DSF=2 TOL=24 MAXPX=200 WAITMS=180000
 import puppeteer from "puppeteer-core";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { alignFreezeParity } from "../freeze_parity.mjs";
 const [, , base, fadeDir, profileDir, mode = "gf", stopArg = "0,0.5,1.2,0.14", start = "0.14"] = process.argv;
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), TOL = +(process.env.TOL ?? 24), MAXPX = +(process.env.MAXPX ?? 200);
+// WAITMS: a new Chrome profile's first redraws after a drag took over 60 s (K1482 s23's guards, 2026-11-19; 4 s once warm)
+const WAIT_MS = +(process.env.WAITMS ?? 180000);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({
   executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: false, userDataDir: profileDir,
@@ -57,7 +59,7 @@ try {
       await p2.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
       const hash = await prep(p2, linkAt(fl));
       const c0 = await p2.evaluate(() => { globalThis.__knotGfOpts = { ...(globalThis.__knotGfOpts ?? {}), redraw: true }; return globalThis.__knotGf.stats.composites; });
-      await p2.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 60000, polling: 100 }, c0);
+      await p2.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: WAIT_MS, polling: 100 }, c0);
       await p2.mouse.move(5, 5); await sleep(600);
       const png = await p2.screenshot({ type: "png" });
       console.log(`  fresh fl=${fl}: state ${hash}`);
@@ -87,7 +89,7 @@ try {
     await page.mouse.up(); await page.mouse.move(5, 5);
     await sleep(1500);
     const c0 = await page.evaluate(() => { globalThis.__knotGfOpts = { ...(globalThis.__knotGfOpts ?? {}), redraw: true }; return globalThis.__knotGf.stats.composites; });
-    await page.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 60000, polling: 100 }, c0);
+    await page.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: WAIT_MS, polling: 100 }, c0);
     await sleep(600);
     const live = await page.evaluate(() => {
       const p = document.querySelector(".tp-rotv, .tp-dfwv")?.getBoundingClientRect();
