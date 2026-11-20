@@ -187,8 +187,13 @@ async function measure(geo, ref, shots) {
       row.da = g.prof.map((p) => p.da);
       // K1460: dots. The under thread's footprint (lateral offsets within 0.85 of its half width) where today's
       // centreline coverage is under 0.5 and outside the over thread's body; a pixel is a dot in a renderer when its
-      // coverage exceeds today's there by 0.2 AND the mean of its four neighbours by 0.12 (a one-pixel spike, not a
+      // coverage exceeds today's there by 0.2 AND the mean of its four neighbours by 0.12 AND its brightest
+      // neighbour by 0.08 (K1494, 27C: an isolated spike, not an edge step - gf's per-pixel edge quantises in one
+      // pixel where today blends over two, so edge-contour pixels beat the neighbour mean while equalling their
+      // brightest neighbour; on master every old-counted dot had brightest-neighbour excess <= 0.003, at fl 0 too,
+      // where no fade ramp exists. A fringe speck in a faded span stands above all four neighbours.)
       // ramp placed differently). c12feaf6..854ac158's gf drew a dotted line on the over thread's edge contour there.
+      // K1494: dotFeat records [x, y, cv, ct, cv-maxGfNeighbour, maxGfNeighbour, todayLocalRange] per counted dot (27C).
       const seen = new Set(), pix = [];
       const hd = g.hOver * d.scale * 0.85;
       for (let i = first; i < g.prof.length - 1; i++) {
@@ -201,16 +206,16 @@ async function measure(geo, ref, shots) {
         }
       }
       const covAt = (D, x, y, i) => { const U = Uat(i), uu = U[0] ** 2 + U[1] ** 2 + U[2] ** 2; const P = px(D, x, y); return ((P[0] - BG[0]) * U[0] + (P[1] - BG[1]) * U[1] + (P[2] - BG[2]) * U[2]) / uu; };
-      row.dots = {}; row.dotAt = {};
+      row.dots = {}; row.dotAt = {}; row.dotFeat = {};
       for (const k of Object.keys(S)) if (k !== "today") {
-        let n = 0; const at = [];
+        let n = 0; const at = []; const feat = [];
         for (const [x, y, i] of pix) {
           const cv = covAt(S[k], x, y, i), ct = covAt(S.today, x, y, i);
           if (!(cv - ct > 0.2)) continue;
-          const nb = (covAt(S[k], x + 1, y, i) + covAt(S[k], x - 1, y, i) + covAt(S[k], x, y + 1, i) + covAt(S[k], x, y - 1, i)) / 4;
-          if (cv - nb > 0.12) { n++; if (at.length < 6) at.push([x, y]); }
+          const gNb = [covAt(S[k], x + 1, y, i), covAt(S[k], x - 1, y, i), covAt(S[k], x, y + 1, i), covAt(S[k], x, y - 1, i)]; const nb = (gNb[0] + gNb[1] + gNb[2] + gNb[3]) / 4;
+          if (cv - nb > 0.12 && cv - Math.max(...gNb) > 0.08) { n++; if (at.length < 6) at.push([x, y]); const tNb = [covAt(S.today, x + 1, y, i), covAt(S.today, x - 1, y, i), covAt(S.today, x, y + 1, i), covAt(S.today, x, y - 1, i)]; feat.push([x, y, +cv.toFixed(3), +ct.toFixed(3), +(cv - Math.max(...gNb)).toFixed(3), +Math.max(...gNb).toFixed(3), +(Math.max(...tNb, ct) - Math.min(...tNb, ct)).toFixed(3)]); }
         }
-        row.dots[k] = n; row.dotAt[k] = at;
+        row.dots[k] = n; row.dotAt[k] = at; row.dotFeat[k] = feat;
       }
       row.dotPix = pix.length;
       sides.push(row);
