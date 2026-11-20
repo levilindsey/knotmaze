@@ -70,6 +70,18 @@ export const GF_KXTOL: number = ENV20?.GF_KXTOL !== undefined ? +ENV20.GF_KXTOL 
 /** K1482 s26: only passes OVER the cut arm count (an arc drawn over an under pass is the right look: t30e, t21s).
  * Env GF_KXZ=0 counts under passes too, for Node probes. */
 export const GF_KXZ: boolean = ENV20?.GF_KXZ !== "0";
+/** K1482 s28: the crossing-outline corner. Where a junction pair ends with no rounding (no corner, or r = 0) and a
+ * crossing pass of a chain X runs within GF_KXO_REACH h of the junction along either arm, the paper pocket that the
+ * two arms and X's near outline close is rounded by its incircle: the ball tangent to the three tubes (no tube
+ * inside it), drawn as two ink-only corners (ext 1) from the arms' join through the cut arm's outline to X's: the
+ * pair's own arc and the cut arm's arc against X, whose vertex is the nearer. Both carry the arm's chain as their
+ * chains, so the corner key never lifts the group to X's depth. Only the retry reads it (`gfk=0` tables equal
+ * master's). Env GF_KXO=0 turns it off for Node probes. */
+export const GF_KXO: boolean = ENV20?.GF_KXO !== "0";
+/** K1482 s28: the reach (h units) along an arm within which a crossing pin offers its pass as the third tube, and
+ * the incircle's radius cap (h units). Env GF_KXO_REACH / GF_KXO_RMAX for Node probes. */
+export const GF_KXO_REACH: number = ENV20?.GF_KXO_REACH !== undefined ? +ENV20.GF_KXO_REACH : 3;
+export const GF_KXO_RMAX: number = ENV20?.GF_KXO_RMAX !== undefined ? +ENV20.GF_KXO_RMAX : 2;
 /**
  * K1482 s23: the retry's switch. The page turns it on with `gfh=1` unless `gfk=0` (frame_loop.ts; K1524, Levi
  * 2026-11-19: "take the rounding"). Off, a Node build's default (K1536): no retry corner is solved, no kExt and no
@@ -966,6 +978,127 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
   const QVB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
   const QPB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
   const QQB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
+  // K1482 s28 (GF_KXO): the crossing-outline corner's pieces. segMin: the nearest spine over every chain.
+  const KXO_DBG = ENV20?.GF_KXO_DBG === "1";
+  const segMin = (x: number, y: number, lim: number): number => {
+    let d2 = Infinity; const l2m = lim * lim;
+    for (let c = 0; c < P.nC; c++) {
+      const v0 = cV0[c]; const nv = cNV[c];
+      for (let k = v0; k < v0 + nv - 1; k++) {
+        const ax = vx[k]; const ay = vy[k]; const dx = vx[k + 1] - ax; const dy = vy[k + 1] - ay;
+        if (Math.min(ax, ax + dx) - x > lim || x - Math.max(ax, ax + dx) > lim || Math.min(ay, ay + dy) - y > lim || y - Math.max(ay, ay + dy) > lim) continue;
+        const l2 = dx * dx + dy * dy;
+        const t = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+        const ex = ax + dx * t - x; const ey = ay + dy * t - y; const dd = ex * ex + ey * ey; if (dd < d2) d2 = dd;
+      }
+    }
+    return d2 <= l2m ? Math.sqrt(d2) : lim;
+  };
+  // The point at distance h from two spines (windows [lm, hm], [ln, hn]) near (x0, y0): an outline vertex.
+  const vert2 = (pm: Poly, lm: number, hm: number, pn: Poly, ln: number, hn: number, x0: number, y0: number): { x: number; y: number } | null => {
+    let x = x0; let y = y0;
+    for (let it = 0; it < 40; it++) {
+      const fm = footInWindow(pm, x, y, lm, hm); const fn = footInWindow(pn, x, y, ln, hn);
+      const Fm = fm.d - h; const Fn = fn.d - h;
+      if (Math.abs(Fm) < 1e-10 * h && Math.abs(Fn) < 1e-10 * h) return { x, y };
+      const ax = (x - fm.x) / (fm.d || 1); const ay = (y - fm.y) / (fm.d || 1); const bx = (x - fn.x) / (fn.d || 1); const by = (y - fn.y) / (fn.d || 1);
+      const det = ax * by - ay * bx; if (!(Math.abs(det) > 1e-9)) return null;
+      let dx = (-Fm * by + Fn * ay) / det; let dy = (-Fn * ax + Fm * bx) / det;
+      const sl = Math.sqrt(dx * dx + dy * dy); if (sl > 0.5 * h) { dx *= (0.5 * h) / sl; dy *= (0.5 * h) / sl; }
+      x += dx; y += dy;
+    }
+    return null;
+  };
+  // The ball tangent to three spines' tubes (radius r beyond h): Newton on (x, y, r), the r row eliminated.
+  type Tri = { x: number; y: number; r: number; f: Foot[] };
+  const tri3 = (ps: Poly[], lo: number[], hi: number[], x0: number, y0: number, r0: number): Tri | null => {
+    let x = x0; let y = y0; let r = r0;
+    for (let it = 0; it < 80; it++) {
+      const f = [0, 1, 2].map((i) => footInWindow(ps[i], x, y, lo[i], hi[i]));
+      const F = f.map((q) => q.d - h - r);
+      if (Math.abs(F[0]) < 1e-10 * h && Math.abs(F[1]) < 1e-10 * h && Math.abs(F[2]) < 1e-10 * h) return { x, y, r, f };
+      const ux = f.map((q) => (x - q.x) / (q.d || 1)); const uy = f.map((q) => (y - q.y) / (q.d || 1));
+      const g1x = ux[0] - ux[1]; const g1y = uy[0] - uy[1]; const g2x = ux[0] - ux[2]; const g2y = uy[0] - uy[2];
+      const r1 = -(F[0] - F[1]); const r2 = -(F[0] - F[2]);
+      const det = g1x * g2y - g1y * g2x; if (!(Math.abs(det) > 1e-9)) return null;
+      let dx = (r1 * g2y - g1y * r2) / det; let dy = (g1x * r2 - r1 * g2x) / det;
+      const sl = Math.sqrt(dx * dx + dy * dy); if (sl > 0.5 * h) { dx *= (0.5 * h) / sl; dy *= (0.5 * h) / sl; }
+      x += dx; y += dy; r = f[0].d + ux[0] * dx + uy[0] * dy - h;
+      if (!(r > -0.5 * h && r < 4 * h)) return null;
+    }
+    return null;
+  };
+  const kxoTry = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, th: number, g: number, ji: number): GfCorner[] | null => {
+    const PA = polyOf(A.c); const PB = polyOf(B.c); if (!PA || !PB) return null; const pA = PA.p; const pB = PB.p;
+    const Lw = (Ar: ArmT): number => Math.max(Ar.L, GF_KXO_REACH * h + h);
+    const wA = armWin({ ...A, L: Lw(A) }); const wB = armWin({ ...B, L: Lw(B) });
+    const seen = new Set<string>();
+    const sgn = Math.sign(A.ux * B.uy - A.uy * B.ux);
+    let bx = A.ux + B.ux; let by = A.uy + B.uy; const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
+    const sn = Math.max(0.05, Math.sin(th / 2));
+    const cands: KxoCand[] = [];
+    for (let mi = 0; mi < 2; mi++) {
+      const Ar = mi === 0 ? A : B; if (!(Ar.Lcut < Ar.L0)) continue; // only an arm a crossing cut short
+      const c = Ar.c; const p0 = P.cPin0[c]; const pn = P.cPinN[c];
+      for (let k = p0; k < p0 + pn; k++) {
+        const d = armDistOf(Ar, P.pinS[k]);
+        if (!(d >= 0 && d <= Math.min(Ar.L0, Math.max(Ar.L, 0) + GF_KXO_REACH * h))) continue;
+        const pc = P.pinPC[k]; if (!(pc >= 0 && pc < P.nC)) continue;
+        const ps = P.pinPS[k]; const key = `${pc}:${Math.round(ps / h)}`; if (seen.has(key)) continue; seen.add(key);
+        const PX = polyOf(pc); if (!PX) continue;
+        const wX: [number, number] = [ps - (GF_KXO_REACH + 1) * h, ps + (GF_KXO_REACH + 1) * h];
+        const dbgJ = KXO_DBG && ENV20?.GF_KXO_J?.split(",").includes(String(jBase + ji));
+        if (dbgJ) console.log(`  try j${jBase + ji} a${A.ei}/b${B.ei} arm c${Ar.c} L ${(Ar.L / h).toFixed(2)} L0 ${(Ar.L0 / h).toFixed(2)} Lcut ${(Ar.Lcut / h).toFixed(2)} pin d ${(d / h).toFixed(2)} X c${pc}`);
+        for (const r0 of [0.3 * h, 0.8 * h]) {
+          const dc = (h + r0) / sn;
+          const T = tri3([PA.p, PB.p, PX.p], [wA[0], wB[0], wX[0]], [wA[1], wB[1], wX[1]], J.c[0] + bx * dc, J.c[1] + by * dc, r0);
+          if (dbgJ) console.log(`    r0 ${r0 / h} -> ${T ? `r ${(T.r / h).toFixed(3)} s ${T.f.map((q, i) => ((q.s - [wA, wB, wX][i][0]) / h).toFixed(2) + "/" + (([wA, wB, wX][i][1] - [wA, wB, wX][i][0]) / h).toFixed(2)).join(" ")} crA ${(A.ux * (T.y - J.c[1]) - A.uy * (T.x - J.c[0])) * sgn > 0} crB ${(B.ux * (T.y - J.c[1]) - B.uy * (T.x - J.c[0])) * sgn < 0} seg ${(segMin(T.x, T.y, h + T.r) / h - 1).toFixed(3)}` : "none"}`);
+          if (!T) continue;
+          const tol = 1e-6 * h; const lims = [wA, wB, wX];
+          if (T.f.some((q, i) => !(q.s > lims[i][0] + tol && q.s < lims[i][1] - tol))) continue;
+          if (!(T.r >= GF_KRMIN * h && T.r <= GF_KXO_RMAX * h)) continue;
+          const crA = A.ux * (T.y - J.c[1]) - A.uy * (T.x - J.c[0]); const crB = B.ux * (T.y - J.c[1]) - B.uy * (T.x - J.c[0]);
+          if (!(crA * sgn > 0 && crB * sgn < 0)) continue;
+          if (segMin(T.x, T.y, h + T.r) < h + T.r - 1e-6 * h) continue;
+          cands.push({ T, X: pc, wX, PX: PX.p, mi });
+          break;
+        }
+      }
+    }
+    cands.sort((u, v) => u.T.r - v.T.r);
+    for (const cd of cands) { const o = kxoFin(cd); if (o) return o; }
+    return null;
+    function kxoFin(best: KxoCand): GfCorner[] | null {
+    const { T } = best;
+    const e = T.f.map((q) => [(q.x - T.x) / (q.d || 1), (q.y - T.y) / (q.d || 1)]);
+    const ang = (i: number, j: number): number => Math.acos(Math.max(-1, Math.min(1, e[i][0] * e[j][0] + e[i][1] * e[j][1])));
+    const aAB = ang(0, 1); const aBX = ang(1, 2); const aXA = ang(2, 0);
+    if (!(Math.abs(aAB + aBX + aXA - 2 * Math.PI) < 1e-6)) return null; // the three tangent points ring the centre
+    const polys = [pA, pB, best.PX]; const wins: [number, number][] = [wA, wB, best.wX];
+    const vOf = (i: number, j: number): { x: number; y: number } | null => {
+      let ux = e[i][0] + e[j][0]; let uy = e[i][1] + e[j][1]; const ul = Math.sqrt(ux * ux + uy * uy) || 1; ux /= ul; uy /= ul;
+      const cs = Math.max(0.05, Math.cos(0.5 * ang(i, j))); const dv = T.r / cs + h * 0;
+      return vert2(polys[i], wins[i][0], wins[i][1], polys[j], wins[j][0], wins[j][1], T.x + ux * (h + dv) * 0 + ux * dv, T.y + uy * dv);
+    };
+    const vAB = vOf(0, 1); const vBX = vOf(1, 2); const vXA = vOf(2, 0);
+    const dist = (v: { x: number; y: number } | null): number => (v ? Math.hypot(v.x - T.x, v.y - T.y) : Infinity);
+    // the cut arm M is the one whose vertex with X is the nearer: the pocket closes there and stays open at the other
+    const m = dist(vBX) <= dist(vXA) ? 1 : 0; const vM = m === 1 ? vBX : vXA;
+    if (KXO_DBG) console.log(`KXO j${jBase + ji} a${A.ei}/b${B.ei} c${A.c}/c${B.c} X c${best.X} r ${(T.r / h).toFixed(3)}h at ${T.x.toFixed(3)},${T.y.toFixed(3)} arcs AB ${(aAB * 180 / Math.PI).toFixed(1)} BX ${(aBX * 180 / Math.PI).toFixed(1)} XA ${(aXA * 180 / Math.PI).toFixed(1)} vAB ${(dist(vAB) / h).toFixed(2)} vBX ${(dist(vBX) / h).toFixed(2)} vXA ${(dist(vXA) / h).toFixed(2)} m ${m ? "B" : "A"} cut ${best.mi ? "B" : "A"}${m === best.mi ? " ACCEPT" : ""}`);
+    if (!vAB || !vM || m !== best.mi) return null; // the pocket closes at the cut arm
+    const out: GfCorner[] = [];
+    const mk = (i: number, j: number, v: { x: number; y: number }, ci: number, si: number, cj: number, sj: number, ai: number, bj: number): GfCorner => {
+      const thv = Math.PI - ang(i, j); const rv = dist(v);
+      return { thru: 0, rv, cx: T.x, cy: T.y, r: T.r, rmax: rv + (2 * aa) / Math.max(0.1, Math.sin(thv / 2)), eax: e[i][0], eay: e[i][1], ebx: e[j][0], eby: e[j][1], g, j: jBase + ji, a: ai, b: bj, theta: thv, ca: ci, cb: cj, sa: si, sb: sj, ext: 1 };
+    };
+    const sA = norm(A.c, T.f[0].s); const sB = norm(B.c, T.f[1].s);
+    out.push(mk(0, 1, vAB, A.c, sA, B.c, sB, A.ei, B.ei));
+    if (m === 1) out.push(mk(1, 2, vM, B.c, sB, B.c, sB, B.ei, B.ei));
+    else out.push(mk(2, 0, vM, A.c, sA, A.c, sA, A.ei, A.ei));
+    return out;
+    }
+  };
+  type KxoCand = { T: Tri; X: number; wX: [number, number]; PX: Poly; mi: number };
 
   for (let ji = jLo; ji < jHi; ji++) {
     const J = junctions[ji];
@@ -1109,7 +1242,12 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       }
       const c0 = got[0]; const c1 = got[1];
       if (c1 && c1.r > 1e-9 && c1.r >= GF_KRMIN * h && c1.r <= GF_KRMAX * h && c1.r * (1 / Math.max(1e-6, Math.sin(c1.theta / 2)) - 1) <= GF_KSAG * h) { c1.ext = 1; K.push(c1); if (c0) { c0.ext = 2; K.push(c0); } }
-      else if (c0) K.push(c0);
+      else {
+        // K1482 s28 (GF_KXO): no rounding here; round the pocket the arms close with a crossing pass's outline
+        const kx = P.kRetry && GF_KXO && !(c0 && c0.r >= GF_KRMIN * h) ? kxoTry(J, A0, B0, th, g, ji) : null;
+        if (kx) { for (const k of kx) K.push(k); if (c0) { c0.ext = 2; K.push(c0); } }
+        else if (c0) K.push(c0);
+      }
     }
   }
   return K;
