@@ -118,6 +118,17 @@ frames forced; `B2=1` in `.claude/probes/K1482/s23/cap23.mjs`). A
 load's first border shot catches its last transition: 22,183 px
 between two loads of one build, 0 px after the reshoot. Compare only
 loads of one capture session (26 px at 1 level across sessions, K1534).
+PROBE LORE (2026-11-19, K1524): **a look shot of a link without
+`snd=none` catches the song's plucks.** `soundMode` defaults to music,
+and its plucks play with no gesture. In rp=gf a plucked thread's
+outline strokes draw dull red (42, 29, 32 against 18, 20, 26) beside a
+pink blur, at another place 1.5 s later. Two live off/on pairs of link
+A had them only in the shot with the second corner try on, by chance,
+and they read as a defect of the corner try until five more loads
+showed them with it off too and never with `&snd=none`
+(`__knotPerf().plucks` 0). Pass `&snd=none` in every look shot.
+`.claude/probes/K1524/flip/redshot.mjs` reports plucks, context
+losses and the hovered run beside three shots of one load.
 
 PROBE LORE, same round: the renderer resets every fill/erase mesh's
 `visible` each frame (hide with `renderable = false`, or per layer);
