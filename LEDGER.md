@@ -1210,6 +1210,7 @@ Every other item below waits on the trigger it names.
   stable, two-load control 0 px). Cause not found; suspects K390's start-marker flip, fog / explore ticks.
   Name what changes between the two redraws (which px, which uniform or table), pin it in the capture or fix
   it, then two redraws agree 10/10; K1463 waits on it (.claude/probes/K1525/s1/notes.md, jobs_q3.json)
+  K1482 s21` in docs/design/K1482_s21_corners_rest.md)
 
 ## Residuals (known, not fixed)
 
@@ -2931,6 +2932,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 - **K1533** · The perf lock had no fair way in: Muse 27A took it with "remove whatever is there, write my line, run" and re-took it with no gap for 80 minutes (2026-11-19 14:19-15:50), so K1482 stage 23's guards waited and never ran before it landed. Done in 2dc1d5d92 (2026-11-19).
+- **K1530** · rp=gf: on `?3&xp=off&am=instant&rp=gf` master draws a different picture on two redraws of ONE frozen state (every shot UNSTABLE in K1525 s1's cap.mjs with paint clocks and background pinned; link A is stable, two-load control 0 px). Done in b3f4be04a (2026-11-19).
 - **K1461** · K1458 tools: border.mjs crashes with Target closed while measuring, so gf's border look vs today's has no numbers (K1458 Do 4); .claude/probes/K1444/drag.mjs aims at the slider's filled bar, so its stops land off target (0.14 -> 0.28, 0.5 -> 0.62) and the first drag does nothing (fade part done in 67fb28720, 26X: one physics state per load by parity alignment; 10/10 fade runs on f9d72040). Done in 6ba929f17 (2026-11-19).
 - **K1475** · Probe: .claude/probes/K1458/dragcheck.mjs for gf at fade 1.2 sometimes finds no fresh load in state f9d72040 within 4 tries, so the stop compares nothing (2 of 3 runs in K1460 s5; K550's worker nondeterminism suspected, untested). Done in 67fb28720 (2026-11-19).
 - **K1499** · rp=gf fades the thread away from the start and exit markers as today's does: Muse run 26K did this work and recorded it under K1500 (the run's brief carried the wrong ID); the dives item that K1500 held is re-filed as K1525. Done in 281a7c8c6 (2026-11-18).
