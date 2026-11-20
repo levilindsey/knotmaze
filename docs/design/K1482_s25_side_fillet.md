@@ -21,11 +21,13 @@ starting idea was a new corner kind, a side-to-side fillet. If time remains, **j
 the right outline that a 0.26 h first-pass corner keeps; retrying it changes nothing visible) is yours too.
 
 Link A is `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (hash fff8c9e5). The border look draws the
-outlines; `&tlk=fill` the fill. `gfk=1` turns on the second corner try (stage 23), off by default.
+outlines; `&tlk=fill` the fill. The second corner try (stage 23) is on by default since K1524 (Levi,
+2026-11-19: "take the rounding"); `&gfk=0` turns it off. A Node build leaves it off unless env `GF_KRETRY=1`
+(K1536): set that for a Node probe, and before the bar so its mirror scan matches its pages.
 
 ## The goal
 
-On link A, switch off and switch on: at the four sites the two outlines meet in **one clean join** (a round
+On link A as it loads (the second try on) and with `&gfk=0`: at the four sites the two outlines meet in **one clean join** (a round
 or a clean point, the stroke at its own width) with no solid patch, spike, stub or gap, and the fill does not
 move. Nothing else on link A or on the bar's four mazes gets worse. You own the technique. The cause is not
 the finish line: a stage that ends with a diagnosis and nothing in `src/` has not reached the goal while time
@@ -35,7 +37,7 @@ a reason to stop.
 
 ## Done
 
-- **By eye**, the four sites (and j41 if taken), context crop and detail crop, today | new, switch off and on.
+- **By eye**, the four sites (and j41 if taken), context crop and detail crop, today | new, as it loads and with `&gfk=0`.
 - **Link A**, loads of one state and one view (pin the background clock; stage 21's handoff, `The 76,609 px
   fill difference`; report the floor first): every place outside the sites where the border look changes is
   counted, the ten largest are on a sheet (surrounding threads with a red box, then the box closer; today |

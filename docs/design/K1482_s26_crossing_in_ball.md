@@ -8,7 +8,7 @@ under-tail ends the over thread's outline runs on unbroken, with no dot, stub, w
 The 14 sites he named on link A are in `The sites` of `docs/design/K1482_s20_wedges_notches.md`.
 
 This stage takes the six sites where a crossing cut the junction's arms short, so the second corner try
-(`gfk=1`, stage 23) either builds a ball the crossing thread runs through or has no room for one. Stage 21's
+(stage 23) either builds a ball the crossing thread runs through or has no room for one. Stage 21's
 measurements, taken on its own tip (measure again on master first; the second try that landed is stage 22's):
 - **j50** (wedge): arm a0 (chain 71) is cut 0.27 units out by chain 71's own other pass. The second-try ball
   k250 (r 0.67 h) rounds past that crossing, the crossing pass's +1 outline runs through it, and a "<" sliver
@@ -30,32 +30,33 @@ partner, so solve the corner against it (a third bound on the ball, or a corner 
 and the crossing's) instead of between two arms the crossing has cut.
 
 Link A is `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (hash fff8c9e5). The border look draws the
-outlines; `&tlk=fill` the fill. `gfk=1` turns on the second corner try, off by default.
+outlines; `&tlk=fill` the fill. The second corner try (stage 23) is on by default since K1524 (Levi,
+2026-11-19: "take the rounding"); `&gfk=0` turns it off. A Node build leaves it off unless env `GF_KRETRY=1`
+(K1536): set that for a Node probe, and before the bar so its mirror scan matches its pages.
 
 ## The goal
 
-On link A with `gfk=1`: at the six sites the outlines meet in **one clean join** (a round or a clean point,
+On link A as it loads (the second try on): at the six sites the outlines meet in **one clean join** (a round or a clean point,
 the stroke at its own width) with no wedge, notch, stub, step or sliver of paper, and the fill does not move.
-With the switch off nothing changes (0 px against master, both looks): the second try stays behind `gfk`
-until Levi answers K1524, unless your fix needs no second try at a site, in which case it may show with the
-switch off too (count those places and show them). Nothing else on link A or on the bar's four mazes gets
+With `&gfk=0` nothing changes (0 px against master's `&gfk=0`, both looks), unless your fix needs no second
+try at a site, in which case it shows there too (count those places and show them). Nothing else on link A or on the bar's four mazes gets
 worse. You own the technique. The cause is not the finish line: a stage that ends with a diagnosis and
 nothing in `src/` has not reached the goal while time remains.
 
 ## Done
 
-- **By eye**, the six sites, context crop and detail crop, master with `gfk=1` | new with `gfk=1`.
+- **By eye**, the six sites, context crop and detail crop, master | new, both as they load (the second try on).
 - **Link A**, loads of one state and one view (pin the background clock; stage 21's handoff, `The 76,609 px
-  fill difference`; report the floor first). Switch off: 0 px against master in the border and fill looks, or
-  each place named. Switch on, against master's switch-on: every place outside the sites where the border
+  fill difference`; report the floor first). With `&gfk=0`: 0 px against master's `&gfk=0` in the border and fill looks, or
+  each place named. As it loads, against master as it loads: every place outside the sites where the border
   look changes is counted, the ten largest are on a sheet (surrounding threads with a red box, then the box
   closer; master | new) and judged by eye; the fill look 0 px. Make this diff **before** you commit anything
   as a fix: stage 24's one fix removed its named fault and opened about 270 joint corners elsewhere.
-- **The bar** on your tip, switch off and on: `.claude/probes/K1436/k1436_bar.ps1`, `STRICT=1 -NoPerfLock`,
-  scenes `ring,def,muse_hash,g41_user_tw64`, `-Base` origin/master's SHA, `-Tag k1482s26` (the switch-on run
-  as stage 23 made it: `### Handoff K1482 s23` in `docs/design/K1482_s23_corner_switch.md`): new 0 and grown
+- **The bar** on your tip: `.claude/probes/K1436/k1436_bar.ps1`, `STRICT=1 -NoPerfLock`,
+  scenes `ring,def,muse_hash,g41_user_tw64`, `-Base` origin/master's SHA, `-Tag k1482s26` (its pages
+  load with the second try on; set `$env:GF_KRETRY = "1"` first so its mirror scan has it too): new 0 and grown
   0; each gone find shown as a fault the fix removed.
-- Under the perf lock on your tip: `hold.mjs` 60/60 on link A, switch off and on;
+- Under the perf lock on your tip: `hold.mjs` 60/60 on link A, as it loads and with `&gfk=0`;
   `.claude/probes/K1482/s15/panelopen.mjs`; both dragchecks (they wait 180 s for a redraw, `WAITMS`; a new
   Chrome profile's first redraws take 30 to 60 s); `npm test` green (a pin that moves is re-frozen in the
   same commit and named in its message).

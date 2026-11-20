@@ -47,7 +47,7 @@ export interface GfBuilt {
 
 const now = (): number => (typeof performance !== "undefined" ? performance.now() : Date.now());
 
-/** K1482 s23: kRetry, the corner retry (`gfk=1`; undefined = tables.ts GF_KRETRY, off in the page). */
+/** K1482 s23: kRetry, the corner retry (the page passes it with `gfh=1` unless `gfk=0`; undefined = tables.ts GF_KRETRY). */
 export function gfBuild(input: SceneExportInput, aa: number, kRetry?: boolean): GfBuilt {
   const t0 = now();
   const scene = buildFieldSceneLean(input);

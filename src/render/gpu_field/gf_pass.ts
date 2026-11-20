@@ -299,7 +299,7 @@ export class GfPass {
   /** K1439: home membership (the `gfh=1` flag): homeForm on every program, the tables uploaded as T.homeOn, the fade
    * depth uHomeZ from homeFade (world units, the live fadeLength; no rebuild). Off: nothing here changes a program. */
   readonly home: boolean;
-  /** K1482 s23: the corner retry (the `gfk=1` flag, with home only): retryForm after homeForm on every program, for
+  /** K1482 s23: the corner retry (with home only, off under `gfk=0`): retryForm after homeForm on every program, for
    * tables built with GfOpts.kRetry. Off: nothing here changes a program. */
   readonly kRetry: boolean;
   homeFade = 0;

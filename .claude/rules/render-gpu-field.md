@@ -27,11 +27,11 @@ strokes toward today's, and do not use today's border strokes as a bar.
   flips projection segments. A speedup must keep the corner solve's
   input bits, or change the solve under a new gate argument
   (`K1362_t1_muse_tables.md`, addendum 2).
-- THE CORNER RETRY (K1482 s23, `gfk=1` with `gfh=1`, off by default): where a corner pair's first solve gets no
+- THE CORNER RETRY (K1482 s23; on with `gfh=1`, `gfk=0` turns it off): where a corner pair's first solve gets no
   rounding (r = 0 or none), a second try with a crossing's cut on its arms extended GF_KEXT h, drawn only under
   home membership (ink only: no D raise, no cover; `retryForm`). Two gates: radius >= GF_KRMIN h, sag r(1/sin(th/2) - 1) <= GF_KSAG h.
-  Off, the tables carry no `kExt`/`*Alt` field and equal master's (`gf_k1482_switch.test.ts`). K1524 decides whether
-  it becomes the default or goes.
+  Off, the tables carry no `kExt`/`*Alt` field (`gf_k1482_switch.test.ts`). K1524 (Levi, 2026-11-19: "take the
+  rounding") made it the page's default. A Node build still defaults to off: set env GF_KRETRY=1 to match the page (K1536).
 - GAP JOINT FLAGS (K1482 s24): s18's UNDER rule in `gapJointFlags` holds about 270 V-corner joint sites on link A
   (an arm's outline meets the joint's outline: j63, j15, j148, t57e). Gating it on dN >= reach removed t81s's tick
   but opened all of them (3902 px at 274 places, backed out in 9b98e47b0). dN, dM and an offset-fold proxy do not

@@ -238,7 +238,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
 // K1439: home membership, the `gfh=1` render flag (frame_loop.ts reads it before the URL rewrite)
 const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotGfHome === true;
-// K1482 s23: the corner retry, the `gfk=1` render flag (set only with `gfh=1`, frame_loop.ts); undefined = off
+// K1482 s23: the corner retry, on with `gfh=1` unless `gfk=0` (frame_loop.ts, K1524); undefined = off
 const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: boolean }).__knotGfKRetry === true && gfHome() ? true : undefined);
   // K1369 s4: by gesture (a thread grabbed or not); an A/B's `depth` wins.
   const depth = (): number => gfDepth(opts(), (ctx.scene.ps?.grabbedParticle ?? -1) >= 0);

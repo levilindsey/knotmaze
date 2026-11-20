@@ -53,8 +53,8 @@ export const GF_KSAG: number = ENV20?.GF_KSAG !== undefined ? +ENV20.GF_KSAG : 0
 /** K1482 s22: and one of radius under GF_KRMIN h (muse_hash's 0.02 h and 0.09 h retries were the bar's rstray at j64\n * and a vdip:tie; a near-null arc is no rounding, only a different ink). Env GF_KSAG / GF_KRMIN for Node probes. */
 export const GF_KRMIN: number = ENV20?.GF_KRMIN !== undefined ? +ENV20.GF_KRMIN : 0.1;
 /**
- * K1482 s23: the retry's switch (the `gfk=1` render flag with `gfh=1`; K1524 decides whether it becomes the default
- * or goes). Off, the default: no retry corner is solved and the tables are master's, field for field (no kExt, no
+ * K1482 s23: the retry's switch. The page turns it on with `gfh=1` unless `gfk=0` (frame_loop.ts; K1524, Levi
+ * 2026-11-19: "take the rounding"). Off, a Node build's default (K1536): no retry corner is solved, no kExt and no
  * *Alt). `GfOpts.kRetry` overrides it per build, env GF_KRETRY=1 for Node probes.
  */
 export const GF_KRETRY: boolean = ENV20?.GF_KRETRY === "1";

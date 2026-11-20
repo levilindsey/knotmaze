@@ -1,5 +1,5 @@
-// K1482 s23: stage 22's gated second corner try (the "retry", C1 = a294f3271) behind the `gfk=1` render flag (with
-// `gfh=1`). Off, the default, is master: the tables carry no retry field and equal a build forced off field for
+// K1482 s23: stage 22's gated second corner try (the "retry", C1 = a294f3271). The page turns it on with `gfh=1`
+// unless `gfk=0` (K1524). Off, a Node build's default: the tables carry no retry field, as a build forced off, field for
 // field (gf_home_glsl.test.ts keeps master's key and pack digests, untouched), and no program changes. On: retry
 // corners exist and every one passes both gates (GF_KRMIN, GF_KSAG); the programs are retryForm of the home ones.
 import { readFileSync } from "node:fs";

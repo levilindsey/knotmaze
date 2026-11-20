@@ -56,7 +56,7 @@ interface Req {
   input: SceneExportInput;
   aa: number;
   pool?: boolean;
-  /** K1482 s23: the corner retry (`gfk=1`); absent = off. */
+  /** K1482 s23: the corner retry (`gfh=1` without `gfk=0`); absent = off. */
   kr?: boolean;
   // K1369 s4: a channel build's extra reply fields and their transfers.
   extra?: { msg: Record<string, unknown>; transfer: Transferable[] };

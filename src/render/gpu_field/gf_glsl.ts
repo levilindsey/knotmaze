@@ -151,7 +151,7 @@ export function homeForm(src: string): string {
 /**
  * K1482 s20: a retry corner (texel 5 .z = 1, gf_pack.ts; only in home membership's corner view) inks only: it
  * never raises its surface's D (eval.ts arc loop) and never covers or labels in layers() (eval.ts scov).
- * K1482 s23: a text form of homeForm's output, applied by GfPass only behind the `gfk=1` render flag (with `gfh=1`;
+ * K1482 s23: a text form of homeForm's output, applied by GfPass only with the corner retry (`gfh=1` without `gfk=0`;
  * tables.ts GF_KRETRY): without it no program changes, byte for byte.
  */
 export function retryForm(src: string): string {

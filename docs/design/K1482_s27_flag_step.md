@@ -28,11 +28,13 @@ change nothing there).
   hiding deep inside the band; (b) move the arm-extension end off chain 66's centre line.
 
 Link A is `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (hash fff8c9e5). The border look draws the
-outlines; `&tlk=fill` the fill. `gfk=1` turns on the second corner try, off by default.
+outlines; `&tlk=fill` the fill. The second corner try (stage 23) is on by default since K1524 (Levi,
+2026-11-19: "take the rounding"); `&gfk=0` turns it off. A Node build leaves it off unless env `GF_KRETRY=1`
+(K1536): set that for a Node probe, and before the bar so its mirror scan matches its pages.
 
 ## The goal
 
-On link A, switch off and switch on: t81s's tick and t4s's step and hole are gone, the outlines there run on
+On link A as it loads (the second try on) and with `&gfk=0`: t81s's tick and t4s's step and hole are gone, the outlines there run on
 at their own width, and the fill does not move. No outline anywhere on link A loses ink at a joint corner
 (stage 24's failure, and stage 18's before it). Nothing else on link A or on the bar's four mazes gets worse.
 You own the technique. The cause is known: a stage that ends with more diagnosis and nothing in `src/` has
@@ -40,7 +42,7 @@ not reached the goal while time remains. The two sites are independent: land one
 
 ## Done
 
-- **By eye**, both sites, context crop and detail crop, today | new, switch off and on.
+- **By eye**, both sites, context crop and detail crop, today | new, as it loads and with `&gfk=0`.
 - **Link A**, loads of one state and one view (pin the background clock; stage 21's handoff, `The 76,609 px
   fill difference`; report the floor first), made **before** you commit anything as a fix: every place
   outside the two sites where the border look changes is counted, with the count of places that only lose
