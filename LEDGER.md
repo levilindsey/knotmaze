@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1523.
+Next free ID: K1524.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -307,25 +307,38 @@ Next free ID: K1493.
 - **K1444** · rp=gf home membership looks (after K1439 makes it live behind a flag): (1) on by default? (2)
   spot 4 (muse_hash 5.88,8.50) rounds the corner where rp=outline draws a dive shadow; (3) g41_user_tw64
   17.80,9.55: soft band at the default fadeLength, no line at 1.2, where master and rp=outline draw a fading
-  stub; sheets .claude/probes/K1438/out/sheet_fl_1..2.png, sheet_worse.png
+  stub; sheets .claude/probes/K1438/out/sheet_fl_1..2.png, sheet_worse.png. 2026-11-19: (1) is technical and
+  moves to K1523; at (2) and (3) master has since closed the loose fragments, and home differs from Nov 18's
+  master by a few px (.claude/probes/K1485/out/o_spots.png: Nov 18 | + home | today). Recommended to Levi:
+  close (page: https://claude.ai/artifact/U6sVjxHNm72V15UK6T12jR)
 - **K1470** · rp=gf gfh=1, junction j71 (g41_user_tw64 4.981:7.472): since K1451 stage 4 the colour seam
   inside the web is a small trapezoid bump where it was a thin spike (21 px at 4x; pin 278 L's over window
   0.658 -> 0.770). No rule tried fixes spot 7 without changing it. Keep, or go back to the spike and reopen
   spot 7? Picture: .claude/probes/K1451/out/s4/g_j71.png (columns 3 and 4), m_j71wide.png. On the
   page the bump shows only once K1482's home build lands (screen tiles: .claude/probes/K1482/out/s5/spots_5_7_j71.png,
-  bottom row: a pointed stub end on master, a squared end with a bump with home)
+  bottom row: a pointed stub end on master, a squared end with a bump with home). 2026-11-19: master has moved
+  the spot since (the detached dot is gone, the outline closes; .claude/probes/K1485/out/o_j71.png: Nov 18 |
+  + home | today), so both pictures in the question are out of date. Recommended to Levi: close, re-picture
+  the remaining stub after K1482 s20 (same page as K1444)
 - **K1485** · rp=gf border look, a dead-end tail under the thread it meets: since 0a84d3d1 (K1482 s2) the tail
   stops just short of that thread, like an under pass, where it used to fuse into it (and drew a sliver across
   it). Keep the short stop, or fuse the tail without the sliver? Picture:
   .claude/probes/K1482/out/s2/sliver_00.png (j3, j61, j76; master | tip | diff), live on Levi's link. With the
   page's home build (K1482 s5, not landed) three tails join as a clean T or Y (t18e, t50s, muse_hash j49:
   .claude/probes/K1482/out/s5/fade_sheet_wide.png rows 2-3, columns 1-3 master, 4-6 home); stage 6 keeps them
-  short until Levi answers
+  short until Levi answers. 2026-11-19: OUT OF DATE. Since 644f9bc39 (K1482 s18, the short cut beside a fused
+  joint that Levi kept under K1521) master joins these tails as a clean T or Y (j3 j61 j76 t18e t50s,
+  muse_hash j49; .claude/probes/K1485/out/o_tails.png, o_j49.png: Nov 17 | Nov 18 | today); plain under passes
+  keep the fading gap (K1522). Recommended to Levi: keep the join, close (same page as K1444)
 - **K1493** · d39e363f (2026-11-18, the coordinator's mistake: `git add -f .claude/probes` on the whole
   directory) pushed 1292 untracked probe output files (362 MB: K1444 660, K1407 546, K1362 62, K1436 24) to
   master; b88a4108 removed them from the tree, so checkouts are clean, but the blobs stay in history (every
   fresh clone downloads them). Dropping them needs a history rewrite and a force-push of master: do it (rebase
-  everything after 82405bf9 without them), or leave it?
+  everything after 82405bf9 without them), or leave it? 2026-11-19 facts: the repo is public, GitHub reports
+  713 MB (about half is this); deploys check out shallow and worktrees share the object store, so only a full
+  clone pays; the 89 text files hold nothing private (searched); a rewrite re-IDs 164 commits and strands 21
+  local branches, about 100 worktrees, Muse's checkout and the laptop's clone. Recommended to Levi: leave it,
+  or one rewrite later together with K1467 (same page as K1444)
 
 ## In progress
 
@@ -1125,6 +1138,12 @@ Every other item below waits on the trigger it names.
   runs into the over's as a hard T with a ragged edge where the parent cut it short
   (.claude/probes/K1501/out/26M/tile_g41_user_tw64_x70_border.png, _x130_border.png, parent | fix; Muse viewed
   fill only). Same class as K1482's joint-side sites: judge after stage 13's rule
+- **K1523** · rp=gf home build, land or drop (K1444's question 1, technical): branch
+  worktree-agent-ad03e8b65a2afa540 (67d8d743, K1482 s5; parked since 2026-11-18, its bar FAIL: new 10, gone 7;
+  stages 7-19 then took link A from 36 faulted to 22 without it). After K1482 s20 lands: one bounded Claude
+  agent stage rebases it on that day's master and reads link A's sweep class table and the K1436 bar; land
+  only if the faulted count falls with no new find, else delete the branch. Every spot it visibly changes gets
+  a three-version sheet (.claude/probes/K1485/wide4.py layout)
 
 ## Residuals (known, not fixed)
 
