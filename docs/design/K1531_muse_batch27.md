@@ -1,6 +1,6 @@
 # K1531: Muse batch 27, captures and guards that can be trusted (2026-11-19)
 
-Four runs (tags 27A-27D), started by Claude through Paseo with the K1053 chain, one after another in the main
+Six runs (tags 27A-27F; 27E and 27F were added 2026-11-19 23:55), started by Claude through Paseo with the K1053 chain, one after another in the main
 checkout. **This brief is the authority and is self-contained: do not read the older batch briefs' rule
 lists.** Levi (2026-11-11): junctions and outlines are the priority; a Claude agent is on rp=gf's corner
 faults (K1482) and judges them with captures, the K1436 bar and the fade and drag guards. Three stages this
@@ -161,3 +161,54 @@ Done 3 (no stale hashes; old -> new is identity for all 12). Fresh STRICT freeze
 Done 4 (bar control). `k1436_bar.ps1 -Ref master -Base master -Port 5486 -Tag 27D_ctrl` on 7b5d80a78, all 12 scenes: `PASS new 0 grown 0 gone 0 deduped 1 (user_tw42.lightpaper)`, missing 0, skipped 0, no FREEZE lines; all 24 captures (base and ref) froze 1 try on their K868 hash (the table in Done 3).
 
 Done 5: `npm test` green (257 files passed, 2 skipped; 3206 tests passed, 9 skipped; tsc clean). K1479 closed in 7b5d80a78; K1531 and K1482 left open. Tried and left: nothing failed and was dropped — the bar's 30-minute lock wait and the under-load base captures are recorded above; `fix_s3.mjs` (the one-shot patch that applied the s3-table edit) is kept with the run's tools. Preview :5485, the bar's :5486, and the run's Chrome profiles (`k1479-screen-profile`, `k1479-ab-profile`) stopped and removed.
+
+## Run E (27E): the test run that failed once gets a name (K1543)
+
+Added 2026-11-19 23:55. Between 22:46 and 23:08 that day `npm test` failed once, 3 tests in 1 file, in K1482
+stage 28's guard sequence: right after its two drag checks, while 27D's bar was capturing. The script kept the
+last 6 lines, so nobody knows which tests. Four later runs of the same code passed. Machine load is a guess,
+not tested. `vitest.config.ts` sets `testTimeout: 30000` and some tests set their own. Piped, the default
+reporter prints no per-test times: add the JSON reporter (`npx vitest run --reporter=default --reporter=json
+--outputFile=<file>`; `npm test` runs `tsc` first, time that apart).
+Done: 1. The idle table: one run on master with nothing else running (through `scripts/perf_lock.ps1`: it is a
+timing). The 20 slowest tests: file, name, ms, its timeout, ms / timeout. 2. Six loaded runs, each one's whole
+output and JSON kept under `.claude/probes/K1543/out/27E/` (untracked). A run starts while the bar's control
+captures run in another process (`k1436_bar.ps1 -Ref <master> -Base <master> -Scenes
+ring,def,muse_hash,g41_user_tw64 -Port <yours> -Tag 27E_load`, started again when it ends; the bar takes the
+perf lock itself, the test run takes none). Per run: every failed test by file and name with the first line of
+its error, and the same 20-slowest table. 3. The verdict, one of three. (a) A test failed: say whether it is a
+timeout or an assertion. A timeout: cut the test's work where that keeps what it guards, else give it its own
+timeout of at least 4x its slowest loaded time, with a comment giving the idle and loaded times measured here.
+An assertion that depends on wall-clock time or on another process: remove that dependence. Then 6 more loaded
+runs with 0 failures. (b) Nothing failed, and a test ran past half its timeout under load: the same fix, then 3
+loaded runs with every test under half. (c) Neither: both tables go into the handoff with the three tests
+nearest their timeouts, K1543 stays open (the coordinator updates its text from the handoff), and the run
+stops. Never raise the global `testTimeout`; never skip, loosen or delete an assertion. 4. `npm test` green on
+an idle machine. K1543 closed only under (a) or (b). A change outside `test/` needs its reason in the commit
+message; none in the hands-off files.
+
+## Run F (27F): the corner stages' tools: captures without the lottery (K1539), one guard script
+
+Added 2026-11-19 23:55. Each K1482 stage agent rebuilds two things in its own worktree: a capture loop that
+reloads until the physics hash matches, and a guard script. Both go into the tracked probes so the next stage
+starts from them. Probes only: no `src/` change, so no ordinary-load guards at the end.
+Done: 1. K1539: `.claude/probes/K1482/cap.mjs` calls `alignFreezeParity(page, SIMT)` before its freeze, as
+`.claude/probes/K1458/dragcheck.mjs` and `.claude/probes/K1468/ab.mjs` do. The retry loop stays as the
+fallback, and the header says so. 12 loads of link A with the arguments its header gives: 12 of 12 captured on
+try 1, one physics hash (fff8c9e5), and for each look it writes 12 identical PNG hashes (`gf_b2view.txt`
+differs per load by design: compare the pictures). K1539 closed with the commit. 2.
+`.claude/probes/K1482/guards.ps1` (tracked: `git add -f`), made from the newest stage guard script: stage 27's
+`run27.ps1` under `C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-a198fbb25c384a8cf\.claude\probes\K1482\s27\`
+if it is there, else stage 28's `run28.ps1` under `...\agent-a1c1c68a332de8029\.claude\probes\K1482\s28\`
+(other agents' worktrees: read, never write). Parameters `-Tag -Port -Ref -BaseRef -BarPort -OutDir -Owner
+[-NoBar] [-BarOnly]`. The guards and their pass lines are that script's, unchanged (hold 60/60 on the two
+ordinary links with the second corner try on and with `gfk=0`, panel open, the fill and the border drag check,
+`npm test`, the K1436 bar): the header lists each with its pass line. New: each guard's whole output goes to
+`<OutDir>/<guard>.txt`; one line per guard, `PASS|FAIL <guard>: <its numbers>`; a failed `npm test` prints the
+failed tests' files and names (the JSON reporter, as in Run E); every capture guard runs through
+`scripts/perf_lock.ps1` with `-Owner`; the exit code is the number of failed guards. 3. Proof. The script on a
+preview of master, twice: every guard PASS both times, the two runs' numbers side by side in the handoff. The
+failure path once: in a scratch worktree (`git worktree add` under `$env:TEMP`, removed afterwards with `git
+worktree remove`) make one test fail, and show that the `FAIL npm test` line names it and the exit code is 1.
+4. Three lines at most in `.claude/rules/probes.md` on the two tools (where, usage, what PASS means). `npm
+test` green.
