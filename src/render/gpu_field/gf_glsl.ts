@@ -177,19 +177,6 @@ export function retryForm(src: string): string {
  * the partner dips under the piece at a crossing, the piece's outline is the over-pass line (t56s). The term reads
  * pd[], ps[] and the depth tables (exact in P0 too), so zb's P0 needs no route for it.
  */
-/** K1482 s31 (part of retryForm): eval.ts runT, line for line, and its two uses (a group's side face, the vertex cap). */
-const RUNT = "// K1482 s31: eval.ts runT: the band's width factor where a lone piece over it faces q across a gap under 5 aa\n" +
-  "float runT(int S, int C, float zj, vec2 q, vec2 n) {\n  float h = uH; float aa = uAA; float t = 1.0;\n  for (int m = 0; m < np; m++) {\n" +
-  "    if (PSURF(m) >= 0 || PSURF(m) == S || PC(m) == C) continue;\n" +
-  "    float over = ss(0.05, 0.2, pkey[m] + pd[m] * (uZt / h) - zj); if (!(over > 0.0)) continue;\n" +
-  "    vec2 g; float dm = sqrt(pieceF(m, q, g)); float gp = dm - h; if (!(gp < 5.0 * aa)) continue;\n" +
-  "    float face = dm > 1e-12 && (n.x != 0.0 || n.y != 0.0) ? ss(0.9, 0.97, -dot(n, q - g) / dm) : 1.0;\n" +
-  "    float tm = 1.0 - over * face * (1.0 - ss(aa, 5.0 * aa, gp));\n    if (tm < t) t = tm;\n  }\n  return t;\n}\n";
-const RT_FACE = "      if (S >= 0 && val > v) { float tr = runT(S, PC(j), pkey[j] + X * (uZt / h), q, (q - f) / h); if (tr < 1.0) { float w = W * tr;" +
-  " val = (1.0 - bur) * (1.0 - ss(w - aa, w + aa, h - X)) * ss(-aa, aa, h - X) * ss(0.0, 2.0 * aa, w); } } // K1482 s31: the run's taper\n";
-const RT_VTX = "      if (S >= 0 && val > best) { float tr = runT(S, PC(j), pkey[j] + Xj * (uZt / vh), V, vec2(0.0)); if (tr < 1.0) { float w = vW * tr;" +
-  " val = (1.0 - vb) * (1.0 - ss(w - va, w + va, dV)) * ss(0.0, 2.0 * va, w); } } // K1482 s31\n";
-
 function homeBurial(src: string): string {
   const rep = (a: string, b: string, n?: number): void => {
     const parts = src.split(a);
@@ -215,9 +202,7 @@ function homeBurial(src: string): string {
   const HB = "      if (bur < 1.0 && S < -MAXP) { int B = (-1 - j - S) / MAXP - 1; for (int m = 0; m < np && bur < 1.0; m++) { if (PSURF(m) != B || PC(m) == PC(j)) continue;" +
     " float wb2 = 1.0 - ss(h - W - aa, h - W + aa, pd[m]); if (!(wb2 > bur)) continue;" +
     " wb2 *= 1.0 - ss(1e-4, 1e-3, abs(pkey[m] + pd[m] * (uZt / h))); if (wb2 > bur) bur = wb2; } } // K1482 s28: home burial\n";
-  rep(VAL[0], HB + VAL[0] + RT_FACE, 1);
-  rep("#ifdef PKQ\n#define VFOOT(j)", RUNT + "#ifdef PKQ\n#define VFOOT(j)", 1);
-  rep("      float val = (1.0 - vb) * fV;\n      if (val > best) {", "      float val = (1.0 - vb) * fV;\n" + RT_VTX + "      if (val > best) {", 1);
+  rep(VAL[0], HB + VAL[0], 1);
   return src;
 }
 

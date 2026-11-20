@@ -28,7 +28,6 @@ export const MAXK = 6; // corners per pixel
 export const GF_FADE_LENGTH = 0.14;
 const TANGENT_TERMS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_TANG !== "0";
 const SELF_BURIAL =(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
-const S31E = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 const MAXS = MAXP + MAXK; // surfaces
 
 export function ss(e0: number, e1: number, x: number): number {
@@ -309,22 +308,6 @@ export class GfEval {
     return d2;
   }
 
-  /** K1482 s31: the width factor of surface S's band at outline point q (outward normal n): 1, or less where a lone
-   * piece m over it (z higher by 0.05..0.2) faces q across a gap g = |q - m| - h under G1 aa, tapering to 0 at G0 aa. */
-  private runT(S: number, C: number, zj: number, qx: number, qy: number, nx: number, ny: number): number {
-    const T = this.T; const h = T.h; const aa = T.aa; let t = 1;
-    const G0 = 1; const G1 = 5; const F0 = 0.9; const F1 = 0.97; // gf_glsl.ts RUNT: 1 and 5 aa, ss(0.9, 0.97)
-    for (let m = 0; m < this.np; m++) {
-      if (this.psurf[m] >= 0 || this.psurf[m] === S || this.pc[m] === C) continue; // C: the band's own chain never counts
-      const over = ss(0.05, 0.2, this.pkey[m] + (this.pd[m] * T.zt) / h - zj); if (!(over > 0)) continue;
-      const dm = Math.sqrt(this.pieceF(m, qx, qy)); const g = dm - h; if (!(g < G1 * aa)) continue;
-      const face = dm > 1e-12 && (nx !== 0 || ny !== 0) ? ss(F0, F1, -(nx * (qx - this.fX) + ny * (qy - this.fY)) / dm) : 1;
-      const tm = 1 - over * face * (1 - ss(G0 * aa, G1 * aa, g));
-      if (tm < t) t = tm;
-    }
-    return t;
-  }
-
   private vtxA = -1; private vtxB = -1;
   /** K1407 c3: the vertices of surface S's outline where two of its members' tubes cross. Each side band stops
    * where its foot is buried by the other tube, so in the normal cone at the vertex V (the pixels whose feet on
@@ -372,11 +355,7 @@ export class GfEval {
           const rV = Math.sqrt((Vx - T.kCx[k]) * (Vx - T.kCx[k]) + (Vy - T.kCy[k]) * (Vy - T.kCy[k]));
           if (rV > T.kR[k] && rV < T.kRmax[k] && this.inSector(k, Vx, Vy) && this.outsideArms(k, -1, Vx, Vy)) vb = 1;
         }
-        let val = (1 - vb) * fV;
-        if (S31E.GF_S31 !== "0" && val > best && S >= 0 && T.homeOn && T.kExt !== undefined) {
-          const tr = this.runT(S, this.pc[j], this.pkey[j] + (Xj * T.zt) / h, Vx, Vy, 0, 0);
-          if (tr < 1) { const w = W * tr; val = (1 - vb) * (1 - ss(w - aa, w + aa, dV)) * ss(0, 2 * aa, w); }
-        }
+        const val = (1 - vb) * fV;
         if (val > best) { best = val; this.vtxA = this.pc[j]; this.vtxB = this.pc[m]; }
       }
     }
@@ -586,11 +565,7 @@ export class GfEval {
             if (wb2 > bur) bur = wb2;
           }
         }
-        let val = (1 - bur) * band2(h - X);
-        if (S31E.GF_S31 !== "0" && val > v && S >= 0 && kxh) {
-          const tr = this.runT(S, this.pc[j], this.pkey[j] + (X * T.zt) / h, qx, qy, (qx - this.pfx[j]) / h, (qy - this.pfy[j]) / h);
-          if (tr < 1) { const w = W * tr; val = (1 - bur) * (1 - ss(w - aa, w + aa, h - X)) * ss(-aa, aa, h - X) * ss(0, 2 * aa, w); }
-        }
+        const val = (1 - bur) * band2(h - X);
         if (val > v) { v = val; wk = this.pend[j] ? 3 : 1; wa = this.pc[j]; wb = this.ptx[j] * (y - this.pfy[j]) - this.pty[j] * (x - this.pfx[j]) >= 0 ? 1 : -1; }
       }
       for (let i = 0; i < this.nk; i++) {
