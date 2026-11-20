@@ -93,7 +93,7 @@ try {
     await sleep(600);
     const live = await page.evaluate(() => {
       const p = document.querySelector(".tp-rotv, .tp-dfwv")?.getBoundingClientRect();
-      return { fl: window.__knotRenderer()?.fadeLength, search: location.search, panel: p ? { x: p.x, y: p.y, w: p.width, h: p.height } : null };
+      return { fl: window.__knotRenderer()?.fadeLength, search: location.search, lost: window.__knotContext?.()?.losses ?? 0, panel: p ? { x: p.x, y: p.y, w: p.width, h: p.height } : null };
     });
     const png = await page.screenshot({ type: "png" });
     writeFileSync(join(fadeDir, `drag_${mode}_${v}.png`), png);
@@ -121,9 +121,11 @@ try {
     }, png.toString("base64"), refB64, live.panel, DSF, TOL);
     const flOk = Math.abs((live.fl ?? -1) - Number(v)) < 0.011;
     const qOk = live.search.includes("rp=gf") && (mode !== "gfh" || live.search.includes("gfh=1"));
-    const ok = flOk && qOk && cmp.n <= MAXPX;
+    // K1524: a lost context (a GPU process restart, K1468) fails the stop by name: the page comes back without the
+    // start marker's halo, which alone read 1600-1672 px against the fresh load (threads 0 px)
+    const ok = flOk && qOk && live.lost === 0 && cmp.n <= MAXPX;
     if (!ok) failed = true;
-    console.log(`[${mode}] stop ${v}: fadeLength ${live.fl} search ${live.search} | ${cmp.n} of ${cmp.tot} px differ > ${TOL} from the fresh load -> ${ok ? "PASS" : "FAIL"}`);
+    console.log(`[${mode}] stop ${v}: fadeLength ${live.fl} search ${live.search} | ${cmp.n} of ${cmp.tot} px differ > ${TOL} from the fresh load${live.lost ? ` | the WebGL context was lost ${live.lost}x on the dragged page (K1468): not a pixel verdict` : ""} -> ${ok ? "PASS" : "FAIL"}`);
   }
 } finally { await browser.close(); }
 console.log(failed ? "DRAG CHECK: FAIL" : "DRAG CHECK: PASS");

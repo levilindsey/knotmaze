@@ -36,6 +36,10 @@ strokes toward today's, and do not use today's border strokes as a bar.
   (an arm's outline meets the joint's outline: j63, j15, j148, t57e). Gating it on dN >= reach removed t81s's tick
   but opened all of them (3902 px at 274 places, backed out in 9b98e47b0). dN, dM and an offset-fold proxy do not
   separate t81s from them. Diff a gap-flag change over all of link A's border look; the mirror has no gap cuts.
+- CONVERGING OUTLINES (K1482 s25, no fix): a third corner try for arms cut behind their root added ticks (backed out,
+  edd983c0f). j15's Z spike is no corner: chain 70's start strokes over chain 5, whose group-15 arm its crossing with
+  chain 70 cuts, and burying that stroke opens the eye's outline. t23e's outlines run tangent (corner r <= 0.03 h).
+  Diff the border look (gf_b2.png) at a luminance step of 6: its ink is only about 30 levels off the paper.
 
 ## The pass on the Pixel (stage 4, `K1362_s4_shader.md`)
 
