@@ -5,9 +5,18 @@
 // far depth (where a stroke ends, arc from the crossing). Saves the full frames and a crop sheet.
 //
 //   node .claude/probes/K1458/border.mjs <base> <outDir> <profileDir> [link=?3.FGH1HtvQeDjm6e4BII] [fl=]   env SIMT=20 DSF=2
+// K1461: the measuring step used to pass the whole geometry (668 lanes, 57,609 rows, 3.05M
+// points: a 122 MB JSON argument) plus the three frames in one page.evaluate, which closed
+// the target (TargetCloseError on Runtime.callFunctionOn) before any number printed. It now
+// decodes one frame in the page and measures it there in lane batches, returning only the
+// aggregates (the stroke search reads excursions either way from the local
+// reference: today's stroke is a dark dip, gf's reads lighter than the bg=none
+// backdrop); and every load aligns its freeze parity first (freeze_parity.mjs, K1475), so
+// today / gf / gfh freeze on the same physics state instead of the two-state lottery.
 import puppeteer from "puppeteer-core";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { alignFreezeParity } from "../freeze_parity.mjs";
 const [, , base, outDir, profileDir, linkArg = "?3.FGH1HtvQeDjm6e4BII", fl = ""] = process.argv;
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2);
 mkdirSync(outDir, { recursive: true });
@@ -17,6 +26,7 @@ const browser = await puppeteer.launch({
   args: ["--use-angle=d3d11", "--no-first-run", "--no-default-browser-check", "--window-position=2200,50", "--window-size=1720,1000",
     "--disable-features=CalculateNativeWinOcclusion", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding"],
 });
+browser.on("disconnected", () => console.log("browser disconnected"));
 const linkOf = (mode) => `${base}/${linkArg}&xp=off&am=instant&phw=0&fw=0&bg=none&snd=none${fl ? `&fl=${fl}` : ""}` +
   (mode === "gf" ? "&rp=gf" : mode === "gfh" ? "&rp=gf&gfh=1" : "");
 async function load(mode, keep) {
@@ -27,6 +37,7 @@ async function load(mode, keep) {
   await page.goto(linkOf(mode), { waitUntil: "load", timeout: 900000 });
   await page.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
   if (mode !== "today") await page.waitForFunction(() => (globalThis.__knotGf?.stats?.composites ?? 0) > 0, { timeout: 900000, polling: 300 });
+  await alignFreezeParity(page, SIMT);
   const hash = await page.evaluate(async (t) => {
     await window.__knotPhysFreeze(true);
     await window.__knotStepUntil(t);
@@ -121,62 +132,81 @@ try {
   await T.page.close();
   console.log(`h ${geo.h.toFixed(3)} world = ${geo.scalePx.toFixed(1)} device px; sections ${geo.secs.length}, crossing sides ${geo.lanes.length}`);
   const G = await load("gf"), H = await load("gfh");
+  // Measure one frame at a time in the page (K1461: see header). The frame's pixels stay
+  // in window.__R; the sections are measured with it, then the lanes in batches of 32.
   const page = await browser.newPage();
   await page.goto("about:blank");
-  const res = await page.evaluate(async (d) => {
-    const load = (b64) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = "data:image/png;base64," + b64; });
-    const img = async (b64) => { const im = await load(b64); const cv = document.createElement("canvas"); cv.width = im.width; cv.height = im.height; const cx = cv.getContext("2d", { willReadFrequently: true }); cx.drawImage(im, 0, 0); return cx.getImageData(0, 0, im.width, im.height); };
-    const out = {};
-    const bgOf = (R) => { const hist = new Map(); for (let i = 0; i < R.data.length; i += 4 * 7) { const k = (R.data[i] << 16) | (R.data[i + 1] << 8) | R.data[i + 2]; hist.set(k, (hist.get(k) ?? 0) + 1); } let bk = 0, bn = 0; for (const [k, n] of hist) if (n > bn) { bn = n; bk = k; } return [bk >> 16, (bk >> 8) & 255, bk & 255]; };
-    for (const [name, b64] of Object.entries(d.shots)) {
-      const R = await img(b64);
-      const BG = bgOf(R);
+  const res = {};
+  for (const [name, png] of [["today", T.png], ["gf", G.png], ["gfh", H.png]]) {
+    const head = await page.evaluate(async (b64, secs, scalePx) => {
+      const load = (b) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = "data:image/png;base64," + b; });
+      const im = await load(b64);
+      const cv = document.createElement("canvas"); cv.width = im.width; cv.height = im.height;
+      const cx = cv.getContext("2d", { willReadFrequently: true }); cx.drawImage(im, 0, 0);
+      const R = cx.getImageData(0, 0, im.width, im.height);
+      window.__R = R;
+      const hist = new Map(); for (let i = 0; i < R.data.length; i += 4 * 7) { const k = (R.data[i] << 16) | (R.data[i + 1] << 8) | R.data[i + 2]; hist.set(k, (hist.get(k) ?? 0) + 1); } let bk = 0, bn = 0; for (const [k, n] of hist) if (n > bn) { bn = n; bk = k; }
+      const BG = [bk >> 16, (bk >> 8) & 255, bk & 255];
       const px = (x, y) => { const xx = Math.max(0, Math.min(R.width - 1, Math.round(x))), yy = Math.max(0, Math.min(R.height - 1, Math.round(y))); const o = (yy * R.width + xx) * 4; return [R.data[o], R.data[o + 1], R.data[o + 2]]; };
       const lum = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-      const n = d.geo.secs[0]?.pts.length ?? 0, mid = (n - 1) / 2, step = d.geo.scalePx / 40; // device px per profile step
+      window.__px = px; window.__lum = lum;
+      const n = secs[0]?.pts.length ?? 0, mid = (n - 1) / 2, step = scalePx / 40; // device px per profile step
       const strokes = [];
-      for (const s of d.geo.secs) {
+      for (const s of secs) {
         const C = s.pts.map(([x, y]) => px(x, y)), L = C.map(lum);
         const Lf = L[Math.round(mid)], Lb = (L[0] + L[n - 1]) / 2;
         for (const dir of [-1, 1]) {
-          // the edge band: 0.55h..1.25h from the centre
-          let im = -1, lm = 1e9;
-          for (let i = Math.round(mid + dir * 0.55 * 40); dir > 0 ? i <= Math.round(mid + 1.25 * 40) : i >= Math.round(mid - 1.25 * 40); i += dir) if (L[i] < lm) { lm = L[i]; im = i; }
-          const ref = Math.min(Lf, Lb), depth = ref - lm;
+          // the edge band: 0.55h..1.25h from the centre. The stroke is the band's
+          // strongest excursion from the local reference, either way: today's is a
+          // dark dip, gf's own border stroke reads lighter than this backdrop, so a
+          // dip-only search finds no gf stroke at all (K1461).
+          let im2 = -1, lm = 1e9, ip = -1, lp = -1e9;
+          for (let i = Math.round(mid + dir * 0.55 * 40); dir > 0 ? i <= Math.round(mid + 1.25 * 40) : i >= Math.round(mid - 1.25 * 40); i += dir) { if (L[i] < lm) { lm = L[i]; im2 = i; } if (L[i] > lp) { lp = L[i]; ip = i; } }
+          const dDark = Math.min(Lf, Lb) - lm, dLight = lp - Math.max(Lf, Lb);
+          const dark = dDark >= dLight, depth = dark ? dDark : dLight, ix = dark ? im2 : ip, lx = dark ? lm : lp;
           let w = 0;
           if (depth > 4) {
-            const half = lm + depth / 2;
-            let a = im, b = im;
-            while (a > 0 && L[a - 1] < half) a--;
-            while (b < n - 1 && L[b + 1] < half) b++;
+            const half = dark ? lx + depth / 2 : lx - depth / 2;
+            let a = ix, b = ix;
+            while (a > 0 && (dark ? L[a - 1] < half : L[a - 1] > half)) a--;
+            while (b < n - 1 && (dark ? L[b + 1] < half : L[b + 1] > half)) b++;
             w = (b - a + 1) * step;
           }
-          strokes.push({ depth, w, off: Math.abs(im - mid) / 40, col: C[im], Lf, Lb });
+          strokes.push({ depth, w, off: Math.abs(ix - mid) / 40, col: C[ix], Lf, Lb });
         }
       }
       const med = (a) => { const b = a.filter((v) => Number.isFinite(v)).sort((p, q) => p - q); return b.length ? b[b.length >> 1] : NaN; };
       const dips = strokes.filter((s) => s.depth > 4);
       const colMed = [0, 1, 2].map((k) => med(dips.map((s) => s.col[k])));
-      // where a stroke ends: per crossing side, the lane (k) with the deepest far dip, walked inward
-      const ends = [];
-      for (const ln of d.geo.lanes) {
-        const nr = ln.rows.length, nk = ln.rows[0].row.length;
-        const Lr = ln.rows.map((r) => r.row.map(([x, y]) => lum(px(x, y))));
-        const far = Lr[nr - 1], centre = far[(nk - 1) >> 1];
-        let best = { k: -1, depth: 0 };
-        for (let k = 0; k < nk; k++) { const dd = Math.min(centre, Math.max(far[0], far[nk - 1])) - far[k]; if (Math.abs(k - (nk - 1) / 2) > 10 && dd > best.depth) best = { k, depth: dd }; }
-        if (best.depth < 6) { ends.push({ ci: ln.ci, side: ln.side, end: null }); continue; }
-        // the stroke's own depth at each row: its lane (best k +-2) against the row's fill centre
-        const dep = Lr.map((row) => { let m = 1e9; for (let k = Math.max(0, best.k - 2); k <= Math.min(nk - 1, best.k + 2); k++) m = Math.min(m, row[k]); return centre - m; });
-        const farD = dep[nr - 1];
-        let end = ln.rows[0].da;
-        for (let i = nr - 1; i > 0; i--) if (dep[i - 1] < farD / 2) { end = ln.rows[i].da; break; }
-        ends.push({ ci: ln.ci, side: ln.side, end, lane: (best.k - (nk - 1) / 2) * 0.05 });
-      }
-      out[name] = { BG, sections: strokes.length, withDip: dips.length, colour: colMed, width: med(dips.map((s) => s.w)), widthP90: (() => { const b = dips.map((s) => s.w).sort((p, q) => p - q); return b[Math.floor(0.9 * (b.length - 1))]; })(), place: med(dips.map((s) => s.off)), depth: med(dips.map((s) => s.depth)), fill: med(strokes.map((s) => s.Lf)), ends };
+      return { BG, sections: strokes.length, withDip: dips.length, colour: colMed, width: med(dips.map((s) => s.w)), widthP90: (() => { const b = dips.map((s) => s.w).sort((p, q) => p - q); return b[Math.floor(0.9 * (b.length - 1))]; })(), place: med(dips.map((s) => s.off)), depth: med(dips.map((s) => s.depth)), fill: med(strokes.map((s) => s.Lf)) };
+    }, Buffer.from(png).toString("base64"), geo.secs, geo.scalePx);
+    const ends = [];
+    for (let bi = 0; bi < geo.lanes.length; bi += 32) {
+      const batch = await page.evaluate((lanes) => {
+        const R = window.__R, px = window.__px, lum = window.__lum;
+        const out = [];
+        for (const ln of lanes) {
+          const nr = ln.rows.length, nk = ln.rows[0].row.length;
+          const Lr = ln.rows.map((r) => r.row.map(([x, y]) => lum(px(x, y))));
+          const far = Lr[nr - 1], centre = far[(nk - 1) >> 1];
+          // strongest excursion either way from the local reference (see sections)
+          let best = { k: -1, depth: 0, dark: true };
+          for (let k = 0; k < nk; k++) { const dd = Math.min(centre, Math.max(far[0], far[nk - 1])) - far[k], du = far[k] - Math.max(centre, Math.min(far[0], far[nk - 1])); const dv = Math.max(dd, du); if (Math.abs(k - (nk - 1) / 2) > 10 && dv > best.depth) best = { k, depth: dv, dark: dd >= du }; }
+          if (best.depth < 6) { out.push({ ci: ln.ci, side: ln.side, end: null }); continue; }
+          // the stroke's own depth at each row: its lane (best k +-2) against the row's fill centre
+          const dep = Lr.map((row) => { let m = best.dark ? 1e9 : -1e9; for (let k = Math.max(0, best.k - 2); k <= Math.min(nk - 1, best.k + 2); k++) m = best.dark ? Math.min(m, row[k]) : Math.max(m, row[k]); return best.dark ? centre - m : m - centre; });
+          const farD = dep[nr - 1];
+          let end = ln.rows[0].da;
+          for (let i = nr - 1; i > 0; i--) if (dep[i - 1] < farD / 2) { end = ln.rows[i].da; break; }
+          out.push({ ci: ln.ci, side: ln.side, end, lane: (best.k - (nk - 1) / 2) * 0.05 });
+        }
+        return out;
+      }, geo.lanes.slice(bi, bi + 32));
+      ends.push(...batch);
     }
-    return out;
-  }, { geo, shots: { today: Buffer.from(T.png).toString("base64"), gf: Buffer.from(G.png).toString("base64"), gfh: Buffer.from(H.png).toString("base64") } });
+    res[name] = { ...head, ends };
+    console.log(`[measure] ${name} done`);
+  }
   await page.close();
   const pairs = [];
   for (const k of ["gf", "gfh"]) {
@@ -193,7 +223,7 @@ try {
   const lines = [];
   for (const k of ["today", "gf", "gfh"]) {
     const o = res[k];
-    lines.push(`${k}: sections ${o.sections} (edges with a dip ${o.withDip}), stroke colour rgb(${o.colour.map((v) => Math.round(v)).join(",")}), depth ${o.depth?.toFixed(1)} lum below min(fill, bg), width median ${o.width?.toFixed(2)} p90 ${o.widthP90?.toFixed(2)} device px, place ${o.place?.toFixed(2)} h from the centre, fill lum ${o.fill?.toFixed(1)}, bg rgb(${o.BG.join(",")})`);
+    lines.push(`${k}: sections ${o.sections} (edges with a stroke ${o.withDip}), stroke colour rgb(${o.colour.map((v) => Math.round(v)).join(",")}), depth ${o.depth?.toFixed(1)} lum from the fill/bg reference, width median ${o.width?.toFixed(2)} p90 ${o.widthP90?.toFixed(2)} device px, place ${o.place?.toFixed(2)} h from the centre, fill lum ${o.fill?.toFixed(1)}, bg rgb(${o.BG.join(",")})`);
     const e = o.ends.filter((x) => x.end !== null).map((x) => x.end).sort((p, q) => p - q);
     lines.push(`   stroke end arc from the crossing: median ${e[e.length >> 1]?.toFixed(3)} p10 ${e[Math.floor(0.1 * (e.length - 1))]?.toFixed(3)} p90 ${e[Math.floor(0.9 * (e.length - 1))]?.toFixed(3)} world (${e.length} sides)`);
   }

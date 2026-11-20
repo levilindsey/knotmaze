@@ -1,5 +1,13 @@
 // K1444: drag the panel's "Crossing fade" slider with the real mouse (as Levi does) and crop the maze after each stop.
 // Usage: node drag.mjs <url> <outPrefix> <profileDir> <v1,v2,...> [waitMs]   env CLIP=x,y,w,h DSF=2 FULL=1
+// K1461: each stop is dragged twice. A clip screenshot hides the panel's scrollbar (the panel
+// widens 310 -> 320 px and the slider track shifts +10 px) until the next value change
+// re-renders the panel, so a drag measured against the shifted track lands ~+0.13 high and
+// the first drag (to 0) nets back to the start value. The first drag to a stop absorbs that
+// shift and restores the layout; the second, on the settled track, is the measured one. The
+// grab point is the value's own track position (the .tp-sldv_k element is the filled bar,
+// whose centre is half the value's fraction), and the ends are dragged past the track so
+// the slider's clamp lands exactly on 0 / 1.2 (dragcheck.mjs's recipe).
 import puppeteer from "puppeteer-core";
 import { writeFileSync } from "node:fs";
 const [, , url, pre, profileDir, vals, waitMs = "7000"] = process.argv;
@@ -21,9 +29,9 @@ try {
     const row = lab.closest(".tp-lblv");
     for (let f = row; f; f = f.parentElement) if (f.classList?.contains("tp-fldv") && !f.classList.contains("tp-fldv-expanded")) f.querySelector(".tp-fldv_b")?.click();
     row.scrollIntoView({ block: "center" });
-    const t = row.querySelector(".tp-sldv_t"), k = row.querySelector(".tp-sldv_k"), i = row.querySelector("input");
-    const r = t?.getBoundingClientRect(), kr = k?.getBoundingClientRect();
-    return r ? { x: r.x, y: r.y, w: r.width, h: r.height, kx: kr ? kr.x + kr.width / 2 : null, box: i?.value } : "notrack";
+    const t = row.querySelector(".tp-sldv_t"), i = row.querySelector("input");
+    const r = t?.getBoundingClientRect();
+    return r ? { x: r.x, y: r.y, w: r.width, h: r.height, box: i?.value } : "notrack";
   });
   let r = await rect();
   await new Promise((q) => setTimeout(q, 800));
@@ -31,12 +39,21 @@ try {
   console.log("track", JSON.stringify(r));
   if (process.env.FULL) writeFileSync(`${pre}_full.jpg`, await page.screenshot({ type: "jpeg", quality: 70 }));
   await shot("start");
-  for (const v of vals.split(",")) {
-    r = await rect();
-    const y = r.y + r.h / 2, x0 = r.kx ?? r.x + r.w * (Number(r.box) / 1.2), x1 = r.x + 1 + (r.w - 2) * (Number(v) / 1.2);
+  const dragOnce = async (rr, v) => {
+    const y = rr.y + rr.h / 2, x0 = rr.x + rr.w * (Number(rr.box) / 1.2);
+    const x1 = Number(v) <= 0 ? rr.x - 20 : Number(v) >= 1.2 ? rr.x + rr.w + 20 : rr.x + rr.w * (Number(v) / 1.2);
     await page.mouse.move(x0, y); await page.mouse.down();
     for (let s = 1; s <= 12; s++) { await page.mouse.move(x0 + (x1 - x0) * s / 12, y); await new Promise((q) => setTimeout(q, 40)); }
     await page.mouse.up(); await page.mouse.move(c[0] - 30, c[1] - 30);
+  };
+  for (const v of vals.split(",")) {
+    r = await rect();
+    await dragOnce(r, v); // primer: absorbs the clip screenshot's track shift (see header)
+    await new Promise((q) => setTimeout(q, 700));
+    r = await rect();
+    const r2 = await rect();
+    if (r2 && Math.abs(r2.x - r.x) > 0.6) { await new Promise((q) => setTimeout(q, 700)); r = await rect(); } else r = r2 ?? r;
+    await dragOnce(r, v); // the measured drag, on the settled track
     await new Promise((q) => setTimeout(q, 2500));
     const now = await page.evaluate(() => ({ search: location.search, home: globalThis.__knotGf?.home, fl: globalThis.__knotParams?.().fadeLength }));
     console.log("drag to", v, "box", (await rect()).box, JSON.stringify(now));
