@@ -147,7 +147,7 @@ export class GfEval {
   }
   /** K1482 s28: member()'s home group for a piece left out of every group (its arm's home, too deep in z), else -1. */
   private mhb = -1;
-  /** K1482 s32: env GF_S32=1 turns on the mirror-only t84e fold rule (foldD's lone-fold gate, the sibling burial). */
+  /** K1482 s32: the t84e fold rule is on (retry programs: foldD's lone fold, the sibling burial); env GF_S32=0 off. */
   private s32 = false;
   private mg = -1; private mramp = 1;
 
@@ -223,7 +223,7 @@ export class GfEval {
       if (e2 < d2) { d2 = e2; sf = T.vs[v] + u * (T.vs[v + 1] - T.vs[v]); fc = -(dx * tx + dy * ty) / (Math.sqrt(l2) * tl); }
     }
     if (!inOther) {
-      // K1482 s32 (mirror only, env GF_S32=1; not in any GLSL program yet): a hairpin folded into ONE piece away from
+      // K1482 s32 (retryForm's programs, gf_glsl.ts loneFold; env GF_S32=0 off in the mirror): a hairpin folded into ONE piece away from
       // a junction (t84e: chain 84's legs at about 35 degrees, both inner bands inked past the cusp into a dark patch).
       // The fold's other run buries q when it turns more than about 52 degrees back (cos > 0.62) and q lies inside its
       // tube, and either it turns more than 45 degrees (cos > 0.7, found by the plain search) with a piece of the chain
@@ -559,8 +559,9 @@ export class GfEval {
     // per surface: coverage a and ink v (max over exposed terms, the winner kept)
     const band = (D: number): number => 1 - ss(W - aa, W + aa, D);
     const band2 = (D: number): number => band(D) * ss(-aa, aa, D);
-    // K1482 s32: the t84e fold rule (foldD, and the sibling burial below), mirror only and only with env GF_S32=1
-    this.s32 = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 === "1";
+    // K1482 s32: the t84e fold rule (foldD, and the sibling burial below), in retryForm's programs only (gf_glsl.ts
+    // loneFold); env GF_S32=0 turns it off in the mirror, for a probe's before/after
+    this.s32 = kxh && (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 !== "0";
     for (let e = 0; e < ns; e++) {
       const S = this.sid[e]; let D = -Infinity; let v = 0; let wk = 0; let wa = -1; let wb = 0;
       for (let j = 0; j < this.np; j++) {
@@ -584,7 +585,7 @@ export class GfEval {
         }
         // the piece's own tube elsewhere along its fold (a tight bend folded into one piece): OFF, form B never
         // buries a piece by its own fold (K1362 s1: 132 census finds were this self-burial)
-        // K1482 s32 (with GF_S32=1): a piece of the same chain on another surface within arc 2 of this one (its
+        // K1482 s32 (retry programs): a piece of the same chain on another surface within arc 2 of this one (its
         // sibling across a group step) buries q by its tube, as a same-surface piece would
         if (this.s32 && bur < 1) {
           for (let m = 0; m < this.np && bur < 1; m++) {

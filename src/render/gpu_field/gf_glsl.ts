@@ -165,7 +165,71 @@ export function retryForm(src: string): string {
   src = src.split("if (kIn[i] == 3 && (key > labK").join("if (kIn[i] == 3 && KXT(k) && (key > labK");
   src = src.split("if (kIn[i] == 3) { scov[e] = true;").join("if (kIn[i] == 3 && KXT(k)) { scov[e] = true;");
   if (/Dk > (D|sa\[e\])\)|KRI > K0\.z\)|KRI > K0\.z && \(|kIn\[i\] == 3\)|kIn\[i\] == 3 && \(/.test(src)) throw new Error("gfFs home: a corner raise or cover without its retry test is left");
-  return homeBurial(src);
+  return loneFold(homeBurial(src));
+}
+
+/**
+ * K1482 s32 (part of retryForm): eval.ts foldD()'s lone fold and the sibling burial, statement for statement. A
+ * hairpin folded into ONE piece away from a junction (t84e) buries its face's q by the fold's other run when that
+ * turns back past cos 0.62 and holds q in its tube, and: it turns past cos 0.7 (the plain search) with a piece of the
+ * chain on another surface within arc 2; or the run's foot (member at its arc) is homed in a group but in none while
+ * p's piece is in none; or p's piece is in a group the foot is not. With no plain fold, a D search also takes
+ * segments turned back from the tangents at arc +-0.3. And a same-chain piece on another surface within arc 2 buries
+ * q by its tube. Reads ps[] (set in every program the retry runs: the split form never takes the retry).
+ */
+function loneFold(src: string): string {
+  const head = "float foldD(int j, int S, vec2 p, vec2 q) {\n";
+  const i0 = src.indexOf(head); if (i0 < 0 || src.indexOf(head, i0 + 1) >= 0) throw new Error("gfFs s32: foldD not found once");
+  const i1 = src.indexOf("\n}\n", i0) + 3; let fn = src.slice(i0, i1);
+  const rep = (a: string, b: string): void => {
+    const parts = fn.split(a); if (parts.length !== 2) throw new Error(`gfFs s32: expected one "${a.trim().slice(0, 48)}" in foldD, found ${parts.length - 1}`);
+    fn = parts.join(b);
+  };
+  rep("  if (!inOther) return BIG;\n", "");
+  rep("  float tl = length(t); float d2 = BIG;\n", "  float tl = length(t); float d2 = BIG; float sf = 0.0; float fc = 1.0;\n");
+  rep("    if (e2 < d2) d2 = e2;\n  }\n  return d2;\n}\n",
+    "    if (e2 < d2) { d2 = e2; sf = A.z + u * (B.z - A.z); fc = -dot(dd, t) / (sqrt(l2) * tl); }\n  }\n" +
+    "  if (!inOther) { // K1482 s32: the lone fold (eval.ts)\n" +
+    "    bool viaD = false;\n" +
+    "    if (!(d2 < uH * uH)) {\n" +
+    "      viaD = true; float L = C0.w; float sp0 = ps[j]; vec2 t1 = t; vec2 t2 = t;\n" +
+    "      for (int r = qlo; r <= qhi; r++) {\n" +
+    "        int k = r; if (closed) k = pmod(k, nseg); else if (k < 0 || k >= nseg) continue;\n" +
+    "        vec4 A = F(uOV + v0 + k); vec4 B = F(uOV + v0 + k + 1);\n" +
+    "        float sa = sp0 - 0.3; if (closed) sa = mod(sa, L);\n" +
+    "        if (sa >= A.z && sa < B.z) t1 = B.xy - A.xy;\n" +
+    "        sa = sp0 + 0.3; if (closed) sa = mod(sa, L);\n" +
+    "        if (sa >= A.z && sa < B.z) t2 = B.xy - A.xy;\n" +
+    "      }\n" +
+    "      float l1 = length(t1); float l2t = length(t2); d2 = BIG; fc = 1.0;\n" +
+    "      for (int r = qlo; r <= qhi; r++) {\n" +
+    "        int k = r; if (closed) k = pmod(k, nseg); else if (k < 0 || k >= nseg) continue;\n" +
+    "        vec4 A = F(uOV + v0 + k); vec4 B = F(uOV + v0 + k + 1);\n" +
+    "        vec2 a = A.xy; vec2 dd = B.xy - a;\n" +
+    "        float l2 = dot(dd, dd); float ll = sqrt(l2); if (!(ll > 0.0)) continue;\n" +
+    "        float fm = max(-dot(dd, t) / (ll * tl), max(-dot(dd, t1) / (ll * l1), -dot(dd, t2) / (ll * l2t))); if (!(fm > 0.5)) continue;\n" +
+    "        float u = clamp(dot(q - a, dd) / l2, 0.0, 1.0);\n" +
+    "        vec2 e = q - a - dd * u; float e2 = dot(e, e);\n" +
+    "        if (e2 < d2) { d2 = e2; sf = A.z + u * (B.z - A.z); fc = fm; }\n" +
+    "      }\n" +
+    "    }\n" +
+    "    if (!(d2 < uH * uH) || !(fc > 0.62)) return BIG;\n" +
+    "    bool hi = fc > 0.7 && !viaD;\n" +
+    "    bool sib = false;\n" +
+    "    for (int m = 0; m < np; m++) { if (m == j || PC(m) != c || PSURF(m) == S) continue; float ds = abs(ps[m] - ps[j]); if (closed) ds = min(ds, C0.w - ds); if (ds < 2.0) { sib = true; break; } }\n" +
+    "    if (sib && hi) return d2;\n" +
+    "    vec4 KF = keyBin(c, sf); float zf = depth(c, sf, KF); member(c, sf, KF, zf);\n" +
+    "    if (pg[j] < 0 && mg < 0 && mhb >= 0) return d2;\n" +
+    "    return hi && pg[j] >= 0 && pg[j] != mg ? d2 : BIG;\n" +
+    "  }\n  return d2;\n}\n");
+  src = src.slice(0, i0) + fn + src.slice(i1);
+  // the sibling burial, just before each foldD burial (bur is a max over terms: the order only moves the early exit)
+  const FD = "if (bur < 1.0) { float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(foldD(j, S, p, q)));";
+  const n = src.split(FD).length - 1; if (n < 1) throw new Error("gfFs s32: no foldD burial");
+  const SIB = "if (bur < 1.0) { int cj = PC(j); vec4 CJ = F(uOCh + 3 * cj); for (int m = 0; m < np && bur < 1.0; m++) { if (m == j || PC(m) != cj || PSURF(m) == S) continue;" +
+    " float ds = abs(ps[m] - ps[j]); if (CJ.z > 0.5) ds = min(ds, CJ.w - ds); if (!(ds < 2.0)) continue;" +
+    " float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q))); if (wb2 > bur) bur = wb2; } } // K1482 s32: sibling burial\n      ";
+  return src.split(FD).join(SIB + FD);
 }
 
 /**
