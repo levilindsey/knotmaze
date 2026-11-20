@@ -211,20 +211,48 @@ export class GfEval {
       const ex = x - ax - dx * u; const ey = y - ay - dy * u; const e2 = ex * ex + ey * ey;
       if (e2 < dp) { dp = e2; tx = dx; ty = dy; }
     }
-    const tl = Math.sqrt(tx * tx + ty * ty); let d2 = Infinity; let sf = 0;
+    const tl = Math.sqrt(tx * tx + ty * ty); let d2 = Infinity; let sf = 0; let fc = 1;
     for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
       let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
       const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
       const l2 = dx * dx + dy * dy; if (!(dx * tx + dy * ty < -0.5 * Math.sqrt(l2) * tl)) continue;
       const u = l2 > 0 ? Math.min(1, Math.max(0, ((qx - ax) * dx + (qy - ay) * dy) / l2)) : 0;
       const ex = qx - ax - dx * u; const ey = qy - ay - dy * u; const e2 = ex * ex + ey * ey;
-      if (e2 < d2) { d2 = e2; sf = T.vs[v] + u * (T.vs[v + 1] - T.vs[v]); }
+      if (e2 < d2) { d2 = e2; sf = T.vs[v] + u * (T.vs[v + 1] - T.vs[v]); fc = -(dx * tx + dy * ty) / (Math.sqrt(l2) * tl); }
     }
     if (!inOther) {
-      if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 !== "1" || !(d2 < T.h * T.h)) return Infinity;
+      const S32D = Number((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32D ?? "0");
+      if (S32D > 0) {
+        const L = T.cLen[c]; const sp0 = this.ps[j]; let t1x = tx; let t1y = ty; let t2x = tx; let t2y = ty;
+        for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
+          let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
+          const v = v0 + k; const a0 = T.vs[v]; const a1 = T.vs[v + 1];
+          for (let sgn = -1; sgn <= 1; sgn += 2) {
+            let sa = sp0 + sgn * S32D; if (closed) sa = ((sa % L) + L) % L;
+            if (sa >= a0 && sa < a1) { if (sgn < 0) { t1x = T.vx[v + 1] - T.vx[v]; t1y = T.vy[v + 1] - T.vy[v]; } else { t2x = T.vx[v + 1] - T.vx[v]; t2y = T.vy[v + 1] - T.vy[v]; } }
+          }
+        }
+        const l1 = Math.sqrt(t1x * t1x + t1y * t1y); const l2t = Math.sqrt(t2x * t2x + t2y * t2y);
+        d2 = Infinity; fc = 1;
+        for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
+          let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
+          const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
+          const l2 = dx * dx + dy * dy; const ll = Math.sqrt(l2); if (!(ll > 0)) continue;
+          const f0 = -(dx * tx + dy * ty) / (ll * tl); const f1 = -(dx * t1x + dy * t1y) / (ll * l1); const f2 = -(dx * t2x + dy * t2y) / (ll * l2t);
+          const fm = Math.max(f0, f1, f2); if (!(fm > 0.5)) continue;
+          const u = Math.min(1, Math.max(0, ((qx - ax) * dx + (qy - ay) * dy) / l2));
+          const ex = qx - ax - dx * u; const ey = qy - ay - dy * u; const e2 = ex * ex + ey * ey;
+          if (e2 < d2) { d2 = e2; sf = T.vs[v] + u * (T.vs[v + 1] - T.vs[v]); fc = fm; }
+        }
+      }
+      if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32DBG === "2") console.log(`fold0 d/h ${(Math.sqrt(d2) / T.h).toFixed(3)} fc ${fc.toFixed(3)} sf ${sf.toFixed(3)} foot ${this.ps[j].toFixed(3)}`);
+      if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 !== "1" || (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32F === "0" || !(d2 < T.h * T.h)) return Infinity;
+      if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32M === "A") { if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32DBG === "1") console.log(`foldA d/h ${(Math.sqrt(d2) / T.h).toFixed(3)} fc ${fc.toFixed(3)} sf ${sf.toFixed(3)}`); } if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32M === "A" && Number((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32E ?? "0") > 0 && !(!closed && Math.min(this.ps[j], T.cLen[c] - this.ps[j]) < Number((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32E ?? "0"))) return Infinity;
+      if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32M === "A") return fc > Number((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32C ?? "0.7") ? d2 : Infinity;
+      if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32M === "K") { let sib = false; const LX = Number((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32X ?? "2"); for (let m = 0; m < this.np; m++) { if (m === j || this.pc[m] !== c || this.psurf[m] === S) continue; let ds = Math.abs(this.ps[m] - this.ps[j]); if (closed) ds = Math.min(ds, T.cLen[c] - ds); if (ds < LX) { sib = true; break; } } return sib ? d2 : Infinity; }
       const zf = this.depth(c, sf); this.member(c, sf, zf);
       const gj = this.pg[j]; const gf = this.mg;
-      if (gj < 0 || gj === gf || ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 !== "1")) return Infinity;
+      if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32M !== "0" && ((gj < 0 && (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32M !== "2") || gj === gf) || ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 !== "1")) return Infinity;
       if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32DBG === "1") console.log(`fold gj ${gj} gf ${gf} pg ${this.pg[j]} phb ${this.phb[j]} mg ${this.mg} mhb ${this.mhb} sf ${sf.toFixed(3)} zf ${zf.toFixed(3)}`);
     }
     return d2;
@@ -519,6 +547,8 @@ export class GfEval {
     const band = (D: number): number => 1 - ss(W - aa, W + aa, D);
     const band2 = (D: number): number => band(D) * ss(-aa, aa, D);
     const S32B = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32B === "1";
+    const S32H = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32H === "1";
+    const S32X = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 === "1" ? Number((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32X ?? "0") : 0;
     for (let e = 0; e < ns; e++) {
       const S = this.sid[e]; let D = -Infinity; let v = 0; let wk = 0; let wa = -1; let wb = 0;
       for (let j = 0; j < this.np; j++) {
@@ -534,7 +564,7 @@ export class GfEval {
         // unfolded q (fo 0) is untouched. fo is taken only once some m reaches q (dm < h; else wb2 is exactly 0).
         let fo = -1;
         for (let m = 0; m < this.np && bur < 1; m++) {
-          if (m === j || this.psurf[m] !== S) continue;
+          if (m === j || (this.psurf[m] !== S && !(S32H && S >= 0 && this.psurf[m] < 0 && this.phb[m] === S))) continue;
           if (S32B && S >= 0 && this.pz[m] < this.pz[j] - T.zt) continue;
           const dm = Math.sqrt(this.pieceD(m, qx, qy)); if (!(dm < h)) continue;
           if (fo < 0) { const f0 = Math.max(0, h - Math.sqrt(this.pieceD(j, qx, qy))); fo = f0 * (1 - ss(2 * aa, 4 * aa, f0)); }
@@ -543,6 +573,15 @@ export class GfEval {
         }
         // the piece's own tube elsewhere along its fold (a tight bend folded into one piece): OFF, form B never
         // buries a piece by its own fold (K1362 s1: 132 census finds were this self-burial)
+        if (S32X > 0 && bur < 1) {
+          for (let m = 0; m < this.np && bur < 1; m++) {
+            if (m === j || this.pc[m] !== this.pc[j] || this.psurf[m] === S) continue;
+            const c = this.pc[j]; let ds = Math.abs(this.ps[m] - this.ps[j]); if (T.cClosed[c] === 1) ds = Math.min(ds, T.cLen[c] - ds);
+            if (!(ds < S32X)) continue;
+            const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
+            if (wb2 > bur) bur = wb2;
+          }
+        }
         if (SELF_BURIAL && bur < 1 && this.phi[j] - this.plo[j] > 1) {
           const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(j, qx, qy)));
           if (wb2 > bur) bur = wb2;
