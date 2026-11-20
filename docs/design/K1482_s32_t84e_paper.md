@@ -106,3 +106,18 @@ fields. Never push, never edit `LEDGER.md`.
   partner run (depth/member at its foot) is homed in a group but in none, or p's piece is in a group the partner is not;
   a D search (tangents at arc +-0.3) only when the plain search finds no fold (hi then off); G6 burial by the sibling's tube.
 - Next: write it as one clean rule (no env), port to gf_glsl.ts, npm test, guards as time allows. Residual: one faint px 1540,950.
+
+### Handoff K1482 s32 (07:30)
+
+- Done on the mirror: the lone fold rule (eval.ts foldD past `!inOther` + the sibling burial, now behind env GF_S32=1).
+  wd32 (`out/s32/wd32_final2.txt`): only t84e changes, 1537,938, 32 samples at stride 2, all loss; with gfk=0
+  (`wd32_final_gfk0.txt`) nothing changes. By eye (mirror, `out/s32/mimg_t84e_hmdh.png`, `_z`): the patch is gone,
+  the diagonal and the ear meet at the cusp; one faint px stays at 1540,950 (ink 0.225: a D fold at cos 0.599).
+- The GLSL twin `loneFold` (gf_glsl.ts, statement for statement) was on in retryForm at 8cc774eb8 (npm test green) but in
+  Chrome its composites ran about 50x slower than master's (diag_n.txt: 3 composites in the 5 s after the switch; master's
+  diag_m.txt: 90, then 237) and cap.mjs's forced redraw stalled past 240 s twice (cap_n1.txt). Turned OFF after it, so the
+  tip renders as master. Not run: the capture diff and sheets, the bar, hold, panelopen, dragchecks.
+- Next: make loneFold cheap (suspects: member()/depth() inlined inside foldD inside the faces loop, the D search's two
+  extra segment loops for every lone-piece face pixel, the zb form's second copy), e.g. bake a per-piece "lone fold"
+  flag and the fold's foot group at the piece scan, run the D search only where the plain loop found a turned segment;
+  then switch it on, capture master twice + new, sheets, the bar, the lock guards.

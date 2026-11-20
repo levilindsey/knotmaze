@@ -165,7 +165,7 @@ export function retryForm(src: string): string {
   src = src.split("if (kIn[i] == 3 && (key > labK").join("if (kIn[i] == 3 && KXT(k) && (key > labK");
   src = src.split("if (kIn[i] == 3) { scov[e] = true;").join("if (kIn[i] == 3 && KXT(k)) { scov[e] = true;");
   if (/Dk > (D|sa\[e\])\)|KRI > K0\.z\)|KRI > K0\.z && \(|kIn\[i\] == 3\)|kIn\[i\] == 3 && \(/.test(src)) throw new Error("gfFs home: a corner raise or cover without its retry test is left");
-  return loneFold(homeBurial(src));
+  return homeBurial(src); // K1482 s32: loneFold (below) is OFF: with it the browser's redraw stalled (cap.mjs, 240 s)
 }
 
 /**
@@ -177,7 +177,7 @@ export function retryForm(src: string): string {
  * segments turned back from the tangents at arc +-0.3. And a same-chain piece on another surface within arc 2 buries
  * q by its tube. Reads ps[] (set in every program the retry runs: the split form never takes the retry).
  */
-function loneFold(src: string): string {
+export function loneFold(src: string): string {
   const head = "float foldD(int j, int S, vec2 p, vec2 q) {\n";
   const i0 = src.indexOf(head); if (i0 < 0 || src.indexOf(head, i0 + 1) >= 0) throw new Error("gfFs s32: foldD not found once");
   const i1 = src.indexOf("\n}\n", i0) + 3; let fn = src.slice(i0, i1);

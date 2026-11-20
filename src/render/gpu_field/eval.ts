@@ -147,7 +147,7 @@ export class GfEval {
   }
   /** K1482 s28: member()'s home group for a piece left out of every group (its arm's home, too deep in z), else -1. */
   private mhb = -1;
-  /** K1482 s32: the t84e fold rule is on (retry programs: foldD's lone fold, the sibling burial); env GF_S32=0 off. */
+  /** K1482 s32: the t84e fold rule (retry programs: foldD's lone fold, the sibling burial); OFF unless env GF_S32=1. */
   private s32 = false;
   private mg = -1; private mramp = 1;
 
@@ -223,7 +223,7 @@ export class GfEval {
       if (e2 < d2) { d2 = e2; sf = T.vs[v] + u * (T.vs[v + 1] - T.vs[v]); fc = -(dx * tx + dy * ty) / (Math.sqrt(l2) * tl); }
     }
     if (!inOther) {
-      // K1482 s32 (retryForm's programs, gf_glsl.ts loneFold; env GF_S32=0 off in the mirror): a hairpin folded into ONE piece away from
+      // K1482 s32 (OFF: env GF_S32=1 in the mirror; gf_glsl.ts loneFold, not applied): a hairpin folded into ONE piece away from
       // a junction (t84e: chain 84's legs at about 35 degrees, both inner bands inked past the cusp into a dark patch).
       // The fold's other run buries q when it turns more than about 52 degrees back (cos > 0.62) and q lies inside its
       // tube, and either it turns more than 45 degrees (cos > 0.7, found by the plain search) with a piece of the chain
@@ -560,8 +560,8 @@ export class GfEval {
     const band = (D: number): number => 1 - ss(W - aa, W + aa, D);
     const band2 = (D: number): number => band(D) * ss(-aa, aa, D);
     // K1482 s32: the t84e fold rule (foldD, and the sibling burial below), in retryForm's programs only (gf_glsl.ts
-    // loneFold); env GF_S32=0 turns it off in the mirror, for a probe's before/after
-    this.s32 = kxh && (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 !== "0";
+    // loneFold, OFF until its program renders in the browser); env GF_S32=1 turns it on in the mirror
+    this.s32 = kxh && (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 === "1";
     for (let e = 0; e < ns; e++) {
       const S = this.sid[e]; let D = -Infinity; let v = 0; let wk = 0; let wa = -1; let wb = 0;
       for (let j = 0; j < this.np; j++) {

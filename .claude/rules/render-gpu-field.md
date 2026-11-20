@@ -97,7 +97,7 @@ strokes toward today's, and do not use today's border strokes as a bar.
   apart (gap 1 h up the band's chain: median 1.3 px at j59, 3.4-11 px at the wedges, but per-pixel spreads overlap and a
   per-piece gate leaves islands): gate on a per-(chain, over pass) run length baked in the tables. Probes: copy
   `GfEval.eval()`'s result, which is one reused object.
-- LONE FOLD (K1482 s32, eval.ts foldD past `!inOther`, gf_glsl.ts `loneFold` in retryForm): t84e's dark patch was a
+- LONE FOLD (K1482 s32, eval.ts foldD past `!inOther` behind env GF_S32=1, gf_glsl.ts `loneFold`, NOT applied: in the browser the redraw stalled): t84e's dark patch was a
   hairpin folded into ONE piece away from any junction, so no tube burial and no s7 fold applied and both inner bands
   inked past the cusp. The fold's other run now buries q there only on evidence of a step: cos > 0.62 and q in its tube,
   plus a sibling piece on another surface within arc 2 (cos > 0.7), a foot homed in a group but in none, or a foot out of
