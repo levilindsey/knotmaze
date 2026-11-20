@@ -85,4 +85,10 @@ list and K1482's handle fields. Never push, never edit `LEDGER.md`.
   fill 0 px. Sheets: `.claude/probes/K1482/out/s27/sheet_t4s*.png`, `sheet_places.png`.
 - t81s: no fix (`.claude/rules/render-gpu-field.md`, t81s entry): its tick pixels are unfolded, so the fold shift
   leaves it; all slots k348-370 of crossing 9:45 carry bits 3, so a flag switch cannot separate it. Next: run
-  45's +1 in-leg on from its corner to chain 9's band (a corner, not a cut), then the short out-leg can go.
+  45's +1 in-leg on from its corner to chain 9's band (a corner, not a cut), then the short out-leg can go.- Checks on the tip (src = eff52514d): the bar (STRICT=1, -NoPerfLock, ring/def/muse_hash/g41_user_tw64, base
+  df4506594) PASS new 0 grown 0 gone 0; under the perf lock hold 60/60 on link A and 60/60 with gfk=0, panelopen,
+  dragcheck_b PASS, dragcheck PASS. npm test in that sequence: 3195 passed, 3 failed, all in
+  gf_k1482_switch.test.ts, because run27.ps1 had set GF_KRETRY=1 (the Node default-off pins); without it that file
+  is 7/7. Full outputs: `.claude/probes/K1482/out/s27/raw/guards/*.txt` (run27.ps1 now clears GF_KRETRY first).- The clean npm test rerun (GF_KRETRY unset) never got the perf lock (muse-26Z held it 00:39-01:22+, two waits gave
+  up): next session runs `npm test` on this tip first, then lands eff52514d and 2097f737a+ in order.
+- Left: t81s (above); the preview builds are stopped and removed; this worktree's node_modules junction is kept.
