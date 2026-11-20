@@ -147,6 +147,8 @@ export class GfEval {
   }
   /** K1482 s28: member()'s home group for a piece left out of every group (its arm's home, too deep in z), else -1. */
   private mhb = -1;
+  /** K1482 s32: the t84e fold rule (retry programs: foldD's lone fold, the sibling burial); OFF unless env GF_S32=1. */
+  private s32 = false;
   private mg = -1; private mramp = 1;
 
   /** member()'s depth at the last depth() call: today's window (tables.depthAt). */
@@ -202,7 +204,6 @@ export class GfEval {
     if (!(this.phi[j] - this.plo[j] > 1)) return Infinity;
     let inOther = false;
     for (let m = 0; m < this.np; m++) if (m !== j && this.psurf[m] === S && this.pd[m] < this.T.h) { inOther = true; break; }
-    if (!inOther) return Infinity;
     const T = this.T; const c = this.pc[j]; const v0 = T.cV0[c]; const nseg = T.cNV[c] - 1; const closed = T.cClosed[c] === 1;
     let tx = 0; let ty = 0; let dp = Infinity;
     for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
@@ -212,14 +213,60 @@ export class GfEval {
       const ex = x - ax - dx * u; const ey = y - ay - dy * u; const e2 = ex * ex + ey * ey;
       if (e2 < dp) { dp = e2; tx = dx; ty = dy; }
     }
-    const tl = Math.sqrt(tx * tx + ty * ty); let d2 = Infinity;
+    const tl = Math.sqrt(tx * tx + ty * ty); let d2 = Infinity; let sf = 0; let fc = 1;
     for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
       let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
       const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
       const l2 = dx * dx + dy * dy; if (!(dx * tx + dy * ty < -0.5 * Math.sqrt(l2) * tl)) continue;
       const u = l2 > 0 ? Math.min(1, Math.max(0, ((qx - ax) * dx + (qy - ay) * dy) / l2)) : 0;
       const ex = qx - ax - dx * u; const ey = qy - ay - dy * u; const e2 = ex * ex + ey * ey;
-      if (e2 < d2) d2 = e2;
+      if (e2 < d2) { d2 = e2; sf = T.vs[v] + u * (T.vs[v + 1] - T.vs[v]); fc = -(dx * tx + dy * ty) / (Math.sqrt(l2) * tl); }
+    }
+    if (!inOther) {
+      // K1482 s32 (OFF: env GF_S32=1 in the mirror; gf_glsl.ts loneFold, not applied): a hairpin folded into ONE piece away from
+      // a junction (t84e: chain 84's legs at about 35 degrees, both inner bands inked past the cusp into a dark patch).
+      // The fold's other run buries q when it turns more than about 52 degrees back (cos > 0.62) and q lies inside its
+      // tube, and either it turns more than 45 degrees (cos > 0.7, found by the plain search) with a piece of the chain
+      // on another surface within arc 2 (the sibling), or the run's foot (member at its arc) is homed in a group but in
+      // none while p's piece is in none, or p's piece is in a group the run's foot is not. Where the plain search finds
+      // no fold, a second one also takes segments turned back from the tangents at arc +-0.3 (the D search), fold only.
+      if (!this.s32) return Infinity;
+      let viaD = false; const SD = 0.3;
+      if (!(d2 < T.h * T.h)) { viaD = true;
+        const L = T.cLen[c]; const sp0 = this.ps[j]; let t1x = tx; let t1y = ty; let t2x = tx; let t2y = ty;
+        for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
+          let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
+          const v = v0 + k; const a0 = T.vs[v]; const a1 = T.vs[v + 1];
+          for (let sgn = -1; sgn <= 1; sgn += 2) {
+            let sa = sp0 + sgn * SD; if (closed) { if (sa < 0) sa += L; else if (sa >= L) sa -= L; }
+            if (sa >= a0 && sa < a1) { if (sgn < 0) { t1x = T.vx[v + 1] - T.vx[v]; t1y = T.vy[v + 1] - T.vy[v]; } else { t2x = T.vx[v + 1] - T.vx[v]; t2y = T.vy[v + 1] - T.vy[v]; } }
+          }
+        }
+        const l1 = Math.sqrt(t1x * t1x + t1y * t1y); const l2t = Math.sqrt(t2x * t2x + t2y * t2y);
+        d2 = Infinity; fc = 1;
+        for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
+          let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
+          const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
+          const l2 = dx * dx + dy * dy; const ll = Math.sqrt(l2); if (!(ll > 0)) continue;
+          const f0 = -(dx * tx + dy * ty) / (ll * tl); const f1 = -(dx * t1x + dy * t1y) / (ll * l1); const f2 = -(dx * t2x + dy * t2y) / (ll * l2t);
+          const fm = Math.max(f0, f1, f2); if (!(fm > 0.5)) continue;
+          const u = Math.min(1, Math.max(0, ((qx - ax) * dx + (qy - ay) * dy) / l2));
+          const ex = qx - ax - dx * u; const ey = qy - ay - dy * u; const e2 = ex * ex + ey * ey;
+          if (e2 < d2) { d2 = e2; sf = T.vs[v] + u * (T.vs[v + 1] - T.vs[v]); fc = fm; }
+        }
+      }
+      if (!(d2 < T.h * T.h) || !(fc > 0.62)) return Infinity;
+      const hi = fc > 0.7 && !viaD;
+      let sib = false;
+      for (let m = 0; m < this.np; m++) {
+        if (m === j || this.pc[m] !== c || this.psurf[m] === S) continue;
+        let ds = Math.abs(this.ps[m] - this.ps[j]); if (closed) ds = Math.min(ds, T.cLen[c] - ds);
+        if (ds < 2) { sib = true; break; }
+      }
+      if (sib && hi) return d2;
+      const zf = this.depth(c, sf); this.member(c, sf, zf);
+      if (this.pg[j] < 0 && this.mg < 0 && this.mhb >= 0) return d2;
+      return hi && this.pg[j] >= 0 && this.pg[j] !== this.mg ? d2 : Infinity;
     }
     return d2;
   }
@@ -512,6 +559,9 @@ export class GfEval {
     // per surface: coverage a and ink v (max over exposed terms, the winner kept)
     const band = (D: number): number => 1 - ss(W - aa, W + aa, D);
     const band2 = (D: number): number => band(D) * ss(-aa, aa, D);
+    // K1482 s32: the t84e fold rule (foldD, and the sibling burial below), in retryForm's programs only (gf_glsl.ts
+    // loneFold, OFF until its program renders in the browser); env GF_S32=1 turns it on in the mirror
+    this.s32 = kxh && (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 === "1";
     for (let e = 0; e < ns; e++) {
       const S = this.sid[e]; let D = -Infinity; let v = 0; let wk = 0; let wa = -1; let wb = 0;
       for (let j = 0; j < this.np; j++) {
@@ -535,6 +585,17 @@ export class GfEval {
         }
         // the piece's own tube elsewhere along its fold (a tight bend folded into one piece): OFF, form B never
         // buries a piece by its own fold (K1362 s1: 132 census finds were this self-burial)
+        // K1482 s32 (retry programs): a piece of the same chain on another surface within arc 2 of this one (its
+        // sibling across a group step) buries q by its tube, as a same-surface piece would
+        if (this.s32 && bur < 1) {
+          for (let m = 0; m < this.np && bur < 1; m++) {
+            if (m === j || this.pc[m] !== this.pc[j] || this.psurf[m] === S) continue;
+            const c = this.pc[j]; let ds = Math.abs(this.ps[m] - this.ps[j]); if (T.cClosed[c] === 1) ds = Math.min(ds, T.cLen[c] - ds);
+            if (!(ds < 2)) continue;
+            const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
+            if (wb2 > bur) bur = wb2;
+          }
+        }
         if (SELF_BURIAL && bur < 1 && this.phi[j] - this.plo[j] > 1) {
           const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(j, qx, qy)));
           if (wb2 > bur) bur = wb2;

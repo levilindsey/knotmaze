@@ -88,3 +88,38 @@ re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K
 report: the commits to land by SHA in order, what changed at the site by eye, the numbers, each guard's result
 with the path of its whole output file, the sheets' absolute paths, a `Ledger items` list and K1482's handle
 fields. Never push, never edit `LEDGER.md`.
+
+### WIP K1482 s32 (06:15)
+
+- Mirror only so far (`.claude/probes/K1482/s32`: px32, mimg32, wd32; outputs in `out/s32`). The patch is
+  chain 84's hairpin: ONE piece spans both legs, so no tube burial applies and foldD (s7) is skipped when no
+  other same-surface piece is in reach; the two inner bands overlap past the cusp (legs at about 35 degrees).
+- C1 (foldD without its inOther guard): crotch gone but a flag (right leg's band up to c66's group step) and a
+  dot stay; notches 1689,224, 1571,252, 1895,1358, 1543,1602. C2 (C1 gated on the fold angle) cannot tell
+  t84e from those clean points. B (same-surface pieces zt deeper do not bury): 52 gain-only places. All fail.
+- G1 (C1 only where the fold run's group or home differs from the piece's): 3 loss-only places (t84e, 1689,224, 1571,252). G3 (carried on with; env `GF_S32=1`, off by default so src behaves as master): C1 only where p's piece is in a group
+  and the fold's other run is not (t84e and 1689,224 change); at t84e the diagonal now thins to a hairline
+  and the flag stays. Next: a join at the cusp (round or bevel) instead of burying one band.
+### WIP K1482 s32 (07:00)
+
+- Failed on the mirror: R, Z (with D: 1687,226 and 1565,256), C 0.55, CH 0.55 (V-notch 1571,254), CH 0.62 without
+  DH (1565,256). Passing (wd32_hmdh.txt: only t84e, 1537,938, 32 samples, loss-only): foldD past !inOther with
+  fold cos > 0.62; buries when cos > 0.7 with a sibling piece of the chain on another surface within arc 2, or the
+  partner run (depth/member at its foot) is homed in a group but in none, or p's piece is in a group the partner is not;
+  a D search (tangents at arc +-0.3) only when the plain search finds no fold (hi then off); G6 burial by the sibling's tube.
+- Next: write it as one clean rule (no env), port to gf_glsl.ts, npm test, guards as time allows. Residual: one faint px 1540,950.
+
+### Handoff K1482 s32 (07:30)
+
+- Done on the mirror: the lone fold rule (eval.ts foldD past `!inOther` + the sibling burial, now behind env GF_S32=1).
+  wd32 (`out/s32/wd32_final2.txt`): only t84e changes, 1537,938, 32 samples at stride 2, all loss; with gfk=0
+  (`wd32_final_gfk0.txt`) nothing changes. By eye (mirror, `out/s32/mimg_t84e_hmdh.png`, `_z`): the patch is gone,
+  the diagonal and the ear meet at the cusp; one faint px stays at 1540,950 (ink 0.225: a D fold at cos 0.599).
+- The GLSL twin `loneFold` (gf_glsl.ts, statement for statement) was on in retryForm at 8cc774eb8 (npm test green) but in
+  Chrome its composites ran about 50x slower than master's (diag_n.txt: 3 composites in the 5 s after the switch; master's
+  diag_m.txt: 90, then 237) and cap.mjs's forced redraw stalled past 240 s twice (cap_n1.txt). Turned OFF after it, so the
+  tip renders as master. Not run: the capture diff and sheets, the bar, hold, panelopen, dragchecks.
+- Next: make loneFold cheap (suspects: member()/depth() inlined inside foldD inside the faces loop, the D search's two
+  extra segment loops for every lone-piece face pixel, the zb form's second copy), e.g. bake a per-piece "lone fold"
+  flag and the fold's foot group at the piece scan, run the D search only where the plain loop found a turned segment;
+  then switch it on, capture master twice + new, sheets, the bar, the lock guards.
