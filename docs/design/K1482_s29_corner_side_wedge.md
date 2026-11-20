@@ -86,3 +86,45 @@ and at each milestone), whichever comes first; keep the last 30 minutes for the 
 stop: re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K1482 s29` here, commit,
 and report: the commits to land by SHA in order, the numbers, the sheets' absolute paths, a `Ledger items`
 list and K1482's handle fields. Never push, never edit `LEDGER.md`.
+
+### Handoff K1482 s29
+
+Stopped 2026-11-20 about 02:55 (start 01:29), with the checks done. **Landed: t56s only.** t84e, j59 and j47 are as on
+master.
+- **Commits, in order:**
+  - 1bb6f9c19: the side-face burial along a tangent run (WIP).
+  - e66fe43b4: the home burial's z guard ramps over 1e-4..1e-3 instead of 0.004..0.02 (eval.ts + gf_glsl.ts), and
+    drops 1bb6f9c19's rule. The net src diff against 0aadaa385 is that guard alone, 8+/4- lines.
+  - 029a29ec2: lore.
+  - this handoff.
+- **t56s, by eye:** the corner pixel 1040,267 is ink again, as with `gfk=0`, and the corner is square.
+  - Cause: chain 28 ramps into group 64 there (homeRamp 0.12). Chain 56 reads |z| 0.005 at its tent's foot, so the old
+    guard counted it as being at z 0 and buried chain 28's over-pass outline.
+- **Link A** (GPU, master m vs c2 = e66fe43b4):
+  - Floor (m vs m2): 0 px at T 1 and at T 6, on and off.
+  - c2: 1 place changed, 1040,267, 1 px. It only gains ink, and no place only loses ink.
+  - `gfk=0`: 0 px.
+  - Fill: 0 px.
+  - In the mirror the same rule moves 4 px on the whole link (1039,266, 1040,267, 1880,1105 and 1800,1592), all of
+    them ink put back.
+- **The bar** (STRICT, -NoPerfLock, ring, def, muse_hash, g41_user_tw64, -Base 0aadaa385): PASS, new 0, grown 0, gone 0.
+- **The guards** (`perf_lock.ps1`):
+  - hold, as it loads and with `gfk=0`: PASS, 60 of 60 frames each.
+  - panelopen: OK.
+  - dragcheck_b: PASS.
+  - dragcheck: PASS.
+  - npm test with GF_KRETRY cleared: 3198 passed, 18 skipped.
+- **Why the other three stay open:**
+  - **j59.** The step is chain 43's band plus chain 23 (stub t23e) running ALONG chain 7's outline.
+    - Burying the under band inside the over pass's tube along that run (1bb6f9c19) opened the white sliver's border
+      mid-strip.
+    - With a tolerance (TOLG), that rule left a flag tick and a hairline at t84e and removed a whole outline to its
+      left.
+    - A round cap at the run's end leaves knobs.
+  - **t84e.** It is k159's own-fold piece band against chain 84. It needs paper (an ink-only change cannot make it),
+    and the own-fold variants left a flag.
+  - **j47.** It was not reached.
+  - **Next:** a rule that ends chain 43's and chain 23's bands where they meet chain 7's band, without burying along
+    the run. Build it in the mirror first (`hb29.ts`, `spine29.ts` with BOX, `mimg29.ts`).
+- **Evidence:** `.claude/probes/K1482/s29` (tools) and `.claude/probes/K1482/out/s29` (sheet `sheet_s29_sites.png`,
+  diffs `diff_m_c2_t1.txt`/`_t6.txt`, guards `raw/guards/*.txt`).
