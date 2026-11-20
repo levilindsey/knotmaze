@@ -1163,15 +1163,6 @@ Every other item below waits on the trigger it names.
   gfh=1 capture) and j24 dash (25.4, 0.8); g41_def_tw42 j132 wedge and dash, j89 notch and dash; g41_ring_tw42
   j8 notch; lightpaper j29 wedge, j7 dash and notch, j27 smear, j23 notch and dash; muse_hash j144 tick. One
   bounded Muse run per site or cause once 26G and 26H show the pattern
-- **K1494** · fade.mjs guard prints FAIL on cfe66a7d (fl=0: 677/679 sides pass, 348/350 crossings complete;
-  fl=1.2: 439/451 sides, 287/299) while its distances match today (p90 |d-today| 0.0001-0.0124 world) - is the
-  FAIL its crossing-completeness/dot criterion rather than a distance failure? Seen in Muse batch 26 Run F's
-  guards (.claude/probes/K1474/out/26F/guards_fade/summary.txt); not a Run F Done item. Answered by K1525 s1
-  on 330069e61 (2026-11-19): yes, the dot criterion: distances pass at every fl (678/679, 627/631, 439/451,
-  676/679 sides at fl 0 / 0.5 / 1.2 / 0.14) and 79 / 98 / 68 / 103 sides carry more than 2 dots, gf and gfh
-  alike; 26X saw the same FAIL 10/10 on one state. Unchecked: whether the dot test passed when K1460 closed
-  (7fe4b9c6). Run it there first; if it passed, find the commit since that brought the dots back, else name
-  what the count sees, then fix it or re-pin the guard
 - **K1504** · rp=gf j64 on Levi's link: a pinhole about 0.1 wide where chains 28 and 56 of one surface part
   (in the CPU mirror too, so geometry, not the look: .claude/probes/K1482/out/s7/j64_gm.png). Fill holes in
   one surface's union narrower than about a stroke width (Handoff K1482 s7)
@@ -2981,6 +2972,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 - **K1223** · Quiet path, dead since K1211 S6 (13aab452): kPaintAt's quiet arg and kPulseCrestQuiet (`paint_glsl.ts`), the quiet flag (`paint_math.ts`), mode 2 in `arm_strip.ts` and joinery's writeStripRow, the quiet tests in `paint_gameplay.test.ts`. Done in a4d78a2ab (2026-11-20).
+- **K1494** · fade.mjs guard prints FAIL on cfe66a7d (fl=0: 677/679 sides pass, 348/350 crossings complete; fl=1.2: 439/451 sides, 287/299) while its distances match today (p90 |d-today| 0.0001-0.0124 world) - is the FAIL its crossing-completeness/dot criterion rather than a distance failure? Done in 5a2b12673 (2026-11-20).
 - **K1542** · rp=gf: the home burial (K1482 stage 28, 2ae8a96d1) takes 2 antialias px off t56s, a clean corner, on link A (1040,267 on the stage's frame: outline 18,20,27 to paper 29,31,47; nothing to see at 6x). Done in d20c2a809 (2026-11-20).
 - **K1543** · `npm test` fails 3 of the 7 tests in test/render/gf_k1482_switch.test.ts whenever env `GF_KRETRY=1` is set: the file pins the Node default off (run alone with and without the variable, 2026-11-20). Done in 0aadaa385 (2026-11-20).
 - **K1467** · Tracked probe output 1034.9 MB (9530 files) -> 491.3 MB (6005) by git rm --cached only in 33f755fc1; disk and history keep every file (last tracking commit 40ee10834); fresh worktrees 1061.6 -> 517.5 MB. Remains: open IDs K1482 100.2, K1395 72.5, K1407 59.8, K863 56.4, K1451 39.3 MB and 36.6 MB live-named closed sheets; guard test/repo/probe_budget.test.ts in a4144e2cf (after-total + 100 MB, names git rm --cached). Done in 33f755fc1 (2026-11-19).
