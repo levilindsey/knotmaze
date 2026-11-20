@@ -2552,11 +2552,6 @@ Every other item below waits on the trigger it names.
   r <= 2aa corners and ink moves through the composite. Not landed, per the run's Done 8; the WIP is
   on branch muse-26p-wip (d0f31f43, pushed) with gf_k1517.test.ts; narrow the gate to corners whose
   sector fill is actually absent, then re-bar. K1504's pinhole is the same seam (wider parting).
-- **K1529** · rp=gf capture A/Bs: some loads of one build land on a view shifted by under a pixel (76,609 px
-  differ, all on antialiased edges and soft shadows; not the reload after a hash miss, not concurrent GPU use,
-  not the background; a per-page view state such as the eased camera's offset is inferred, not tested). Until
-  the capture pins the view, compare only within loads that agree (`The 76,609 px fill difference` in `###
-  Handoff K1482 s21`, docs/design/K1482_s21_corners_rest.md; out/s21/sd_sheet.png in the s21 worktree)
 - **K1532** · rp=gf with the corner retry on (C1, K1482 s22; gfk=1 after stage 23): the fill look on link A
   differs from the start build at 29 px by 1 level of 255, spread over the frame. Two fill-neutral probe
   builds give 0 px, so the 29 are C1's own; cause untested (`### Handoff K1482 s22`, Numbers, in
@@ -2948,6 +2943,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1529** · rp=gf capture A/Bs: some loads of one build land on a view shifted by under a pixel (76,609 px differ, all on antialiased edges and soft shadows; not the reload after a hash miss, not concurrent GPU use, not the background; a per-page view state such as the eased camera's offset is inferred, not tested). Done in 434a34092 (2026-11-19).
 - **K1524** · rp=gf corners: is rounding welcome at the sharp corners Levi did not name? Levi, 2026-11-19: "take the rounding". The second corner try is the default under gfh=1 (`gfk=0` turns it off), docs/design/K1524_keep_fault_gate.md deleted, probe branch `k1482s21-kclr` deleted; live 18:02. Done in 083a8cb1c (2026-11-19).
 - **K1535** · rp=gf's border look differs from today's renderer's (Muse 26Y's numbers). Dropped: already decided: Levi 2026-11-17 kept gf's own border look (K1455, .claude/rules/render-gpu-field.md). With explore off the two differ the same way (four live shots 2026-11-19, untracked .claude/probes/K1535/out), so nothing to ask (2026-11-19).
 - **K1533** · The perf lock had no fair way in: Muse 27A took it with "remove whatever is there, write my line, run" and re-took it with no gap for 80 minutes (2026-11-19 14:19-15:50), so K1482 stage 23's guards waited and never ran before it landed. Done in 2dc1d5d92 (2026-11-19).
