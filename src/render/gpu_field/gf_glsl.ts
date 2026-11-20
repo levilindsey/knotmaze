@@ -196,7 +196,10 @@ function homeBurial(src: string): string {
   // (bx's form reads fb, its band2(h - X) computed before the loops)
   const VAL = ["      float val = (1.0 - bur) * band2(h - X);\n", "      float val = (1.0 - bur) * fb;\n"].filter((s) => src.includes(s));
   if (VAL.length !== 1) throw new Error(`gfFs s28: the piece face's value moved (${VAL.length} forms)`);
-  // (m's depth only where the term would raise bur: the partner must sit out of every crossing's window, t56s)
+  // (m's depth only where the term would raise bur: the partner must sit out of every crossing's window, t56s).
+  // A packed P1 gets pkey and pramp from P0 and never set ps: set it from the key segment (P0's nearest), as SPLITK does
+  const UNP = "#else\n      if (pg[j] >= 0 && pramp[j] > 0.0 && pramp[j] < 1.0) {";
+  if (src.includes("pkey[j] = uintBitsToFloat(E.z);")) rep(UNP, "#else\n      ps[j] = A.z + u * (B.z - A.z); // K1482 s28: the home burial's depth reads it\n      if (pg[j] >= 0 && pramp[j] > 0.0 && pramp[j] < 1.0) {", 1);
   const HB = "      if (bur < 1.0 && S < -MAXP) { int B = (-1 - j - S) / MAXP - 1; for (int m = 0; m < np && bur < 1.0; m++) { if (PSURF(m) != B || PC(m) == PC(j)) continue;" +
     " float wb2 = 1.0 - ss(h - W - aa, h - W + aa, pd[m]); if (!(wb2 > bur)) continue;" +
     " wb2 *= 1.0 - ss(0.004, 0.02, abs(depth(PC(m), ps[m], keyBin(PC(m), ps[m])))); if (wb2 > bur) bur = wb2; } } // K1482 s28: home burial\n";
