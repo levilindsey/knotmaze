@@ -77,3 +77,30 @@ and at each milestone), whichever comes first; keep the last 30 minutes for the 
 stop: re-read this brief and `git log`. On stopping: stop your previews, commit WIP, append
 `### Handoff K1482 s28` here, commit, and report: the commits to land by SHA in order, the numbers, the
 sheets' absolute paths, a `Ledger items` list and K1482's handle fields. Never push, never edit `LEDGER.md`.
+
+### Handoff K1482 s28
+
+Nothing lands in `src/`. The try is in the WIP commits 5710afd7c and 1d7facd32. The last commit puts
+`tables.ts` back to master. The try was `GF_KXO`: a retry-only, ink-only corner on the ball tangent to the two arms and the
+crossing pass's outline (`tri3`, Newton on three tubes). It also emitted the corner (cut arm, crossing) at the
+pocket's close. The kept pockets must close at the cut arm, and each arc's sag must be within GF_KSAG.
+
+- **Captured** at 1d7facd32 vs dfcced282 on link A, as it loads, with matching views:
+  - border: 1256 px in 23 clusters; fill: 1 px (at t56e).
+  - At the five sites, j4 moved 4 px and t84e 0. j47, j59 and t45s found no pocket: j47's candidate failed the
+    close check, j59's ball is 0.011 h, and t45s's foot lands at the window start.
+  - 22 V points Levi never named turned into rounds. Clean ones: t56e, t63e, t59e, t29e, t39e, t36e, t54s, t83e,
+    t58e, t4s, j143. With a spur, a step or a thickened tip: t10e, j95, t44e, t77s.
+  - `&gfk=0`: the two loads settled on views 2e-5 apart, so its 42 + 30 px is unread. The tables are master's by
+    construction.
+- **Why it cannot fix these sites.** An ink-only arc only adds ink. j4's pocket ball (0.205 h) sits in ink already:
+  the pocket is closed by chain 82's -1 outline and chain 68's -1 outline, with a 1-2 px step "B..C" at about
+  (1636, 194). A wedge (t84e) needs paper, not ink.
+- **The mirror matches the GPU.** Overlays at j4, j139, t56e and t10e put the mirror's ink on the GPU's border ink.
+  The early "mismatch" was my probe window. Probes: `.claude/probes/K1482/s28/mrender28.ts` (ink PGM),
+  `ovl28.py` (mirror over GPU), `wmap28.ts` (who draws each pixel: winKind:winA:winB, and the fill chain),
+  `grid28.py` (master | new grids).
+- **Next.** Name the exact pixels of each notch first: s20's `ba_fix1_notch_*.png` in worktree
+  `agent-a0f22901bb5fca4a4`, against `wmap28.ts` maps. Then decide whether the look needs ink taken away (burial,
+  a cap) rather than an arc added. The 22 V-to-round changes are a look question for Levi (sheets
+  `out/s28/g1.png`, `g4.png`, `g5.png`). They do not land without his call.

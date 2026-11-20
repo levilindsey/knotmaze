@@ -53,6 +53,12 @@ strokes toward today's, and do not use today's border strokes as a bar.
   the growth probes radii past the final r. j4, j47 and j59 are crossings by OTHER chains (tiny or no ball), and
   t84e/t45s have no retry corner: they need a corner solved against the crossing's outline, not a smaller ball.
   Two loads of one hash can settle on views 2e-5 apart (21.29684 vs 21.29682): compare `gf_b2view.txt` before a diff.
+- THE POCKET INCIRCLE, REJECTED (K1482 s28, `GF_KXO` at 1d7facd32, not landed): an ink-only retry corner on the
+  ball tangent to both arms AND the crossing pass's outline left the five sites as they were on the GPU (j4 4 px,
+  t84e 0; j47, j59, t45s found no pocket) and turned 22 V points Levi never named into rounds, some with a spur or
+  step (t10e, j95, t44e, t77s). An ink-only arc only adds ink: j4's pocket ball (0.205 h) lies in ink already, and a
+  wedge (t84e) needs paper. The mirror (kRetry, `withHome`, `GfEval`) matched the GPU's border ink at j4, j139, t56e
+  and t10e: judge a candidate there before capturing.
 
 ## The pass on the Pixel (stage 4, `K1362_s4_shader.md`)
 
