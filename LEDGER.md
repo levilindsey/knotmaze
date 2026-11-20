@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1536.
+Next free ID: K1538.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -339,21 +339,6 @@ Next free ID: K1493.
   clone pays; the 89 text files hold nothing private (searched); a rewrite re-IDs 164 commits and strands 21
   local branches, about 100 worktrees, Muse's checkout and the laptop's clone. Recommended to Levi: leave it,
   or one rewrite later together with K1467 (same page as K1444)
-- **K1524** · rp=gf corners: is rounding welcome at sharp corners Levi did not name? K1482 s22's C1 (a294f3271
-  on branch `worktree-agent-adabb55bc67661562`: the second corner try with longer arms, ink only, kept where
-  r >= 0.1 h and sag <= 0.35 h) finishes j14 and passes the K1436 bar on ring, def, muse_hash and g41_user_tw64
-  and every guard, but on link A it rounds 98 sharp loop tips and V corners he did not name, 70 of them by
-  30 px or more (`unnamed_c1_ranked.txt` and the sheets in the s22 worktree's `.claude/probes/K1482/out/s22/`;
-  clean arcs at the 24 largest, by the coordinator's eye). Levi's call, asked 2026-11-19: round them (C1
-  becomes the default), keep today's sharp corners (C1 stays off, and j14 needs a gate that tells a faulty
-  meeting from a clean point), or name the rows to keep. C1 is live behind `gfk=1` since 2026-11-19 (K1482
-  stage 23, 1485fee2b; off by default): link A with and without `&gfk=1` shows the two looks (seen on the
-  live site by the coordinator at j14, j41 and j4, build 2dc1d5d; both links are on the card). On "take": make
-  it the default and delete docs/design/K1524_keep_fault_gate.md; on "keep": run that brief's stage. fix3
-  (s20, 37eda49e8) failed the bar with 10 finds and is superseded;
-  delete the local probe branch `k1482s21-kclr` (7b2b22e99) once this is answered. Card:
-  https://claude.ai/artifact/GU7kbzAG1uofdBLFD2UBh1 (sheets, `card.py`, `card_bar.py` and `card_c1.py` in
-  untracked `.claude/probes/K1524/`)
 
 ## In progress
 
@@ -757,11 +742,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a886c0bec734229eb` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 17:02, 2 h cap ~19:02)
-  - branch: `worktree-agent-a886c0bec734229eb`, worktree `.claude/worktrees/agent-a886c0bec734229eb`; last commit: `87792f434`
-  - evidence: .claude/probes/K1482/s25 and out/s25 (untracked, in the s25 worktree); stage 24: .claude/probes/K1482/s24 and out/s24 (untracked, in worktree .claude/worktrees/agent-a1ac1faa36f86dcc4, kept); stage 23: .claude/probes/K1482/s23, out/s23 (raw/hold_tip, hold_tip_on, dcf_tip, dcb_tip the failed run, dcb_tip2_1, dcb_tip2_2) and .claude/probes/K1436/out/bar/k1482s23 (untracked, in worktree .claude/worktrees/agent-a5016731195d015ff, kept; branch worktree-agent-a5016731195d015ff at c72e267c2); C1: worktree .claude/worktrees/agent-adabb55bc67661562 (kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (kept); .claude/probes/K1524 (the card)
-  - next: Stage 25 (K1528: t59s, j15, t58e, t23e, j41 if time) running since 2026-11-19 17:02. On its report: look at its crops at each site with the switch off and on and at the largest changes of its whole-link border diff, merge (rebase in its worktree, ff the coordinator worktree, npm test, push), watch the deploy. Stage 24 (K1527) stopped 16:57 with no fix; its docs and lore are on master (9a8eaefa5), K1527 carries the causes and next steps. Stage 23's guards ran 16:05-17:00 on master's build 2dc1d5d92: hold 60/60 with the switch off and with gfk=1, panelopen ok, fill drag check PASS (136, 137, 86 px; limit 200), border drag check PASS twice at 0 px after one failed run (the 60 s redraw wait timed out at the third stop on a new Chrome profile; the two drag checks now wait 180 s, WAITMS, 87792f434). A run on a new profile with the 180 s wait was started 17:04 to confirm the cause (scratch output; write its result here). Then one at a time in this file area: stage 26 (K1526, brief docs/design/K1482_s26_crossing_in_ball.md), stage 27 (K1527, brief docs/design/K1482_s27_flag_step.md), K1523, j64 (K1517), K1525's field stage, K1419's partner capture, K1463. Muse's 26Z2 edits gf_look.ts or gf_pass.ts: it was moved to the end of .claude/probes/K1053/queue.txt (main checkout) and stage 25's agent knows; put a # before its line while a stage runs if its turn comes. K1524 (the card has both live links) unanswered: on take make gfk the default and delete docs/design/K1524_keep_fault_gate.md; on keep run that brief; then delete probe branch k1482s21-kclr.
-  - brief: `docs/design/K1482_s25_side_fillet.md`
+  - owner: agent `a306305e3593e9802` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 18:06, 2 h cap ~20:06)
+  - branch: `worktree-agent-a306305e3593e9802`, worktree `.claude/worktrees/agent-a306305e3593e9802`; last commit: `2a5119979`
+  - evidence: .claude/probes/K1482/s26 and out/s26 (untracked, in the s26 worktree); stage 25: .claude/probes/K1482/s25 and out/s25 (untracked, in worktree .claude/worktrees/agent-a886c0bec734229eb, kept; branch worktree-agent-a886c0bec734229eb at 5052e0e82, its handoff and lore landed in 2a5119979); the flip guards: .claude/probes/K1524/flip (untracked, coordinator worktree); stage 24: .claude/probes/K1482/s24 and out/s24 (untracked, in worktree .claude/worktrees/agent-a1ac1faa36f86dcc4, kept); stage 23: .claude/probes/K1482/s23, out/s23 (raw/hold_tip, hold_tip_on, dcf_tip, dcb_tip the failed run, dcb_tip2_1, dcb_tip2_2) and .claude/probes/K1436/out/bar/k1482s23 (untracked, in worktree .claude/worktrees/agent-a5016731195d015ff, kept; branch worktree-agent-a5016731195d015ff at c72e267c2); C1: worktree .claude/worktrees/agent-adabb55bc67661562 (kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (kept); .claude/probes/K1524 (the card)
+  - next: Stage 26 (K1526: j50, j4, j47, t84e, j59, t45s) running since 2026-11-19 18:06. On its report: look at its crops at each site as it loads and with `gfk=0`, and at the largest changes of its whole-link border diff (luminance step 6), merge (rebase in its worktree, ff the coordinator worktree, npm test, push), watch the deploy. Stage 25 (K1528) stopped 18:02 with no fix; its handoff and lore are on master (2a5119979) and K1528 carries the causes and next steps. K1524 is answered ("take the rounding"): the second corner try is the default since 083a8cb1c (deployed 18:02; K1536 is the Node default). Its guards on that build: flag check PASS, border drag check 0 px at four stops, fill drag check 0 px at two stops, then a GPU process restart in the probe's Chrome (K1468) after which the dragged page lacked the start marker's glow (1672 and 1600 px in one ring, threads 0 px: K1537); both drag checks now fail such a stop by name (2a5119979). Still owed: the fill drag check with the rounding on, on a new Chrome profile and then warm (queued 17:58 behind Muse 27B's perf lock), and a look at link A on the live site as it loads and with `gfk=0`: write both results here. Stage 23's border drag check on a new profile with the 180 s wait PASSED (0 px at all stops, cold and warm; cold stops 37 to 60 s apart, warm about 35 s). Then one at a time in this file area: stage 27 (K1527, brief docs/design/K1482_s27_flag_step.md), K1528's next steps, K1523, j64 (K1517), K1525's field stage, K1419's partner capture, K1463, K1536. Muse's 26Z2 edits gf_look.ts or gf_pass.ts: it is last in .claude/probes/K1053/queue.txt (main checkout); put a # before its line while a stage runs if its turn comes
+  - brief: `docs/design/K1482_s26_crossing_in_ball.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -1193,9 +1178,9 @@ Every other item below waits on the trigger it names.
 - **K1526** · rp=gf corners, leftover kind 1 (j50, j4, j47, t84e, j59, t45s on link A): a crossing thread runs
   through the retry ball, or the arms past the cut are too short for one. The ball needs the crossing pass's
   near outline as a third bound; longer arms do not help (GF_KFROM and GF_KX2 rejected, patches in the s21
-  worktree's .claude/probes/K1482/s21). Not taken by stage 22; it builds on the retry (C1, behind `gfk=1`
-  after stage 23). Brief ready, queued behind K1482 stage 25:
-  docs/design/K1482_s26_crossing_in_ball.md (stage 26)
+  worktree's .claude/probes/K1482/s21). Not taken by stage 22; it builds on the retry (C1, the default
+  since K1524). K1482 stage 26 is on it since 2026-11-19 18:06:
+  docs/design/K1482_s26_crossing_in_ball.md
 - **K1527** · rp=gf corners, leftover kind 2 (t81s's top tick, t4s's step). K1482 stage 24 (2026-11-19) found
   both causes and no fix (`### Handoff K1482 s24` in docs/design/K1482_s24_tick_step.md; lore GAP JOINT FLAGS
   in .claude/rules/render-gpu-field.md). t81s: the tick is stage 18's under rule in `gapJointFlags` flagging
@@ -1207,15 +1192,43 @@ Every other item below waits on the trigger it names.
   t4s: chain 4's arm-extension end sits on chain 66's centre line and its disc hides part of chain 66's -1
   band (the step, and a hole at 2177,634 on the s24 frame); untried: the hiding loops in eval.ts and gf_glsl.ts
   ignore another piece's hiding deep inside the band, or the end moves off chain 66's centre line. Brief
-  ready, queued behind stages 25 and 26: docs/design/K1482_s27_flag_step.md (stage 27)
+  ready, queued behind stage 26: docs/design/K1482_s27_flag_step.md (stage 27)
 - **K1528** · rp=gf corners, leftover kind 3 (t59s's twist foot, j15's Z, t58e's second V, t23e's patch): two
   outlines converge with no corner at all, so no ball exists; needs a new side-to-side fillet. j41 (a sharp
   ">" kept by a 0.26h first-pass corner; retrying it changes nothing visible) fits no kind yet (`### Handoff
-  K1482 s21` in docs/design/K1482_s21_corners_rest.md). K1482 stage 25 is on it since 2026-11-19 17:02:
-  docs/design/K1482_s25_side_fillet.md
+  K1482 s21` in docs/design/K1482_s21_corners_rest.md). K1482 stage 25 (2026-11-19) stopped with no
+  fix (`### Handoff K1482 s25` in docs/design/K1482_s25_side_fillet.md; lore CONVERGING OUTLINES). j15's spike
+  is no missing corner: chain 70's start strokes over chain 5, whose arm their own crossing cut (next: rank
+  that stroke under the cut partner, in the mirror first, then diff the whole border look; burying the stroke
+  opened the eye's outline at 49 places). t23e's outlines run tangent, corner r <= 0.03 h (next: half strokes
+  into the overlap, w = (W - g) / 2, so the band stays W wide). t59s: j132's first-try corners are 0.031 h and
+  0.087 h, under the 0.1 h minimum (retrying small corners rounds it and adds 13 corners nobody has looked at).
+  t58e's second V: unchanged by every try. j41 not taken. A third corner try (arms cut behind their root)
+  added ticks at t77s, t14e and j15 and was backed out (edd983c0f on the s25 branch). Queued behind stages 26
+  and 27
 
 ## Residuals (known, not fixed)
 
+- **K1537** · After a WebGL context loss and restore the glow ring around the start marker is missing. Seen
+  once, 2026-11-19 17:42, build 083a8cb1c, in the fill drag check (.claude/probes/K1458/dragcheck.mjs, link
+  `?3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&fl=1.2&rp=gf&gfh=1`): the probe Chrome's GPU
+  process restarted during a cold gf compile (K1468; crash dump 17:42:07), the page error `Cannot read
+  properties of undefined (reading 'stats')` followed 26 s later (gf disposed and rebuilt), and from then on
+  the dragged page differed from a fresh load by 1672 and 1600 px, all in one ring at device px x 745-826, y
+  78-159 (css 372,39 to 413,80), levels <= 28, threads 0 px. Not established: which sprite it is (first
+  suspect: the walker's glow, fabric_maze_renderer.ts `WALKER_GLOW_TEX`, a canvas texture cached at module
+  level), whether today's renderer loses it too, and whether it is the app's or the probe's (the probe pins
+  `advanceClocks`, `paintClock` and `pulseBorn` on a renderer the restore may have rebuilt). Repro to try:
+  lose and restore the app canvas's context with `WEBGL_lose_context`, then compare that ring with a shot from
+  before. A bounded Muse fix run fits once it reproduces (numeric: the ring's px against the shot before the
+  loss). Evidence, untracked in the coordinator worktree .claude/worktrees/agent-af52b1a95572b7c1a:
+  .claude/probes/K1524/flip (dcf_marker_stops.png, dcf_diff_1.2.png, dcf_diff_0.14.png, dcf_diff.py, notes.md,
+  the two GPU-process dumps)
+- **K1536** · rp=gf: a Node build still leaves the second corner try OFF (tables.ts `GF_KRETRY` reads env
+  `GF_KRETRY=1`) while the page has it on since K1524 (083a8cb1c, frame_loop.ts sets `__knotGfKRetry` unless
+  `gfk=0`). So every Node probe and the K1436 bar's mirror scan need `$env:GF_KRETRY = '1'` to match the page,
+  and test/render/gf_k1482_switch.test.ts pins the Node default off. After K1482 stages 26 and 27: make the
+  Node default match the page and re-freeze the pins it moves, or remove the `gfk` switch
 - **K1130** · K309 inject probes: a run's first normal screenshot can come back dark and nearly blank (round 2026-11-02 rimSeam, 3848 bytes against 628314; round 2026-11-03 handoff step 3b). Take a throwaway first shot, or shoot each state twice and diff the repeat, before believing a pair.
 - **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5; `K1040_s1d_corner.md` F1, Handoff 5):
   q5holes skips a hole with a partly OWN rim; q4's g41 crop holds no ink on the g41 rings; the free ends' oracle
@@ -2925,6 +2938,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1524** · rp=gf corners: is rounding welcome at the sharp corners Levi did not name? Levi, 2026-11-19: "take the rounding". The second corner try is the default under gfh=1 (`gfk=0` turns it off), docs/design/K1524_keep_fault_gate.md deleted, probe branch `k1482s21-kclr` deleted; live 18:02. Done in 083a8cb1c (2026-11-19).
 - **K1535** · rp=gf's border look differs from today's renderer's (Muse 26Y's numbers). Dropped: already decided: Levi 2026-11-17 kept gf's own border look (K1455, .claude/rules/render-gpu-field.md). With explore off the two differ the same way (four live shots 2026-11-19, untracked .claude/probes/K1535/out), so nothing to ask (2026-11-19).
 - **K1533** · The perf lock had no fair way in: Muse 27A took it with "remove whatever is there, write my line, run" and re-took it with no gap for 80 minutes (2026-11-19 14:19-15:50), so K1482 stage 23's guards waited and never ran before it landed. Done in 2dc1d5d92 (2026-11-19).
 - **K1530** · rp=gf: on `?3&xp=off&am=instant&rp=gf` master draws a different picture on two redraws of ONE frozen state (every shot UNSTABLE in K1525 s1's cap.mjs with paint clocks and background pinned; link A is stable, two-load control 0 px). Done in b3f4be04a (2026-11-19).
