@@ -2580,13 +2580,6 @@ Every other item below waits on the trigger it names.
 - **K1538** · rp=gf: while a pluck lives, the plucked thread's outline strokes turn dull red (42, 29, 32) against gf's
   near black (18, 20, 26); the pale pink blur matches today's render. Seen in music mode's auto plucks on link A. Cause
   not looked for. Record and crop names: `.claude/probes/K1524/flip/notes.md`, last section
-- **K1539** · K1482/cap.mjs freezes without alignFreezeParity, so each load plays the K1519 substep-parity
-  lottery and reloads until HASH matches: in 27B's fixed 12-load set one load exhausted TRIES=6 on 10104c64
-  (six misses; 11 of 12 captured, all 0 px after the view pin, plus 2/2 supplement). Cure: call
-  alignFreezeParity(page, SIMT) before its freeze, as .claude/probes/K1458/dragcheck.mjs and fade.mjs do
-  (Handoff 26X). Left by 27B: outside the view-pinning Done; the retry design is documented in cap.mjs's
-  header.
-  Muse run 27F is queued for it (docs/design/K1531_muse_batch27.md).
 - **K1544** · Captures of the plain knot link `?3&xp=off&am=instant` have no 0 px floor: two loads of ONE
   build, asleep, at one physics hash (0cbb8f07) differ by 193,124 px (today's renderer) and 101,249 px (rp=gf
   fill) over 24 levels in the thread area, so K1223's 0 px re-shoot could not be read on it (Muse run 26Z;
@@ -2985,6 +2978,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1539** · K1482/cap.mjs freezes without alignFreezeParity, so each load plays the K1519 substep-parity lottery and reloads until HASH matches: in 27B's fixed 12-load set one load exhausted TRIES=6 on 10104c64 (six misses; 11 of 12 captured, all 0 px after the view pin, plus 2/2 supplement). Done in e4f3a4657 (2026-11-20).
 - **K1223** · Quiet path, dead since K1211 S6 (13aab452): kPaintAt's quiet arg and kPulseCrestQuiet (`paint_glsl.ts`), the quiet flag (`paint_math.ts`), mode 2 in `arm_strip.ts` and joinery's writeStripRow, the quiet tests in `paint_gameplay.test.ts`. Done in a4d78a2ab (2026-11-20).
 - **K1494** · fade.mjs guard prints FAIL on cfe66a7d (fl=0: 677/679 sides pass, 348/350 crossings complete; fl=1.2: 439/451 sides, 287/299) while its distances match today (p90 |d-today| 0.0001-0.0124 world) - is the FAIL its crossing-completeness/dot criterion rather than a distance failure? Done in 03bc0d4c4 (2026-11-20).
 - **K1542** · rp=gf: the home burial (K1482 stage 28, 2ae8a96d1) takes 2 antialias px off t56s, a clean corner, on link A (1040,267 on the stage's frame: outline 18,20,27 to paper 29,31,47; nothing to see at 6x). Done in d20c2a809 (2026-11-20).
