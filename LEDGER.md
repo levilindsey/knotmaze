@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1525.
+Next free ID: K1526.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -665,9 +665,9 @@ Next free ID: K1493.
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `0c4be2b78`
+  - branch: mainline; last commit: `67fb28720`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: runs 26X (K1475 + K1461's fade part: drag and fade guards reach one physics state), 26Y (K1461: border.mjs, drag.mjs) and 26W (K1467: closed items' probe output leaves the index) are queued in that order since 2026-11-19 09:55; when the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt (next tag 26Z) and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Held until K1482 s20 lands: K1502 (tables.ts)
+  - next: 26X (K1475 + K1461's fade part) running since 2026-11-19 09:49; queued behind it in order: 26Y (K1461: border.mjs, drag.mjs), 26W (K1467: closed items' probe output leaves the index), 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. After 26X's handoff decide K1479 and K1494 (verify-and-close runs). The next refill starts a compact batch 27 brief (this one is 1,040 lines and every run reads it whole). Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held until K1482's corner work lands: K1502 (tables.ts)
   - brief: `docs/design/K1464_muse_batch26.md`
 - **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
@@ -772,6 +772,16 @@ Next free ID: K1493.
   - evidence: .claude/probes/K1456/s3/ (ab.ps1, checks.ps1, nogf.mjs, out/), .claude/probes/K1456/s2/ (table.mjs, ctime.mjs, variants.mjs)
   - next: Muse 26J landed 41c13cf6 (one loop for layers()' corner faces: the gating program's compile 21.4 -> 14.4 s; the halving bar unmet, Handoff 26J in docs/design/K1464_muse_batch26.md). Next: on a quiet machine under the perf lock, cold A/B of 955de39d (compile starts 0.8 s after load) against master, merge only if the first composite comes sooner; untried: deferring today's renderer's programs the rest look does not need; gf_split's two passes as two programs
   - brief: `docs/design/K1456_s3_first_visit.md`
+- **K1525** · rp=gf fill look where a thread dives under a junction, against today's on link A (`&tlk=fill`):
+  at fl 0 a dark block, gap lines that loop on around the thread and small triangles where today's draws one
+  thin line; at fl 0.5 and 1.2 straight hard edges across the ramp (.claude/probes/K1495/out/sheet_dives.png,
+  four dives, 2026-11-18). Filed as K1500 on 2026-11-18 and overwritten by 26K's close; re-filed 2026-11-19.
+  Stage 1 also takes the fill's junction spots K1419 (colour wedges) and K1463 (notch at ?3)
+  - owner: agent `a63f2fb4fcbd5d82d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 10:57, 2 h cap ~12:57)
+  - branch: `worktree-agent-a63f2fb4fcbd5d82d`, worktree `.claude/worktrees/agent-a63f2fb4fcbd5d82d`; last commit: `330069e61`
+  - evidence: .claude/probes/K1525/s1, out/s1 (untracked, in the agent's worktree); .claude/probes/K1495/out/sheet_dives.png
+  - next: stage 1 running (started 2026-11-19 about 11:00): re-shoot the four dives, K1419's and K1463's spots, fix what lives in the look (gf_look.ts, gf_pass.ts), name what is the field's. On its report: look at every spot in context against today's before relaying, then merge what holds; a cause in tables.ts / eval.ts waits for K1482's corner work to land
+  - brief: `docs/design/K1525_s1_fill_dives.md`
 
 ## Next, in order
 
@@ -1134,9 +1144,6 @@ Every other item below waits on the trigger it names.
   fl=1.2: 439/451 sides, 287/299) while its distances match today (p90 |d-today| 0.0001-0.0124 world) - is the
   FAIL its crossing-completeness/dot criterion rather than a distance failure? Seen in Muse batch 26 Run F's
   guards (.claude/probes/K1474/out/26F/guards_fade/summary.txt); not a Run F Done item
-- **K1499** · rp=gf has no fade at the start and exit markers: today's fades the thread away from the marker
-  disc over a long stretch at fl 1.2, gf keeps the crisp fl 0 cut at every value (gf_look.ts has no marker-gap
-  port; K1495 handoff in docs/design/K1495_fade_reach.md). Muse run 26K
 - **K1504** · rp=gf j64 on Levi's link: a pinhole about 0.1 wide where chains 28 and 56 of one surface part
   (in the CPU mirror too, so geometry, not the look: .claude/probes/K1482/out/s7/j64_gm.png). Fill holes in
   one surface's union narrower than about a stroke width (Handoff K1482 s7)
@@ -2854,6 +2861,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1499** · rp=gf fades the thread away from the start and exit markers as today's does: Muse run 26K did this work and recorded it under K1500 (the run's brief carried the wrong ID); the dives item that K1500 held is re-filed as K1525. Done in 281a7c8c6 (2026-11-18).
 - **K1519** · The K1436 bar is noisy run to run on g41_user_tw64: two loads of identical src in one physics hash gave 14 finds under STRICT=1 (frames differ by 1-2 levels; .claude/probes/K1482/out/s13/bar.txt, bar_sheet.png). Done in 3ae03fdcb (2026-11-19).
 - **K1515** · At fused junctions today's renderer draws straight fan strokes through the junction where rp=gf's border look follows the threads' curves (j55, j36, j87, t16e, t2s on his link; K1482 stage 12). Dropped: Levi 2026-11-19: 'Keep the curves'. At fused junctions rp=gf's border look keeps following the threads' curves; gf's own picture stays the reference, today's straight fan strokes are not copied (2026-11-19).
 - **K1522** · rp=gf, the last two joint-side sites (j29, j49) are ordinary under-pass gaps ending next to a joint; closing them means joining the under thread's outline to the over thread's (no gap) at about 74 other crossings (u19) or about 11-17 under-tail and junction gaps (v19 / w19, a dot left at j50), which removes the over/under cue there. Dropped: Levi 2026-11-19: 'Keep today's gaps'. j29 and j49 stay as ordinary crossing-gap endings; the u19/v19/w19 joining rules are not landed (patches stay in .claude/probes/K1482/s19/) (2026-11-19).
