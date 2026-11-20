@@ -90,6 +90,13 @@ strokes toward today's, and do not use today's border strokes as a bar.
   between run-on and anchor: a step. Link A: 14 run-on groups (`.claude/probes/K1482/s30/runs30.ts` lists them),
   t81s's nub gone; 12 other places changed (426 px, 4 gain-only, 0 lose-only), mostly ticks and notches turned V
   corners; j83 and j51's new V wedges hold a one-pixel dark speck near the tip.
+- BAND END ALONG A LONE OVER PASS, REJECTED (K1482 s31, runT in 031a266a8/75e1a7949, backed out after them): narrowing a
+  group's side band and cap to W*t where a lone over piece faces its outline point within 5 aa cleared j59's step (t23e,
+  153 px) but also tapered every other band tail it reached (t81s, t76e, t53e, t36s...): those are short wedges running
+  into the over outline (s30's run-on), and lost them to blunt ends, dots and hairlines. Only the run's length tells j59
+  apart (gap 1 h up the band's chain: median 1.3 px at j59, 3.4-11 px at the wedges, but per-pixel spreads overlap and a
+  per-piece gate leaves islands): gate on a per-(chain, over pass) run length baked in the tables. Probes: copy
+  `GfEval.eval()`'s result, which is one reused object.
 
 ## The pass on the Pixel (stage 4, `K1362_s4_shader.md`)
 
