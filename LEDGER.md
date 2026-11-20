@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1531.
+Next free ID: K1532.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -670,9 +670,9 @@ Next free ID: K1493.
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `67fb28720`
+  - branch: mainline; last commit: `c54f5c36a`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 26X (K1475 + K1461's fade part) running since 2026-11-19 09:49; queued behind it in order: 26Y (K1461: border.mjs, drag.mjs), 26W (K1467: closed items' probe output leaves the index), 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. After 26X's handoff decide K1479 and K1494 (verify-and-close runs). The next refill starts a compact batch 27 brief (this one is 1,040 lines and every run reads it whole). Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held until K1482's corner work lands: K1502 (tables.ts)
+  - next: 26X passed its gate 2026-11-19 12:44 (K1475 closed, K1461's fade part struck); 26Y (K1461: border.mjs, drag.mjs) running since 12:44. Still queued from this batch, now behind batch 27's 27A, 27B, 27D (K1531): 26W (K1467: closed items' probe output leaves the index), 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). K1479 and K1494 went to 27D and 27C. When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26W, 26Z and 26Z2 have reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held until K1482's corner work lands: K1502 (tables.ts)
   - brief: `docs/design/K1464_muse_batch26.md`
 - **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
@@ -790,6 +790,15 @@ Next free ID: K1493.
   - evidence: .claude/probes/K1525/s1 (tools, notes.md, run_checks.ps1, k1419_attempts_dbg.patch: on master); outputs untracked in the agent's worktree under .claude/probes/K1525/out/s1 (sheets_final/dives_tip2.png: d1-d4 at fl 0, 0.14, 0.5, 1.2, today's | master gf | attempt) and .claude/probes/K1436/out/bar/k1525s1/bar.txt
   - next: a field stage, once K1482's corner stage has stopped (one agent in tables.ts / eval.ts / gf_glsl.ts): make coverage reach the px beside a dive where today's draws ink (d1 1968,432; d2 2224,976; d3 1904,1136; d4 1248,1104 in link A's fill capture; counts in the class table of the handoff), then re-shoot the four dives at the four fades against today's. The look side is ruled out
   - brief: `docs/design/K1525_s1_fill_dives.md`
+- **K1531** · Muse batch 27 (captures and guards that can be trusted): 27A K1530 two redraws of one frozen
+  state agree, 27B K1529 every load lands on one view, 27D K1479 one physics state per census scene, 27C K1494
+  the fade guard's verdict. Probe runs first; hands off tables.ts, eval.ts, gf_keys.ts, gf_glsl.ts,
+  gf_look.ts, gf_pass.ts (K1482's agent)
+  - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
+  - branch: mainline; last commit: `1e0575f28`
+  - evidence: .claude/probes/K1053/chain.log, done.txt
+  - next: queued 2026-11-19 12:58 behind 26Y (running): 27A, 27B, 27D, then batch 26's 26W, 26Z, 26Z2, then 27C. On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. 26Z2 edits gf_look.ts or gf_pass.ts: tell the Claude agent holding that area before it starts
+  - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
 
