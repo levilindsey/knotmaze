@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1538.
+Next free ID: K1539.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -2565,6 +2565,9 @@ Every other item below waits on the trigger it names.
   loads of one session agree at 0 px (border and fill). Cause not found. Until it is, compare only loads of
   one session (`### Handoff K1482 s23`, docs/design/K1482_s23_corner_switch.md; cap23.mjs in the s23
   worktree's .claude/probes/K1482/s23)
+- **K1538** · rp=gf: while a pluck lives, the plucked thread's outline strokes turn dull red (42, 29, 32) against gf's
+  near black (18, 20, 26); the pale pink blur matches today's render. Seen in music mode's auto plucks on link A. Cause
+  not looked for. Record and crop names: `.claude/probes/K1524/flip/notes.md`, last section
 
 ## Approved, to schedule (2026-10-11)
 

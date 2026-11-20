@@ -43,3 +43,16 @@ Observed:
 
 Concluded: the red strokes are music mode's plucks (`soundMode` defaults to music), not the corner try. The two
 earlier pairs had them only in the "on" shot by chance. Lore: probes.md, PROBE LORE (2026-11-19, K1524).
+
+# A pluck in rp=gf against today's render, 2026-11-19 19:23-19:27 (levi.dev on 083a8cb, link A, dsf 1.5)
+
+Observed (two live loads without `rp=gf` through `redshot.mjs`: music on, then `snd=none`; `live/pluck_cmp.ps1`):
+- Today's render at rest draws link A's outline strokes brown-red; rp=gf draws them near black (18, 20, 26).
+- A live pluck in today's render lights the plucked thread's strokes pale pink with a blur
+  (`live/pluck_today.png`: `snd=none` | music on, device px x 1150-1490, y 440-760).
+- A live pluck in rp=gf draws the same pale pink blur, and the plucked thread's strokes beside it turn dull red
+  (42, 29, 32) for as long as the pluck lives (`live/pluck_big.png`: `snd=none` | music on, x 1340-1680,
+  y 980-1220).
+
+Inferred, not tested: the pluck overlay is today's renderer drawing the plucked thread over gf, so its strokes
+carry today's outline colour. Filed as K1538.
