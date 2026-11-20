@@ -27,6 +27,8 @@ checkout. Batch 25's rules (`docs/design/K1448_muse_batch25.md`, its first list)
 - Each run is a fix run with a stop line of 2 h. If the bar is not met at the stop line, land what is a real
   fix (0 px elsewhere), and write in the handoff what you measured, what you tried and why each fell short.
 
+**Ledger adds (added 2026-11-19).** A new item's ID comes only from `ledger.mjs add` (never type an ID). Bring the checkout level with origin/master right before an `add` (`git pull --ff-only origin master`; commit your work first if it refuses): the ID is one more than the highest in YOUR checkout, and a checkout that is behind hands out a taken one (27B's K1536).
+
 ## Run A (26A): K1456, rp=gf's cold first load
 
 A new build's first rp=gf load shows no maze for about a minute on the desktop (58-71 s to the first composite

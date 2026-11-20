@@ -19,9 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1539.
-Next free ID: K1537.
-Next free ID: K1493.
+Next free ID: K1540.
 
 ## Waiting on Levi
 
@@ -661,7 +659,7 @@ Next free ID: K1493.
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
   - branch: mainline; last commit: `b3f4be04a`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 26Y passed its gate 2026-11-19 14:17 (K1461 closed in 6ba929f17; its border numbers filed as a residual). Still queued from this batch behind batch 27's 27A (running), 27B, 27D (K1531): 26W (K1467: closed items' probe output leaves the index), 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26W, 26Z and 26Z2 have reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held while K1482's stages edit tables.ts: K1502
+  - next: 26Y passed its gate 2026-11-19 14:17 (K1461 closed in 6ba929f17; its border numbers filed as a residual). Still queued from this batch, in the chain's order 27D, 26W, 26Z, 27C, 26Z2 (K1531's handle has the chain's state; 26Z2 is held with a # in queue.txt while K1482 stages run): 26W (K1467: closed items' probe output leaves the index), 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26W, 26Z and 26Z2 have reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held while K1482's stages edit tables.ts: K1502
   - brief: `docs/design/K1464_muse_batch26.md`
 - **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
@@ -784,9 +782,9 @@ Next free ID: K1493.
   the fade guard's verdict. Probe runs first; hands off tables.ts, eval.ts, gf_keys.ts, gf_glsl.ts,
   gf_look.ts, gf_pass.ts (K1482's agent)
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `549f5a72d`
+  - branch: mainline; last commit: `2a287c5c5`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 27A passed its gate 2026-11-19 16:24 (master at 3e7eef32). 27B (K1529) running since 16:24:22; its lock lines read as the brief requires (muse-27B | time | what). After it: 27D, batch 26's 26W and 26Z, 27C, then 26Z2 (moved last on 2026-11-19 17:00: it edits gf_look.ts or gf_pass.ts, K1482's file area; put a # before its line in queue.txt while a K1482 stage runs; queue.txt.bak-s24 is the order before the move). On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Check that no run removes another owner's lock.
+  - next: 27A passed its gate 2026-11-19 16:24 (master at 3e7eef32). 27B (K1529) landed 434a34092 and 2a287c5c5 at 21:07 (probes only: the shared waitViewStill of .claude/probes/view_still.mjs, used by K1436/k1436_screen.mjs and K1482/cap.mjs; K1529 closed; its 12-load sets and its three 0/0/0 bar control runs are Muse's numbers: the coordinator read the diff and did not re-run them). The chain had stopped at 20:24 on its 4 h cap while that run queued behind perf locks; restarted right after this commit (chain.log has the line; a run that outlives the cap but ends by itself is adopted and gated by the restart). 27B's ledger add ran on a checkout behind origin and handed out K1536 a second time: renumbered K1539, and both Muse briefs now say to pull before an add. After it: 27D, batch 26's 26W and 26Z, 27C, then 26Z2 (it edits gf_look.ts or gf_pass.ts, K1482's file area: held with a # before its line in queue.txt since 2026-11-19 21:35 while K1482 stages run back to back; take the # off when the gpu_field slot is free; queue.txt.bak-s24 is the order before it moved last). On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Check that no run removes another owner's lock.
   - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
@@ -2564,7 +2562,7 @@ Every other item below waits on the trigger it names.
 - **K1538** · rp=gf: while a pluck lives, the plucked thread's outline strokes turn dull red (42, 29, 32) against gf's
   near black (18, 20, 26); the pale pink blur matches today's render. Seen in music mode's auto plucks on link A. Cause
   not looked for. Record and crop names: `.claude/probes/K1524/flip/notes.md`, last section
-- **K1536** · K1482/cap.mjs freezes without alignFreezeParity, so each load plays the K1519 substep-parity
+- **K1539** · K1482/cap.mjs freezes without alignFreezeParity, so each load plays the K1519 substep-parity
   lottery and reloads until HASH matches: in 27B's fixed 12-load set one load exhausted TRIES=6 on 10104c64
   (six misses; 11 of 12 captured, all 0 px after the view pin, plus 2/2 supplement). Cure: call
   alignFreezeParity(page, SIMT) before its freeze, as .claude/probes/K1458/dragcheck.mjs and fade.mjs do
