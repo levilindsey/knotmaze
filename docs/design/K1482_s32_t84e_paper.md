@@ -87,7 +87,7 @@ report: the commits to land by SHA in order, what changed at the site by eye, th
 with the path of its whole output file, the sheets' absolute paths, a `Ledger items` list and K1482's handle
 fields. Never push, never edit `LEDGER.md`.
 
-### s32 WIP notes (Claude agent, 06:17)
+### WIP K1482 s32 (06:15)
 
 - Mirror only so far (`.claude/probes/K1482/s32`: px32, mimg32, wd32; outputs in `out/s32`). The patch is
   chain 84's hairpin: ONE piece spans both legs, so no tube burial applies and foldD (s7) is skipped when no
@@ -95,6 +95,6 @@ fields. Never push, never edit `LEDGER.md`.
 - C1 (foldD without its inOther guard): crotch gone but a flag (right leg's band up to c66's group step) and a
   dot stay; notches 1689,224, 1571,252, 1895,1358, 1543,1602. C2 (C1 gated on the fold angle) cannot tell
   t84e from those clean points. B (same-surface pieces zt deeper do not bury): 52 gain-only places. All fail.
-- G3 (WIP, env `GF_S32=1`, off by default so src behaves as master): C1 only where p's piece is in a group
+- G1 (C1 only where the fold run's group or home differs from the piece's): 3 loss-only places (t84e, 1689,224, 1571,252). G3 (carried on with; env `GF_S32=1`, off by default so src behaves as master): C1 only where p's piece is in a group
   and the fold's other run is not (t84e and 1689,224 change); at t84e the diagonal now thins to a hairline
   and the flag stays. Next: a join at the cusp (round or bevel) instead of burying one band.
