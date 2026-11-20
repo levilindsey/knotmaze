@@ -812,7 +812,8 @@ for a flow-on retrace).
 
 - *Force-adding under `.claude/probes/` (K1467):* only tools (.mjs .ts .py .ps1 .sh .md .patch .diff) and the
   sheets a brief names may be force-added; output (out/, images, dumps/logs, json/txt/csv over 100 KB) stays
-  untracked, and a closed item's tracked output leaves the index with `git rm --cached` (disk and history keep it).
+  untracked, and a closed item's tracked output leaves the index with `git rm --cached` (history keeps it; the
+  files stay on disk only in the checkout that ran it: every other checkout loses them at its next pull).
 
 ## Where the rest of the probe lore lives
 
