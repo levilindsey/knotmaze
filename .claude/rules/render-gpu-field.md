@@ -63,8 +63,16 @@ strokes toward today's, and do not use today's border strokes as a bar.
 - HOME BURIAL (K1482 s28, in `retryForm`: `gfk=0` and home-off byte-identical): a piece outside every group heading
   into group B (its ramp's, or `mhb`, its arm's home while left out for depth; in its surface id -1 - j - MAXP(B + 1))
   inks no deeper inside B's other-chain tubes than their band (pd[m] < h - W): stub ends mitre (j47, t45s, j59's stub).
-  Only against partners at z 0 (|z| ramp 0.004..0.02; t56s's partner dips under, its outline is the over-pass line),
-  z read as pkey + pd zK: a packed P1 never sets ps (depth(ps) there bit t56s on the GPU only). t84e is out of reach.
+  Only against partners at z 0 (|z| ramp 1e-4..1e-3 since s29; t56s's partner dips under, its outline is the over-pass
+  line), z read as pkey + pd zK: a packed P1 never sets ps (depth(ps) there bit t56s on the GPU only). t84e is out of
+  reach. s29: s28's 0.004..0.02 still took t56s's corner (1040,267): chain 28 ramps into group 64 there (homeRamp
+  0.12) and chain 56 reads |z| 0.005 at its tent's foot. Out of every window the read-back z is 0 to ~1e-8 (float
+  bits), so the tighter ramp moved 4 px on all of link A in the mirror, 1 px on the GPU, all ink put back.
+- SIDE-FACE BURIAL ALONG A TANGENT RUN, REJECTED (K1482 s29, 1bb6f9c19, dropped in e66fe43b4): j59's step (1030-1045,
+  1503-1524) is chain 43's band plus chain 23 (stub t23e) running ALONG chain 7's outline, not across it. Burying the
+  under band inside the over pass's tube along that run opened the white sliver's border at j59 (a gap mid-strip);
+  with a tolerance (TOLG) it left a flag tick and a hairline at t84e and removed a whole outline left of it; a round
+  cap at the run's end leaves knobs. t84e's own-fold piece band (k159 against chain 84) needs paper, not burial.
 - FOLD SHIFT (K1482 s27, side faces' burial in eval.ts and gf_glsl.ts layers(); zb's regex and ko's text follow it): a
   side point q sitting fo inside its own piece's tube (a swallowtail fold) is buried by another piece m only past that
   fold: m's distance + fo. t4s: chain 4's arm-extension end disc rides chain 66's spine, nibbling 66's -1 fold into a
