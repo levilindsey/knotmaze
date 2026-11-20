@@ -551,27 +551,17 @@ export class GfEval {
         // on over B's fill to the square end where the piece joins B (j47, t45s, j59's stub). Only against a piece m out
         // of every crossing's depth window (z 0, a junction's plane): where m dips under the piece at a crossing, the
         // piece's outline is the over-pass line and stays (t56s, |z| >= 0.024 there; the stubs' partners sit at 0).
-        // m's z is read back from its key (pkey + pd zK), the one value every GPU program holds for m
+        // m's z is read back from its key (pkey + pd zK), the one value every GPU program holds for m. K1482 s29: the
+        // guard's ramp is 1e-4..1e-3 (was 0.004..0.02, which also took m at the foot of its crossing's tent: t56s's
+        // corner, 1039,266 and 1040,267, where chain 56 reads |z| 0.005 under chain 28's outline); out of every window
+        // m's read-back z is 0 to f32 noise (about 1e-8: pkey travels as float bits)
         if (bur < 1 && S < 0 && kxh) {
           const B = this.pg[j] >= 0 ? this.pg[j] : this.phb[j];
           for (let m = 0; m < this.np && bur < 1 && B >= 0; m++) {
             if (this.psurf[m] !== B || this.pc[m] === this.pc[j]) continue;
             let wb2 = 1 - ss(h - W - aa, h - W + aa, this.pd[m]);
             if (!(wb2 > bur)) continue;
-            wb2 *= 1 - ss(0.004, 0.02, Math.abs(this.pkey[m] + (this.pd[m] * T.zt) / h));
-            if (wb2 > bur) bur = wb2;
-          }
-        }
-        if (bur < 1 && S >= 0 && kxh && (globalThis as any).process?.env?.GF_S29 !== "0") {
-          const zj = this.pkey[j] + (X * T.zt) / h; const s = h - X;
-          const nx = (qx - this.pfx[j]) / h; const ny = (qy - this.pfy[j]) / h; const ux = -ny * aa; const uy = nx * aa;
-          for (let m = 0; m < this.np && bur < 1; m++) {
-            if (this.psurf[m] >= 0) continue;
-            const over = ss(0.1, 0.2, this.pkey[m] + (this.pd[m] * T.zt) / h - zj); if (!(over > bur)) continue;
-            const ee = h - Math.sqrt(this.pieceD(m, qx, qy)); if (!(ee > 0)) continue;
-            const g = Math.abs(Math.sqrt(this.pieceD(m, qx + ux, qy + uy)) - Math.sqrt(this.pieceD(m, qx - ux, qy - uy))) / (2 * aa);
-            const tau = ee / Math.max(g, 0.05);
-            const wb2 = over * ss(W - aa, W + aa, Math.sqrt(tau * tau + s * s));
+            wb2 *= 1 - ss(1e-4, 1e-3, Math.abs(this.pkey[m] + (this.pd[m] * T.zt) / h));
             if (wb2 > bur) bur = wb2;
           }
         }
