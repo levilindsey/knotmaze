@@ -71,3 +71,45 @@ stage's job, not a finding to report: if a pixel differs, find what differs and 
 a stop: re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K1482 s23` here, commit,
 and report: the commits to land by SHA in order, the numbers, the sheets' absolute paths, a `Ledger items`
 list and K1482's handle fields. Never push, never edit `LEDGER.md`.
+
+### Handoff K1482 s23
+
+Claude agent agent-a5016731, 2026-11-19 13:53-15:45, branch `worktree-agent-a5016731195d015ff`. Stopped on the
+cap with every Done holding except the perf-lock guards, which were never run.
+
+- **Commit to land:** df8880998 (the switch, C1's source, the test, the lore lines), then this handoff commit.
+  Neither overlaps master's commits since 98a11ec30. `npm test` at df8880998: 3197 passed, 18 skipped, no pin
+  re-frozen.
+- **Floor and off = master.** cap23.mjs on link A + `bgs=0`, 1600x900, DSF 2, hash fff8c9e5. `B2=1` reshoots
+  the border after a bit-exact still view (10 equal world transforms, frames forced). All compared loads had
+  view 21.296838875313163 / 417.23864033820786 / 67.929905984554338.
+  - The floor (master against master, m3 against m4): border 0 px, fill 0 px.
+  - The tip with the switch off (t2) against both master loads: border 0 px, fill 0 px.
+  - The page's GfTables (`TABLES=1`) are equal field by field; only the build-ms record differs.
+  - Two traps the reshoot removes:
+    - The first border shot of a load catches its last transition: 22,183 px between two master loads
+      (background speckle and marker rims).
+    - Fill shots from an earlier session (m1, m2) differ from later ones by 26 px at 1 level, master
+      against master. The cause was not found. Compare loads of one session.
+- **On = C1.** The tip with `&gfk=1` (t2on) against a294f3271 (c1b): border 0 px, and the tables are equal
+  (both carry kExt and the Alt fields). On against off differs by 7,124 px (6,278 above 8 levels).
+- **j14, judged by eye** (`out/s23/j14_context.png`, `j14_detail.png`; panels off, on, C1): with the switch on,
+  the notch at the top, the V at lower left and the kink on the right arm all meet in rounded corners with
+  continuous borders. It is finished, and identical to C1.
+- **The bar:** STRICT=1, -NoPerfLock, `-Ref df8880998 -Base 98a11ec30`, scenes ring, def, muse_hash and
+  g41_user_tw64. Result: PASS, new 0, grown 0, gone 0, with equal hashes per scene.
+  - The on repeat was skipped: k1436_bar.ps1 takes no link suffix (Base, HomeFlag, Port, Par, Tag, Keep,
+    NoPerfLock, PrevRoot, PruneOnly), and k1436_screen.mjs reads its links from jobs.json.
+- **Not run: hold off and on, panelopen, both dragchecks.** Muse 27A held the perf lock from 14:19 to past
+  15:38, re-taking it without a gap. Two waits gave up: 14:47 to 15:27, then 15:28 to 15:38. The coordinator
+  will run them on the tip. `.claude/probes/K1482/s23/run23.ps1 -Port <p> -Tag tip`, under `locked23.ps1`,
+  runs all five against a preview of df8880998.
+- **Tools** (untracked): `.claude/probes/K1482/s23/`:
+  - cap23.mjs + cap23.ps1 (B2, TABLES, FILL);
+  - pxd.py (pixel diff and heat map);
+  - crop23.py (raw crops);
+  - eq.probe.ts + vitest.eq.config.ts + eq_run.ps1 (Node equivalence: off = master, on = C1);
+  - run23.ps1 and locked23.ps1.
+
+  Results are in `.claude/probes/K1482/out/s23/results.txt`.
+- Cleaned up: the previews are stopped, and the builds, src worktrees and profiles are removed.
