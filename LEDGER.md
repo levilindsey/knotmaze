@@ -1139,10 +1139,6 @@ Every other item below waits on the trigger it names.
   untracked .claude/probes/K1530/out/27A/k1463_sheet.png. Seen at 16x by the coordinator: where the pink
   tail fades under the blue thread, gf ends it at a harder lower-right corner and leaves about five single
   faint pink pixels along the blue thread's upper edge; today's has neither. Waits for the gpu_field slot
-- **K1467** · a fresh checkout is 0.81 GB and 0.78 GB of it is tracked probe output (.claude/probes: K1435 316
-  MB, K1186 64, K1407 60, K863 56, K1198 43), so each agent worktree costs 0.8 GB (224 worktrees = 123 GB when
-  C: filled on 2026-11-17, claude-config CC156). Stop tracking closed items' sheets (history keeps them) or
-  give agent worktrees a sparse checkout; measured 2026-11-17 with git ls-tree -r -l HEAD
 - **K1473** · rp=gf: check pulses and the turn telegraph on screen. Their table (unit 9) uploaded as R32F from
   9b48e44f until K1472's fix (998be573), so the shader read zeros; nobody has looked since (gf_pass.ts
   setLook; test/render/gf_look_upload.test.ts counts mismatched uploads)
@@ -2964,6 +2960,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1467** · Tracked probe output 1034.9 MB (9530 files) -> 491.3 MB (6005) by git rm --cached only in 33f755fc1; disk and history keep every file (last tracking commit 40ee10834); fresh worktrees 1061.6 -> 517.5 MB. Remains: open IDs K1482 100.2, K1395 72.5, K1407 59.8, K863 56.4, K1451 39.3 MB and 36.6 MB live-named closed sheets; guard test/repo/probe_budget.test.ts in a4144e2cf (after-total + 100 MB, names git rm --cached). Done in 33f755fc1 (2026-11-19).
 - **K1479** · K868 census states are not one per scene: ring froze on two physics hashes (50dd4ffd, 0a0ee15e) within one build in K1436's bar control, and g41_user_tw42 freezes on user_tw42.lightpaper's state, so its finds repeat lightpaper's. Done in 7b5d80a78 (2026-11-19).
 - **K1529** · rp=gf capture A/Bs: some loads of one build land on a view shifted by under a pixel (76,609 px differ, all on antialiased edges and soft shadows; not the reload after a hash miss, not concurrent GPU use, not the background; a per-page view state such as the eased camera's offset is inferred, not tested). Done in 434a34092 (2026-11-19).
 - **K1524** · rp=gf corners: is rounding welcome at the sharp corners Levi did not name? Levi, 2026-11-19: "take the rounding". The second corner try is the default under gfh=1 (`gfk=0` turns it off), docs/design/K1524_keep_fault_gate.md deleted, probe branch `k1482s21-kclr` deleted; live 18:02. Done in 083a8cb1c (2026-11-19).

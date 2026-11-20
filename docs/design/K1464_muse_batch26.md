@@ -965,6 +965,49 @@ may be force-added (tools, and the sheets a brief names). Do not edit CLAUDE.md.
 out an older commit in this checkout and returning deletes the untracked copies (history keeps them: name
 the last commit that tracks them in the handoff).
 
+### Handoff 26W (Muse, 2026-11-19, done: every Done holds; K1467 closed)
+
+Started 22:57 PST, stopped 23:45 PST. Starting master 40ee10834. Untrack on master in 33f755fc1 (pushed; `.claude/`-only, so no deploy), guard and rule in a4144e2cf (deploy 44694757237 success). No `src/` change. Tools and records under `.claude/probes/K1467/` (`k1467_analyze/whonames/sample/scans/scancmp`, `removals.tsv`, `kept_output.tsv`, `table.json`, captures under `out/26W/`; untracked). Method: a file leaves only when (a) it is output (under `out/`, or png/jpg/webp/gif/svg/bin anywhere, or json/txt/csv over 100 KiB; `.mjs .ts .py .ps1 .sh .md .patch .diff` never leave), (b) its item heads Done in LEDGER.md / `docs/ledger_done.md` or a Dropped Done entry (an item heading both counts open; an ID with no ledger head never leaves), and (c) no live text names the file or its immediate parent directory — live = open ledger text, `docs/design/` files of open items, tracked `src/`/`test/`/`scripts/`, and tracked probe tools of open items (relative `../K…` loads are tool-to-tool and stay anyway; the bar/census/test scene inputs are the untracked K868 scenes, read from the main checkout, so nothing tracked had to stay for them).
+
+Done 1 (the table before, `git ls-tree -r -l HEAD .claude/probes` at 40ee10834: 9,530 files, 1,085,186,846 bytes = 1034.9 MB; top 20, removed = passes (a)+(b)+(c)):
+
+| ID | state | files | before MB | removed MB | kept output and the condition that keeps it |
+|---|---|---|---|---|---|
+| K1435 | closed | 982 | 315.8 | 315.8 | — |
+| K1482 | open | 696 | 100.2 | 0 | 99.8 open item (b) |
+| K1395 | open | 147 | 72.5 | 0 | 72.5 open (b) |
+| K1186 | closed | 58 | 63.7 | 63.3 | tools stay (a) |
+| K1407 | open | 718 | 59.8 | 0 | 59.7 open (b) |
+| K863 | open | 543 | 56.4 | 0 | 52.7 open (b) |
+| K1198 | closed | 137 | 43.5 | 37.0 | 5.1 (c): open K1112's `K1112_cursive_j3i.md` names the root dir |
+| K1449 | closed | 528 | 40.5 | 38.5 | 1.9 (c): open K1451 text names `K1449/out/` |
+| K1451 | open | 591 | 39.3 | 0 | 39.2 open (b) |
+| K1139 | open | 305 | 34.3 | 0 | 33.5 open (b) |
+| K1472 | open | 113 | 30.4 | 0 | 30.3 open (b) |
+| K1456 | open | 52 | 23.7 | 0 | 23.7 open (b) |
+| K1040 | closed (dropped) | 1430 | 20.8 | 18.8 | tools stay (a) |
+| K1439 | closed | 67 | 20.0 | 20.0 | — |
+| K1433 | closed | 308 | 18.6 | 12.0 | 6.5 (c): open text names `K1433/out/` (+ its scan summary by file) |
+| K1460 | closed | 71 | 14.2 | 13.0 | 1.2 (c): this brief names `K1460/out/s5/jb_*.png` |
+| K1182 | closed | 95 | 9.4 | 4.3 | 4.9 (c): `src/render/ribbon/rim_curve.ts` names `K1182/exam/` |
+| K1438 | closed | 223 | 9.2 | 1.6 | 7.5 (c): open text names `K1438/out/` |
+| K1458 | closed | 16 | 7.7 | 0 | 7.6 (c): open K1463 names `K1458/live/zoom_a.png` |
+| K1240 | open | 378 | 7.6 | 0 | no output: tools only (a) |
+
+Totals: removed 3,525 files, 569,990,615 bytes (543.6 MB); kept closed-but-live output 36.6 MB in all (the (c) rows above plus K1492/K1495/K1208 tails under 1 MB each); open items stay at 447.1 MB tracked (largest above; the rest under 8 MB each) and the five no-ledger segments (`rounds`, `S3a`, two root tools, CC156) at 0.5 MB. No script-like file is in the removal list (png 1428, txt 848, json 639, bin 475, err/svg/log/csv/jsonl the rest, all under `out/` or image/bin anywhere).
+
+Done 2: one commit, `git rm --cached --pathspec-from-file` only (33f755fc1, 3,525 index deletions, no history rewrite). All 20 sampled paths (first removal of 20 IDs, `.claude/probes/K1467/sample20_{before,after}.txt`) are present after with identical size and SHA-256 head; three samples' worktree size differs from their blob (CRLF), identical before and after. Nothing named by `docs/design/K1482_s20_wedges_notches.md` left: K1482 is open anyway, and its protected K1490 sheets sit in directories the (c) check already kept; the s20 directories kept every tracked file.
+
+Done 3: tracked after = 6,005 files, 515,196,231 bytes (491.3 MB). Fresh `git worktree add --detach` under `$env:TEMP` measured on disk (file bytes): starting 40ee10834 1,061.6 MB total / probes 1,036.4 MB; new 33f755fc1 517.5 MB / 492.3 MB — 544.1 MB less (bar 300 MB), so no kept-ID naming is owed. Both checkouts removed after Done 4, no other.
+
+Done 4 (fresh checkout of 33f755fc1 at `$env:TEMP\k1467-wt-new`, no untracked files): `npm ci` clean; `npm test` green (257 files passed, 2 skipped; 3,197 passed, 18 skipped — the skips are the K868/drag cases that skip without untracked scenes). `k1436_bar.ps1 -Ref master -Base master -Scenes ring,def` (inside the perf lock as holder, `-NoPerfLock` for its own wait, tag 26W_fresh): PASS new 0 grown 0 gone 0. Mirror scan (`k1436_scan.ts`, GF_HOME=1, ppu 100) over the 12 census scenes in the new checkout against the starting checkout (`k1467-wt-base`, junctioned `node_modules` for the runner only): all 12 SAME — finds, tallies and raster sizes identical (`out/26W/scans_{base,new}`, `k1467_scancmp.mjs`), so every input a check loads is still tracked or read from the main checkout as before.
+
+Done 5: `test/repo/probe_budget.test.ts` (a4144e2cf) sums `git ls-tree -r -l HEAD -- .claude/probes` and fails over 620,053,831 bytes (after-total + 100 MiB) with a message naming `git rm --cached`; it skips with no git checkout. Verified both ways: the starting tree (1034.9 MB) is over, the new tree within, and a K1493-style +362 MB lands at 877 MB, over. Focused run green; full `npm test` on the final tree green (258 files, 3,207 passed, 9 skipped; tsc clean, guard included).
+
+Done 6: K1467 closed in the ledger with the numbers and remains (Done entry above); `.claude/rules/probes.md` gained three lines (only tools and brief-named sheets may be force-added). CLAUDE.md untouched. The last commit that tracks the removed files is 40ee10834: checking it out in this checkout and returning deletes their untracked copies, as accepted; history keeps them there.
+
+Guards (preview of a4144e2cf on :5493, one kept profile `%TEMP%\k26w-guards-profile`, perf lock held): `hold.mjs` 60 250 5000 PASS on `?3&xp=off&am=instant&rp=gf` (first composite 2.8 s warm; 60/60, edges min 102,786) and on `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (2.2 s; 60/60, min 7,028); `dragcheck.mjs` PASS for gf (stops 0/0/81/0 px over TOL 24, limit 200) and for gfh (0/0/67/0). K1464, K1451 and K1460 left open and untouched. Preview server (5493) stopped; perf lock released.
+
 ## Run X (26X): the drag and fade guards reach one physics state (K1475, K1461's fade part)
 
 Added 2026-11-19. Handoff 26V named why two loads of one build freeze on two states: the live substep
