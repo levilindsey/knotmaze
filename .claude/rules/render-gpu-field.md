@@ -60,6 +60,11 @@ strokes toward today's, and do not use today's border strokes as a bar.
   its bottom left): a 3.5 px round on that 90-degree corner moves ~3 px. An ink-only arc only adds ink, so a wedge (t84e) needs
   paper. The mirror (kRetry, `withHome`, `GfEval`) matched the GPU's border ink at j4, j139, t56e and t10e: judge
   a candidate there before capturing.
+- HOME BURIAL (K1482 s28, in `retryForm`: `gfk=0` and home-off byte-identical): a piece outside every group heading
+  into group B (its ramp's, or `mhb`, its arm's home while left out for depth; in its surface id -1 - j - MAXP(B + 1))
+  inks no deeper inside B's other-chain tubes than their band (pd[m] < h - W): stub ends mitre (j47, t45s, j59's stub).
+  Only against partners at z 0 (|z| ramp 0.004..0.02; t56s's partner dips under, its outline is the over-pass line),
+  z read as pkey + pd zK: a packed P1 never sets ps (depth(ps) there bit t56s on the GPU only). t84e is out of reach.
 
 ## The pass on the Pixel (stage 4, `K1362_s4_shader.md`)
 
