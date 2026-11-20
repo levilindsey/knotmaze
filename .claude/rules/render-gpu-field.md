@@ -40,6 +40,12 @@ strokes toward today's, and do not use today's border strokes as a bar.
   edd983c0f). j15's Z spike is no corner: chain 70's start strokes over chain 5, whose group-15 arm its crossing with
   chain 70 cuts, and burying that stroke opens the eye's outline. t23e's outlines run tangent (corner r <= 0.03 h).
   Diff the border look (gf_b2.png) at a luminance step of 6: its ink is only about 30 levels off the paper.
+- THE RETRY'S THIRD BOUND (K1482 s26, `GF_KXB`/`GF_KXBS`, tables only, so the shader and `gfk=0` are untouched): a
+  retry ball may not enter the tube of a crossing pass, of the corner's own chains, that cuts either arm; the arc's
+  buriers skip cA/cB, so such a ball draws through the crossing (j50's wedge: r 0.67 -> 0.17 h). Over every crossing
+  pass it shrank nearly all 109 retry corners. j4, j47 and j59 are crossings by OTHER chains (tiny or no ball), and
+  t84e/t45s have no retry corner: they need a corner solved against the crossing's outline, not a smaller ball.
+  Two loads of one hash can settle on views 2e-5 apart (21.29684 vs 21.29682): compare `gf_b2view.txt` before a diff.
 
 ## The pass on the Pixel (stage 4, `K1362_s4_shader.md`)
 

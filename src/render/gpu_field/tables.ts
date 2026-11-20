@@ -52,6 +52,16 @@ export const GF_KRMAX: number = ENV20?.GF_KRMAX !== undefined ? +ENV20.GF_KRMAX 
 export const GF_KSAG: number = ENV20?.GF_KSAG !== undefined ? +ENV20.GF_KSAG : 0.35;
 /** K1482 s22: and one of radius under GF_KRMIN h (muse_hash's 0.02 h and 0.09 h retries were the bar's rstray at j64\n * and a vdip:tie; a near-null arc is no rounding, only a different ink). Env GF_KSAG / GF_KRMIN for Node probes. */
 export const GF_KRMIN: number = ENV20?.GF_KRMIN !== undefined ? +ENV20.GF_KRMIN : 0.1;
+/** K1482 s26: the retry's third bound. The crossing pass that cut an arm (the partner of a pin on either arm's
+ * chain within the extended arm) bounds the retry ball like the arms' own far parts: the ball stops where it would
+ * enter that pass's tube, so its arc meets the crossing's near outline instead of running through it (j50). Env
+ * GF_KXB=0 turns it off for Node probes. Only the retry (pass 1) reads it, so `gfk=0` tables equal master's. */
+export const GF_KXB: boolean = ENV20?.GF_KXB !== "0";
+/** K1482 s26: the third bound counts only a crossing pass of the corner's OWN chains (a chain crossing itself next
+ * to the junction): the arc's buriers skip those chains, so nothing else hides a ball inside that tube. Over every
+ * crossing pass it shrank nearly all 109 of link A's retry corners (Levi took the rounding); own chains move 18.
+ * Env GF_KXBS=0 bounds by every crossing pass, for Node probes. */
+export const GF_KXBS: boolean = ENV20?.GF_KXBS !== "0";
 /**
  * K1482 s23: the retry's switch. The page turns it on with `gfh=1` unless `gfk=0` (frame_loop.ts; K1524, Levi
  * 2026-11-19: "take the rounding"). Off, a Node build's default (K1536): no retry corner is solved, no kExt and no
@@ -738,6 +748,44 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
     if (cClosed[A.c]) d = ((d % cLen[A.c]) + cLen[A.c]) % cLen[A.c];
     return d;
   };
+  // K1482 s26 (GF_KXB): chain c's spine point at s (clamped on an open chain, wrapped on a closed one).
+  const XY = new Float64Array(2);
+  const chainXY = (c: number, sRaw: number): void => {
+    const v0 = cV0[c]; const nv = cNV[c];
+    const s = cClosed[c] ? norm(c, sRaw) : Math.max(vs[v0], Math.min(vs[v0 + nv - 1], sRaw));
+    let lo = v0; let hi = v0 + nv - 1;
+    if (s <= vs[lo]) hi = lo + 1; else if (s >= vs[hi]) lo = hi - 1;
+    else while (hi - lo > 1) { const m = (lo + hi) >> 1; if (vs[m] <= s) lo = m; else hi = m; }
+    const L = vs[hi] - vs[lo]; const t = L > 0 ? Math.min(1, Math.max(0, (s - vs[lo]) / L)) : 0;
+    XY[0] = vx[lo] + (vx[hi] - vx[lo]) * t; XY[1] = vy[lo] + (vy[hi] - vy[lo]) * t;
+  };
+  // The crossing passes that cut A or B: per pin on the arm's chain at arm distance [0, L + 2h], its partner's
+  // spine over [ps - 3h, ps + 3h] as segments (x0, y0, x1, y1). Null when there is none.
+  const crossSpines = (A: ArmT, B: ArmT): Float64Array | null => {
+    const seg: number[] = []; const NS = 18;
+    for (const Ar of [A, B]) {
+      const c = Ar.c; const p0 = P.cPin0[c]; const pn = P.cPinN[c];
+      for (let k = p0; k < p0 + pn; k++) {
+        const d = armDistOf(Ar, P.pinS[k]);
+        if (!(d >= 0 && d <= Ar.L + 2 * h)) continue;
+        const pc = P.pinPC[k]; if (!(pc >= 0 && pc < P.nC)) continue;
+        if (GF_KXBS && pc !== A.c && pc !== B.c) continue;
+        const ps = P.pinPS[k];
+        chainXY(pc, ps - 3 * h); let x0 = XY[0]; let y0 = XY[1];
+        for (let i = 1; i <= NS; i++) { chainXY(pc, ps - 3 * h + (6 * h * i) / NS); seg.push(x0, y0, XY[0], XY[1]); x0 = XY[0]; y0 = XY[1]; }
+      }
+    }
+    return seg.length ? Float64Array.from(seg) : null;
+  };
+  const segDist = (S: Float64Array, x: number, y: number): number => {
+    let d2 = Infinity;
+    for (let i = 0; i < S.length; i += 4) {
+      const ax = S[i]; const ay = S[i + 1]; const dx = S[i + 2] - ax; const dy = S[i + 3] - ay; const l2 = dx * dx + dy * dy;
+      const t = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+      const ex = ax + dx * t - x; const ey = ay + dy * t - y; const dd = ex * ex + ey * ey; if (dd < d2) d2 = dd;
+    }
+    return Math.sqrt(d2);
+  };
   const CF = new CornerGrowth();
   // Form B's solveEq at rho = h: Newton on the true feet (footInWindow over each arm's window).
   const solveV = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, pa: Poly, pb: Poly, th: number): { x: number; y: number; fa: Foot; fb: Foot } | null => {
@@ -951,13 +999,18 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       const denOf = (p: Q): number => { const ax = p.x - p.fax; const ay = p.y - p.fay; const bx = p.x - p.fbx; const by = p.y - p.fby; return 1 + (ax * bx + ay * by) / ((Math.sqrt(ax * ax + ay * ay) || 1) * (Math.sqrt(bx * bx + by * by) || 1)); };
       const denV = denOf(V);
       const mCut = (dc: number): number => { const c0 = dc - 0.05 * h - 1e-12 * (1 + dc); return c0 > 0 ? c0 * c0 : -1; };
+      // K1482 s26 (GF_KXB): the retry's third bound, the spines of the crossing passes that cut either arm (each
+      // pin on A's or B's chain within the extended arm, its partner sampled over +-3h), as point pairs.
+      const XS = pass === 1 && GF_KXB ? crossSpines(A, B) : null;
       const wOf = (p: Q): number => {
         const fSteep = ss01(((Math.abs(denV) > 1e-12 ? denOf(p) / denV : 0) - 0.3) / 0.4); if (fSteep === 0) return 0;
         const fSlack = ss01(Math.min(A.L - W - p.ua, B.L - W - p.ub) / (0.5 * h)); if (fSlack === 0) return 0;
         const fA = ss01(p.ua / rb); const fB = ss01(p.ub / rb); if (fA === 0 || fB === 0) return 0;
         const dcA = Math.hypot(p.x - p.fax, p.y - p.fay); const mA = marginAt(SA, p.ua, p.x, p.y, dcA, mCut(dcA)); if (mA <= -0.05 * h) return 0;
         const dcB = Math.hypot(p.x - p.fbx, p.y - p.fby); const mB = marginAt(SB, p.ub, p.x, p.y, dcB, mCut(dcB)); if (mB <= -0.05 * h) return 0;
-        return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fA * fB;
+        let mX = 0;
+        if (XS) { mX = segDist(XS, p.x, p.y) - Math.max(dcA, dcB); if (mX <= -0.05 * h) return 0; }
+        return ss01(1 + Math.min(0, mA, mB, mX) / (0.05 * h)) * fSteep * fSlack * fA * fB;
       };
       const dN = r0 / NODES; let r = 0; let pua = V.ua; let pub = V.ub; let qCF: Q | null = null; let cfZero = false;
       // The growth's integral is zero when w(V) is: skip its piece building then (its r is 0 either way).
