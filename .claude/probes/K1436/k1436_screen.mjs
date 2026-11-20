@@ -17,6 +17,7 @@
 import puppeteer from "puppeteer-core";
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { waitViewStill } from "../view_still.mjs";
 const [, , base, outDir, profileDir, jobsPath, parS = "3"] = process.argv;
 const DSF = +(process.env.DSF ?? 3), TRIES = +(process.env.TRIES ?? 4), WARM = process.env.WARM === "1";
 const jobs = JSON.parse(readFileSync(jobsPath, "utf8"));
@@ -89,6 +90,14 @@ async function once1(job, h = {}) {
   // DOM chrome off the capture (chips, buttons, HUD, a closed panel's menu): only the canvas shows
   await page.addStyleTag({ content: "body * { visibility: hidden !important; } canvas { visibility: visible !important; }" });
   await sleep(2000);
+  // K1529: pin the view before shooting. After the freeze the fit camera is still easing toward
+  // the bounds fit; a shot taken mid-ease sits at a sub-pixel offset that differs per load (s21:
+  // 76,609 px on antialiased edges, 1-3 levels), and stableShot alone only proves two shots of
+  // THIS load agree. Wait for the bit-exact still view (the snapped fit target, the same bits on
+  // every load), then shoot; stableShot stays as the net for a gf build still in flight.
+  const still = await waitViewStill(page);
+  if (!still) console.log(`[${job.name}] WARNING view never bit-still in 60 s; shooting unpinned (K1529)`);
+  else console.log(`[${job.name}] view still x=${still.x} y=${still.y} s=${still.s} dpr=${still.dpr}`);
   await page.evaluate(() => { const r = window.__knotRenderer(); r.threadLook = 0; });
   // K1519: keep a screenshot only when two redrawn shots in a row are byte-identical. The freeze moves
   // the physics (StepUntil), so gf rebuilds async; a shot while that build is in flight draws the stale

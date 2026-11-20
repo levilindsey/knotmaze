@@ -20,6 +20,7 @@ items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
 Next free ID: K1539.
+Next free ID: K1537.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -2568,6 +2569,12 @@ Every other item below waits on the trigger it names.
 - **K1538** · rp=gf: while a pluck lives, the plucked thread's outline strokes turn dull red (42, 29, 32) against gf's
   near black (18, 20, 26); the pale pink blur matches today's render. Seen in music mode's auto plucks on link A. Cause
   not looked for. Record and crop names: `.claude/probes/K1524/flip/notes.md`, last section
+- **K1536** · K1482/cap.mjs freezes without alignFreezeParity, so each load plays the K1519 substep-parity
+  lottery and reloads until HASH matches: in 27B's fixed 12-load set one load exhausted TRIES=6 on 10104c64
+  (six misses; 11 of 12 captured, all 0 px after the view pin, plus 2/2 supplement). Cure: call
+  alignFreezeParity(page, SIMT) before its freeze, as .claude/probes/K1458/dragcheck.mjs and fade.mjs do
+  (Handoff 26X). Left by 27B: outside the view-pinning Done; the retry design is documented in cap.mjs's
+  header.
 
 ## Approved, to schedule (2026-10-11)
 

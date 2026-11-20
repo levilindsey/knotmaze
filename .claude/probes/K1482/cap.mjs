@@ -13,6 +13,7 @@
 import puppeteer from "puppeteer-core";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { waitViewStill } from "../view_still.mjs";
 const [, , base, outDir, profileDir, query = "3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&gfh=1"] = process.argv;
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), TRIES = +(process.env.TRIES ?? 6);
 const FRAME_TIMEOUT_MS = +(process.env.FRAME_TIMEOUT_MS ?? 240000);
@@ -64,14 +65,13 @@ async function collectDiags(page) {
   return out;
 }
 async function waitViewSettled(page) {
-  let prev = null;
-  for (let i = 0; i < 80; i++) {
-    let cur = null;
-    try { cur = await page.evaluate(async () => { const d = await window.__knotPhysDump(); const hh = d?.hashes ?? d; const h = String(hh?.all ?? JSON.stringify(hh).slice(0, 80)); const R = window.__knotRenderer(); const wt = R.root.worldTransform; const dpr = window.devicePixelRatio; return { h, v: [wt.a * dpr, wt.b * dpr, wt.c * dpr, wt.d * dpr, wt.tx * dpr, wt.ty * dpr] }; }); } catch { await sleep(250); continue; }
-    if (prev && cur.h === prev.h && cur.v.every((x, k) => x === prev.v[k])) { console.log(T(), `view settled ${cur.h}`); return cur; }
-    prev = cur; await sleep(250);
-  }
-  console.log(T(), "view settle timeout, shooting anyway"); return prev;
+  // K1529: the shared bit-still wait (10 equal world transforms, 200 ms apart; K1508's two
+  // samples 250 ms apart could agree while the fit ease still crept below their resolution).
+  const st = await waitViewStill(page);
+  if (!st) { console.log(T(), "view settle timeout, shooting anyway"); return null; }
+  const h = await page.evaluate(async () => { const d = await window.__knotPhysDump(); const hh = d?.hashes ?? d; return String(hh?.all ?? JSON.stringify(hh).slice(0, 80)); }).catch(() => "?");
+  console.log(T(), `view settled ${h}`);
+  return { h, still: st };
 }
 async function freeze(page) {
   return page.evaluate(async (t) => {
