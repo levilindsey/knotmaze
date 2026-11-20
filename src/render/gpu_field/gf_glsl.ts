@@ -148,6 +148,26 @@ export function homeForm(src: string): string {
   return src;
 }
 
+/**
+ * K1482 s20: a retry corner (texel 5 .z = 1, gf_pack.ts; only in home membership's corner view) inks only: it
+ * never raises its surface's D (eval.ts arc loop) and never covers or labels in layers() (eval.ts scov).
+ * K1482 s23: a text form of homeForm's output, applied by GfPass only behind the `gfk=1` render flag (with `gfh=1`;
+ * tables.ts GF_KRETRY): without it no program changes, byte for byte.
+ */
+export function retryForm(src: string): string {
+  if (!src.includes("uniform float uHomeZ; // K1439: home membership's fade depth\n")) throw new Error("gfFs retry: homeForm first");
+  src = src.split("uniform float uHomeZ; // K1439: home membership's fade depth\n").join(
+    "uniform float uHomeZ; // K1439: home membership's fade depth\n#define KXT(k) (F(uOK + 6 * (k) + 5).z < 0.5)\n");
+  src = src.split("Dk > D) D = Dk;").join("Dk > D && KXT(k)) D = Dk;");
+  src = src.split("Dk > sa[e]) sa[e] = Dk;").join("Dk > sa[e] && KXT(k)) sa[e] = Dk;");
+  src = src.split("if (KRI > K0.z && (key > labK").join("if (KRI > K0.z && KXT(k) && (key > labK");
+  src = src.split("if (KRI > K0.z) { scov[e] = true;").join("if (KRI > K0.z && KXT(k)) { scov[e] = true;");
+  src = src.split("if (kIn[i] == 3 && (key > labK").join("if (kIn[i] == 3 && KXT(k) && (key > labK");
+  src = src.split("if (kIn[i] == 3) { scov[e] = true;").join("if (kIn[i] == 3 && KXT(k)) { scov[e] = true;");
+  if (/Dk > (D|sa\[e\])\)|KRI > K0\.z\)|KRI > K0\.z && \(|kIn\[i\] == 3\)|kIn\[i\] == 3 && \(/.test(src)) throw new Error("gfFs home: a corner raise or cover without its retry test is left");
+  return src;
+}
+
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);
   if (tier?.one) src = oneConfig(src);

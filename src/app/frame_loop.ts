@@ -228,6 +228,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // K1439: `gfh=1` under `rp=gf` draws junction membership from the arms' home intervals (K1438; gf_glsl.ts homeForm),
   // its fade following the fadeLength slider live. Off by default: without it the programs and tables are master's.
   if (gfFlag && new URLSearchParams(location.search).get("gfh") === "1") (globalThis as { __knotGfHome?: boolean }).__knotGfHome = true;
+  // K1482 s23: `gfk=1` with `gfh=1` adds the gated second corner try (tables.ts GF_KRETRY, gf_glsl.ts retryForm); K1524
+  // decides whether it becomes the default or goes. Off by default: without it the programs and tables are master's.
+  if (gfFlag && new URLSearchParams(location.search).get("gfh") === "1" && new URLSearchParams(location.search).get("gfk") === "1") (globalThis as { __knotGfKRetry?: boolean }).__knotGfKRetry = true;
   const labelFrame = (): void => {
     const r = scene.renderer;
     const kind = gfFlag ? "gf" : outlineFlag ? "outline" : params.fieldBand ? "field" : "label";

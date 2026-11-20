@@ -500,7 +500,7 @@ export class GfEval {
       const z = nearerA ? T.kZa[k] : T.kZb[k]; const key = z - zt;
       const e = entry(T.kG[k]);
       if (key > this.skey[e]) this.skey[e] = key;
-      if (this.krho[i] > T.kR[k]) { this.scov[e] = 1; if (key > this.sckey[e]) { this.sckey[e] = key; this.scch[e] = nearerA ? T.kCa[k] : T.kCb[k]; this.scs[e] = nearerA ? T.kSa[k] : T.kSb[k]; } }
+      if (this.krho[i] > T.kR[k] && T.kExt?.[k] !== 1) { this.scov[e] = 1; if (key > this.sckey[e]) { this.sckey[e] = key; this.scch[e] = nearerA ? T.kCa[k] : T.kCb[k]; this.scs[e] = nearerA ? T.kSa[k] : T.kSb[k]; } }
     }
     this.ns = ns;
     // order by key, descending (insertion sort; ns is small)
@@ -540,7 +540,7 @@ export class GfEval {
       for (let i = 0; i < this.nk; i++) {
         const k = this.kk[i]; if (T.kG[k] !== S || !this.kSec[i] || !(T.kR[k] > 0)) continue; // K1407 23A: no arc at r = 0
         const rho = this.krho[i]; const Dk = rho - T.kR[k];
-        if (this.kIn[i] === 2 && Dk > D) D = Dk;
+        if (this.kIn[i] === 2 && Dk > D && T.kExt?.[k] !== 1) D = Dk; // K1482 s20: a retry corner inks only
         if (!(rho > 1e-12)) continue;
         const qx = T.kCx[k] + (T.kR[k] * (x - T.kCx[k])) / rho; const qy = T.kCy[k] + (T.kR[k] * (y - T.kCy[k])) / rho;
         const cA = T.kCa[k]; const cB = T.kCb[k]; // K1407 c1: the corner's own arms never bury its faces

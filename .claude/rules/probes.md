@@ -183,6 +183,7 @@ for a flow-on retrace).
   refuses some ports (ERR_UNSAFE_PORT: 6000 and 6665-6669 among them), so
   probe servers skip them (K465, 2026-10-15).
 - `scripts/dev.ps1 [-Port 5173]` starts Levi's LAN dev server (`vite --host 0.0.0.0 --port <Port> --strictPort` from the checkout's own `node_modules`; it checks that vite is installed and warns on a stale install, never installs) - the script a ledger `env:` line names for the phone's server; agents use a port other than 5173, which is Levi's own.
+- `scripts/preview.ps1 -Port <p> [-Ref <commit>] [-Root <dir>]` builds a commit into its own folder and serves it (`vite preview`). In an agent worktree (K1482 s23), its `-Ref` builds junction their `node_modules` to the worktree's own (`$repo\node_modules`), so the worktree needs one first: a junction to the main checkout's (`New-Item -ItemType Junction -Path node_modules -Target <main>\node_modules`). Unlink it with `(Get-Item <path>).Delete()` before any `git worktree remove --force`, which follows a junction into its target and empties the main checkout's packages.
 
 - K73 (2026-10-13), corner chrome probes: `.claude/probes/K73/`
   (probe_badge.mjs free | official | replay | narrow, probe_exit.mjs

@@ -37,6 +37,27 @@ export const MAXP = 8; // pieces kept per pixel
  * switch off the packed texture, the digest and every pin are master's.
  */
 export const GF_HOME: boolean = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_HOME === "1";
+/**
+ * K1482 s20: home membership's corner retry (solveGfCorners pass 1): a cut arm extends GF_KEXT h past its cut.
+ * 0 turns the retry off. Env GF_KEXT / GF_KCAP (L0 | home) for Node probes.
+ */
+const ENV20 = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+export const GF_KEXT: number = ENV20?.GF_KEXT !== undefined ? +ENV20.GF_KEXT : 1.5;
+export const GF_KCAP: string = ENV20?.GF_KCAP ?? "L0";
+/** K1482 s20: a retry corner of radius above GF_KRMAX h is dropped (the pass-0 result stands): its arc leaves the
+ * thread's edge (t32e, t75e). Env GF_KRMAX for Node probes. */
+export const GF_KRMAX: number = ENV20?.GF_KRMAX !== undefined ? +ENV20.GF_KRMAX : 1e9;
+/** K1482 s20: likewise a retry corner whose arc sits more than GF_KSAG h inside the sharp corner (r / sin(th/2) - r).
+ * K1482 s22: 0.35 (was 0.5): the arcs at 0.37-0.48 h are the K1436 bar's fix3 finds (def's dstray, g41_user_tw64's vdip:\n * the arc leaves the fill's sharp corner bare); link A's named corners sit at 0.32 h or less. */
+export const GF_KSAG: number = ENV20?.GF_KSAG !== undefined ? +ENV20.GF_KSAG : 0.35;
+/** K1482 s22: and one of radius under GF_KRMIN h (muse_hash's 0.02 h and 0.09 h retries were the bar's rstray at j64\n * and a vdip:tie; a near-null arc is no rounding, only a different ink). Env GF_KSAG / GF_KRMIN for Node probes. */
+export const GF_KRMIN: number = ENV20?.GF_KRMIN !== undefined ? +ENV20.GF_KRMIN : 0.1;
+/**
+ * K1482 s23: the retry's switch (the `gfk=1` render flag with `gfh=1`; K1524 decides whether it becomes the default
+ * or goes). Off, the default: no retry corner is solved and the tables are master's, field for field (no kExt, no
+ * *Alt). `GfOpts.kRetry` overrides it per build, env GF_KRETRY=1 for Node probes.
+ */
+export const GF_KRETRY: boolean = ENV20?.GF_KRETRY === "1";
 
 export interface GfOpts {
   /** Half the AA ramp, world units. */
@@ -45,6 +66,8 @@ export interface GfOpts {
   gridK?: number;
   /** K1438: home membership on (default GF_HOME). */
   home?: boolean;
+  /** K1482 s23: the corner retry on (default GF_KRETRY). */
+  kRetry?: boolean;
 }
 
 export interface GfTables {
@@ -91,6 +114,15 @@ export interface GfTables {
    * somewhere in it, each in cellKList order (2 + nThru + nKeep <= 4 kn); unused slots are -1.
    */
   cellKPList: Int32Array;
+  /**
+   * K1482 s20: per corner, 1 = a retry corner (solveGfCorners pass 1: a pair a crossing cut short, on arms extended
+   * past the cut), home membership's only and ink only (its arc buries the V's outlines; it sets no depth, cov or
+   * label); 2 = the pair's pass 0 corner, home-off's only; 0 = both modes'. Retry corners sit after all others.
+   * nK and the cell lists above are this build's mode's (homeOn); the *Alt fields are the other mode's, and
+   * withHome() swaps them in. Corners nK..nKAlt-1 of a home-off build are its retry corners.
+   * K1482 s23: only a build with the retry on (GfOpts.kRetry / GF_KRETRY) carries these fields.
+   */
+  kExt?: Uint8Array; nKAlt?: number; cellK0Alt?: Int32Array; cellKNAlt?: Int32Array; cellKListAlt?: Int32Array; cellKPListAlt?: Int32Array;
   /** Build time per part, ms. */
   ms: { vtx: number; pins: number; arms: number; corners: number; bins: number; kp: number; total: number };
 }
@@ -348,7 +380,7 @@ function footNear(T: GfTables | Pick<GfTables, "cV0" | "cNV" | "vx" | "vy" | "vs
 // corners are bit-identical to the cold build's (the t1 rule: the solve's
 // input bits are unchanged, only who runs them).
 export interface GfArm { c: number; j: number; ei: number; sR: number; dir: number; L: number; Lcut: number; g: number; ang: number; ux: number; uy: number; uB: number; L0: number; ahead: number; home: number }
-export interface GfCorner { thru: number; rv: number; cx: number; cy: number; r: number; rmax: number; eax: number; eay: number; ebx: number; eby: number; g: number; j: number; a: number; b: number; theta: number; ca: number; cb: number; sa: number; sb: number }
+export interface GfCorner { thru: number; rv: number; cx: number; cy: number; r: number; rmax: number; eax: number; eay: number; ebx: number; eby: number; g: number; j: number; a: number; b: number; theta: number; ca: number; cb: number; sa: number; sb: number; /** K1482 s20: 1 = home membership's only, 2 = home-off's only */ ext?: number }
 export interface GfRaw { cV0: Int32Array; cNV: Int32Array; vx: Float64Array; vy: Float64Array; vs: Float64Array }
 export interface GfPrefix {
   h: number; W: number; aa: number; sigma: number; zt: number; amp: number; win: number; rc: number; gridK?: number; cr: number;
@@ -362,6 +394,8 @@ export interface GfPrefix {
   arms: GfArm[]; junctions: FieldScene["junctions"]; jGroup: Int32Array;
   /** K1438: the build's home switch (GfOpts.home ?? GF_HOME). */
   homeOn: boolean;
+  /** K1482 s23: the build's corner retry switch (GfOpts.kRetry ?? GF_KRETRY). */
+  kRetry: boolean;
   /** Pool slices carry only their junction range: junctions/jGroup/arms are
    * range-local and jBase is the range's first global junction index. */
   jBase?: number;
@@ -655,7 +689,7 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
     nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
     nV, vx, vy, vs, pinS, pinZ, pinPC, pinPS, nA, aSR, aDir, aL, aLcut, aG,
     arms: armsT, junctions: scene.junctions, jGroup, pinTheta, chainIds, rootsOff, rootsS, rootsJ,
-    homeOn: opts.home ?? GF_HOME,
+    homeOn: opts.home ?? GF_HOME, kRetry: opts.kRetry ?? GF_KRETRY,
     ms: { vtx: t1 - t0, pins: t2 - t1, arms: t3 - t2 },
   };
 }
@@ -691,6 +725,14 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
     return r;
   };
   const armWin = (A: ArmT): [number, number] => (A.dir > 0 ? [A.sR, A.sR + A.L] : [A.sR - A.L, A.sR]);
+  // K1482 s20: an arm a crossing cut short (Lcut < L0), extended to Lcut + GF_KEXT h (within L0, and within its
+  // home extent with GF_KCAP=home); a fresh object, so its samples (smp) are its own. Uncut: A itself.
+  const extArm = (A: ArmT): ArmT => {
+    if (!(A.Lcut < A.L0)) return A;
+    const cap = GF_KCAP === "home" ? Math.min(A.L0, A.home) : A.L0;
+    const L = Math.min(cap, Math.max(A.L, A.Lcut + GF_KEXT * h));
+    return L > A.L ? { ...A, L } : A;
+  };
   const armDistOf = (A: ArmT, s: number): number => {
     let d = (s - A.sR) * A.dir;
     if (cClosed[A.c]) d = ((d % cLen[A.c]) + cLen[A.c]) % cLen[A.c];
@@ -856,13 +898,26 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
     const S = sibs[ji].sort((u, v) => u.ang - v.ang); const n = S.length; if (n < 2) continue;
     const g = jGroup[ji]; const ne = J.arms.length; const styles = J.corners ?? [];
     for (let i = 0; i < n; i++) {
-      const A = S[i]; const B = S[(i + 1) % n];
-      let th = B.ang - A.ang; th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      const A0 = S[i]; const B0 = S[(i + 1) % n];
+      let th = B0.ang - A0.ang; th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
       if (th <= 1e-6 || th >= Math.PI - 1e-6) continue;
-      const xa = J.arms[A.ei]; const xb = J.arms[B.ei];
+      const xa = J.arms[A0.ei]; const xb = J.arms[B0.ei];
       const thru = xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6 ? 1 : 0;
-      let st = styles[A.ei]?.style; if ((A.ei + 1) % ne !== B.ei && (B.ei + 1) % ne === A.ei) st = styles[B.ei]?.style;
+      let st = styles[A0.ei]?.style; if ((A0.ei + 1) % ne !== B0.ei && (B0.ei + 1) % ne === A0.ei) st = styles[B0.ei]?.style;
       if (st === "sharp") continue;
+      // K1482 s20: pass 1 retries a non-through pair that pass 0 gave no fillet, on arms a crossing cut short
+      // extended past the cut (extArm). Its corner is home membership's only (ext 1): the cut arm's pieces join
+      // the group out to aHome there, so the outlines meet in a V or a notch the retry rounds. Pass 0's corner
+      // stays home-off's (ext 2).
+      const got: (GfCorner | null)[] = [null, null];
+      for (let pass = 0; pass < 2; pass++) {
+      let A = A0; let B = B0;
+      if (pass === 1) {
+        const c0 = got[0];
+        if (thru || !P.kRetry || !(GF_KEXT > 0) || (c0 && c0.r > 1e-9)) break; // K1482 s23: only with the switch
+        A = extArm(A0); B = extArm(B0);
+        if (A === A0 && B === B0) break;
+      }
       if (!(A.L > 1e-9 && B.L > 1e-9)) continue;
       const t2 = Math.tan(th / 2);
       // form B: V's (tracked) feet inside both arms, checked below
@@ -953,7 +1008,7 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       if (!(r > 1e-9)) { // K1407 23A: form B keeps a null corner (r = 0): its tangent terms ink a disc at V.
         // A through pair's null is not kept: the reference's fillet pick requires r > 0, so a null through
         // corner draws nothing (its eye band would ink the open eye).
-        if (!thru) K.push({ thru, rv: 0, cx: V.x, cy: V.y, r: 0, rmax: (2 * aa) / Math.max(0.1, Math.sin(th / 2)), eax: -V.nax, eay: -V.nay, ebx: -V.nbx, eby: -V.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: V.sa, sb: V.sb });
+        if (!thru) got[pass] = { thru, rv: 0, cx: V.x, cy: V.y, r: 0, rmax: (2 * aa) / Math.max(0.1, Math.sin(th / 2)), eax: -V.nax, eay: -V.nay, ebx: -V.nbx, eby: -V.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: V.sa, sb: V.sb };
         continue;
       }
       if (thru && r < 0.16 * h) continue; // K1407 23A: a through radius this small is the integral's noise (form B's reads 0-0.05h there); its pick passes, so the eye stays open
@@ -962,7 +1017,11 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       else { trackInto(QQB, J, A, B, pua, pub, h + r, TRACK + 1, 4 * dN / t2, hA, hB, snH, csH); q = QQB; }
       const rV = Math.hypot(V.x - q.x, V.y - q.y);
       const rmax = rV + (2 * aa) / Math.max(0.1, Math.sin(th / 2));
-      K.push({ thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb });
+      got[pass] = { thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb };
+      }
+      const c0 = got[0]; const c1 = got[1];
+      if (c1 && c1.r > 1e-9 && c1.r >= GF_KRMIN * h && c1.r <= GF_KRMAX * h && c1.r * (1 / Math.max(1e-6, Math.sin(c1.theta / 2)) - 1) <= GF_KSAG * h) { c1.ext = 1; K.push(c1); if (c0) { c0.ext = 2; K.push(c0); } }
+      else if (c0) K.push(c0);
     }
   }
   return K;
@@ -1081,7 +1140,12 @@ function clipPinWindows(win: number, pinWL: Float64Array, pinWR: Float64Array, d
  * With a merged chunk-bin slice set, bins take it; else bins run whole. */
 export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfChunkMeta; bins: { cellCh0: Int32Array; cellChN: Int32Array; cellChList: Int32Array } } | null, ms: { vtx: number; pins: number; arms: number; corners: number }, t0: number): GfTables {
   const { h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN, nV, vx, vy, vs, pinS, pinZ, pinPC, pinPS, nA, aSR, aDir, aL, aLcut, aG } = P;
+  // K1482 s20: home membership's retry corners (ext 1) go after every other corner, so corners 0..nOff-1 are
+  // home-off's, in the solve's order, and its tables are the ones before s20; ext 2 corners are home-off's only.
+  if (K.some((q) => q.ext === 1)) K = K.filter((q) => q.ext !== 1).concat(K.filter((q) => q.ext === 1));
   const nK = K.length;
+  let nOff = nK; while (nOff > 0 && K[nOff - 1].ext === 1) nOff--;
+  const kExt = new Uint8Array(nK); K.forEach((q, i) => { kExt[i] = q.ext ?? 0; });
   const kCx = new Float64Array(nK); const kCy = new Float64Array(nK); const kR = new Float64Array(nK); const kRmax = new Float64Array(nK);
   const kEax = new Float64Array(nK); const kEay = new Float64Array(nK); const kEbx = new Float64Array(nK); const kEby = new Float64Array(nK); const kG = new Int32Array(nK);
   const kJ = new Int32Array(nK); const kA = new Int32Array(nK); const kB = new Int32Array(nK); const kTheta = new Float64Array(nK);
@@ -1097,7 +1161,6 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
   const meta = chunk?.meta ?? gfChunkMeta(P);
   const { nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH } = meta;
   const nCell = gW * gH;
-  const cellKN = new Int32Array(nCell);
   // K1362 t1: each item's cell range computed once (same floors), reused by the count and fill passes.
   const rngK = new Int32Array(4 * nK);
   for (let q = 0; q < nK; q++) {
@@ -1105,8 +1168,24 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
     const a = Math.max(0, Math.floor((kx - R - gx0) / G)); const b = Math.max(0, Math.floor((ky - R - gy0) / G));
     const c = Math.min(gW - 1, Math.floor((kx + R - gx0) / G)); const d = Math.min(gH - 1, Math.floor((ky + R - gy0) / G));
     rngK[4 * q] = a; rngK[4 * q + 1] = b; rngK[4 * q + 2] = c; rngK[4 * q + 3] = d;
-    for (let y = b; y <= d; y++) { let i = y * gW + a; for (let x = a; x <= c; x++) cellKN[i++]++; }
   }
+  // K1482 s20: the cell lists of one view: home-off's (corners below nOff) or home membership's (every corner but
+  // ext 2). Without retry corners the two are one.
+  const cellLists = (use: (q: number) => boolean): { cellK0: Int32Array; cellKN: Int32Array; cellKList: Int32Array } => {
+    const cellKN = new Int32Array(nCell);
+    for (let q = 0; q < nK; q++) {
+      if (!use(q)) continue;
+      const a = rngK[4 * q]; const b = rngK[4 * q + 1]; const c = rngK[4 * q + 2]; const d = rngK[4 * q + 3];
+      for (let y = b; y <= d; y++) { let i = y * gW + a; for (let x = a; x <= c; x++) cellKN[i++]++; }
+    }
+    const cellK0 = new Int32Array(nCell);
+    let sK = 0;
+    for (let i = 0; i < nCell; i++) { cellK0[i] = sK; sK += cellKN[i]; }
+    const cellKList = new Int32Array(sK);
+    const fK = new Int32Array(nCell);
+    for (let q = 0; q < nK; q++) { if (!use(q)) continue; const a = rngK[4 * q]; const b = rngK[4 * q + 1]; const c = rngK[4 * q + 2]; const d = rngK[4 * q + 3]; for (let y = b; y <= d; y++) { const i0 = y * gW; for (let x = a; x <= c; x++) { const i = i0 + x; cellKList[cellK0[i] + fK[i]++] = q; } } }
+    return { cellK0, cellKN, cellKList };
+  };
   let cellCh0: Int32Array; let cellChN: Int32Array; let cellChList: Int32Array;
   if (chunk) {
     ({ cellCh0, cellChN, cellChList } = chunk.bins);
@@ -1114,14 +1193,17 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
     const merged = mergeGfChunkBins([gfChunkBinPart(P, meta, 0, nCh)], nCell);
     ({ cellCh0, cellChN, cellChList } = merged);
   }
-  const cellK0 = new Int32Array(nCell);
-  let sK = 0;
-  for (let i = 0; i < nCell; i++) { cellK0[i] = sK; sK += cellKN[i]; }
-  const cellKList = new Int32Array(sK);
-  const fK = new Int32Array(nCell);
-  for (let q = 0; q < nK; q++) { const a = rngK[4 * q]; const b = rngK[4 * q + 1]; const c = rngK[4 * q + 2]; const d = rngK[4 * q + 3]; for (let y = b; y <= d; y++) { const i0 = y * gW; for (let x = a; x <= c; x++) { const i = i0 + x; cellKList[cellK0[i] + fK[i]++] = q; } } }
+  const vOff = cellLists((q) => q < nOff);
+  const vOffP = prunedCornerLists(kCx, kCy, kR, kRmax, kThru, kRV, W, aa, gx0, gy0, G, gW, gH, vOff.cellK0, vOff.cellKN, vOff.cellKList);
+  let vOn = vOff; let vOnP = vOffP;
+  if (nOff < nK || kExt.some((e) => e === 2)) {
+    vOn = cellLists((q) => kExt[q] !== 2);
+    vOnP = prunedCornerLists(kCx, kCy, kR, kRmax, kThru, kRV, W, aa, gx0, gy0, G, gW, gH, vOn.cellK0, vOn.cellKN, vOn.cellKList);
+  }
   const t5 = now();
-  const cellKPList = prunedCornerLists(kCx, kCy, kR, kRmax, kThru, kRV, W, aa, gx0, gy0, G, gW, gH, cellK0, cellKN, cellKList);
+  const homeOn = P.homeOn === true;
+  const [vB, vBP, nB, vA, vAP, nA2] = homeOn ? [vOn, vOnP, nK, vOff, vOffP, nOff] : [vOff, vOffP, nOff, vOn, vOnP, nK];
+  const { cellK0, cellKN, cellKList } = vB; const cellKPList = vBP;
   const t6 = now();
   // K1438: from the arms themselves (P.arms is armTab.arms on every path: cold, pooled, the worker's), so no
   // caller copies a new field.
@@ -1164,9 +1246,11 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
 
   return {
     h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
-    nV, vx, vy, vs, pinS, pinZ, pinWL: wL2, pinWR: wR2, nA, aSR, aDir, aL, aLcut, aG, aHome, homeOn: P.homeOn === true,
-    nK, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
+    nV, vx, vy, vs, pinS, pinZ, pinWL: wL2, pinWR: wR2, nA, aSR, aDir, aL, aLcut, aG, aHome, homeOn,
+    nK: nB, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
+    // K1482 s23: with the retry off (the default) the tables are master's, field for field
+    ...(P.kRetry ? { kExt, nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
     ms: { vtx: ms.vtx, pins: ms.pins + walkMs, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
   };
 }
@@ -1208,6 +1292,22 @@ function prunedCornerLists(kCx: Float64Array, kCy: Float64Array, kR: Float64Arra
     }
   }
   return out;
+}
+
+/**
+ * K1482 s20: the tables in home mode `on`: T itself when built so, else with homeOn flipped and the corner count
+ * and cell lists of that mode (the retry corners in or out; GfTables.kExt). Every reader of a flipped table set
+ * (the pass's upload, the CPU eval, the explore and reveal tables beside it) takes it from here.
+ */
+export function withHome(T: GfTables, on: boolean): GfTables {
+  if (on === T.homeOn) return T;
+  // K1482 s23: a build without the retry (the switch off) flips homeOn alone, as K1439 did
+  if (T.kExt === undefined || T.nKAlt === undefined || !T.cellK0Alt || !T.cellKNAlt || !T.cellKListAlt || !T.cellKPListAlt) return { ...T, homeOn: on };
+  return {
+    ...T, homeOn: on,
+    nK: T.nKAlt, cellK0: T.cellK0Alt, cellKN: T.cellKNAlt, cellKList: T.cellKListAlt, cellKPList: T.cellKPListAlt,
+    nKAlt: T.nK, cellK0Alt: T.cellK0, cellKNAlt: T.cellKN, cellKListAlt: T.cellKList, cellKPListAlt: T.cellKPList,
+  };
 }
 
 export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {

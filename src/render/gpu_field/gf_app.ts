@@ -26,7 +26,7 @@ import { RenderContainer, type Container, type WebGLRenderer } from "pixi.js";
 import { buildFieldScene, type SceneExportInput } from "../field/scene_export";
 import { gatherLeanSkeleton, gatherSceneInput, gatherSceneInputLean, type SceneExportCtx } from "../field/scene_export_hook";
 import { splineBend, type SplineSamples } from "../../geometry/spline_generator";
-import { buildTables, type GfTables } from "./tables";
+import { buildTables, withHome, type GfTables } from "./tables";
 import { GfEval } from "./eval";
 import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
@@ -238,6 +238,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
 // K1439: home membership, the `gfh=1` render flag (frame_loop.ts reads it before the URL rewrite)
 const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotGfHome === true;
+// K1482 s23: the corner retry, the `gfk=1` render flag (set only with `gfh=1`, frame_loop.ts); undefined = off
+const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: boolean }).__knotGfKRetry === true && gfHome() ? true : undefined);
   // K1369 s4: by gesture (a thread grabbed or not); an A/B's `depth` wins.
   const depth = (): number => gfDepth(opts(), (ctx.scene.ps?.grabbedParticle ?? -1) >= 0);
   const verifying = (): boolean => !!api.verify || !!opts().verify;
@@ -425,7 +427,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     );
     const { scene } = buildFieldScene(input);
     scene.look.ctrlArc ??= CTRL_ARC;
-    const R = buildTables(scene, { aa });
+    const R = buildTables(scene, { aa, kRetry: gfKRetry() });
     stats.verifyMs.push(performance.now() - t0);
     return R;
   };
@@ -674,7 +676,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
   let gwEv: GfEval | null = null, gwEvT: GfTables | null = null;
   const gwMember = (fade: number): ((c: number, k: number) => boolean) | undefined => {
     if (!T || !pass) return undefined;
-    if (gwEvT !== T || !gwEv) { gwEvT = T; gwEv = new GfEval(pass.home === T.homeOn ? T : { ...T, homeOn: pass.home }); }
+    if (gwEvT !== T || !gwEv) { gwEvT = T; gwEv = new GfEval(withHome(T, pass.home)); }
     const ev = gwEv; ev.fadeLength = fade;
     const Tt = ev.T;
     return (c, k) => {
@@ -846,7 +848,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     const { input, transfer }: { input: SceneExportInput; transfer: ArrayBuffer[] } = gatherSceneInputLean(ctx, "field");
     if (useWorker) {
       flightId++;
-      worker!.postMessage({ id: flightId, input, aa, pool: opts().pool !== false }, transfer);
+      worker!.postMessage({ id: flightId, input, aa, pool: opts().pool !== false, ...(gfKRetry() ? { kr: true } : {}) }, transfer);
       const main = performance.now() - t0;
       flights.set(flightId, { gen, t0, main, lk: lkSnap(), pt: ptSnap(), dyn: dynSnap(), rt: rtSnap() });
       stats.gatherMs.push(main);
@@ -855,7 +857,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       return true;
     }
     const tg = performance.now() - t0;
-    const r = gfBuild(input, aa);
+    const r = gfBuild(input, aa, gfKRetry());
     stats.gatherMs.push(tg);
     stats.exportMs.push(r.exportMs);
     stats.tablesMs.push(r.tablesMs);
@@ -914,6 +916,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         skel: gatherLeanSkeleton(ctx, "field"),
         passCounts: (r as unknown as { passCounts: number[] }).passCounts.slice(),
         threadWidth: r.style.threadWidth, aa: 0.5 / scale, pool: opts().pool !== false, depth: depth(),
+        ...(gfKRetry() ? { kr: true } : {}),
       }, [h.port]);
     } catch (e) {
       chanRefused = r;
@@ -974,7 +977,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       if (!pass) {
         // K1468: every program writes one packed RGBA32UI output (gf_pass.ts packForm): the look's three targets
         // made its first draw compile a second shader on the GPU process's main thread (cold: watchdog kill)
-        pass = new GfPass(g, false, undefined, undefined, false, { home: gfHome(), pack: true });
+        pass = new GfPass(g, false, undefined, undefined, false, { home: gfHome(), pack: true, kRetry: gfKRetry() });
         target = new GfTarget(g, 1, false, true);
         comp = new GfComposite(g, { packed: true });
       }
@@ -1035,7 +1038,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       // frame it ends, the original programs again
       if (pass.revealable && o.reveal !== false && gfRevealing(r)) {
         rvTab ??= new GfRevealTable();
-        rvTab.build(r, T);
+        rvTab.build(r, withHome(T, pass.home || T.homeOn)); // K1482 s20: the packed corner count
         pass.setReveal(rvTab);
         rvDrawn = true;
         dirty = true;
@@ -1089,7 +1092,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
           for (const p of pieces) ekey += `|${p.chain},${p.c0},${p.c1},${p.f0},${p.f1},${p.tip0 ? 1 : 0}${p.tip1 ? 1 : 0}`;
           if (ekey !== exKey || !exDrawn) {
             exKey = ekey;
-            exTab.build(r, T);
+            exTab.build(r, withHome(T, pass.home || T.homeOn));
             pass.setExplore(exTab, E[0] ?? 1, Math.round(E[1] ?? 0), E[2] ?? 1, E[3] ?? 0);
             exDrawn = true;
             dirty = true;
@@ -1238,7 +1241,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
   const counts = (): Record<string, number> | null => {
     const g = gl();
     if (!g || !T || !target) return null;
-    const pp = new GfPass(g, true, undefined, undefined, false, { home: pass?.home });
+    const pp = new GfPass(g, true, undefined, undefined, false, { home: pass?.home, kRetry: pass?.kRetry });
     pp.homeFade = pass?.homeFade ?? 0;
     const tg = new GfTarget(g, 3, true);
     try {

@@ -56,6 +56,8 @@ interface Req {
   input: SceneExportInput;
   aa: number;
   pool?: boolean;
+  /** K1482 s23: the corner retry (`gfk=1`); absent = off. */
+  kr?: boolean;
   // K1369 s4: a channel build's extra reply fields and their transfers.
   extra?: { msg: Record<string, unknown>; transfer: Transferable[] };
 }
@@ -72,6 +74,7 @@ interface ChanOpen {
   aa: number;
   pool: boolean;
   depth: number;
+  kr?: boolean; // K1482 s23
 }
 type ChanMsg =
   | ChanOpen
@@ -156,13 +159,13 @@ interface SolveReply { K: import("./tables").GfCorner[]; arms: import("./tables"
 
 /** The pooled build: same tables as buildTables(scene), split across the
  * ready slices. Throws on any pool failure; the caller falls back. */
-async function pooledBuild(id: number, scene: FieldScene, aa: number, n: number): Promise<{ T: GfTables; cornersMs: number }> {
+async function pooledBuild(id: number, scene: FieldScene, aa: number, n: number, kRetry?: boolean): Promise<{ T: GfTables; cornersMs: number }> {
   // Raw vertices on the coordinator: gfRawChain over 24k points is ~1 ms,
   // cheaper than a pool round trip that copies every chain's points to a
   // slice and back (t2's two-phase split paid that latency per build).
   const blocks: { vx: Float64Array; vy: Float64Array; vs: Float64Array }[] = new Array(scene.chains.length);
   for (let ci = 0; ci < scene.chains.length; ci++) blocks[ci] = gfRawChain(scene.chains[ci].pts, scene.chains[ci].closed);
-  const P = buildGfPrefix(scene, { aa }, mergeGfRaw(scene, blocks), true);
+  const P = buildGfPrefix(scene, { aa, kRetry }, mergeGfRaw(scene, blocks), true);
   const meta = gfChunkMeta(P);
   const jRanges = partitionWeighted(scene.junctions.map((J) => J.arms.length), n);
   const qRanges = partitionWeighted(new Array(meta.nCh).fill(1), n);
@@ -217,6 +220,7 @@ interface Chan {
   aa: number;
   pool: boolean;
   depth: number;
+  kr?: boolean; // K1482 s23
   posted: number;
   done: number;
   fresh: boolean;
@@ -250,7 +254,7 @@ function openChan(m: ChanOpen): void {
   }
   const c: Chan = {
     cid: m.cid, port: m.port, gen: m.gen, mirror, skel: m.skel, passCounts: m.passCounts,
-    tw: m.threadWidth, aa: m.aa, pool: m.pool, depth: Math.max(1, m.depth),
+    tw: m.threadWidth, aa: m.aa, pool: m.pool, depth: Math.max(1, m.depth), ...(m.kr ? { kr: true } : {}),
     posted: 0, done: 0, fresh: false, snaps: 0, snapSeq: -1, snapAbs: 0,
   };
   ch = c;
@@ -337,6 +341,7 @@ function chanReq(): Req | null {
     input,
     aa: c.aa,
     pool: c.pool,
+    ...(c.kr ? { kr: true } : {}),
     extra: { msg: { chan: c.cid, samples: out, snapSeq: c.snapSeq, snapAbs: c.snapAbs, gatherMs: now() - t0 }, transfer },
   };
 }
@@ -373,12 +378,13 @@ function reply(req: Req, msg: Record<string, unknown>, transfer?: Transferable[]
 
 async function run(req: Req): Promise<void> {
   const { id, input, aa } = req;
+  const kr = req.kr === true ? true : undefined; // K1482 s23: off = the build's default (GF_KRETRY)
   const t0 = now();
   try {
     const ready = sliceReady.filter(Boolean).length;
     const usePool = req.pool !== false && !poolBroken && ready >= 2;
     if (!usePool) {
-      const r = gfBuild(input, aa);
+      const r = gfBuild(input, aa, kr);
       reply(
         req,
         { id, T: r.T, exportMs: r.exportMs, tablesMs: r.tablesMs, workMs: now() - t0, pool: 0 },
@@ -402,19 +408,19 @@ async function run(req: Req): Promise<void> {
     // the single build, where the pool's round trip cannot pay.
     if (totalPts < 6000) {
       const tt0 = now();
-      const T = buildTables(scene, { aa });
+      const T = buildTables(scene, { aa, kRetry: kr });
       reply(req, { id, T, exportMs, tablesMs: now() - tt0, workMs: now() - t0, pool: 0 }, tablesTransfer(T));
       return;
     }
     const n = Math.min(ready, POOL_MAX);
-    const { T } = await pooledBuild(id, scene, aa, n);
+    const { T } = await pooledBuild(id, scene, aa, n, kr);
     const workMs = now() - t0;
     reply(req, { id, T, exportMs, tablesMs: Math.max(0, workMs - exportMs), workMs, pool: n }, tablesTransfer(T));
   } catch (err) {
     if (poolBroken || err instanceof Error) {
       // Pool failed mid-build: the same build, whole, here.
       try {
-        const r = gfBuild(input, aa);
+        const r = gfBuild(input, aa, kr);
         reply(
           req,
           { id, T: r.T, exportMs: r.exportMs, tablesMs: r.tablesMs, workMs: now() - t0, pool: 0 },

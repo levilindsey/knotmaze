@@ -6,7 +6,7 @@
 // Timing: EXT_disjoint_timer_query_webgl2 brackets the draw, and an empty
 // query (begin, end, no draw) right after it gives the floor the readings
 // subtract. Results arrive frames later (poll()).
-import { GF_VS, gfFs, homeForm, type GfTier } from "./gf_glsl";
+import { GF_VS, gfFs, homeForm, retryForm, type GfTier } from "./gf_glsl";
 import { GF_TW, packTables, type GfPacked } from "./gf_pack";
 import { buildKeys } from "./gf_keys";
 import { GfPieces } from "./gf_split";
@@ -16,7 +16,7 @@ import { knotUniformValues } from "../paint_model";
 import { lookForm, LOOK_COMP_FS, type GfLookTable, type GfMarkerUniforms, type GfRimUniforms } from "./gf_look";
 /** K1362 s7: the split's options. skip: empty pixels skip pass 2 (depth); keys: the keys run in pass 2 (gf_glsl.ts SPLITK). */
 export interface GfSplitForm { skip?: boolean; keys?: boolean }
-import type { GfTables } from "./tables";
+import { withHome, type GfTables } from "./tables";
 
 export type GfMap = [number, number, number, number];
 
@@ -299,6 +299,9 @@ export class GfPass {
   /** K1439: home membership (the `gfh=1` flag): homeForm on every program, the tables uploaded as T.homeOn, the fade
    * depth uHomeZ from homeFade (world units, the live fadeLength; no rebuild). Off: nothing here changes a program. */
   readonly home: boolean;
+  /** K1482 s23: the corner retry (the `gfk=1` flag, with home only): retryForm after homeForm on every program, for
+   * tables built with GfOpts.kRetry. Off: nothing here changes a program. */
+  readonly kRetry: boolean;
   homeFade = 0;
   /** K1362 s7: the split's pieces (gf_split.ts), when the one tier runs as two passes. */
   private pieces: GfPieces | null = null;
@@ -322,9 +325,9 @@ export class GfPass {
    * tiers: GF_TIERS by default; [] draws the full program alone (stage 2's pass). fs: a program's source override
    * (benches; split programs get their pass as the second argument). split (K1362 s7): the one tier as two passes.
    */
-  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split: boolean | "skip" | GfSplitForm = false, opts: { home?: boolean; pack?: boolean } = {}) {
-    this.gl = gl; this.probe = probe; this.home = !!opts.home;
-    const hf = this.home ? homeForm : (src: string): string => src; // K1439
+  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split: boolean | "skip" | GfSplitForm = false, opts: { home?: boolean; pack?: boolean; kRetry?: boolean } = {}) {
+    this.gl = gl; this.probe = probe; this.home = !!opts.home; this.kRetry = this.home && !!opts.kRetry;
+    const hf = this.kRetry ? (src: string): string => retryForm(homeForm(src)) : this.home ? homeForm : (src: string): string => src; // K1439, K1482 s23
     // K1468: the app's programs write one packed output (packForm) into a GfTarget(1, false, true)
     this.pack = !!opts.pack && !probe && !split && !fs;
     const pf = this.pack ? packForm : (src: string): string => src;
@@ -784,11 +787,11 @@ export class GfPass {
   upload(T: GfTables): void {
     const gl = this.gl;
     const t0 = performance.now();
-    const Th = this.home && !T.homeOn ? { ...T, homeOn: true } : T; // K1439: the build differs from home: true only there
+    const Th = this.home && !T.homeOn ? withHome(T, true) : T; // K1439: the build differs from home: true only there (K1482 s20: its corners too)
     this.packed = packTables(Th, this.packed ?? undefined, buildKeys(Th));
     const t1 = performance.now();
-    this.T = T;
-    let kc = false; for (let i = 0; i < T.cellKN.length && !kc; i++) kc = T.cellKN[i] > 0;
+    this.T = Th;
+    let kc = false; for (let i = 0; i < Th.cellKN.length && !kc; i++) kc = Th.cellKN[i] > 0;
     this.cellCorners = kc;
     const { data, rows } = this.packed;
     gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);

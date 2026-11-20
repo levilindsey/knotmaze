@@ -47,12 +47,13 @@ export interface GfBuilt {
 
 const now = (): number => (typeof performance !== "undefined" ? performance.now() : Date.now());
 
-export function gfBuild(input: SceneExportInput, aa: number): GfBuilt {
+/** K1482 s23: kRetry, the corner retry (`gfk=1`; undefined = tables.ts GF_KRETRY, off in the page). */
+export function gfBuild(input: SceneExportInput, aa: number, kRetry?: boolean): GfBuilt {
   const t0 = now();
   const scene = buildFieldSceneLean(input);
   scene.look.ctrlArc ??= CTRL_ARC;
   const t1 = now();
-  const T = buildTables(scene, { aa });
+  const T = buildTables(scene, { aa, kRetry });
   const t2 = now();
   return { T, exportMs: t1 - t0, tablesMs: t2 - t1 };
 }
