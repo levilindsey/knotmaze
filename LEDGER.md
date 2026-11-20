@@ -738,11 +738,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: nobody since 2026-11-19 05:56 (merged; agent `a5d6861178992f9ee` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `af41daae`
-  - evidence: .claude/probes/K1482/s19, .claude/probes/K1482/out/s19, docs/design/K1482_s18_cut_endings.md
-  - next: stage 19 landed no src (22 holds on link A; the bar PASS on all four scenes across stages 18-19 against 2e70be908). The joint-side lane is finished short of look choices: j29 and j49 are ordinary crossing-gap endings that only close by joining under outlines to over outlines at many other sites (K1522, waits on Levi); t81s's V and j71 are cross-surface light with no cut, now K1490's (19 sites) with j4; j64 is Muse's (K1517). Prototypes as patches in .claude/probes/K1482/s19/ (u19_probe.patch, v19_t19_w19_probe.patch). Next: act on Levi's K1490 / K1522 / K1521 answers; residual: K1492's dragcheck_b fresh loads can miss the drag's state (needs retries or a pinned state)
-  - brief: `docs/design/K1482_s19_last_gaps.md`
+  - owner: agent `a0f22901bb5fca4a4` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 09:03, 2 h cap ~11:03)
+  - branch: `worktree-agent-a0f22901bb5fca4a4`, worktree `.claude/worktrees/agent-a0f22901bb5fca4a4`; last commit: `3fa9c7f4d`
+  - evidence: .claude/probes/K1482/s20, .claude/probes/K1482/out/s20, .claude/probes/K1490/out
+  - next: stage 20 running since 2026-11-19 09:05: round the 14 wedges and notches (K1490 answered: fix them, accept the 5 slivers); on its report, look at all 14 before/after sheets before relaying, then file its ledger items. Still waiting on Levi: K1522 (j29/j49), K1515
+  - brief: `docs/design/K1482_s20_wedges_notches.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
