@@ -1,0 +1,40 @@
+[
+  {
+    "h": 900,
+    "fls": [
+      0.14,
+      1.2
+    ],
+    "hash": "c5d9f3b6",
+    "simT": 40.0087,
+    "query": "3&tlk=border&cr=6&bg=wash&bgcm=custom&bgc0=e6e9ee&am=instant&stb=0&fw=0",
+    "looks": [
+      1,
+      0
+    ],
+    "w": 1240,
+    "dsf": 3,
+    "name": "mdt_gf",
+    "rp": "gf",
+    "par": 0
+  },
+  {
+    "h": 900,
+    "fls": [
+      0,
+      1.2
+    ],
+    "hash": "5ccb276f",
+    "simT": 40.0087,
+    "query": "s=b&tw=.64&cr=3&fl=0&am=instant&tlk=border&fw=0&stb=0",
+    "looks": [
+      1,
+      0
+    ],
+    "w": 1240,
+    "dsf": 3,
+    "name": "g41_gf",
+    "rp": "gf",
+    "par": 0
+  }
+]

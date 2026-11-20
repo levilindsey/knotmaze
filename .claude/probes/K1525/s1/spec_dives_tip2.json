@@ -1,0 +1,116 @@
+{
+ "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-a63f2fb4fcbd5d82d\\.claude\\probes\\K1525\\out\\s1\\sheets\\dives_tip2.png",
+ "dist": 32,
+ "rows": [
+  [
+   "dive 1 fl 0",
+   "f_fl0.png",
+   1968,
+   432
+  ],
+  [
+   "dive 1 fl 0.14",
+   "f_fl0.14.png",
+   1968,
+   432
+  ],
+  [
+   "dive 1 fl 0.5",
+   "f_fl0.5.png",
+   1968,
+   432
+  ],
+  [
+   "dive 1 fl 1.2",
+   "f_fl1.2.png",
+   1968,
+   432
+  ],
+  [
+   "dive 2 fl 0",
+   "f_fl0.png",
+   2224,
+   976
+  ],
+  [
+   "dive 2 fl 0.14",
+   "f_fl0.14.png",
+   2224,
+   976
+  ],
+  [
+   "dive 2 fl 0.5",
+   "f_fl0.5.png",
+   2224,
+   976
+  ],
+  [
+   "dive 2 fl 1.2",
+   "f_fl1.2.png",
+   2224,
+   976
+  ],
+  [
+   "dive 3 fl 0",
+   "f_fl0.png",
+   1904,
+   1136
+  ],
+  [
+   "dive 3 fl 0.14",
+   "f_fl0.14.png",
+   1904,
+   1136
+  ],
+  [
+   "dive 3 fl 0.5",
+   "f_fl0.5.png",
+   1904,
+   1136
+  ],
+  [
+   "dive 3 fl 1.2",
+   "f_fl1.2.png",
+   1904,
+   1136
+  ],
+  [
+   "dive 4 fl 0",
+   "f_fl0.png",
+   1248,
+   1104
+  ],
+  [
+   "dive 4 fl 0.14",
+   "f_fl0.14.png",
+   1248,
+   1104
+  ],
+  [
+   "dive 4 fl 0.5",
+   "f_fl0.5.png",
+   1248,
+   1104
+  ],
+  [
+   "dive 4 fl 1.2",
+   "f_fl1.2.png",
+   1248,
+   1104
+  ]
+ ],
+ "cols": [
+  [
+   "today's",
+   "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-a63f2fb4fcbd5d82d\\.claude\\probes\\K1525\\out\\s1\\base\\A_today"
+  ],
+  [
+   "master gf",
+   "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-a63f2fb4fcbd5d82d\\.claude\\probes\\K1525\\out\\s1\\base\\A_gf"
+  ],
+  [
+   "my tip",
+   "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-a63f2fb4fcbd5d82d\\.claude\\probes\\K1525\\out\\s1\\tip2\\A_gf"
+  ]
+ ]
+}

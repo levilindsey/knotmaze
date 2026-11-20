@@ -1,0 +1,138 @@
+diff --git a/src/render/gpu_field/gf_look.ts b/src/render/gpu_field/gf_look.ts
+index bab1aa192..353dda00b 100644
+--- a/src/render/gpu_field/gf_look.ts
++++ b/src/render/gpu_field/gf_look.ts
+@@ -1756,6 +1756,20 @@ const G_LOOK = `// K1389 s1: the label's piece (-1: a corner, whose s rides lkS)
+ // configuration's copies; the output colour (K1389 s2)
+ int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec4(0.0); float lkHi = 0.0; vec3 lkHiC = vec3(0.0); float lkHiA = 0.0; float lkE = 1.0;
+ int lkj[MAXS]; float lks[MAXS];
++// K1525 s1 (K1419): a corner label's other arm (chain, s) and its weight, per candidate, per surface and the best's
++int lkC2; float lkS2; float lkW2 = 0.0; int lkC2b; float lkS2b; float lkW2b = 0.0;
++int lkc2[MAXS]; float lks2[MAXS]; float lkw2[MAXS];
++// K1525 s1 (K1419): today's junction colour (junction_field.ts junctionBase) blends the two bracketing arms'
++// colours with a smoothstep across the gap between their ribbon edges; a corner's label switched from one arm to
++// the other at the bisector, a hard step. dA, dB: p's distances from the arms' edge lines, the fillet's tangents at
++// K4.zw and K5.xy (normals K2.xy, K2.zw, from the fillet centre to those tangent points: tables.ts n = (q - foot) / d).
++// Returns the weight of the arm that is NOT the label's.
++float lkCornerW(vec2 p, vec4 K2, vec4 K4, vec4 K5, bool nearerA) {
++  float dA = max(dot(K4.zw - p, K2.xy), 0.0); float dB = max(dot(K5.xy - p, K2.zw), 0.0);
++  float t = dA + dB > 1e-6 ? dA / (dA + dB) : 0.5;
++  t = t * t * (3.0 - 2.0 * t);
++  return nearerA ? t : 1.0 - t;
++}
+ `;
+ const M_ANCHOR = "\nvoid main() {\n";
+ function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? s : s + ".0"; }
+@@ -1765,6 +1779,7 @@ uniform highp sampler2D uPt; uniform vec3 uGold;
+ uniform highp sampler2D uGw; uniform float uGwLive;
+ uniform vec4 uMkA[4]; uniform vec4 uMkB[4];
+ uniform highp sampler2D uRt;
++uniform float uLkDbg; uniform float uLkFix; int lkDbgS = -1; int lkDbgC = -1; float lkDbgK = 0.0; float lkDbgSrc = 0.0; float lkDbgSin = 0.0; float lkDbgD = 0.0; float lkDbgWm = 0.0;
+ uniform vec4 uRimA; uniform vec4 uRimB; uniform vec4 uRimC; uniform vec3 uHov;
+ vec4 LKT(int i) { return texelFetch(uLk, ivec2(i & TWM, i >> LOG), 0); }
+ float LKP(int i) { return texelFetch(uLkP, ivec2(i & TWM, i >> LOG), 0).x; }
+@@ -2249,6 +2264,7 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
+   vec2 tu = lkTanS(cU, qU);
+   float wm = uGwLive > 0.5 ? lkWinM(cU, qU) : 1e3;
+   float pxw = 2.0 * uAA;
++  lkDbgS = -1; lkDbgC = -1; lkDbgK = 0.0; lkDbgSrc = 0.0; lkDbgSin = 0.0; lkDbgD = 0.0; lkDbgWm = wm;
+   vec3 sl = uGwLive > 0.5 && wm > -pxw ? lkGwSlot(cU, qU) : vec3(-1.0, 0.0, 0.0);
+   vec2 sc = vec2(1.0);
+   if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
+@@ -2286,7 +2302,10 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
+     float sinT = abs(tu.x * to.y - tu.y * to.x);
+     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
+     float cj = lkCut(pd[j], sinT, exg, wm, pxw, sc);
+-    gA = max(gA, cj);
++    lkDbgS = cS;
++    bool cvOk = !(mod(uLkFix, 2.0) > 0.5 && cS >= 0 && PC(j) != cS);
++    if (cvOk && cj > gA) { lkDbgC = PC(j); lkDbgK = pkey[j]; lkDbgSrc = 1.0; lkDbgSin = sinT; lkDbgD = pd[j]; }
++    if (cvOk) gA = max(gA, cj);
+     if (cS < 0) g = max(g, cj);
+     else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); g0 = max(g0, cj); }
+     // K1417: no casing term (the composite clears the gap to the background in every look).
+@@ -2305,6 +2324,7 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
+         float exg = uExLive > 0.5 ? exAt(cO, lkArc(cO, N.yz)).x : 1.0;
+         float cN = lkCut(N.x, sinT, exg, wm, pxw, sc);
+         g = max(g, jf ? lkCut(N.x, sinT, exg, wm, pxw, scJ) : cN);
++        if (gA < 0.999 && g0 < 0.999 && cN > gA) { lkDbgC = cO; lkDbgSrc = 2.0; lkDbgSin = sinT; lkDbgD = N.x; }
+         if (gA < 0.999 && g0 < 0.999) gA = max(gA, cN);
+       }
+     }
+@@ -2341,6 +2361,24 @@ float lkMarker(int c, float arc, vec2 p) {
+ // cut it, and the composite paints it in a labelled neighbour's colour: along the edge where form B's burial ends
+ // the under thread beside an over pass, the uncut fringe drew a dotted line across the faded under thread. Cut the
+ // fringe by its lowest covering piece's gap, keeping whatever pieces above that one cover the pixel.
++// K1525 s1 (K1419): a junction's arms share one surface and tie in key, so a piece label steps to whichever arm the
++// list names first, along the arms' ribbon edges: the hard run-colour wedges. Today's junctionBase blends the arms'
++// colours across their overlap. The label piece jb's partner: the nearest piece of another chain in jb's surface and
++// key band (|key - jb's| <= zt, so a crossing's passes never blend), weighted by depth inside each ribbon (h - d),
++// smoothstepped: 1 at jb's edge, where the partner alone labels, so the colour is continuous there. -1 = none.
++int lkPairJ(int jb, int c, vec2 p, out float w) {
++  w = 0.0;
++  int s0 = PSURF(jb); float k0 = pkey[jb]; int j2 = -1; float d2 = uH;
++  for (int j = 0; j < np; j++) {
++    if (j == jb || PC(j) == c || (PSURF(j) != s0 && mod(floor(uLkFix / 16.0), 2.0) < 0.5) || (abs(pkey[j] - k0) > uZt && mod(floor(uLkFix / 8.0), 2.0) < 0.5) || !(pd[j] < d2)) continue;
++    d2 = pd[j]; j2 = j;
++  }
++  if (j2 < 0) return -1;
++  float wa = max(uH - pd[jb], 0.0); float wb = uH - d2;
++  float t = wb / max(wa + wb, 1e-6);
++  w = t * t * (3.0 - 2.0 * t);
++  return j2;
++}
+ void lkFringe(vec2 p, inout float ink, inout float cov) {
+   int jU = -1; float kU = BIG;
+   for (int j = 0; j < np; j++) { if (pd[j] < uH + uAA && pkey[j] < kU) { kU = pkey[j]; jU = j; } }
+@@ -2367,20 +2405,20 @@ const SITES: [string | RegExp, string, number][] = [
+   ["float band(float D) { return 1.0 - ss(uW - uAA, uW + uAA, D); }",
+     "float band(float D) { return 1.0 - ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D); }", 1],
+   // layers(), LABRUN: a piece label, then a corner's
+-  ["labE = e; labC = PC(j); }", "labE = e; labC = PC(j); lkJ = j; lkK = pkey[j]; }", 1],
+-  ["labC = nearerA ? int(K3.x) : int(K3.y); }", "labC = nearerA ? int(K3.x) : int(K3.y); lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; }", 1],
++  ["labE = e; labC = PC(j); }", "labE = e; labC = PC(j); lkJ = j; lkK = pkey[j]; lkW2 = 0.0; }", 1],
++  ["labC = nearerA ? int(K3.x) : int(K3.y); }", "labC = nearerA ? int(K3.x) : int(K3.y); lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; lkC2 = nearerA ? int(K3.y) : int(K3.x); lkS2 = nearerA ? K3.w : K3.z; lkW2 = lkCornerW(p, F(uOK + 6 * k + 2), K4, K5, nearerA); }", 1],
+   // layers(), the full program: per surface, then the top's
+-  ["scch[e] = PC(j);", "scch[e] = PC(j); lkj[e] = j;", 1],
+-  ["scch[e] = nearerA ? int(K3.x) : int(K3.y);", "scch[e] = nearerA ? int(K3.x) : int(K3.y); lkj[e] = -1; lks[e] = nearerA ? K3.z : K3.w;", 1],
+-  ["labC = top >= 0 ? scch[top] : -1;", "labC = top >= 0 ? scch[top] : -1; if (top >= 0) { lkJ = lkj[top]; lkS = lks[top]; lkK = sckey[top]; }", 1],
++  ["scch[e] = PC(j);", "scch[e] = PC(j); lkj[e] = j; lkw2[e] = 0.0;", 1],
++  ["scch[e] = nearerA ? int(K3.x) : int(K3.y);", "scch[e] = nearerA ? int(K3.x) : int(K3.y); lkj[e] = -1; lks[e] = nearerA ? K3.z : K3.w; lkc2[e] = nearerA ? int(K3.y) : int(K3.x); lks2[e] = nearerA ? K3.w : K3.z; lkw2[e] = lkCornerW(p, F(uOK + 6 * k + 2), K4, K5, nearerA);", 1],
++  ["labC = top >= 0 ? scch[top] : -1;", "labC = top >= 0 ? scch[top] : -1; if (top >= 0) { lkJ = lkj[top]; lkS = lks[top]; lkK = sckey[top]; lkC2 = lkc2[top]; lkS2 = lks2[top]; lkW2 = lkJ < 0 ? lkw2[top] : 0.0; }", 1],
+   // layers1()
+-  ["if (pd[0] < h) labC = PC(0);", "if (pd[0] < h) { labC = PC(0); lkJ = 0; lkK = pkey[0]; }", 1],
++  ["if (pd[0] < h) labC = PC(0);", "if (pd[0] < h) { labC = PC(0); lkJ = 0; lkK = pkey[0]; lkW2 = 0.0; }", 1],
+   // the configurations' best, the through corner's own label
+-  ["if (w > bestW) { bestW = w; lab = labC;", "if (w > bestW) { bestW = w; lab = labC; lkJb = lkJ; lkSb = lkS; lkKb = lkK;", 1],
+-  ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
++  ["if (w > bestW) { bestW = w; lab = labC;", "if (w > bestW) { bestW = w; lab = labC; lkJb = lkJ; lkSb = lkS; lkKb = lkK; lkC2b = lkC2; lkS2b = lkS2; lkW2b = lkJ < 0 ? lkW2 : 0.0;", 1],
++  ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG; lkW2b = 0.0;", 1],
+   // the output: the gap cut and the colour
+   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
+-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
++    "    float lkCov0 = cov; lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); if (lkJb < 0 && lkW2b > 0.0) { vec2 lq2 = lookQs(lkC2b, lkS2b); vec4 lkc2c = lkColour(lkC2b, lq2); if (lkc2c.a > 0.0) { float gp2 = lkPaint(lkC2b, lq2); lkCo.rgb = mix(lkCo.rgb, mix(lkc2c.rgb, uGold, gp2), lkW2b); lkgp = mix(lkgp, gp2, lkW2b); } } else if (lkJb >= 0 && mod(floor(uLkFix / 4.0), 2.0) < 0.5) { float lkPw; int lkJ2 = lkPairJ(lkJb, lab, p, lkPw); if (lkJ2 >= 0 && lkPw > 0.0) { vec2 lq3 = lookQ(lkJ2, p); vec4 lkc3 = lkColour(PC(lkJ2), lq3); if (lkc3.a > 0.0) { float gp3 = lkPaint(PC(lkJ2), lq3); lkCo.rgb = mix(lkCo.rgb, mix(lkc3.rgb, uGold, gp3), lkPw); lkgp = mix(lkgp, gp3, lkPw); } } } lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } if (uLkDbg > 0.5) { int dm = int(uLkDbg + 0.5); if (dm == 1) lkCo = vec4(lkg2.y, lkg, 0.5 * lkDbgSrc, 1.0); else if (dm == 2) lkCo = vec4(float(lkDbgC + 1) / 255.0, float(lab + 1) / 255.0, lkJb >= 0 ? float(PC(lkJb) + 1) / 255.0 : 0.0, 1.0); else if (dm == 5) lkCo = vec4(float(lkDbgS + 1) / 255.0, float(lkDbgC + 1) / 255.0, lkDbgWm > -2.0 * uAA ? 1.0 : 0.0, 1.0); else if (dm == 3) lkCo = vec4(lkDbgSin, clamp(lkDbgD / (4.0 * uH), 0.0, 1.0), clamp(lkDbgWm / max(uLkF, 2.0 * uAA) * 0.25 + 0.5, 0.0, 1.0), 1.0); else lkCo = vec4(lkJb >= 0 ? 1.0 : 0.0, clamp((lkDbgK - lkKb) / 4.0, 0.0, 1.0), fract(lkSb), 1.0); ink = 1.0; cov = 1.0; lkE = 0.0; lkHiA = 0.0; lkHi = 0.0; } } else if (ink > 0.0 || cov > 0.0) { if (mod(floor(uLkFix / 2.0), 2.0) < 0.5) lkFringe(p, ink, cov); if (uLkDbg > 0.5) { ink = 0.0; cov = 0.0; } } if (uLkDbg > 5.5) { float mpd = BIG; for (int j = 0; j < np; j++) mpd = min(mpd, pd[j]); lkCo = vec4(clamp(mpd / (2.0 * uH), 0.0, 1.0), clamp(lkCov0, 0.0, 1.0), (lab >= 0 ? 0.5 : 0.0) + float(nk) / 16.0, 1.0); if (uLkDbg > 6.5 && lkJb >= 0) { float w7; int j7 = lkPairJ(lkJb, lab, p, w7); float o8 = BIG; int jo = -1; for (int j = 0; j < np; j++) { if (PC(j) != lab && pd[j] < o8) { o8 = pd[j]; jo = j; } } if (uLkDbg < 7.5) lkCo = vec4((j7 >= 0 ? 0.5 : 0.0) + 0.25, w7, clamp(pd[lkJb] / uH, 0.0, 1.0), 1.0); else lkCo = vec4(clamp(o8 / (2.0 * uH), 0.0, 1.0), jo >= 0 ? clamp((pkey[jo] - pkey[lkJb]) / 8.0 + 0.5, 0.0, 1.0) : 0.0, jo >= 0 ? (PSURF(jo) == PSURF(lkJb) ? 1.0 : 0.5) : 0.0, 1.0); } ink = 1.0; cov = 1.0; lkE = 0.0; lkHiA = 0.0; lkHi = 0.0; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
+ ];
+ 
+diff --git a/src/render/gpu_field/gf_pass.ts b/src/render/gpu_field/gf_pass.ts
+index 90fcad841..d15f32160 100644
+--- a/src/render/gpu_field/gf_pass.ts
++++ b/src/render/gpu_field/gf_pass.ts
+@@ -174,7 +174,7 @@ export class GfTarget {
+  * means of 10 runs over three benches, p14f and p14h); level on the desktop. 0 px on its 12 scenes on both.
+  */
+ export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c", kd: true }];
+-const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkP", "uLkG", "uLkF", "uPt", "uGold", "uDyn", "uKPulseU", "uKReachU", "uPulseCol", "uTeleU", "uTeleAtU", "uTeleScale", "uPulseW", "uFx", "uFxStyle", "uFxPh", "uFxLive", "uEx", "uOExK", "uExLive", "uExLook", "uExTw", "uExOn", "uExBr", "uRimA", "uRimB", "uRimC", "uHov", "uGw", "uGwLive", "uRt", "uMkA[0]", "uMkB[0]"];
++const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkP", "uLkG", "uLkF", "uPt", "uGold", "uDyn", "uKPulseU", "uKReachU", "uPulseCol", "uTeleU", "uTeleAtU", "uTeleScale", "uPulseW", "uFx", "uFxStyle", "uFxPh", "uFxLive", "uEx", "uOExK", "uExLive", "uExLook", "uExTw", "uExOn", "uExBr", "uRimA", "uRimB", "uRimC", "uHov", "uGw", "uGwLive", "uRt", "uMkA[0]", "uMkB[0]", "uLkDbg", "uLkFix"];
+ const NO_MARKERS = new Float32Array([0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, -1]);
+ const NO_MARKERS_B = new Float32Array(16);
+ /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
+@@ -921,7 +921,7 @@ export class GfPass {
+       gl.uniform1i(u("uD"), 0);
+       if (g.split === 2) for (let i = 0; i < 4; i++) gl.uniform1i(u(`uP${i}`), 1 + i);
+       if (rv) { gl.uniform1i(u("uRv"), 5); gl.uniform1i(u("uORvK"), rv.oK); }
+-      if (lk) { gl.uniform1i(u("uLk"), 6); gl.uniform1i(u("uLkP"), 7); gl.uniform1f(u("uLkG"), lk.gap); gl.uniform1f(u("uLkF"), lk.fade); gl.uniform1i(u("uPt"), 8); const G = knotUniformValues().uKGold; gl.uniform3f(u("uGold"), G ? G[0] : 1, G ? G[1] : 0.8235, G ? G[2] : 0.2902); gl.uniform1i(u("uDyn"), 9); const U = knotUniformValues(); const KP = U.uKPulse; gl.uniform4f(u("uKPulseU"), KP ? KP[0] : 0, KP ? KP[1] : 0, KP ? KP[2] : 2.5, KP ? KP[3] : 1); const KR = U.uKReach; const KH = U.uKHead; gl.uniform4f(u("uKReachU"), KR ? KR[0] : 1e6, KR ? KR[1] : 1, U.uKPaint ? U.uKPaint[3] : 0.5, KH ? KH[0] : 0); const PC = U.uKHlPulse; gl.uniform3f(u("uPulseCol"), PC ? PC[0] : 1, PC ? PC[1] : 1, PC ? PC[2] : 1); const TU = U.uKTele; gl.uniform4f(u("uTeleU"), TU ? TU[0] : 0, TU ? TU[1] : 0, TU ? TU[2] : 0, TU ? TU[3] : 0); gl.uniform1f(u("uTeleAtU"), this.teleAtU); const HV = U.uKHlHover; gl.uniform1f(u("uTeleScale"), HV ? HV[3] : 1); const PW = U.uKPath; gl.uniform1f(u("uPulseW"), PW ? PW[2] : 1); gl.uniform1i(u("uFx"), 10); gl.uniform1f(u("uFxStyle"), U.uKFx ? U.uKFx[0] : 0); const FP = U.uKFx2; gl.uniform4f(u("uFxPh"), FP ? FP[0] : 0, FP ? FP[1] : 0, FP ? FP[2] : 0, FP ? FP[3] : 0); gl.uniform1f(u("uFxLive"), this.fxLive ? 1 : 0); const EX = this.ex; gl.uniform1i(u("uEx"), 11); gl.uniform1i(u("uOExK"), EX ? EX.oK : 0); gl.uniform1f(u("uExLive"), EX ? 1 : 0); gl.uniform1i(u("uExLook"), EX ? EX.look : 0); gl.uniform1f(u("uExTw"), EX ? EX.tw : 0); gl.uniform1f(u("uExOn"), EX ? EX.on : 0); gl.uniform1f(u("uExBr"), EX ? EX.breath : 1); const RM = this.rim; gl.uniform4f(u("uRimA"), RM ? RM.a[0] : -1, RM ? RM.a[1] : 0, RM ? RM.a[2] : 0, RM ? RM.a[3] : 0); gl.uniform4f(u("uRimB"), RM ? RM.b[0] : 0, RM ? RM.b[1] : 0, RM ? RM.b[2] : 1, RM ? RM.b[3] : 0); gl.uniform4f(u("uRimC"), RM ? RM.c[0] : 1, RM ? RM.c[1] : 0, RM ? RM.c[2] : 1, RM ? RM.c[3] : 0); gl.uniform3f(u("uHov"), RM ? RM.hov[0] : 1, RM ? RM.hov[1] : 1, RM ? RM.hov[2] : 1); gl.uniform1i(u("uGw"), 12); gl.uniform1f(u("uGwLive"), this.gwLive ? 1 : 0);  gl.uniform1i(u("uRt"), 13); const MK = this.mk; gl.uniform4fv(u("uMkA[0]"), MK ? MK.a : NO_MARKERS); gl.uniform4fv(u("uMkB[0]"), MK ? MK.b : NO_MARKERS_B); }
++      if (lk) { gl.uniform1i(u("uLk"), 6); gl.uniform1i(u("uLkP"), 7); gl.uniform1f(u("uLkG"), lk.gap); gl.uniform1f(u("uLkF"), lk.fade); gl.uniform1i(u("uPt"), 8); const G = knotUniformValues().uKGold; gl.uniform3f(u("uGold"), G ? G[0] : 1, G ? G[1] : 0.8235, G ? G[2] : 0.2902); gl.uniform1i(u("uDyn"), 9); const U = knotUniformValues(); const KP = U.uKPulse; gl.uniform4f(u("uKPulseU"), KP ? KP[0] : 0, KP ? KP[1] : 0, KP ? KP[2] : 2.5, KP ? KP[3] : 1); const KR = U.uKReach; const KH = U.uKHead; gl.uniform4f(u("uKReachU"), KR ? KR[0] : 1e6, KR ? KR[1] : 1, U.uKPaint ? U.uKPaint[3] : 0.5, KH ? KH[0] : 0); const PC = U.uKHlPulse; gl.uniform3f(u("uPulseCol"), PC ? PC[0] : 1, PC ? PC[1] : 1, PC ? PC[2] : 1); const TU = U.uKTele; gl.uniform4f(u("uTeleU"), TU ? TU[0] : 0, TU ? TU[1] : 0, TU ? TU[2] : 0, TU ? TU[3] : 0); gl.uniform1f(u("uTeleAtU"), this.teleAtU); const HV = U.uKHlHover; gl.uniform1f(u("uTeleScale"), HV ? HV[3] : 1); const PW = U.uKPath; gl.uniform1f(u("uPulseW"), PW ? PW[2] : 1); gl.uniform1i(u("uFx"), 10); gl.uniform1f(u("uFxStyle"), U.uKFx ? U.uKFx[0] : 0); const FP = U.uKFx2; gl.uniform4f(u("uFxPh"), FP ? FP[0] : 0, FP ? FP[1] : 0, FP ? FP[2] : 0, FP ? FP[3] : 0); gl.uniform1f(u("uFxLive"), this.fxLive ? 1 : 0); const EX = this.ex; gl.uniform1i(u("uEx"), 11); gl.uniform1i(u("uOExK"), EX ? EX.oK : 0); gl.uniform1f(u("uExLive"), EX ? 1 : 0); gl.uniform1i(u("uExLook"), EX ? EX.look : 0); gl.uniform1f(u("uExTw"), EX ? EX.tw : 0); gl.uniform1f(u("uExOn"), EX ? EX.on : 0); gl.uniform1f(u("uExBr"), EX ? EX.breath : 1); const RM = this.rim; gl.uniform4f(u("uRimA"), RM ? RM.a[0] : -1, RM ? RM.a[1] : 0, RM ? RM.a[2] : 0, RM ? RM.a[3] : 0); gl.uniform4f(u("uRimB"), RM ? RM.b[0] : 0, RM ? RM.b[1] : 0, RM ? RM.b[2] : 1, RM ? RM.b[3] : 0); gl.uniform4f(u("uRimC"), RM ? RM.c[0] : 1, RM ? RM.c[1] : 0, RM ? RM.c[2] : 1, RM ? RM.c[3] : 0); gl.uniform3f(u("uHov"), RM ? RM.hov[0] : 1, RM ? RM.hov[1] : 1, RM ? RM.hov[2] : 1); gl.uniform1i(u("uGw"), 12); gl.uniform1f(u("uGwLive"), this.gwLive ? 1 : 0);  gl.uniform1i(u("uRt"), 13); const MK = this.mk; gl.uniform4fv(u("uMkA[0]"), MK ? MK.a : NO_MARKERS); gl.uniform4fv(u("uMkB[0]"), MK ? MK.b : NO_MARKERS_B); gl.uniform1f(u("uLkDbg"), (globalThis as unknown as { __knotGfLkDbg?: number }).__knotGfLkDbg ?? 0); gl.uniform1f(u("uLkFix"), (globalThis as unknown as { __knotGfLkFix?: number }).__knotGfLkFix ?? 0); }
+       const o = P.o;
+       gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
+       gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);

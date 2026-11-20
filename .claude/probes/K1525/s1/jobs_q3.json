@@ -1,0 +1,44 @@
+[
+  {
+    "h": 900,
+    "fls": [
+      0,
+      0.14,
+      0.5,
+      1.2
+    ],
+    "hash": "",
+    "simT": 20,
+    "query": "3&xp=off&am=instant",
+    "looks": [
+      0,
+      1
+    ],
+    "w": 1600,
+    "dsf": 2,
+    "name": "q3_gf",
+    "rp": "gf",
+    "par": 0
+  },
+  {
+    "h": 900,
+    "fls": [
+      0,
+      0.14,
+      0.5,
+      1.2
+    ],
+    "hash": "",
+    "simT": 20,
+    "query": "3&xp=off&am=instant",
+    "looks": [
+      0,
+      1
+    ],
+    "w": 1600,
+    "dsf": 2,
+    "name": "q3_today",
+    "rp": "today",
+    "par": 0
+  }
+]

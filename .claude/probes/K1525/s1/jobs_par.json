@@ -1,0 +1,70 @@
+[
+  {
+    "h": 900,
+    "fls": [
+      0.14
+    ],
+    "simT": 20,
+    "query": "3.FGH1HtvQeDjm6e4BII&xp=off&am=instant",
+    "looks": [
+      0
+    ],
+    "w": 1600,
+    "dsf": 2,
+    "name": "A_today_p0",
+    "rp": "today",
+    "par": 0,
+    "tries": 1
+  },
+  {
+    "h": 900,
+    "fls": [
+      0.14
+    ],
+    "simT": 20,
+    "query": "3.FGH1HtvQeDjm6e4BII&xp=off&am=instant",
+    "looks": [
+      0
+    ],
+    "w": 1600,
+    "dsf": 2,
+    "name": "A_today_p1",
+    "rp": "today",
+    "par": 1,
+    "tries": 1
+  },
+  {
+    "h": 900,
+    "fls": [
+      0.14
+    ],
+    "simT": 20,
+    "query": "3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&gfh=1",
+    "looks": [
+      0
+    ],
+    "w": 1600,
+    "dsf": 2,
+    "name": "A_gf_p0",
+    "rp": "gf",
+    "par": 0,
+    "tries": 1
+  },
+  {
+    "h": 900,
+    "fls": [
+      0.14
+    ],
+    "simT": 20,
+    "query": "3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&gfh=1",
+    "looks": [
+      0
+    ],
+    "w": 1600,
+    "dsf": 2,
+    "name": "A_gf_p1",
+    "rp": "gf",
+    "par": 1,
+    "tries": 1
+  }
+]
