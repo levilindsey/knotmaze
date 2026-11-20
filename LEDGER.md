@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1524.
+Next free ID: K1525.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -339,6 +339,13 @@ Next free ID: K1493.
   clone pays; the 89 text files hold nothing private (searched); a rewrite re-IDs 164 commits and strands 21
   local branches, about 100 worktrees, Muse's checkout and the laptop's clone. Recommended to Levi: leave it,
   or one rewrite later together with K1467 (same page as K1444)
+- **K1524** · rp=gf corners: K1482 s20's fix3 (second corner try with longer arms, ink only; branch
+  `worktree-agent-a0f22901bb5fca4a4`, 37eda49e8, not landed) also rounds about 27 sharp loop tips and V
+  corners Levi did not name (t39e t65e t69s t17e t29e t80e t5e t5s t55e ...). Levi's call, asked 2026-11-19:
+  take the rounding (recommended; fix3 then lands after its timing checks), keep today's sharp corners (the
+  fix must be held to the 14 sites; no table-level rule separates them, next is per-pixel attribution), or
+  name the rows to keep. Card: https://claude.ai/artifact/GU7kbzAG1uofdBLFD2UBh1 (sheets and `card.py` in
+  untracked `.claude/probes/K1524/`)
 
 ## In progress
 
@@ -742,11 +749,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a0f22901bb5fca4a4` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 09:03, 2 h cap ~11:03)
-  - branch: `worktree-agent-a0f22901bb5fca4a4`, worktree `.claude/worktrees/agent-a0f22901bb5fca4a4`; last commit: `3fa9c7f4d`
-  - evidence: .claude/probes/K1482/s20, .claude/probes/K1482/out/s20, .claude/probes/K1490/out
-  - next: stage 20 running since 2026-11-19 09:05: round the 14 wedges and notches (K1490 answered: fix them, accept the 5 slivers); on its report, look at all 14 before/after sheets before relaying, then file its ledger items. Still waiting on Levi: K1522 (j29/j49), K1515
-  - brief: `docs/design/K1482_s20_wedges_notches.md`
+  - owner: agent `afdf2b8bb494bb380` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 10:50, 2 h cap ~12:50 plus its lock wait)
+  - branch: `worktree-agent-afdf2b8bb494bb380`, worktree `.claude/worktrees/agent-afdf2b8bb494bb380` (fix3 itself: branch `worktree-agent-a0f22901bb5fca4a4`, worktree `.claude/worktrees/agent-a0f22901bb5fca4a4`); last commit: `37eda49e8` (fix3, on the s20 branch; s20 handoff on master 87483c6a3)
+  - evidence: .claude/probes/K1482/s20 and out/s20 (untracked, in the s20 worktree), .claude/probes/K1482/s21 (untracked, in the s21 worktree), .claude/probes/K1524 (the card)
+  - next: stage 21 running since 2026-11-19 10:50: finish the 13 open wedge and notch sites on top of fix3 (s20 finished j14 only by the coordinator's look; causes: a tiny pass-0 corner blocks the retry at t59s j41, the retry extends from a negative Lcut at t84e t45s j59 t23e, j50 unexplained), pin the capture's background clock so a fill A/B reads 0 px, run the landing checks. It does not land: fix3 waits on K1524. On its report, look at all 14 in context before relaying; when Levi answers K1524, message the agent (yes: land after the checks; no: gate to the 14). Then K1523, then j64 (K1517)
+  - brief: `docs/design/K1482_s21_corners_rest.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
