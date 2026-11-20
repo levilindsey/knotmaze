@@ -144,6 +144,7 @@ makes a new profile each run;
 `SHOT_PROFILE`), waits for gf's first pass and reports `gfWaitS`.
 Keep a capture tool's whole output in a file: the first run kept six
 lines and lost these facts.
+K1539 (2026-11-20): `.claude/probes/K1482/cap.mjs` aligns the freeze parity before freezing, so a HASH-pinned capture lands on try 1 (the reload loop is only a fallback); `.claude/probes/K1482/guards.ps1 -Tag <t> -Port <p> -Ref <c> -BaseRef <c> -OutDir <d> -Owner <o>` runs the corner stages' guards (bar, holds, panel, drag checks, npm test) with one `PASS|FAIL <guard>: <numbers>` line each and whole outputs in `<OutDir>` (exit = failed count). PASS there means every guard's own pass line held on that build.
 
 PROBE LORE, same round: the renderer resets every fill/erase mesh's
 `visible` each frame (hide with `renderable = false`, or per layer);

@@ -1,6 +1,8 @@
 // K1482: one frozen rest state of a link under rp=gf AND today's renderer, at 1600x900 DSF 2, plus the scene's sites.
-// The K868 recipe (load, freeze, __knotStepUntil(SIMT), clocks pinned); each page is reloaded until its physics hash
-// is HASH (when given; else the gf page's first hash becomes the target), so today | gf compare one state.
+// The K868 recipe (load, freeze, __knotStepUntil(SIMT), clocks pinned). Every load aligns the freeze substep
+// parity first (alignFreezeParity, K1539) and lands on the target state on try 1; reloading until the hash
+// matches HASH stays only as a fallback net that should never fire (with no HASH given, the gf page's first
+// hash becomes the target), so the two renderers compare one state.
 //
 //   node .claude/probes/K1482/cap.mjs <base> <outDir> <profileDir> [query=3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&gfh=1]
 //     env HASH=<target>  SIMT=20  DSF=2  TRIES=6  TODAY=1 (also shoot today's renderer)  GF=1  FL=<fade> (sets fadeLength
@@ -14,6 +16,7 @@ import puppeteer from "puppeteer-core";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { waitViewStill } from "../view_still.mjs";
+import { alignFreezeParity } from "../freeze_parity.mjs";
 const [, , base, outDir, profileDir, query = "3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&gfh=1"] = process.argv;
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), TRIES = +(process.env.TRIES ?? 6);
 const FRAME_TIMEOUT_MS = +(process.env.FRAME_TIMEOUT_MS ?? 240000);
@@ -88,6 +91,7 @@ async function shoot(gf, name) {
   for (let k = 0; k < TRIES; k++) {
     const page = await load(gf);
     if (process.env.WARM === "1") { console.log(T(), `warm ${gf ? "gf" : "today"} ok, lost ${await page.evaluate(() => window.__lost)}`); await page.close(); return true; }
+    await alignFreezeParity(page, SIMT);
     const h = await freeze(page);
     if (HASH && h !== HASH) { console.log(T(), `${name}: hash ${h} != ${HASH}, reload`); await page.close(); continue; }
     if (!HASH) HASH = h;
