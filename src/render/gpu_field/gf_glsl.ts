@@ -434,7 +434,8 @@ function zClass(src: string): string {
  */
 const ZB_MARGIN = "(0.25 * uAA)";
 const ZB_LOOPS: [RegExp, (m: string) => string][] = [
-  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(m == j \|\| PSURF\(m\) != S\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, q\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
+  // K1482 s27: the piece faces' loop with its fold shift (fo only lowers the burial, so P0's bound stays exact)
+  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(m == j \|\| PSURF\(m\) != S\) continue;\s*float dm = sqrt\(pieceD\(m, q\)\); if \(!\(dm < h\)\) continue;\s*if \(fo < 0\.0\) \{ float f0 = max\(0\.0, h - sqrt\(pieceD\(j, q\)\)\); fo = f0 \* \(1\.0 - ss\(2\.0 \* aa, 4\.0 \* aa, f0\)\); \}\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, dm \+ fo\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
     () => `for (int m = 0; m < np; m++) { if (m == j || PSURF(m) != S) continue; if (!(pd[m] - (abs(h - X) + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
   [/for \(int i = 0; i < nk && bur < 1\.0; i\+\+\) \{\s*(int k = kk\[i\]; vec4 K0 = F\(uOK \+ 6 \* k\); vec4 K1 = F\(uOK \+ 6 \* k \+ 1\); if \(int\(K1\.z\) != S\) continue;)\s*float rq = length\(q - K0\.xy\);\s*if \(rq > K0\.z && rq < K0\.w && inSector\(k, q\) && outsideArms\(k, PC\(j\), q\)\) bur = 1\.0;\s*\}/,
     (m) => `for (int i = 0; i < nk; i++) { ${/\{\s*(int k[^\n]*continue;)/.exec(m)![1]} float rp = length(p - K0.xy); float zr = abs(h - X) + ${ZB_MARGIN}; if (rp + zr > K0.z && rp - zr < K0.w) { zbR = true; break; } } // K1362 s15 zb`],
@@ -603,7 +604,7 @@ function thruScalars(src: string): string {
  * the pieces' wb2 and the corners' 1.0, each loop leaving at 1.0, so the order cannot change it; a corner that
  * buries the face skips every pieceD.
  */
-const KO_PIECES = "      for (int m = 0; m < np && bur < 1.0; m++) {\n        if (m == j || PSURF(m) != S) continue;\n        float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));\n        if (wb2 > bur) bur = wb2;\n      }\n";
+const KO_PIECES = "      for (int m = 0; m < np && bur < 1.0; m++) {\n        if (m == j || PSURF(m) != S) continue;\n        float dm = sqrt(pieceD(m, q)); if (!(dm < h)) continue;\n        if (fo < 0.0) { float f0 = max(0.0, h - sqrt(pieceD(j, q))); fo = f0 * (1.0 - ss(2.0 * aa, 4.0 * aa, f0)); }\n        float wb2 = 1.0 - ss(h - 2.0 * aa, h, dm + fo);\n        if (wb2 > bur) bur = wb2;\n      }\n";
 const KO_CORNERS = "      for (int i = 0; i < nk && bur < 1.0; i++) {\n        int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;\n        float rq = length(q - K0.xy);\n        if (rq > K0.z && rq < K0.w && inSector(k, q) && outsideArms(k, PC(j), q)) bur = 1.0;\n      }\n";
 function burialOrder(src: string): string {
   const parts = src.split(KO_PIECES + KO_CORNERS);
@@ -1439,11 +1440,14 @@ void layers(vec2 p) {
 #else
       vec2 f = vec2(pfx[j], pfy[j]);
 #endif
+      float fo = -1.0; // K1482 s27: q's shallow own fold (eval.ts), taken once a piece reaches q
       vec2 q = f + (h * (p - f)) / X;
       float bur = 0.0;
       for (int m = 0; m < np && bur < 1.0; m++) {
         if (m == j || PSURF(m) != S) continue;
-        float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
+        float dm = sqrt(pieceD(m, q)); if (!(dm < h)) continue;
+        if (fo < 0.0) { float f0 = max(0.0, h - sqrt(pieceD(j, q))); fo = f0 * (1.0 - ss(2.0 * aa, 4.0 * aa, f0)); }
+        float wb2 = 1.0 - ss(h - 2.0 * aa, h, dm + fo);
         if (wb2 > bur) bur = wb2;
       }
       for (int i = 0; i < nk && bur < 1.0; i++) {

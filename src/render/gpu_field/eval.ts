@@ -520,9 +520,17 @@ export class GfEval {
         if (!(X > h - W - aa && X > 1e-12)) continue;
         const qx = this.pfx[j] + (h * (x - this.pfx[j])) / X; const qy = this.pfy[j] + (h * (y - this.pfy[j])) / X;
         let bur = 0;
+        // K1482 s27 (t4s): where q sits a shallow fold fo inside the piece's own tube (a swallowtail under 2-4 aa
+        // deep), another piece m buries it only as far as m reaches past that fold: m's distance counts fo more.
+        // A tube whose edge runs along the outline (an arm extension's end disc on this piece's spine) then no longer
+        // nibbles the fold's points into a step and a pinhole. A deep fold (j58's) keeps the plain burial, and an
+        // unfolded q (fo 0) is untouched. fo is taken only once some m reaches q (dm < h; else wb2 is exactly 0).
+        let fo = -1;
         for (let m = 0; m < this.np && bur < 1; m++) {
           if (m === j || this.psurf[m] !== S) continue;
-          const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
+          const dm = Math.sqrt(this.pieceD(m, qx, qy)); if (!(dm < h)) continue;
+          if (fo < 0) { const f0 = Math.max(0, h - Math.sqrt(this.pieceD(j, qx, qy))); fo = f0 * (1 - ss(2 * aa, 4 * aa, f0)); }
+          const wb2 = 1 - ss(h - 2 * aa, h, dm + fo);
           if (wb2 > bur) bur = wb2;
         }
         // the piece's own tube elsewhere along its fold (a tight bend folded into one piece): OFF, form B never
