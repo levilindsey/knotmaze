@@ -196,9 +196,9 @@ function loneFold(src: string): string {
     "      for (int r = qlo; r <= qhi; r++) {\n" +
     "        int k = r; if (closed) k = pmod(k, nseg); else if (k < 0 || k >= nseg) continue;\n" +
     "        vec4 A = F(uOV + v0 + k); vec4 B = F(uOV + v0 + k + 1);\n" +
-    "        float sa = sp0 - 0.3; if (closed) sa = mod(sa, L);\n" +
+    "        float sa = sp0 - 0.3; if (closed) { if (sa < 0.0) sa += L; else if (sa >= L) sa -= L; }\n" +
     "        if (sa >= A.z && sa < B.z) t1 = B.xy - A.xy;\n" +
-    "        sa = sp0 + 0.3; if (closed) sa = mod(sa, L);\n" +
+    "        sa = sp0 + 0.3; if (closed) { if (sa < 0.0) sa += L; else if (sa >= L) sa -= L; }\n" +
     "        if (sa >= A.z && sa < B.z) t2 = B.xy - A.xy;\n" +
     "      }\n" +
     "      float l1 = length(t1); float l2t = length(t2); d2 = BIG; fc = 1.0;\n" +

@@ -238,7 +238,7 @@ export class GfEval {
           let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
           const v = v0 + k; const a0 = T.vs[v]; const a1 = T.vs[v + 1];
           for (let sgn = -1; sgn <= 1; sgn += 2) {
-            let sa = sp0 + sgn * SD; if (closed) sa = ((sa % L) + L) % L;
+            let sa = sp0 + sgn * SD; if (closed) { if (sa < 0) sa += L; else if (sa >= L) sa -= L; }
             if (sa >= a0 && sa < a1) { if (sgn < 0) { t1x = T.vx[v + 1] - T.vx[v]; t1y = T.vy[v + 1] - T.vy[v]; } else { t2x = T.vx[v + 1] - T.vx[v]; t2y = T.vy[v + 1] - T.vy[v]; } }
           }
         }
