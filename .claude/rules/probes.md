@@ -129,6 +129,21 @@ showed them with it off too and never with `&snd=none`
 (`__knotPerf().plucks` 0). Pass `&snd=none` in every look shot.
 `.claude/probes/K1524/flip/redshot.mjs` reports plucks, context
 losses and the hovered run beside three shots of one load.
+PROBE LORE (2026-11-20, K1482 s27): **a shot of an rp=gf link is gf's
+look only once `__knotGf.stats.passes` is above 0.** Until gf's
+programs have compiled, today's renderer draws, by design (K1456), and
+on a profile without them that lasts over a minute (live 0aadaa3: 115 s;
+K1456: 55-123 s; 2-3 s on the same profile's next load). Its outline
+strokes on link A are dull red (40, 29, 39), gf's near black (18, 20,
+28). Five new-profile shots taken 60 s into live loads of that build,
+whose look program had changed, read as a broken deploy; the three
+whose output was kept had `passes` 0, `compileWorker` "compiling",
+`switchedMs` -1, no context loss, `fallback` empty. `redshot.mjs`
+makes a new profile each run;
+`.claude/probes/K1482/s27_live/warmshot.mjs` keeps one (env
+`SHOT_PROFILE`), waits for gf's first pass and reports `gfWaitS`.
+Keep a capture tool's whole output in a file: the first run kept six
+lines and lost these facts.
 
 PROBE LORE, same round: the renderer resets every fill/erase mesh's
 `visible` each frame (hide with `renderable = false`, or per layer);
