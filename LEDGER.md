@@ -338,13 +338,6 @@ Next free ID: K1493.
   Which should the border look show there? Picture: .claude/probes/K1482/out/s12/step1_a.png (today | flat
   today | gf). Options: keep gf's curves as they are; make gf draw today's straight strokes. Until answered
   gf's own picture is the reference (stage 13)
-- **K1521** · rp=gf, Crossing fade at joints: since K1482 s15/s18 an outline cut beside a fused joint (flagged
-  crossing sides, about 1000+ slots on link A) starts at the over thread's edge and fades over 0.3 of the
-  slider's length, so at a large fade (1.2) those outlines run nearly up to the over thread while ordinary
-  crossings fade over the full length (29k px on link A; picture
-  .claude/worktrees/agent-a077003d003b40d70/.claude/probes/K1482/out/s18/sheets/fl12_top.png). At the default
-  0.14 this is what closes the joint gaps. Keep, or make the joint sides' fade follow the full slider length
-  above some fade?
 - **K1522** · rp=gf, the last two joint-side sites (j29, j49) are ordinary under-pass gaps ending next to a
   joint; closing them means joining the under thread's outline to the over thread's (no gap) at about 74 other
   crossings (u19) or about 11-17 under-tail and junction gaps (v19 / w19, a dot left at j50), which removes
@@ -2855,6 +2848,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1521** · rp=gf, Crossing fade at joints: since K1482 s15/s18 an outline cut beside a fused joint (flagged crossing sides, about 1000+ slots on link A) starts at the over thread's edge and fades over 0.3 of the slider's length, so at a large fade (1.2) those outlines run nearly up to the over thread while ordinary crossings fade over the full length (29k px on link A; picture .claude/worktrees/agent-a077003d003b40d70/.claude/probes/K1482/out/s18/sheets/fl12_top.png). Dropped: Levi 2026-11-19: keep. Joint-side outlines keep the short 0.3 fade at every Crossing fade setting; no change (2026-11-19).
 - **K1520** · the K1436 bar never prunes: one ~1 GB build + src worktree per compared commit under TEMP\k1436s3-prev (10 GB) filled the disk 2026-11-18 21:13 and ended Muse Run P's checks; prune at start, refuse under 6 GB free (Muse Run Q part 1, docs/design/K1464_muse_batch26.md). Done in 7e5e87c9 (2026-11-18).
 - **K1512** · K1482 j49's tick needs how far a fused joint's fan reaches along the OVER thread (today's fan paints the over's outline across the under's faded tip); the window bake carries only the under thread's joints, so it is a new baked number, after Muse Run M leaves the bake (docs/design/K1482_s10_borders.md handoff, out/s10/pixels.txt). Dropped: folded into K1482 stage 15 (the baked per-crossing flag) (2026-11-18).
 - **K1511** · Muse 26O. Done in 18031ec3 (2026-11-18).
