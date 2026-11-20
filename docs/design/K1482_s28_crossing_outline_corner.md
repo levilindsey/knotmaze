@@ -114,3 +114,48 @@ pocket's close. The kept pockets must close at the cut arm, and each arc's sag m
   `agent-a0f22901bb5fca4a4`, against `wmap28.ts` maps. Then decide whether the look needs ink taken away (burial,
   a cap) rather than an arc added. The 22 V-to-round changes are a look question for Levi (sheets
   `out/s28/g1.png`, `g4.png`, `g5.png`). They do not land without his call.
+
+#### Resumed (2026-11-19, 22:00-23:30): the home burial lands
+
+- **What landed.** b758b57e7 (code) and 4c2c7087b (lore, `render-gpu-field.md`, HOME BURIAL). Both are in
+  `retryForm` with home on, so `gfk=0` and home-off stay byte-identical. The rule: a piece outside every group
+  (S < 0) heading into group B inks no deeper inside B's other-chain tubes than their band. B is its ramp's group,
+  or its arm's home (`phb`) while it is left out for depth. The weight is `1 - ss(h-W-aa, h-W+aa, pd[m])` times
+  `1 - ss(0.004, 0.02, |z_m|)`. z_m is read as `pkey[m] + pd[m] zK`, because a packed P1 never sets `ps`
+  (0b2ded530's `depth(ps)` bit t56s on the GPU only; c1b7ef979's ps fix is superseded). The stub ends mitre
+  against the partner's outline. The GLSL emits the same rule in homeBurial (gf_glsl.ts).
+- **Rejected variants** (mirror diffs in `.claude/probes/K1482/out/s28/`):
+  - Requiring piece j itself at z 0 killed every fix, because the stubs sit at |z| 0.2-0.4. That is why they are
+    left out of their group (`diffm28_zj.txt`, 0 clusters).
+  - Only pg[j] < 0 halved the fixes and lost j47 (`diffm28_pgneg.txt`, 9 clusters).
+- **GPU vs master 7b5d80a78** (link A, `&snd=none`, matching gf_b2view; `out/s28/raw/n4_*` vs `m2_*`):
+  - border: 244 px, all of them ink removed, in 11 clusters: t50s 48, t45s 35, t38e 30, t62e 28, t23e (j59's stub)
+    28, t46e 24, t67s 20, t18e 13, t53e 9, t17s (j47) 8, t56s 1.
+  - fill: 0 px. `&gfk=0` (n4_off vs m2_off, matching views): 0 px on gf_b2, gf_fill and gf.png.
+- **The five sites** (sheet `out/s28/k1482s28_sites.png`):
+  - t45s: better, the stub that stuck out past the corner is trimmed back to the corner.
+  - j47: slightly better (8 px); the block's square end is shaved.
+  - j59: partial. Its stub (t23e) is trimmed, but most of the thick step at the top of the inner leg remains.
+  - t84e: unchanged. Corner k159's own ink meets c84's outline there, and this rule does not reach it: a fix needs
+    a corner-side change at k159.
+  - j4: unchanged (0 px). What is left is chain 82's outline meeting arm a0's at a true 90-degree corner, beside
+    a paper eye about 10 px across. Judged geometry; the crop is on the sites sheet for Levi.
+- **Other moved corners** (sheets `k1482s28_moved_a.png`, `k1482s28_moved_b.png`, master | new): t50s, t38e,
+  t62e, t46e, t67s, t18e and t53e are stub ends trimmed back to their corners. t56s is a clean corner in master
+  and it changes: 2 AA pixels lighten a little (1040,267 goes from 18,20,27 to 29,31,47). The likely cause is a
+  float boundary on c28's membership ramp at that pixel. By the stage's rule that is a failure, and it is not
+  fixed.
+- **Guards** on 4c2c7087b (code of b758b57e7), under `scripts/perf_lock.ps1`, runner
+  `.claude/probes/K1482/s28/run28.ps1`, outputs in `out/s28/raw/guards/`:
+  - hold.mjs: 60/60 as the page loads, and 60/60 with `&gfk=0`.
+  - panelopen.mjs: ok.
+  - dragcheck_b (TLK=border) and dragcheck, both gfh: PASS. The worst stop was 8 px > 24 at fadeLength 1.2.
+  - npm test: the first run, right after the dragchecks, failed 3 tests in 1 file. The runner kept only the last
+    6 lines, so the file is not known. Two reruns on the same commit passed: vitest 257/257, then `npm test`
+    exit 0 (3197 passed).
+  - The bar (k1436_bar.ps1: STRICT, GF_KRETRY=1, ring, def, muse_hash and g41_user_tw64, `-Base 7b5d80a78`,
+    `-Tag k1482s28`): PASS, new 0, grown 0, gone 0. It printed `taken under load` because the npm test rerun
+    overlapped its captures (`.claude/probes/K1436/out/bar/k1482s28/`).
+- **Next.** For t84e, a corner-side change at k159 that buries k159's ink under c84's band. For t56s's 2 px, make
+  the burial's membership test robust to the float boundary. For j59, find out who draws the remaining step at the
+  top of the inner leg (`wmap28.ts`). Show Levi the j4 crop.
