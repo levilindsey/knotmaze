@@ -562,6 +562,19 @@ export class GfEval {
             if (wb2 > bur) bur = wb2;
           }
         }
+        if (bur < 1 && S >= 0 && kxh && (globalThis as any).process?.env?.GF_S29 !== "0") {
+          const zj = this.pkey[j] + (X * T.zt) / h; const s = h - X;
+          const nx = (qx - this.pfx[j]) / h; const ny = (qy - this.pfy[j]) / h; const ux = -ny * aa; const uy = nx * aa;
+          for (let m = 0; m < this.np && bur < 1; m++) {
+            if (this.psurf[m] >= 0) continue;
+            const over = ss(0.1, 0.2, this.pkey[m] + (this.pd[m] * T.zt) / h - zj); if (!(over > bur)) continue;
+            const ee = h - Math.sqrt(this.pieceD(m, qx, qy)); if (!(ee > 0)) continue;
+            const g = Math.abs(Math.sqrt(this.pieceD(m, qx + ux, qy + uy)) - Math.sqrt(this.pieceD(m, qx - ux, qy - uy))) / (2 * aa);
+            const tau = ee / Math.max(g, 0.05);
+            const wb2 = over * ss(W - aa, W + aa, Math.sqrt(tau * tau + s * s));
+            if (wb2 > bur) bur = wb2;
+          }
+        }
         const val = (1 - bur) * band2(h - X);
         if (val > v) { v = val; wk = this.pend[j] ? 3 : 1; wa = this.pc[j]; wb = this.ptx[j] * (y - this.pfy[j]) - this.pty[j] * (x - this.pfx[j]) >= 0 ? 1 : -1; }
       }

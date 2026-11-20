@@ -201,7 +201,13 @@ function homeBurial(src: string): string {
   const HB = "      if (bur < 1.0 && S < -MAXP) { int B = (-1 - j - S) / MAXP - 1; for (int m = 0; m < np && bur < 1.0; m++) { if (PSURF(m) != B || PC(m) == PC(j)) continue;" +
     " float wb2 = 1.0 - ss(h - W - aa, h - W + aa, pd[m]); if (!(wb2 > bur)) continue;" +
     " wb2 *= 1.0 - ss(0.004, 0.02, abs(pkey[m] + pd[m] * (uZt / h))); if (wb2 > bur) bur = wb2; } } // K1482 s28: home burial\n";
-  rep(VAL[0], HB + VAL[0], 1);
+  const UB = "      if (bur < 1.0 && S >= 0) { float zj = pkey[j] + X * (uZt / h); float sd = h - X; vec2 u = vec2(f.y - q.y, q.x - f.x) * (aa / h);" +
+    " for (int m = 0; m < np && bur < 1.0; m++) { if (PSURF(m) >= 0) continue;" +
+    " float ov = ss(0.1, 0.2, pkey[m] + pd[m] * (uZt / h) - zj); if (!(ov > bur)) continue;" +
+    " float ee = h - sqrt(pieceD(m, q)); if (!(ee > 0.0)) continue;" +
+    " float tau = ee / max(abs(sqrt(pieceD(m, q + u)) - sqrt(pieceD(m, q - u))) / (2.0 * aa), 0.05);" +
+    " float wb2 = ov * ss(W - aa, W + aa, sqrt(tau * tau + sd * sd)); if (wb2 > bur) bur = wb2; } } // K1482 s29: under outline\n";
+  rep(VAL[0], HB + UB + VAL[0], 1);
   return src;
 }
 
