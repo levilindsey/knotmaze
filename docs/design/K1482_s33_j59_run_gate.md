@@ -1,0 +1,111 @@
+# K1482 stage 33: j59's step, by ending the under bands only along a long run (K1526; Claude agent stage)
+
+**Queued behind stage 32** (t84e's wedge, `docs/design/K1482_s32_t84e_paper.md`): one code agent at a time in
+`src/render/gpu_field/`. Start only when the coordinator says the stage before it has landed or stopped.
+
+Levi, 2026-11-19, on K1490: **"Fix the wedges and notches, accept the slivers."** His bar: at junctions and
+under-tail ends the over thread's outline runs on unbroken, with no dot, stub, wedge, tick, notch or sliver.
+j59 is one of the 14 sites he named on link A (`The sites` in `docs/design/K1482_s20_wedges_notches.md`; his
+sheets `.claude/probes/K1490/out/k1490_wedge.png` and `k1490_notch.png` in the coordinator worktree
+`C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-af52b1a95572b7c1a`).
+
+## The site
+
+**j59** is at 1060,1512 on the 3200x1800 frame of link A; the step is near 1037,1512. At the top of the
+junction's inner leg the outline widens in a step: chain 43's band plus chain 23 (the stub **t23e**,
+1050,1521) lie ALONG chain 7's outline for about 20 px and end square. The white sliver beside the step is one
+Levi accepted: it stays, and its border stays whole.
+
+Stage 31 found a rule that clears the step and why it cannot land as it is. Read `### Handoff K1482 s31`
+(`docs/design/K1482_s31_j59_band_end.md`) and the entry BAND END ALONG A LONE OVER PASS in
+`.claude/rules/render-gpu-field.md` first. In short:
+
+- **runT** (the attempt, `git show 75e1a7949 -- src`; it passed `npm test`): a group's side band and vertex cap
+  narrow to nothing where a lone piece over it faces the outline point across a small gap. On the GPU it
+  clears j59's step: the inner leg's outline runs at one width into the junction, the sliver's border is
+  whole, fill 0 px, `&gfk=0` 0 px.
+- It fires at every band tail against a lone over pass, and all but j59 are short wedges that converge INTO
+  the over outline: stage 30's approved run-on. There it cut ink: t81s 105 px (blunt end and a gap), t76e 72
+  (broken outline, a stray dot), t53e 65 (dotted hairline), t36s 21 (knob, dots), j58 14 (a notch), 464 px
+  lost in 15 places.
+- A gate per PIXEL does not separate them: with each piece's own tangent it leaves ink islands in j59's step,
+  with the band chain's tangent j59's spread overlaps t53e's.
+- A gate per (band chain, over pass) may: the arc over which the band chain's outline stays within 1 px of
+  the over pass's tube is 19.4 px at t23e along chain 7 (1.14 h), 13.2 at t76e (0.77 h), 6.7 at t73e, 2.8 at
+  t36s, 0 elsewhere (`out/s31/why31_run.txt` in stage 31's worktree). Within 2 px, t81s (29.6) outruns j59
+  (20.8). The margin is thin, and it was measured on link A only.
+
+Stage 31's tools and outputs are in
+`C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-a48af51230e66ddb3\.claude\probes\K1482\s31` and
+`...\out\s31` (the run measurement, `isl31.ts`, the mirror image tools, its capture and sheet scripts); stage
+30's are tracked in `.claude/probes/K1482/s30`. Copy what you use, change nothing in another worktree.
+
+Link A is `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (hash fff8c9e5). `&tlk=border` draws the
+outlines only, `&tlk=fill` the fill; `&gfk=0` turns the second corner try off. A Node build leaves it off
+unless env `GF_KRETRY=1` (K1536): set that for a Node probe and for the bar, and clear it before `npm test`.
+
+## The steps
+
+1. **Measure first, on five mazes, before any GLSL** (the first 30 minutes). The run length for every (band
+   chain, over pass) pair where runT would fire, on link A and on the bar's four mazes (the scenes `ring`,
+   `def`, `muse_hash`, `g41_user_tw64`: follow `.claude/probes/K1436/k1436_bar.ps1`'s `-Scenes` to where it
+   turns a scene name into a link): a table, longest first, in h and in px. Draw the CPU copy at every pair over 0.6 h and look: is it a band lying along an
+   outline that ends in a step (j59's kind), or a wedge that converges into the outline (the approved kind)?
+   Then say whether one threshold puts every step on one side and every wedge on the other, and by what
+   margin. Commit the table and the verdict in this brief before step 2.
+2. **If it separates:** bring runT back from 75e1a7949 with that switch: one value per (band chain, over
+   pass), baked in `tables.ts`, constant along the band (no per-pixel gate: stage 31's islands). The CPU copy
+   first, where a try costs seconds, then the GLSL, with the programs for `&gfk=0` and home-off unchanged.
+3. **If it does not** (a wedge over the threshold, a step under it, or a margin under about 0.2 h): do not
+   port the gate. Say which pairs break it, with their crops, and try a technique local to j59; the brief's
+   goal still holds and you own the technique.
+
+Stage 32 may have changed the corner code since this was written: re-read `git log -5 -- src/render/gpu_field`
+at your start and take your "today" captures from your own base.
+
+## The goal
+
+On link A as it loads: the step at j59 is gone, the inner leg's outline runs at one width into the junction,
+and the sliver's border is whole; t23e's stub is no worse; the fill does not move. With `&gfk=0` nothing gets
+worse. The run-on wedges at t81s, t76e, t53e and t36s keep their length and their points, and j58 gets no
+notch. Nothing else on link A or on the bar's four mazes gets worse: a clean round turned into a point, a
+clean point rounded, or an outline that loses ink at a joint corner is a failure, and a changed shape at a
+place Levi did not name is his to judge: list it and say what it looked like before and now. A stage that
+ends with more diagnosis and nothing in `src/` has not reached the goal while time remains. j47 is NOT this
+stage's: leave it.
+
+## Done
+
+- **By eye**: j59 and t23e, context crop and detail crop, today | new, as it loads and with `&gfk=0`,
+  contrast stretched (the outline is only about 15 levels darker than a pinhole inside it); the same pair for
+  t81s, t76e, t53e, t36s and j58.
+- **Link A**, loads of one state and one view (compare the image hashes of repeat loads first, K1539; report
+  the floor), made **before** you commit anything as a fix: every place outside j59 where the border look
+  changes at a luminance step of 1 is counted, the places that only gain or only lose ink counted separately;
+  the ten largest are on a sheet (surrounding threads with a red box, then the box closer; today | new) and
+  judged by eye; the fill look 0 px, or each place named.
+- **The bar** on your tip: `.claude/probes/K1436/k1436_bar.ps1`, `STRICT=1 -NoPerfLock`, scenes
+  `ring,def,muse_hash,g41_user_tw64`, `-Base` master's SHA at your start, `-Tag k1482s33`: new 0, grown 0.
+- Under the perf lock (`scripts/perf_lock.ps1 -MaxWaitMin 60`, each wait in ONE blocking command): `hold.mjs`
+  60/60 on link A, as it loads and with `&gfk=0`; `.claude/probes/K1482/s15/panelopen.mjs`; both dragchecks.
+  `npm test` green, run WITHOUT the lock (a pin that moves is re-frozen in the same commit and named in its
+  message). Each guard's whole output kept in a file.
+- Three or four lines of lore in `.claude/rules/render-gpu-field.md`.
+- The commits on your branch, in landing order, each green.
+
+## How to work
+
+`git merge --ff-only origin/master` in your worktree first. Ports 6270-6289, profiles `$env:TEMP\k1482s33-*`,
+probe directories `.claude/probes/K1482/s33` and `.claude/probes/K1482/out/s33` (untracked: do not `git add`
+raw captures or dumps). Pass `&snd=none` in every look capture; never Chrome's `--virtual-time-budget`. The
+border look under gf is gf's own: today's renderer's border strokes are no bar. Read code through the shell
+(`Select-String`, a range of `Get-Content`); use the Read tool only on a file you are about to edit. No
+helpers. Commit WIP at every milestone, broken or not, and add two or three handoff lines here each time: the
+first commit within 40 minutes of your start.
+
+**Stop rule.** Stop when every Done holds, or after 2 h of wall clock from your start (`Get-Date` at the start
+and at each milestone), whichever comes first; start the guards by 75 minutes in. A compaction is not a stop:
+re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K1482 s33` here, commit, and
+report: the commits to land by SHA in order, what changed at the site by eye, the numbers, each guard's result
+with the path of its whole output file, the sheets' absolute paths, a `Ledger items` list and K1482's handle
+fields. Never push, never edit `LEDGER.md`.
