@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1545.
+Next free ID: K1548.
 
 ## Waiting on Levi
 
@@ -345,6 +345,25 @@ Next free ID: K1545.
   .claude/probes/K1482/cards/j4_then_now.png (coordinator worktree, untracked): is j4 fine as it is now
   (recommended: keep), or should the pocket go? Filling it makes one thicker dark corner, the wedge kind he
   asked to remove
+- **K1527** · rp=gf corners, leftover kind 2: t4s's corner is still square, and Levi judges it on the live site
+  before more work goes in (K1482 stage 27's fold shift, 0b82e0960, 2026-11-20, took the pinhole at 2177,634 and
+  the bump beside it, 2 px; the corner itself is not a bend; .claude/probes/K1482/cards/s27_landed.png,
+  coordinator worktree; `### Handoff K1482 s27` in docs/design/K1482_s27_flag_step.md). t81s is fixed: K1482
+  stage 30 (d98f62544, 2026-11-20; `### Handoff K1482 s30` in docs/design/K1482_s30_t81s_inleg.md; lore in
+  .claude/rules/render-gpu-field.md) draws the under pass's in-leg outline straight on into the over thread's
+  outline and drops the short out-leg (`gapRunOn` and `lkRun` in gf_look.ts; a run must start at the crossing's
+  own slots, or t56s grows a step beside its dot). The nub below the joint is gone and the two outlines meet in
+  a point with no gap, the same with gfk=0, fill 0 px (.claude/probes/K1482/cards/s30_t81s.png, coordinator
+  worktree). The same rule moved 13 other places on link A; six changed shape, and K1545 asks Levi about them.
+  Close this item on Levi's word about t4s
+- **K1545** · rp=gf: the t81s fix (K1482 stage 30, d98f62544) also changed the shape of six joints Levi did
+  not name on link A. Where an under thread's side outline used to hook round just before the over thread's
+  outline, it now runs straight into it and the two meet in a point: j51 (the same kind and size as t81s),
+  t28e, j83, j31, j161, t61s (38-88 px each). Keep the new points, or keep the round hooks at those six?
+  Cards, today | new with the surrounding threads: .claude/probes/K1482/cards/s30_t81s.png (t81s, j51) and
+  s30_others.png (the other five), coordinator worktree. Recommended: keep the points (t81s, which he named,
+  was the same shape; one rule for one kind of joint). If he keeps the hooks, a gpu_field stage limits the
+  run-on to the short out-legs (t81s, j51): a numeric rule still to find. Asked 2026-11-20
 
 ## In progress
 
@@ -748,11 +767,11 @@ Next free ID: K1545.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a19d082bada33a2d3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus; stage 30, started 2026-11-20 03:02, 2 h cap 05:02)
-  - branch: worktree-agent-a19d082bada33a2d3 (worktree .claude/worktrees/agent-a19d082bada33a2d3); last commit: `dbee156b4`
-  - evidence: stage 26: .claude/probes/K1482/s26 and out/s26 (untracked, in worktree .claude/worktrees/agent-a306305e3593e9802, kept; landed a06826a57) and its live look .claude/probes/K1482/s26_live (untracked, coordinator worktree .claude/worktrees/agent-af52b1a95572b7c1a); stage 25: .claude/probes/K1482/s25 and out/s25 (untracked, in worktree .claude/worktrees/agent-a886c0bec734229eb, kept; branch worktree-agent-a886c0bec734229eb at 5052e0e82, its handoff and lore landed in 2a5119979); the flip guards: .claude/probes/K1524/flip (untracked, coordinator worktree); stage 24: .claude/probes/K1482/s24 and out/s24 (untracked, in worktree .claude/worktrees/agent-a1ac1faa36f86dcc4, kept); stage 23: .claude/probes/K1482/s23, out/s23 (raw/hold_tip, hold_tip_on, dcf_tip, dcb_tip the failed run, dcb_tip2_1, dcb_tip2_2) and .claude/probes/K1436/out/bar/k1482s23 (untracked, in worktree .claude/worktrees/agent-a5016731195d015ff, kept; branch worktree-agent-a5016731195d015ff at c72e267c2); C1: worktree .claude/worktrees/agent-adabb55bc67661562 (kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (kept); .claude/probes/K1524 (the card); stage 28: .claude/probes/K1482/s28 and out/s28 in worktree agent-a1c1c68a332de8029 (untracked), the bar's output .claude/probes/K1436/out/bar/k1482s28 in the main checkout, the coordinator's before and now sheet .claude/probes/K1482/cards/s28_landed.png; stage 28's live look .claude/probes/K1482/s28_live (coordinator worktree, untracked; build df45065 on levi.dev 23:42: live_pairs.png shows t45s, t50s and t38e clean and t23e's spur gone with its patch left; against the 20:57 live shot the picture moves only at the trimmed corners); stage 27: .claude/probes/K1482/s27 and out/s27 (untracked, in worktree .claude/worktrees/agent-a198fbb25c384a8cf, kept; landed 0b82e0960..160ed2b84; guard outputs whole in out/s27/raw/guards), the coordinator's before and now sheets .claude/probes/K1482/cards/s27_landed.png, s27_sites.png, s27_places.png and the live look .claude/probes/K1482/s27_live (coordinator worktree, untracked); stage 29: .claude/probes/K1482/s29 and out/s29 (untracked, in worktree .claude/worktrees/agent-af74bc71e7b05839a, kept; landed 134947d4d..dbee156b4; guard outputs whole in out/s29/raw/guards), the coordinator's before and now sheet .claude/probes/K1482/cards/s29_landed.png and the live look .claude/probes/K1482/s29_live (coordinator worktree, untracked)
-  - next: Stage 30 (t81s's tick, K1527) running since 2026-11-20 03:02, 2 h cap. On its report: look at its sheets for the site and for every place that moves elsewhere, each against master dbee156b4 (a clean round turned into a point, or a clean point rounded, is a failure); diff its master and new captures yourself at a luminance step of 1 (compare the image hashes of repeat loads first, K1539; stage 29's whole change was 1 px); then merge (rebase in its worktree, ff the coordinator worktree, npm test with env GF_KRETRY unset and the whole output kept, push), watch the deploy and take the live look. After it: stage 31, j59's step (K1526; brief committed: docs/design/K1482_s31_j59_band_end.md; launch it as an opus agent in a worktree once stage 30 has landed or stopped, after a usage check), then t84e (paper against chain 84; no brief yet), j47, K1528's next steps. Stage 29 landed (dbee156b4, code d20c2a809, pushed 2026-11-20 03:01): the home burial's depth guard ramps over 1e-4..1e-3 (was 0.004..0.02). The coordinator's diff of its master and new captures of link A: 1 px (1040,267, paper 29,31,47 to ink 18,20,27: t56s's corner square again, as with gfk=0), 0 px with gfk=0, fill 0 px, repeat loads byte-identical; t84e, j59 and j47 unchanged (K1526). Its guards: the bar PASS 0/0/0 (taken under load), hold 60/60 both ways, panelopen, both dragchecks; the coordinator's npm test on the merged tip: 3198 passed. The live look of dbee156b4 (.claude/probes/K1482/s29_live/full4_*, full5_* and their .json.txt, crops live_t56s.png; coordinator worktree, untracked): the build's stamp is on the page, gf's look, no context loss, no fallback. On the 2400x1350 live frame t56s's corner (near 780,200) is pixel-identical to 0aadaa3's: the stage's 1 px shows only at the local capture's 3200x1800 scale. t84e and j59 as before. The places that differ from 0aadaa3's frame by 3 levels or more (1,236 px in 19) are the moving highlight by the start marker, the build's SHA text and 1-6 px spots of the kind two loads of this build differ by (1,187 px in 22). Take every live look with `node .claude/probes/K1482/s27_live/warmshot.mjs <live link A>&snd=none <outPrefix> 60000` under env SHOT_PROFILE=$env:TEMP\k1482s27live-profile-20548 (kept; any kept directory works), through scripts/perf_lock.ps1, the whole output to a file: it waits for gf's first pass (gfWaitS); a build that changes gf's shader text makes the profile cold again (probes.md, PROBE LORE 2026-11-20; K1456).
-  - brief: `docs/design/K1482_s30_t81s_inleg.md`
+  - owner: agent `a48af51230e66ddb3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus; stage 31, started 2026-11-20 04:36, 2 h cap 06:36)
+  - branch: worktree-agent-a48af51230e66ddb3 (worktree .claude/worktrees/agent-a48af51230e66ddb3); last commit: `8fb02309e`
+  - evidence: stage 26: .claude/probes/K1482/s26 and out/s26 (untracked, in worktree .claude/worktrees/agent-a306305e3593e9802, kept; landed a06826a57) and its live look .claude/probes/K1482/s26_live (untracked, coordinator worktree .claude/worktrees/agent-af52b1a95572b7c1a); stage 25: .claude/probes/K1482/s25 and out/s25 (untracked, in worktree .claude/worktrees/agent-a886c0bec734229eb, kept; branch worktree-agent-a886c0bec734229eb at 5052e0e82, its handoff and lore landed in 2a5119979); the flip guards: .claude/probes/K1524/flip (untracked, coordinator worktree); stage 24: .claude/probes/K1482/s24 and out/s24 (untracked, in worktree .claude/worktrees/agent-a1ac1faa36f86dcc4, kept); stage 23: .claude/probes/K1482/s23, out/s23 (raw/hold_tip, hold_tip_on, dcf_tip, dcb_tip the failed run, dcb_tip2_1, dcb_tip2_2) and .claude/probes/K1436/out/bar/k1482s23 (untracked, in worktree .claude/worktrees/agent-a5016731195d015ff, kept; branch worktree-agent-a5016731195d015ff at c72e267c2); C1: worktree .claude/worktrees/agent-adabb55bc67661562 (kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (kept); .claude/probes/K1524 (the card); stage 28: .claude/probes/K1482/s28 and out/s28 in worktree agent-a1c1c68a332de8029 (untracked), the bar's output .claude/probes/K1436/out/bar/k1482s28 in the main checkout, the coordinator's before and now sheet .claude/probes/K1482/cards/s28_landed.png; stage 28's live look .claude/probes/K1482/s28_live (coordinator worktree, untracked; build df45065 on levi.dev 23:42: live_pairs.png shows t45s, t50s and t38e clean and t23e's spur gone with its patch left; against the 20:57 live shot the picture moves only at the trimmed corners); stage 27: .claude/probes/K1482/s27 and out/s27 (untracked, in worktree .claude/worktrees/agent-a198fbb25c384a8cf, kept; landed 0b82e0960..160ed2b84; guard outputs whole in out/s27/raw/guards), the coordinator's before and now sheets .claude/probes/K1482/cards/s27_landed.png, s27_sites.png, s27_places.png and the live look .claude/probes/K1482/s27_live (coordinator worktree, untracked); stage 29: .claude/probes/K1482/s29 and out/s29 (untracked, in worktree .claude/worktrees/agent-af74bc71e7b05839a, kept; landed 134947d4d..dbee156b4; guard outputs whole in out/s29/raw/guards), the coordinator's before and now sheet .claude/probes/K1482/cards/s29_landed.png and the live look .claude/probes/K1482/s29_live (coordinator worktree, untracked); stage 30: .claude/probes/K1482/s30 (tracked tools) and out/s30 (untracked, in worktree .claude/worktrees/agent-a19d082bada33a2d3, kept; landed d98f62544..8fb02309e; guard outputs whole in out/s30/raw/guards), the coordinator's sheets .claude/probes/K1482/s30_check, the cards .claude/probes/K1482/cards/s30_t81s.png and s30_others.png and the live look .claude/probes/K1482/s30_live (coordinator worktree, untracked)
+  - next: Stage 31 (j59's step, K1526) running since 2026-11-20 04:36, 2 h cap. On its report: look at its sheets for j59, t23e and every place that moves elsewhere, each against master 8fb02309e (a clean round turned into a point, or a clean point rounded, is a failure; a changed shape at a place Levi did not name is a question for him with a picture); diff its master and new captures yourself at a step of 1 (compare the image hashes of repeat loads first, K1539); then merge (rebase in its worktree, ff the coordinator worktree, npm test with env GF_KRETRY unset and the whole output kept, push), watch the deploy and take the live look. After it: t84e (paper against chain 84; no brief yet), j47, K1528's next steps; Levi's answer to K1545 may add a stage (limit the run-on to short out-legs). Stage 30 landed (8fb02309e, code d98f62544, pushed 2026-11-20 04:34): t81s's nub is gone, the in-leg's outline runs straight into chain 9's outline (K1527). The coordinator's diff of its master and new captures of link A: 505 px in 14 places at a step of 1 on any channel (the stage counted 488 in 13 at a luminance step of 1; the 14th is one pixel by one level beside j59), 504 px in the same places with gfk=0, fill 0 px both ways, repeat loads byte-identical. Six places changed shape, a round hook to a point (j51, t28e, j83, j31, j161, t61s: K1545 asks Levi); three notches filled (t66s, t7s, t47e); the rest are specks and faint tips (K1546). Its guards: the bar PASS 0/0/0 (taken under load), hold 60/60 both ways, panelopen, both dragchecks; the coordinator's npm test on the merged tip: 3198 passed. The live look of 8fb02309e is still to take: deploy run 44736891056 started 04:34; when it has succeeded run the scratch copy of the stage 29 look (two loads, the first cold) and file the cold wait under K1456, then look at t81s (about 681,852 on the 2400x1350 live frame) and at j51 and t28e. Take every live look with `node .claude/probes/K1482/s27_live/warmshot.mjs <live link A>&snd=none <outPrefix> 60000` under env SHOT_PROFILE=$env:TEMP\k1482s27live-profile-20548 (kept; any kept directory works), through scripts/perf_lock.ps1, the whole output to a file: it waits for gf's first pass (gfWaitS); a build that changes gf's shader text makes the profile cold again (probes.md, PROBE LORE 2026-11-20; K1456).
+  - brief: `docs/design/K1482_s31_j59_band_end.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -1186,17 +1205,6 @@ Every other item below waits on the trigger it names.
   outline (GF_KXO) moved none of the five (K1540); GF_KFROM, GF_KX2 and a whole-ball bound are rejected. Stage
   28's record: `### Handoff K1482 s28` in docs/design/K1482_s28_crossing_outline_corner.md; tools in
   .claude/probes/K1482/s28 of worktree agent-a1c1c68a332de8029
-- **K1527** · rp=gf corners, leftover kind 2: t81s's top tick (open) and t4s's step (pinhole filled, a square
-  corner left). K1482 stage 27 landed the fold shift (0b82e0960, 2026-11-20; `### Handoff K1482 s27` in
-  docs/design/K1482_s27_flag_step.md; lore FOLD SHIFT and t81s in .claude/rules/render-gpu-field.md). t4s: the
-  pinhole at 2177,634 and the bump beside it are gone (2 px); the corner itself is still square, not a bend
-  (.claude/probes/K1482/cards/s27_landed.png, coordinator worktree): Levi judges it on the live site before more
-  work goes in. t81s: unchanged. Its tick pixels sit in no fold, and every slot k348-370 of crossing 9:45
-  carries flag bits 3, so no flag switch separates it (stage 24's gate opened about 270 joint corners, backed
-  out in 9b98e47b0). The tick is chain 45's short out-leg from its +1 corner up to chain 9's outline; removing
-  the leg alone opens the corner. Next, K1482 stage 30 (after stage 29; brief
-  docs/design/K1482_s30_t81s_inleg.md): run chain 45's +1 in-leg on from its corner to chain 9's outline, then
-  drop the out-leg
 - **K1528** · rp=gf corners, leftover kind 3 (t59s's twist foot, j15's Z, t58e's second V, t23e's patch): two
   outlines converge with no corner at all, so no ball exists; needs a new side-to-side fillet. j41 (a sharp
   ">" kept by a 0.26h first-pass corner; retrying it changes nothing visible) fits no kind yet (`### Handoff
@@ -2582,6 +2590,13 @@ Every other item below waits on the trigger it names.
   whether the state or the draw differs. Until then take 0 px checks on link A or the bar's scenes (`###
   Handoff 26Z` in docs/design/K1464_muse_batch26.md; captures .claude/probes/K1223/out/26Z, main checkout,
   untracked)
+- **K1546** · rp=gf, K1482 stage 30's run-on leaves three one-pixel specks inside the new points' ink on link
+  A: j51 (2262,523: 77 against ink 65 and paper about 125, R+G+B) and j83 (1859,1528: 70; 1862,1530: 71). Each
+  is the old hook's edge pixel, the same value as before, now with ink all round it. At two under-tail ends
+  (1895,247 near j6; 2315,488 near j51) the run adds a faint one-pixel extension of the tail's tip toward the
+  over outline (at most 8 of about 13 levels per channel), and one pixel beside j59 (1043,1503) moved by one
+  level. None shows at the look's own contrast: mend them with the next change to `lkRun`, not on their own
+  (the coordinator's sheets and numbers: .claude/probes/K1482/s30_check, coordinator worktree, untracked)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2958,6 +2973,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   (t10e a spur, j95 and t77s a step, t44e a stub), 7 not judged. Levi never named these points. A look
   question for him (round or today's point, with pictures) only once the four are clean; sheets
   out/s28/g1.png, g4.png, g5.png under .claude/probes/K1482 of worktree agent-a1c1c68a332de8029
+- **K1547** · rp=gf: look at K1482 stage 30's in-leg run-on (`lkRun`) on more mazes. It fires at 14 groups on
+  link A and was judged only there and on the bar's four mazes (ring, def, muse_hash, g41_user_tw64); another
+  maze could hold a run-on that reads worse. `.claude/probes/K1482/s30/runs30.ts` lists the groups of a maze;
+  a sweep needs a switch that turns the run off (none exists) to capture each group both ways
 
 ## Done
 

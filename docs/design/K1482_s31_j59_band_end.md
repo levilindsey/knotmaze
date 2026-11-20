@@ -1,7 +1,9 @@
 # K1482 stage 31: j59's step, by ending the under bands at the over band (K1526; Claude agent stage)
 
-**Queued behind stage 30** (`docs/design/K1482_s30_t81s_inleg.md`): one code agent at a time in
-`src/render/gpu_field/`. Start only when the coordinator says the stage before it has landed or stopped.
+**Started 2026-11-20 04:36** on master 8fb02309e, after stage 30 landed (d98f62544: the in-leg run-on, `gapRunOn`
+and `lkRun` in `gf_look.ts`; at j59 it moved one pixel by one level, 1043,1503). Stage 30's tools are tracked in
+`.claude/probes/K1482/s30` (`run30.ps1` keeps each guard's whole output). Agent worktrees are siblings: use
+absolute paths.
 
 Levi, 2026-11-19, on K1490: **"Fix the wedges and notches, accept the slivers."** His bar: at junctions and
 under-tail ends the over thread's outline runs on unbroken, with no dot, stub, wedge, tick, notch or sliver.
