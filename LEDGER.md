@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1541.
+Next free ID: K1544.
 
 ## Waiting on Levi
 
@@ -338,6 +338,13 @@ Next free ID: K1541.
   clone pays; the 89 text files hold nothing private (searched); a rewrite re-IDs 164 commits and strands 21
   local branches, about 100 worktrees, Muse's checkout and the laptop's clone. Recommended to Levi: leave it,
   or one rewrite later together with K1467 (same page as K1444)
+- **K1541** · rp=gf, j4 on link A (the last of K1526's five with no fix planned): the junction's own corners
+  are round since K1482 stages 20 to 23; what is left is a paper pocket about 10 px across at its top left,
+  between chain 82's outline and arm a0's, which meet at a true 90-degree corner (stage 28's
+  who-draws-each-pixel map, out/s28/wj4.png). Asked 2026-11-19 with the before and now card
+  .claude/probes/K1482/cards/j4_then_now.png (coordinator worktree, untracked): is j4 fine as it is now
+  (recommended: keep), or should the pocket go? Filling it makes one thicker dark corner, the wedge kind he
+  asked to remove
 
 ## In progress
 
@@ -657,9 +664,9 @@ Next free ID: K1541.
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `b3f4be04a`
+  - branch: mainline; last commit: `a4144e2cf`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 26Y passed its gate 2026-11-19 14:17 (K1461 closed in 6ba929f17; its border numbers filed as a residual). Still queued from this batch, in the chain's order 27D, 26W, 26Z, 27C, 26Z2 (K1531's handle has the chain's state; 26Z2 is held with a # in queue.txt while K1482 stages run): 26W (K1467: closed items' probe output leaves the index), 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26W, 26Z and 26Z2 have reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held while K1482's stages edit tables.ts: K1502
+  - next: 26Y passed its gate 2026-11-19 14:17 (K1461 closed in 6ba929f17; its border numbers filed as a residual). 26W (K1467: closed items' probe output leaves the index) is running since 2026-11-19 22:56:41 and has pushed 33f755fc1 (3525 files leave the index: a worktree that pulls loses them from disk, the main checkout keeps them) and a4144e2cf (a probe-budget test in npm test and the force-add rule in .claude/rules/probes.md); not gated yet. Still queued from this batch, in the chain's order 26Z, 27C, 26Z2 (K1531's handle has the chain's state; 26Z2 is held with a # in queue.txt while K1482 stages run): 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26W, 26Z and 26Z2 have reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held while K1482's stages edit tables.ts: K1502
   - brief: `docs/design/K1464_muse_batch26.md`
 - **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
@@ -741,11 +748,11 @@ Next free ID: K1541.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a1c1c68a332de8029` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus; started 2026-11-19 20:44, stopped itself 21:31 without a fix, sent back 21:43 with a 23:30 stop line)
-  - branch: `worktree-agent-a1c1c68a332de8029`, worktree `.claude/worktrees/agent-a1c1c68a332de8029`; last commit: `88627b4f1`
-  - evidence: .claude/probes/K1482/s28 and out/s28 (untracked, in the s28 worktree); stage 26: .claude/probes/K1482/s26 and out/s26 (untracked, in worktree .claude/worktrees/agent-a306305e3593e9802, kept; landed a06826a57) and its live look .claude/probes/K1482/s26_live (untracked, coordinator worktree .claude/worktrees/agent-af52b1a95572b7c1a); stage 25: .claude/probes/K1482/s25 and out/s25 (untracked, in worktree .claude/worktrees/agent-a886c0bec734229eb, kept; branch worktree-agent-a886c0bec734229eb at 5052e0e82, its handoff and lore landed in 2a5119979); the flip guards: .claude/probes/K1524/flip (untracked, coordinator worktree); stage 24: .claude/probes/K1482/s24 and out/s24 (untracked, in worktree .claude/worktrees/agent-a1ac1faa36f86dcc4, kept); stage 23: .claude/probes/K1482/s23, out/s23 (raw/hold_tip, hold_tip_on, dcf_tip, dcb_tip the failed run, dcb_tip2_1, dcb_tip2_2) and .claude/probes/K1436/out/bar/k1482s23 (untracked, in worktree .claude/worktrees/agent-a5016731195d015ff, kept; branch worktree-agent-a5016731195d015ff at c72e267c2); C1: worktree .claude/worktrees/agent-adabb55bc67661562 (kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (kept); .claude/probes/K1524 (the card)
-  - next: Stage 28's first 48 minutes (to 21:31): GF_KXO, an ink-only arc on the ball tangent to the two arms and the crossing pass's outline, moved none of the five sites (j4 4 px, t84e 0; j47, j59 and t45s kept no pocket) and rounded 22 other V points, four with faults: not landed (WIP 5710afd7c and 1d7facd32 on the stage's branch, undone there in a8dc5cf00; K1540). It stopped with a diagnosis, so it was sent back at 21:43 with: the notch Levi answered on is a square or stepped stroke END (K1490's wording and sheet), not a paper eye; take that ink away at j47, j59, t45s and t84e; j4 last (a true 90-degree crossing corner beside a real paper eye goes to Levi with a picture). Stage 28 (K1526's five sites j4, j47, j59, t84e, t45s: a corner against the crossing thread's outline) running since 2026-11-19 20:44. On its report: look at its sheets for the five sites and for every corner that moves elsewhere, each against master (a clean round turned smaller or into a point is a failure, K1524); diff its master and new captures yourself; then merge (rebase in its worktree, ff the coordinator worktree, npm test, push), watch the deploy and look at the live site with snd=none. After it: stage 27 (K1527, docs/design/K1482_s27_flag_step.md), then K1528's next steps. Stage 26 landed (a06826a57, code 8f1fafa22, deployed 20:49): j50 is fixed and is the one corner of 307 that moves; its first version was rejected because t34e, t30e and t21s lost their round (record: `### Handoff K1482 s26c` and `### Landed` in docs/design/K1482_s26_crossing_in_ball.md). Stage 25 (K1528) stopped 18:02 with no fix (handoff and lore in 2a5119979). The rounding is the default since 083a8cb1c (K1524; K1536 is the Node default); the record of its guards, the live look and the plucks (K1537, K1538) is .claude/probes/K1524/flip/notes.md (tracked).
-  - brief: `docs/design/K1482_s28_crossing_outline_corner.md`
+  - owner: agent `a198fbb25c384a8cf` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus; stage 27, started 2026-11-19 23:32, 2 h cap 01:32)
+  - branch: worktree-agent-a198fbb25c384a8cf (worktree .claude/worktrees/agent-a198fbb25c384a8cf); last commit: `df4506594`
+  - evidence: stage 26: .claude/probes/K1482/s26 and out/s26 (untracked, in worktree .claude/worktrees/agent-a306305e3593e9802, kept; landed a06826a57) and its live look .claude/probes/K1482/s26_live (untracked, coordinator worktree .claude/worktrees/agent-af52b1a95572b7c1a); stage 25: .claude/probes/K1482/s25 and out/s25 (untracked, in worktree .claude/worktrees/agent-a886c0bec734229eb, kept; branch worktree-agent-a886c0bec734229eb at 5052e0e82, its handoff and lore landed in 2a5119979); the flip guards: .claude/probes/K1524/flip (untracked, coordinator worktree); stage 24: .claude/probes/K1482/s24 and out/s24 (untracked, in worktree .claude/worktrees/agent-a1ac1faa36f86dcc4, kept); stage 23: .claude/probes/K1482/s23, out/s23 (raw/hold_tip, hold_tip_on, dcf_tip, dcb_tip the failed run, dcb_tip2_1, dcb_tip2_2) and .claude/probes/K1436/out/bar/k1482s23 (untracked, in worktree .claude/worktrees/agent-a5016731195d015ff, kept; branch worktree-agent-a5016731195d015ff at c72e267c2); C1: worktree .claude/worktrees/agent-adabb55bc67661562 (kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (kept); .claude/probes/K1524 (the card); stage 28: .claude/probes/K1482/s28 and out/s28 in worktree agent-a1c1c68a332de8029 (untracked), the bar's output .claude/probes/K1436/out/bar/k1482s28 in the main checkout, the coordinator's before and now sheet .claude/probes/K1482/cards/s28_landed.png
+  - next: Stage 27 (K1527: t81s's tick, t4s's step) running since 2026-11-19 23:32, 2 h cap. On its report: look at its sheets for both sites and for every place that moves elsewhere, each against master df4506594 (a clean round turned into a point, or a clean point rounded, is a failure); diff its master and new captures yourself (compare the image hashes of repeat loads first, K1539); then merge (rebase in its worktree, ff the coordinator worktree, npm test with the whole output kept, push), watch the deploy and look at the live site with snd=none. After it: K1526's leftovers (t84e on corner k159's side, j59's step, j47's block; needs a brief), then K1528's next steps. Stage 28 landed (df4506594, code 3cb97db94..2ae8a96d1, pushed 2026-11-19 23:28): the home burial, ink removal only. The coordinator's own diff of the master and new captures of link A: 271 px at tolerance 6 in 11 clusters, every px lighter (stub ends trimmed to clean corners at t50s t45s t38e t62e t46e t67s t18e t53e t17s; t23e's spur gone, its patch not; 1 px at t56s, K1542); the fill captures and the gfk=0 captures are byte-identical to master's. The agent's guards: hold 60/60 both ways, panelopen, both dragchecks, the bar PASS 0/0/0 (taken under load); its first npm test failed 3 tests in 1 file, unnamed (K1543); the coordinator's two runs on the merged tip passed. Its first try GF_KXO was not landed (K1540). Record: `### Handoff K1482 s28` in docs/design/K1482_s28_crossing_outline_corner.md. Stage 26 landed (a06826a57, code 8f1fafa22, deployed 20:49): j50 is fixed and is the one corner of 307 that moves; its first version was rejected because t34e, t30e and t21s lost their round (record: `### Handoff K1482 s26c` and `### Landed` in docs/design/K1482_s26_crossing_in_ball.md). Stage 25 (K1528) stopped 18:02 with no fix (handoff and lore in 2a5119979). The rounding is the default since 083a8cb1c (K1524; K1536 is the Node default); the record of its guards, the live look and the plucks (K1537, K1538) is .claude/probes/K1524/flip/notes.md (tracked).
+  - brief: `docs/design/K1482_s27_flag_step.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -782,9 +789,9 @@ Next free ID: K1541.
   the fade guard's verdict. Probe runs first; hands off tables.ts, eval.ts, gf_keys.ts, gf_glsl.ts,
   gf_look.ts, gf_pass.ts (K1482's agent)
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `2a287c5c5`
+  - branch: mainline; last commit: `40ee10834`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 27A passed its gate 2026-11-19 16:24 (master at 3e7eef32). 27B (K1529) landed 434a34092 and 2a287c5c5 at 21:07 (probes only: the shared waitViewStill of .claude/probes/view_still.mjs, used by K1436/k1436_screen.mjs and K1482/cap.mjs; K1529 closed; its 12-load sets and its three 0/0/0 bar control runs are Muse's numbers: the coordinator read the diff and did not re-run them). The chain had stopped at 20:24 on its 4 h cap while that run queued behind perf locks; restarted 21:24, 27B passed its gate 21:26 and 27D (K1479) started 21:26:20, cap 01:26 (chain.log; a run that outlives the cap but ends by itself is adopted and gated by the restart). 27B's ledger add ran on a checkout behind origin and handed out K1536 a second time: renumbered K1539, and both Muse briefs now say to pull before an add. After it: 27D, batch 26's 26W and 26Z, 27C, then 26Z2 (it edits gf_look.ts or gf_pass.ts, K1482's file area: held with a # before its line in queue.txt since 2026-11-19 21:24 while K1482 stages run back to back; take the # off when the gpu_field slot is free; queue.txt.bak-s24 is the order before it moved last). On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Check that no run removes another owner's lock.
+  - next: 27A passed its gate 2026-11-19 16:24 and 27B (K1529; 434a34092, 2a287c5c5) at 21:26. 27D (K1479) passed its gate at 22:56 (7b5d80a78, 40ee10834; probes only: ab.mjs aligns the freeze parity, the bar and the s3 census count g41_user_tw42 and user_tw42.lightpaper once; the coordinator read the diff and the control bar's record, PASS 0/0/0 deduped 1 in .claude/probes/K1436/out/bar/27D_ctrl/bar.txt in the main checkout, and did not re-run its 10-load sets). Left in this batch: 27C (K1494), after batch 26's 26W (running since 22:56:41, cap 02:56) and 26Z; then 26Z2 (it edits gf_look.ts or gf_pass.ts, K1482's file area: held with a # before its line in queue.txt since 2026-11-19 21:24 while K1482 stages run back to back; take the # off when the gpu_field slot is free; queue.txt.bak-s24 is the order before it moved last). A run that outlives the 4 h cap but ends by itself is adopted and gated by the restart. Both Muse briefs say to pull before a ledger add (27B's duplicate K1536 became K1539). On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Check that no run removes another owner's lock.
   - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
@@ -1170,12 +1177,17 @@ Every other item below waits on the trigger it names.
   agent stage rebases it on that day's master and reads link A's sweep class table and the K1436 bar; land
   only if the faulted count falls with no new find, else delete the branch. Every spot it visibly changes gets
   a three-version sheet (.claude/probes/K1485/wide4.py layout)
-- **K1526** · rp=gf corners, leftover kind 1 on link A. j50 is fixed (K1482 stage 26, 8f1fafa22, 2026-11-19: the
-  retry ball stops at an own-chain over pass its drawn arc ran into; the one corner of 307 that moves). Left: j4,
-  j47, j59, t84e, t45s, whose arms a crossing by ANOTHER chain cut: they need a corner between the uncut arm's
-  outline and the crossing pass's near outline (a new corner kind in tables.ts, gf_glsl.ts, eval.ts; no ball
-  size does it; GF_KFROM, GF_KX2 and a whole-ball bound are rejected). K1482 stage 28 is on it since
-  2026-11-19 20:44: docs/design/K1482_s28_crossing_outline_corner.md
+- **K1526** · rp=gf corners, leftover kind 1 on link A (arms a crossing by ANOTHER chain cut). Fixed: j50 (K1482
+  stage 26, 8f1fafa22: the retry ball stops at an own-chain over pass its drawn arc ran into) and t45s (stage
+  28's home burial, 2ae8a96d1, 2026-11-19: a piece outside every group inks no deeper inside the tubes of the
+  group it heads into than their own band; ink removal only, 11 stub ends trimmed on link A). Left: t84e (the
+  wedge's ink is corner k159's own, meeting chain 84's outline, out of the burial's reach: bury it under chain
+  84's band on k159's side); j59 (its stub t23e lost 28 px; the step at the top of the inner leg remains, cause
+  not found: find who draws it with wmap28.ts); j47 (8 px gone at t17s; the block at the left of the junction
+  remains); j4 (nothing moved; a look question for Levi, K1541). A round corner against the crossing pass's
+  outline (GF_KXO) moved none of the five (K1540); GF_KFROM, GF_KX2 and a whole-ball bound are rejected. Record:
+  `### Handoff K1482 s28` in docs/design/K1482_s28_crossing_outline_corner.md; tools in .claude/probes/K1482/s28
+  of worktree agent-a1c1c68a332de8029. Next stage after stage 27 (K1527)
 - **K1527** · rp=gf corners, leftover kind 2 (t81s's top tick, t4s's step). K1482 stage 24 (2026-11-19) found
   both causes and no fix (`### Handoff K1482 s24` in docs/design/K1482_s24_tick_step.md; lore GAP JOINT FLAGS
   in .claude/rules/render-gpu-field.md). t81s: the tick is stage 18's under rule in `gapJointFlags` flagging
@@ -1186,8 +1198,8 @@ Every other item below waits on the trigger it names.
   where a side's flag switches between neighbouring slots, blend across that step instead of dropping the flag.
   t4s: chain 4's arm-extension end sits on chain 66's centre line and its disc hides part of chain 66's -1
   band (the step, and a hole at 2177,634 on the s24 frame); untried: the hiding loops in eval.ts and gf_glsl.ts
-  ignore another piece's hiding deep inside the band, or the end moves off chain 66's centre line. Brief
-  ready, queued behind stage 26: docs/design/K1482_s27_flag_step.md (stage 27)
+  ignore another piece's hiding deep inside the band, or the end moves off chain 66's centre line. K1482 stage 27
+  is on it since 2026-11-19 23:32: docs/design/K1482_s27_flag_step.md
 - **K1528** · rp=gf corners, leftover kind 3 (t59s's twist foot, j15's Z, t58e's second V, t23e's patch): two
   outlines converge with no corner at all, so no ball exists; needs a new side-to-side fillet. j41 (a sharp
   ">" kept by a 0.26h first-pass corner; retrying it changes nothing visible) fits no kind yet (`### Handoff
@@ -1199,8 +1211,8 @@ Every other item below waits on the trigger it names.
   into the overlap, w = (W - g) / 2, so the band stays W wide). t59s: j132's first-try corners are 0.031 h and
   0.087 h, under the 0.1 h minimum (retrying small corners rounds it and adds 13 corners nobody has looked at).
   t58e's second V: unchanged by every try. j41 not taken. A third corner try (arms cut behind their root)
-  added ticks at t77s, t14e and j15 and was backed out (edd983c0f on the s25 branch). Queued behind stages 26
-  and 27
+  added ticks at t77s, t14e and j15 and was backed out (edd983c0f on the s25 branch). K1482 stage 28
+  (2026-11-19) took t23e's spur off (28 px; its solid patch remains). Queued behind stage 27 and K1526's leftovers
 
 ## Residuals (known, not fixed)
 
@@ -2564,6 +2576,15 @@ Every other item below waits on the trigger it names.
   alignFreezeParity(page, SIMT) before its freeze, as .claude/probes/K1458/dragcheck.mjs and fade.mjs do
   (Handoff 26X). Left by 27B: outside the view-pinning Done; the retry design is documented in cap.mjs's
   header.
+- **K1542** · rp=gf: the home burial (K1482 stage 28, 2ae8a96d1) takes 2 antialias px off t56s, a clean
+  corner, on link A (1040,267 on the stage's frame: outline 18,20,27 to paper 29,31,47; nothing to see at 6x).
+  Untested guess: the burial's membership test sits on a float boundary of chain 28's group. Take it with
+  K1526's next stage; sooner if a corner shows it larger
+- **K1543** · `npm test` failed once, 3 tests in 1 file, in K1482 stage 28's guard sequence (2026-11-19
+  between 22:46 and 23:08, right after the dragchecks, while a Muse bar run was capturing); run28.ps1 kept the
+  last 6 lines only, so the tests are unnamed. Four later runs of the same code passed (two the agent's, two
+  the coordinator's). Cause not found; machine load is a guess, not tested. Stage 27's guard script keeps each
+  guard's whole output: when it fails again, name the tests here and look for a timeout
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2934,12 +2955,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   main cost) to the gf worker (K1389 s2 handoff)
 - **K1465** · rp=outline ignores the thread look setting (tlk); if it is kept, decide whether it follows
   tlk=border as gf does (from K1455)
-- **K1540** · rp=gf: GF_KXO (K1482 stage 28's first try, WIP 1d7facd32 on branch
-  worktree-agent-a1c1c68a332de8029, not landed) turns 22 V points on link A, where a tail end's outline meets
+- **K1540** · rp=gf: GF_KXO (K1482 stage 28's first try, WIP f672ef2be, undone in
+  539e2d849: in master's history, not in the code) turns 22 V points on link A, where a tail end's outline meets
   a crossing thread's, into rounds: 11 clean (t56e t63e t59e t29e t39e t36e t54s t83e t58e t4s j143), 4 faulty
   (t10e a spur, j95 and t77s a step, t44e a stub), 7 not judged. Levi never named these points. A look
   question for him (round or today's point, with pictures) only once the four are clean; sheets
-  out/s28/g1.png, g4.png, g5.png in that worktree's .claude/probes/K1482
+  out/s28/g1.png, g4.png, g5.png under .claude/probes/K1482 of worktree agent-a1c1c68a332de8029
 
 ## Done
 
