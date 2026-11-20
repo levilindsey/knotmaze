@@ -93,9 +93,17 @@ pocket's close. The kept pockets must close at the cut arm, and each arc's sag m
     t58e, t4s, j143. With a spur, a step or a thickened tip: t10e, j95, t44e, t77s.
   - `&gfk=0`: the two loads settled on views 2e-5 apart, so its 42 + 30 px is unread. The tables are master's by
     construction.
-- **Why it cannot fix these sites.** An ink-only arc only adds ink. j4's pocket ball (0.205 h) sits in ink already:
-  the pocket is closed by chain 82's -1 outline and chain 68's -1 outline, with a 1-2 px step "B..C" at about
-  (1636, 194). A wedge (t84e) needs paper, not ink.
+- **What j4's notch is.** `wimg28.ts` (who draws each pixel, `out/s28/wj4.png`, beside the GPU crop, s20's framing
+  1626,182 at 8x) shows it. The eye at the top left is about 10 px across. Its left side and top are chain 82's -1
+  outline, one continuous stroke. Its bottom is the -1 outline of chain 68's arm a0. The left end reads square:
+  the top-left is chain 82's own curve, but the bottom-left corner is a sharp 90 degrees.
+- **Why GF_KXO did not move it.** Its pocket ball (the tubes of a0, b1 and chain 82; r 0.205 h, centre about
+  1640, 191) is the right ball, and the (chain 82, a0) corner sits at that bottom-left vertex. But a 3.5 px round
+  on a 90-degree corner changes about 3 px, which is the 4 px measured.
+- **What a round end would take.** The end would need the incircle of the eye's left end: a ball tangent to a0
+  and to both sides of chain 82's turning outline, about 0.28 h. Even that is only about 6 px of change.
+- **Wedges.** An ink-only arc only adds ink, so a wedge (t84e, a dark patch) cannot be fixed this way. It needs
+  paper.
 - **The mirror matches the GPU.** Overlays at j4, j139, t56e and t10e put the mirror's ink on the GPU's border ink.
   The early "mismatch" was my probe window. Probes: `.claude/probes/K1482/s28/mrender28.ts` (ink PGM),
   `ovl28.py` (mirror over GPU), `wmap28.ts` (who draws each pixel: winKind:winA:winB, and the fill chain),
