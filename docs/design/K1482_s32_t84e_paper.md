@@ -98,3 +98,11 @@ fields. Never push, never edit `LEDGER.md`.
 - G1 (C1 only where the fold run's group or home differs from the piece's): 3 loss-only places (t84e, 1689,224, 1571,252). G3 (carried on with; env `GF_S32=1`, off by default so src behaves as master): C1 only where p's piece is in a group
   and the fold's other run is not (t84e and 1689,224 change); at t84e the diagonal now thins to a hairline
   and the flag stays. Next: a join at the cusp (round or bevel) instead of burying one band.
+### WIP K1482 s32 (07:00)
+
+- Failed on the mirror: R, Z (with D: 1687,226 and 1565,256), C 0.55, CH 0.55 (V-notch 1571,254), CH 0.62 without
+  DH (1565,256). Passing (wd32_hmdh.txt: only t84e, 1537,938, 32 samples, loss-only): foldD past !inOther with
+  fold cos > 0.62; buries when cos > 0.7 with a sibling piece of the chain on another surface within arc 2, or the
+  partner run (depth/member at its foot) is homed in a group but in none, or p's piece is in a group the partner is not;
+  a D search (tangents at arc +-0.3) only when the plain search finds no fold (hi then off); G6 burial by the sibling's tube.
+- Next: write it as one clean rule (no env), port to gf_glsl.ts, npm test, guards as time allows. Residual: one faint px 1540,950.
