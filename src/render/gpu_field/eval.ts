@@ -542,14 +542,15 @@ export class GfEval {
         // than their own band (p within h - W of one): its outline meets theirs in a mitred corner instead of running
         // on over B's fill to the square end where the piece joins B (j47, t45s, j59's stub). Only against a piece m out
         // of every crossing's depth window (z 0, a junction's plane): where m dips under the piece at a crossing, the
-        // piece's outline is the over-pass line and stays (t56s, |z| >= 0.024 there; the stubs' partners sit at 0)
+        // piece's outline is the over-pass line and stays (t56s, |z| >= 0.024 there; the stubs' partners sit at 0).
+        // m's z is read back from its key (pkey + pd zK), the one value every GPU program holds for m
         if (bur < 1 && S < 0 && kxh) {
           const B = this.pg[j] >= 0 ? this.pg[j] : this.phb[j];
           for (let m = 0; m < this.np && bur < 1 && B >= 0; m++) {
             if (this.psurf[m] !== B || this.pc[m] === this.pc[j]) continue;
             let wb2 = 1 - ss(h - W - aa, h - W + aa, this.pd[m]);
             if (!(wb2 > bur)) continue;
-            wb2 *= 1 - ss(0.004, 0.02, Math.abs(this.pz[m]));
+            wb2 *= 1 - ss(0.004, 0.02, Math.abs(this.pkey[m] + (this.pd[m] * T.zt) / h));
             if (wb2 > bur) bur = wb2;
           }
         }
