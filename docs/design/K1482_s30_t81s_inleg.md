@@ -1,7 +1,10 @@
 # K1482 stage 30: t81s's tick, by running the in-leg on (K1527; Claude agent stage)
 
-**Queued behind stage 29** (`docs/design/K1482_s29_corner_side_wedge.md`): one code agent at a time in
-`src/render/gpu_field/`. Start only when the coordinator says the stage before it has landed or stopped.
+**Started 2026-11-20 03:02** on master dbee156b4, after stage 29 landed (the home burial's depth guard; t56s
+only). Stage 29's tools are in `.claude/probes/K1482/s29` of the worktree
+`C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-af74bc71e7b05839a` (`run29.ps1` keeps each guard's
+whole output; `capseq28.ps1` and `diff28.ps1` gave byte-identical repeat loads). Agent worktrees are siblings:
+use absolute paths.
 
 Levi, 2026-11-19, on K1490: **"Fix the wedges and notches, accept the slivers."** His bar: at junctions and
 under-tail ends the over thread's outline runs on unbroken, with no dot, stub, wedge, tick, notch or sliver.
