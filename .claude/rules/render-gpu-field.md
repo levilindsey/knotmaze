@@ -77,9 +77,19 @@ strokes toward today's, and do not use today's border strokes as a bar.
   side point q sitting fo inside its own piece's tube (a swallowtail fold) is buried by another piece m only past that
   fold: m's distance + fo. t4s: chain 4's arm-extension end disc rides chain 66's spine, nibbling 66's -1 fold into a
   step and a pinhole. Unfaded, a deep fold (j58, 0.14) drew a stray line in a fill: fo fades out over 2-4 aa of depth.
-- t81s (K1482 s27, open): its tick pixels are unfolded (own distance h): chain 45's +1 corner sits 2-3 px below
+- t81s (K1482 s27): its tick pixels are unfolded (own distance h): chain 45's +1 corner sits 2-3 px below
   chain 9's outline, and the flagged short cut keeps 45's out-leg from that corner up to 9's band (all slots k348-370
   of 9:45 carry bits 3, so no flag switch separates it). Removing that leg opens the corner: it needs the in-leg run on.
+- IN-LEG RUN-ON (K1482 s30, `gapRunOn` in gf_look.ts, `lkRun` in its GLSL): where an under pass's side offset folds
+  within 0.35 fh outside the over outline and the in-leg's straight line reaches that outline within 0.75 fh, the bake
+  tags the slots from the crossing to the fold (V1 += 0.5 + code/4096, code = anchor delta + 32 + 64 if side -1;
+  `lkGwY` strips it, so lkGap reads V1 as before); lkRun draws that side's outline as the in-leg's line from the anchor,
+  cut by the gap and stopped at the over centre line, and drops the out-leg's. Coverage is untouched (fill 0 px).
+- The tagged run must reach its anchor: the slot just before the anchor must be one of the crossing's. t56s's fold
+  lay past the crossing's slots (anchor k17, slots 26..41 tagged, 18..25 not), so the bend's own outline stayed
+  between run-on and anchor: a step. Link A: 14 run-on groups (`.claude/probes/K1482/s30/runs30.ts` lists them),
+  t81s's nub gone; 12 other places changed (426 px, 4 gain-only, 0 lose-only), mostly ticks and notches turned V
+  corners; j83 and j51's new V wedges hold a one-pixel dark speck near the tip.
 
 ## The pass on the Pixel (stage 4, `K1362_s4_shader.md`)
 

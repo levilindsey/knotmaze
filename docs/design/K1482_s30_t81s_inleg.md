@@ -83,3 +83,26 @@ re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K
 report: the commits to land by SHA in order, what changed at the site by eye, the numbers, each guard's result
 with the path of its whole output, the sheets' absolute paths, a `Ledger items` list and K1482's handle
 fields. Never push, never edit `LEDGER.md`.
+
+**s30 progress (03:34).** Link A's repeat-load floor is 0 (gf_b2 and gf_fill byte-identical, on and off). Trying the
+in-leg run-on as a look-only step: the bake (`gapRunOn`, gf_look.ts) finds where an under pass's side offset folds
+within 0.35 fh outside the over outline and the in-leg's line reaches that outline within 0.75 fh, and tags the slots
+from the crossing to the fold (y += 0.5 + code/4096: anchor delta, side); `lkRun` draws that side's outline as the
+in-leg's straight line from the anchor (cut by the gap, stopped at the over centre line), dropping the out-leg's.
+Coverage untouched. WIP, not yet captured.
+
+**s30 progress (03:45).** c1 (276dbbfbd) captured: t81s's nub gone (the in-leg's outline runs straight on into chain
+9's in a V), fill 0 px, on = gfk=0; 13 other places changed, most of them the same tick class turned into clean V
+corners (t28e, j161, t61s, j83, j51, j31, t66s), but t56s grew a step next to its dot: its fold lies past the
+crossing's slots (anchor k17, tagged slots 26..41), so the bend's own outline stayed between the run-on and the
+anchor. c2 adds: the slot just before the anchor must be one of the crossing's (`runs30.ts` lists every run-on
+group from s27's DUMPGW: 15 -> 14, only U56 dropped).
+
+**s30 progress (03:57).** c2 (a2c806440) against today (m3, same capture session, floor 0): 488 px in 13 places, on =
+gfk=0, fill 0 px; t81s 62 px (nub gone, V corner); outside it 12 places, 426 px, 4 gain-only, 0 lose-only, 8 mixed;
+by eye all ticks and notches turned V corners or unchanged, j83 and j51 with a one-pixel speck in the new wedge. Lore
+added; guards started at 03:56 (`run30.ps1`, outputs in `out/s30/raw/guards/`).
+
+**s30 progress (04:05).** `npm test` on a2c806440 failed one text pin (gf_look.test.ts K1492: lkRun split the
+composite's `lkHiA *= ...; if (lkCo.a ...)` line). lkRun moved after that line (it reads only ink and lkg, so the
+same program); the WIP commits squashed into 808d724e6 so each commit is green; guards restarted on it (port 6213).
