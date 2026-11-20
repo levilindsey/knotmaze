@@ -990,3 +990,53 @@ every stop lands within 0.01 of the value asked (read back from the control, sto
 first drag moves it, 5 runs in a row. 4. `npm test` green, no `src/` change. 5. K1461 closed with the
 commit, or what is left recorded.
 
+## Run Z (26Z): the dead quiet path leaves the paint code (K1223)
+
+Added 2026-11-19. Today's renderer's paint code; nothing under `src/render/gpu_field/` changes beyond a call
+site's argument list. Since K1211 S6 (13aab452) nothing asks for the pulses' quiet rows, and the code still
+ships: `kPaintAt`'s `quiet` argument and `kPulseCrestQuiet` (`src/render/paint_glsl.ts`), the `quiet` flag of
+its CPU mirror (`paint_math.ts`), row mode 2 in `arm_strip.ts` and in joinery's `writeStripRow`
+(`src/render/ribbon/joinery.ts`), and the quiet cases of `test/render/paint_gameplay.test.ts`.
+Done: 1. Dead by evidence, before anything is deleted: every call site of `kPaintAt`, of the mirror's paint
+function and of `writeStripRow`, and every writer of a strip row's mode, listed with the value it passes;
+none passes quiet or mode 2. If one does, stop there, correct K1223's entry and report. 2. One commit removes
+the argument, `kPulseCrestQuiet`, the mirror's flag, mode 2 and its row, and the quiet tests. After it,
+`git grep -n -i -E "kPulseCrestQuiet|quiet" -- src/render/paint_glsl.ts src/render/paint_math.ts
+src/render/arm_strip.ts src/render/ribbon/joinery.ts` prints no line about the pulse's quiet path (name any
+line left and why). If the strip texture's row count or layout changes, the handoff gives the sizes before
+and after. 3. The screen does not move: built previews of your starting commit and of your commit
+(`preview.ps1 -Ref`), captures on one physics hash (the parity fix of Handoff 26V), 0 px in the thread area
+for today's renderer and for rp=gf, fill and border looks, on `?3&xp=off&am=instant`, on link A
+(`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant`, with and without `&rp=gf&gfh=1`), and with pulses, the telegraph
+and the gold path showing (24C's state and clocks: `.claude/probes/K1414/k1414c_ab.mjs`, seed 7, 10 cheapest
+moves, clocks 100 / 100.45 / 101.3). 4. The pins this moves, each named old -> new in the commit message:
+`test/render/k320_slim.test.ts`'s character budgets are re-frozen at the smaller numbers and none grows; the
+G2 mirror tests (`paint_math`, `paint_fx`, `paint_section`, `paint_gameplay`) stay green with no tolerance
+loosened; the byte-identity goldens are untouched. 5. `npm test` green. 6. The guards. 7. K1223 closed with
+the commit.
+
+## Run Z2 (26Z2): pulses and the telegraph still draw under rp=gf (K1473)
+
+Added 2026-11-19. The pulses' and telegraph's table (texture unit 9) uploaded as R32F from 9b48e44f until
+K1472's fix (998be573), so the look shader read zeros and neither drew; nobody has measured them on screen
+since, and Runs F to N and the junction-field stages changed the look around them. The bars and probes are
+24C's (`.claude/probes/K1414/k1414c_ab.mjs`, fill look; Handoff 24C in `docs/design/K1418_muse_batch24.md`)
+and 24H's and 25A's (`k1414h_ab.mjs` with `mask_h.mjs`, `tlk=border`; Handoff 25A in
+`docs/design/K1448_muse_batch25.md`): seed 7, 10 cheapest moves, clocks 100 / 100.45 / 101.3.
+Done: 1. The floor first: two loads of today's renderer give ratio 1.000 and IoU 1.000 for both features at
+the three clocks; if not, the probe reaches one state per load first (Handoffs 26V and 26X). 2. The table on
+master, today's against gf, count ratio and IoU per feature and clock: fill look (24C's bar: count within
+15%, IoU at least 0.7), border look telegraph (25A read 1.017, IoU 0.958) and border look pulse (25A read
+0.942 / 0.786, 1.033 / 0.748, 0.969 / 0.823). 3. Fixed where the table is short: fill at 24C's bar; border
+telegraph within 15% and IoU at least 0.8; border pulse count within 15% and IoU no more than 0.02 under
+25A's at each clock (25A's own residue at the head fan is K1447, not this run). For anything short: the
+commit that moved it, found on built previews between 25A's commit and master, then the fix in `gf_look.ts`
+or `gf_pass.ts`, never in the field. If everything holds on master there is no source change. 4. An ordinary
+load shows them too: with the probe's frame-forcing hooks off, in real time, three captures 0.5 s apart on
+the same state each hold a pulse mask within 30% of today's count, and the crest sits somewhere else in each.
+5. The upload guard bites: `test/render/gf_look_upload.test.ts` fails when unit 9's format is put back to R32F
+(paste the failing lines, then restore), or gains the case that makes it fail. 6. 4x crops, today's | gf, at
+the three clocks, fill and border, under `.claude/probes/K1473/out/26Z2/`, looked at: what you see at each,
+including what is worse. 7. `npm test` green. 8. The guards. 9. K1473 closed with the numbers, and the fix's
+commit if there was one.
+
