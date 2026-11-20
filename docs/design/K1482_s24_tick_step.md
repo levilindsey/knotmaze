@@ -80,3 +80,10 @@ and at each milestone), whichever comes first; keep the last 30 minutes for the 
 stop: re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K1482 s24` here, commit,
 and report: the commits to land by SHA in order, the numbers, the sheets' absolute paths, a `Ledger items`
 list and K1482's handle fields. Never push, never edit `LEDGER.md`.
+
+### Handoff K1482 s24 (WIP notes, 16:40)
+
+- t81s: chain 45's +1 outline pokes across the 9-over-45 crossing gap. gapJointFlags' s18 UNDER rule flags slots `9:45:*:+1` (chain 45's group-103 home samples lie within reach of q), so lkGap gives that side the short joint cut and the outline ends square against chain 9's band. With the under rule off (`__k15.u24=1`) the tick goes and the outline ends along the fill edge, but the under rule moves 399 places (4749 px, luminance step > 6, floor 1063 px of which 764 at j160/j39), so it cannot go wholesale.
+- Discriminator: dN (q to the over chain's nearest non-member sample). t81s's flags have dN 0.45-0.50 (q inside the over thread's own cut reach fh+mg+fd = 0.61); the s18 sites have dN >= 0.68. Trying: the under rule only when dN >= reach (`__k15.dn=-1`, WIP knob in gf_look.ts).
+- t4s is NOT the under-rule class (the u24=1 capture leaves it unchanged). It is chain 4's start (a T on chain 66, group 12): the bottom reflex corner (about 2178.5,639.5 device) has no corner record (only k11, the top one, r 0); the ink there is chain 66's -1 side plus a vertex cap 6/4/66, and the band's inner edge should be a radius-W arc but has a hole at (2177,634) (side term ink 0.03 at h-d 0.108 < W) and extra ink at (2176,633).
+- Tools: `.claude/probes/K1482/s24/` (cap24.ps1, card24.py sheets, inkd24.py diffs with a luminance step, geo24.ts mirror terms). Outputs: `.claude/probes/K1482/out/s24/`.

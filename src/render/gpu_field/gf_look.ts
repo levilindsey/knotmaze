@@ -568,7 +568,13 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
       for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
       for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
       if (dM < reach2 && dM <= dN) { nb |= bit; if (dN >= nn2) bits |= bit; }
-      for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } }
+      const K24 = (globalThis as { __k15?: { u24?: number; log?: boolean; dn?: number } }).__k15; const ob = bits & bit;
+      const dnT = K24 && K24.dn !== undefined ? (K24.dn < 0 ? reach2 : K24.dn * K24.dn) : 0;
+      if (!(K24 && K24.u24 === 1) && dN >= dnT) for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } }
+      if (K24 && K24.log && un && !ob) {
+        let uIn = 0; for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) uIn++; }
+        if (uIn) { const G = globalThis as unknown as { __k15log?: Record<string, number[]> }; (G.__k15log ??= {})[`${c}:${un.c}:${k}:${sd}`] = [uxy[2 * k], uxy[2 * k + 1], qx, qy, uIn, ux.length, mem(un.c, un.km[k]) ? 1 : 0, Math.sqrt(dM), Math.sqrt(dN)]; }
+      }
     }
     out[i] = bits; near[i] = nb;
   }
