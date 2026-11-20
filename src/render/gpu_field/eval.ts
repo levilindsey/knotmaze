@@ -202,7 +202,6 @@ export class GfEval {
     if (!(this.phi[j] - this.plo[j] > 1)) return Infinity;
     let inOther = false;
     for (let m = 0; m < this.np; m++) if (m !== j && this.psurf[m] === S && this.pd[m] < this.T.h) { inOther = true; break; }
-    if (!inOther) return Infinity;
     const T = this.T; const c = this.pc[j]; const v0 = T.cV0[c]; const nseg = T.cNV[c] - 1; const closed = T.cClosed[c] === 1;
     let tx = 0; let ty = 0; let dp = Infinity;
     for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
@@ -212,14 +211,21 @@ export class GfEval {
       const ex = x - ax - dx * u; const ey = y - ay - dy * u; const e2 = ex * ex + ey * ey;
       if (e2 < dp) { dp = e2; tx = dx; ty = dy; }
     }
-    const tl = Math.sqrt(tx * tx + ty * ty); let d2 = Infinity;
+    const tl = Math.sqrt(tx * tx + ty * ty); let d2 = Infinity; let sf = 0;
     for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
       let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
       const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
       const l2 = dx * dx + dy * dy; if (!(dx * tx + dy * ty < -0.5 * Math.sqrt(l2) * tl)) continue;
       const u = l2 > 0 ? Math.min(1, Math.max(0, ((qx - ax) * dx + (qy - ay) * dy) / l2)) : 0;
       const ex = qx - ax - dx * u; const ey = qy - ay - dy * u; const e2 = ex * ex + ey * ey;
-      if (e2 < d2) d2 = e2;
+      if (e2 < d2) { d2 = e2; sf = T.vs[v] + u * (T.vs[v + 1] - T.vs[v]); }
+    }
+    if (!inOther) {
+      if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 !== "1" || !(d2 < T.h * T.h)) return Infinity;
+      const zf = this.depth(c, sf); this.member(c, sf, zf);
+      const gj = this.pg[j]; const gf = this.mg;
+      if (gj < 0 || gj === gf || ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32 !== "1")) return Infinity;
+      if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32DBG === "1") console.log(`fold gj ${gj} gf ${gf} pg ${this.pg[j]} phb ${this.phb[j]} mg ${this.mg} mhb ${this.mhb} sf ${sf.toFixed(3)} zf ${zf.toFixed(3)}`);
     }
     return d2;
   }
@@ -512,6 +518,7 @@ export class GfEval {
     // per surface: coverage a and ink v (max over exposed terms, the winner kept)
     const band = (D: number): number => 1 - ss(W - aa, W + aa, D);
     const band2 = (D: number): number => band(D) * ss(-aa, aa, D);
+    const S32B = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S32B === "1";
     for (let e = 0; e < ns; e++) {
       const S = this.sid[e]; let D = -Infinity; let v = 0; let wk = 0; let wa = -1; let wb = 0;
       for (let j = 0; j < this.np; j++) {
@@ -528,6 +535,7 @@ export class GfEval {
         let fo = -1;
         for (let m = 0; m < this.np && bur < 1; m++) {
           if (m === j || this.psurf[m] !== S) continue;
+          if (S32B && S >= 0 && this.pz[m] < this.pz[j] - T.zt) continue;
           const dm = Math.sqrt(this.pieceD(m, qx, qy)); if (!(dm < h)) continue;
           if (fo < 0) { const f0 = Math.max(0, h - Math.sqrt(this.pieceD(j, qx, qy))); fo = f0 * (1 - ss(2 * aa, 4 * aa, f0)); }
           const wb2 = 1 - ss(h - 2 * aa, h, dm + fo);
