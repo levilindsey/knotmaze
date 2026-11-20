@@ -11,11 +11,19 @@ const RAD = +RS, GROW = +GS, GROW_PX = 3;
 const scenes = [...new Set(readdirSync(refDir).filter((f) => f.endsWith(".screen.json") || f.endsWith(".mirror.json")).map((f) => f.replace(/\.(screen|mirror)\.json$/, "")))].sort();
 const rd = (p) => (existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : null);
 const rows = []; const lines = []; let nNew = 0, nGrown = 0, nGone = 0, missing = 0, skipped = 0; const skippedScenes = [];
+let deduped = 0; const dedupedScenes = [];
+// K1479: g41_user_tw42 and user_tw42.lightpaper are one physics state by design (same seed and
+// params; only the background paint differs, which the bar strips), exported one substep apart
+// (4801 a5f6d198 / 4802 462652e7). Count the pair's finds once: the lightpaper scene's finds are
+// the same state's finds, so they never enter new/grown/gone. This is not a K1519 skip: both
+// scenes still freeze, capture and report FREEZE; only the counting dedupes.
+const DEDUP_OF = { "user_tw42.lightpaper": "g41_user_tw42" };
 const freezeOf = (dir, sc) => { try { return JSON.parse(readFileSync(join(dir, "cap", sc, "meta.json"), "utf8")).freeze ?? null; } catch { return null; } };
 const freezeTxt = (f) => (f ? `${f.ok ? "ok" : "FAILED"} in ${f.tries} (saw ${(f.seen ?? []).join(",") || "?"}; want ${f.expected ?? "?"})` : "no record (pre-K1519 capture)");
 for (const sc of scenes) for (const scan of ["mirror", "screen"]) {
   const A = rd(join(baseDir, `${sc}.${scan}.json`)), B = rd(join(refDir, `${sc}.${scan}.json`));
   if (!A || !B) { missing++; lines.push(`MISSING ${sc} ${scan} (base ${!!A}, ref ${!!B})`); continue; }
+  if (DEDUP_OF[sc] && scenes.includes(DEDUP_OF[sc])) { if (!dedupedScenes.includes(sc)) { dedupedScenes.push(sc); deduped++; } lines.push(`DEDUP ${sc} ${scan}: same physics state as ${DEDUP_OF[sc]} by design (K1479); finds counted once under ${DEDUP_OF[sc]}`); continue; }
   if (scan === "screen") {
     const fa = freezeOf(baseDir, sc), fb = freezeOf(refDir, sc);
     if ((fa && (fa.tries > 1 || !fa.ok)) || (fb && (fb.tries > 1 || !fb.ok))) lines.push(`FREEZE ${sc}: base ${freezeTxt(fa)}; ref ${freezeTxt(fb)}`);
@@ -37,13 +45,13 @@ const pass = nNew === 0 && nGrown === 0 && missing === 0; // skipped scenes (K15
 const byCls = new Map();
 for (const r of rows) { const k = `${r.scan} ${r.f.kind}:${r.f.cls}`; if (!byCls.has(k)) byCls.set(k, []); byCls.get(k).push(r); }
 const fmt = (r) => `${r.sc}:${r.f.x.toFixed(2)}:${r.f.y.toFixed(2)}${r.f.site ? " " + r.f.site : ""} ${r.f.px}px${r.g ? ` (was ${r.g.px}px)` : ""}`;
-const out = [`${pass ? "PASS" : "FAIL"}  new ${nNew}  grown ${nGrown}  gone ${nGone}${missing ? `  missing ${missing}` : ""}${skipped ? `  skipped ${skipped} (${skippedScenes.join(",")})` : ""}  (match radius ${RAD}, grow > ${GROW * 100}% and >= ${GROW_PX} px)`, ...lines];
+const out = [`${pass ? "PASS" : "FAIL"}  new ${nNew}  grown ${nGrown}  gone ${nGone}${missing ? `  missing ${missing}` : ""}${skipped ? `  skipped ${skipped} (${skippedScenes.join(",")})` : ""}${deduped ? `  deduped ${deduped} (${dedupedScenes.join(",")})` : ""}  (match radius ${RAD}, grow > ${GROW * 100}% and >= ${GROW_PX} px)`, ...lines];
 for (const [k, rs] of [...byCls].sort()) {
   out.push(`\n${k}`);
   for (const what of ["new", "grown", "gone"]) { const L = rs.filter((r) => r.what === what); if (L.length) out.push(`  ${what} ${L.length}: ${L.slice(0, 40).map(fmt).join("; ")}${L.length > 40 ? " ..." : ""}`); }
 }
 writeFileSync(join(outDir, "bar.txt"), out.join("\n") + "\n");
-writeFileSync(join(outDir, "bar.json"), JSON.stringify({ pass, nNew, nGrown, nGone, missing, skipped, skippedScenes, rows }));
+writeFileSync(join(outDir, "bar.json"), JSON.stringify({ pass, nNew, nGrown, nGone, missing, skipped, skippedScenes, deduped, dedupedScenes, rows }));
 console.log(out.join("\n"));
 // --- crop sheet of new + grown (screen captures; mirror finds are cropped from the same captures)
 function png(p) {

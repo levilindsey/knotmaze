@@ -1,10 +1,14 @@
 // K1468 Done 3: frozen-state captures of gf for the pixel A/B (K1460 shot.mjs's freeze, per link, fade and look).
 // Saves <outDir>/<link>_<fl>_<tlk>.png and prints each load's physics hash; diff two builds' dirs with diff.py.
-//   node .claude/probes/K1468/ab.mjs <base> <outDir> <profileDir> "<A|B>:<fl>:<tlk>,..."
+//   node .claude/probes/K1468/ab.mjs <base> <outDir> <profileDir> "<A|B|R>:<fl>:<tlk>,..."
+//   R = the K868 ring link at rp=gf&gfh=1 (K1479: SIMT=40.01666666666504 lands hash 50dd4ffd).
+//   Every load aligns the freeze substep parity first (alignFreezeParity, K1479), so one link
+//   freezes on one physics state per build instead of the two-state lottery K1468 s2 saw.
 //   A = ?3.FGH1HtvQeDjm6e4BII&...&rp=gf&gfh=1, B = ?3&...&rp=gf. env SIMT=20 DSF=2 EXTRA="--chrome-flag ..."
 import puppeteer from "puppeteer-core";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { alignFreezeParity } from "../freeze_parity.mjs";
 const [, , base, outDir, profileDir, jobArg] = process.argv;
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2);
 mkdirSync(outDir, { recursive: true });
@@ -15,7 +19,7 @@ const browser = await puppeteer.launch({
     "--disable-features=CalculateNativeWinOcclusion", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding",
     ...(process.env.EXTRA ? process.env.EXTRA.split(" ") : [])],
 });
-const LINKS = { A: "?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1", B: "?3&xp=off&am=instant&rp=gf" };
+const LINKS = { A: "?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1", B: "?3&xp=off&am=instant&rp=gf", R: "?s=1rphqy1&gs=12&shp=ring&wd=.45&sl=1&dr=.75&rep=1.45&bd=2.5&sm=.6&ga=.2&tw=.58&gap=.04&cr=3&fv=1&am=instant&stb=0&rp=gf&gfh=1" };
 const linkOf = (l, fl, tlk) => `${base}/${LINKS[l]}&prp=off&phw=0&fw=0&bg=none&snd=none&fl=${fl}&tlk=${tlk}`;
 let lost = 0;
 try {
@@ -38,6 +42,7 @@ try {
     await page.goto(linkOf(l, fl, tlk), { waitUntil: "load", timeout: 900000 });
     await page.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
     await page.waitForFunction(() => (globalThis.__knotGf?.stats?.composites ?? 0) > 0, { timeout: 900000, polling: 300 });
+    await alignFreezeParity(page, SIMT);
     const hash = await page.evaluate(async (t) => {
       await window.__knotPhysFreeze(true);
       await window.__knotStepUntil(t);
