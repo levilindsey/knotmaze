@@ -1086,6 +1086,9 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
     const m = dist(vBX) <= dist(vXA) ? 1 : 0; const vM = m === 1 ? vBX : vXA;
     if (KXO_DBG) console.log(`KXO j${jBase + ji} a${A.ei}/b${B.ei} c${A.c}/c${B.c} X c${best.X} r ${(T.r / h).toFixed(3)}h at ${T.x.toFixed(3)},${T.y.toFixed(3)} arcs AB ${(aAB * 180 / Math.PI).toFixed(1)} BX ${(aBX * 180 / Math.PI).toFixed(1)} XA ${(aXA * 180 / Math.PI).toFixed(1)} vAB ${(dist(vAB) / h).toFixed(2)} vBX ${(dist(vBX) / h).toFixed(2)} vXA ${(dist(vXA) / h).toFixed(2)} m ${m ? "B" : "A"} cut ${best.mi ? "B" : "A"}${m === best.mi ? " ACCEPT" : ""}`);
     if (!vAB || !vM || m !== best.mi) return null; // the pocket closes at the cut arm
+    if (KXO_DBG) console.log(`KXA j${jBase + ji} a${A.ei}/b${B.ei} sagAB ${((dist(vAB) - T.r) / h).toFixed(3)} sagM ${((dist(vM) - T.r) / h).toFixed(3)}${dist(vAB) - T.r > GF_KSAG * h || dist(vM) - T.r > GF_KSAG * h ? "" : " KEEP"}`);
+    // each drawn arc's sag (vertex beyond the arc) within GF_KSAG h, as the retry's: the stroke covers it, no sliver
+    if (dist(vAB) - T.r > GF_KSAG * h || dist(vM) - T.r > GF_KSAG * h) return null;
     const out: GfCorner[] = [];
     const mk = (i: number, j: number, v: { x: number; y: number }, ci: number, si: number, cj: number, sj: number, ai: number, bj: number): GfCorner => {
       const thv = Math.PI - ang(i, j); const rv = dist(v);
