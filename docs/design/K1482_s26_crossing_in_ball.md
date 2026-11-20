@@ -101,3 +101,24 @@ Next (j4, j47, j59, t84e, t45s): solve a corner between the uncut arm's outline 
 (the crossing is the corner's real partner), which needs a new corner kind in tables.ts, gf_glsl.ts and eval.ts;
 a smaller or larger ball between the cut arms cannot make that join. Capture views can differ by 2e-5 between
 loads of one hash (c1/c2 `gfk=0` did): compare `gf_b2view.txt` before trusting a diff.
+
+### Handoff K1482 s26c (supersedes the one above for the fix)
+
+2026-11-19 20:40. The coordinator rejected 44fd1b814: its whole-ball bound took the round from t34e, t30e and t21s.
+Now (50c7b900e, b40afa0c0) the bound applies only to a retry corner whose DRAWN arc (tangent point to tangent point)
+runs more than 0.15 h into the tube of a pass OVER its arm by its own chain (pinZ < 0); that corner is grown again
+(pass 2) with the tube as a third bound, and every other corner keeps master's growth bit for bit. Link A's tables
+(Node, `kxc26.ts`): 1 corner of 307 differs from master, j50 (t18e) 0.672 -> 0.432 h. Captures as it loads (same
+view as master): border differs only at j50, fill shows nothing there; `gfk=0` border 0 px. Judged: j50 better (the
+arc no longer runs through chain 71's own crossing; the eye's left outline is thinner, a smaller round inside the eye);
+t34e, t30e, t21s, j55, j71 (= t30e), j87, j136, j145, t43e, t27s, t63e, t75e, t6e all 0 px (equal master). t43e,
+t27s, t63e and t75e moved under 44fd1b814 only because the whole ball overlapped a tube while the drawn arc stayed
+clear (t43e +0.587 h, t27s +0.152 h): not j50's defect. t6e's arc is 0.084 h (1.4 px) into an over pass with no
+visible defect; at the first trigger depth (0.05 h, 50c7b900e) its clean round shrank 1.54 -> 1.43 h, so the depth
+is 0.15 h. Rejected forms and the dents an untriggered bound makes: the lore bullet "THE RETRY'S THIRD BOUND" in
+`.claude/rules/render-gpu-field.md`. Sheets (master | s26c): `.claude/probes/K1482/out/s26/c_j50.png`,
+`c_rounds.png` (t34e, t30e, t21s, t6e), `c_asked.png` (j55, j87, j136, j145, t43e, t27s). Captures n4_on/n4_off
+(warm profile): border 41 px differ, all at j50; fill 0; `gfk=0` 0 px both. A first capture in a NEW profile without
+the warm step (n3) scattered the fill by AA levels over the whole maze (170 px > 8, `gfk=0` too) and the warmed
+recapture was 0 px: warm the profile (or capture twice) before reading a fill diff. Still open: j4, j47,
+j59, t84e, t45s (see the handoff above: a corner against the crossing's outline).
