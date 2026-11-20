@@ -347,7 +347,8 @@ Next free ID: K1493.
   clean arcs at the 24 largest, by the coordinator's eye). Levi's call, asked 2026-11-19: round them (C1
   becomes the default), keep today's sharp corners (C1 stays off, and j14 needs a gate that tells a faulty
   meeting from a clean point), or name the rows to keep. C1 is live behind `gfk=1` since 2026-11-19 (K1482
-  stage 23, 1485fee2b; off by default): link A with and without `&gfk=1` shows the two looks. On "take": make
+  stage 23, 1485fee2b; off by default): link A with and without `&gfk=1` shows the two looks (seen on the
+  live site by the coordinator at j14, j41 and j4, build 2dc1d5d; both links are on the card). On "take": make
   it the default and delete docs/design/K1524_keep_fault_gate.md; on "keep": run that brief's stage. fix3
   (s20, 37eda49e8) failed the bar with 10 finds and is superseded;
   delete the local probe branch `k1482s21-kclr` (7b2b22e99) once this is answered. Card:
@@ -797,9 +798,9 @@ Next free ID: K1493.
   the fade guard's verdict. Probe runs first; hands off tables.ts, eval.ts, gf_keys.ts, gf_glsl.ts,
   gf_look.ts, gf_pass.ts (K1482's agent)
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `b3f4be04a`
+  - branch: mainline; last commit: `549f5a72d`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 27A (K1530) running since 2026-11-19 14:18, cap about 16:18; it pushed b3f4be04a (tickPaint pinned at dt 0 in __knotPinClocks). Then 27B, 27D, batch 26's 26W, 26Z, 26Z2, then 27C. On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. From 27B on the brief requires scripts/perf_lock.ps1 (K1533): check the run's lock lines read "muse-27<X> | <time> | <what>" and that it never removes another owner's lock. 26Z2 edits gf_look.ts or gf_pass.ts: tell the Claude agent holding that area before it starts
+  - next: 27A (K1530) finished 2026-11-19 16:13: fix b3f4be04a, handoff 549f5a72d, reviewed (probe hook only; K1463's same-state sheet made). Its gate line had not appeared in chain.log by 16:19 (chain process alive): check it, then 27B, 27D, batch 26's 26W, 26Z, 26Z2, then 27C. On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. From 27B on the brief requires scripts/perf_lock.ps1 (K1533): check the run's lock lines read "muse-27<X> | <time> | <what>" and that it never removes another owner's lock. 26Z2 edits gf_look.ts or gf_pass.ts: tell the Claude agent holding that area before it starts
   - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
@@ -1143,7 +1144,10 @@ Every other item below waits on the trigger it names.
   .claude/probes/K1451/out/tie_causes.png)
 - **K1463** · rp=gf: a small notch where the pink arm meets the blue thread at ?3 (lower right of
   .claude/probes/K1458/live/zoom_a.png): the look's colour/fill, present before K1458, the field is clean
-  there (Handoff K1451). Not judged in K1525 s1: same-state captures of that link are unstable (K1530 first)
+  there (Handoff K1451). Same-state sheet since K1530 (27A, state f9d72040, fades 0.14 and 1.2, today | gf):
+  untracked .claude/probes/K1530/out/27A/k1463_sheet.png. Seen at 16x by the coordinator: where the pink
+  tail fades under the blue thread, gf ends it at a harder lower-right corner and leaves about five single
+  faint pink pixels along the blue thread's upper edge; today's has neither. Waits for the gpu_field slot
 - **K1467** · a fresh checkout is 0.81 GB and 0.78 GB of it is tracked probe output (.claude/probes: K1435 316
   MB, K1186 64, K1407 60, K863 56, K1198 43), so each agent worktree costs 0.8 GB (224 worktrees = 123 GB when
   C: filled on 2026-11-17, claude-config CC156). Stop tracking closed items' sheets (history keeps them) or
@@ -1205,12 +1209,6 @@ Every other item below waits on the trigger it names.
   ">" kept by a 0.26h first-pass corner; retrying it changes nothing visible) fits no kind yet (`### Handoff
   K1482 s21` in docs/design/K1482_s21_corners_rest.md). Brief ready, queued behind K1482 stage 24:
   docs/design/K1482_s25_side_fillet.md
-- **K1530** · rp=gf: on `?3&xp=off&am=instant&rp=gf` master draws a different picture on two redraws of ONE
-  frozen state (every shot UNSTABLE in K1525 s1's cap.mjs with paint clocks and background pinned; link A is
-  stable, two-load control 0 px). Cause not found; suspects K390's start-marker flip, fog / explore ticks.
-  Name what changes between the two redraws (which px, which uniform or table), pin it in the capture or fix
-  it, then two redraws agree 10/10; K1463 waits on it (.claude/probes/K1525/s1/notes.md, jobs_q3.json)
-  K1482 s21` in docs/design/K1482_s21_corners_rest.md)
 
 ## Residuals (known, not fixed)
 
@@ -2550,14 +2548,6 @@ Every other item below waits on the trigger it names.
   loads of one session agree at 0 px (border and fill). Cause not found. Until it is, compare only loads of
   one session (`### Handoff K1482 s23`, docs/design/K1482_s23_corner_switch.md; cap23.mjs in the s23
   worktree's .claude/probes/K1482/s23)
-- **K1535** · The border look (`tlk=border`) reads differently in today's renderer and rp=gf (Muse 26Y's
-  border.mjs, 5 runs each, links WITHOUT `xp=off`): `?3&tlk=border` today rgb(42,29,32), depth 5.7, width 2.60
-  px, a stroke on 443/446 edges; gf rgb(39,47,68), depth 20.0, width 3.76 px, 446/446. Link A: today depth
-  5.5, width 4.69 px, 372-373/600 edges; gf 566/600. By the coordinator's eye on an unstretched crop today's
-  stroke is faint red-brown and patchy, gf's uniform blue-grey. Not known: whether explore mode causes it
-  (repeat with `xp=off`: `border_pair.ps1` in untracked .claude/probes/K1535/ takes the four shots from
-  the live site, run through scripts/perf_lock.ps1), and which of the two Levi approved. If they still differ with explore off it is a look
-  question for Levi, with a picture (`### Handoff 26Y`, docs/design/K1464_muse_batch26.md)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2931,6 +2921,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1535** · rp=gf's border look differs from today's renderer's (Muse 26Y's numbers). Dropped: already decided: Levi 2026-11-17 kept gf's own border look (K1455, .claude/rules/render-gpu-field.md). With explore off the two differ the same way (four live shots 2026-11-19, untracked .claude/probes/K1535/out), so nothing to ask (2026-11-19).
 - **K1533** · The perf lock had no fair way in: Muse 27A took it with "remove whatever is there, write my line, run" and re-took it with no gap for 80 minutes (2026-11-19 14:19-15:50), so K1482 stage 23's guards waited and never ran before it landed. Done in 2dc1d5d92 (2026-11-19).
 - **K1530** · rp=gf: on `?3&xp=off&am=instant&rp=gf` master draws a different picture on two redraws of ONE frozen state (every shot UNSTABLE in K1525 s1's cap.mjs with paint clocks and background pinned; link A is stable, two-load control 0 px). Done in b3f4be04a (2026-11-19).
 - **K1461** · K1458 tools: border.mjs crashes with Target closed while measuring, so gf's border look vs today's has no numbers (K1458 Do 4); .claude/probes/K1444/drag.mjs aims at the slider's filled bar, so its stops land off target (0.14 -> 0.28, 0.5 -> 0.62) and the first drag does nothing (fade part done in 67fb28720, 26X: one physics state per load by parity alignment; 10/10 fade runs on f9d72040). Done in 6ba929f17 (2026-11-19).
