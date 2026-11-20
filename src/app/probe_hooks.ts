@@ -426,6 +426,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   // K1139 S2: the declared pulse items (walk edge, drawn span, dist0,
   // cont, inward, tree parent), and the clock pin in one call: the
   // paint clock at t with the fade-in born at 0, advanceClocks a no-op,
+  // tickPaint at dt 0 (K1530: its flow clock moved redraws of one state),
   // the background's drift frozen and the fabric's explore clock held
   // (the recipe .claude/probes/K1139/lib.mjs's PIN does by hand).
   (window as unknown as Record<string, unknown>).__knotPulses = () =>
@@ -438,6 +439,11 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     r.advanceClocks = () => {};
     r.paintClock = t;
     r.pulseBorn = 0;
+    // K1530: tickPaint still advances the flow clock and the palette/appear
+    // work with real dt, so two redraws of one frozen state differed on
+    // every thread (the K1139 lib PIN this mirrors wraps it at dt 0).
+    const tickPaint = r.tickPaint.bind(r);
+    r.tickPaint = () => tickPaint(0);
     const L = ctx.background;
     L.tick = () => false;
     L.clock.time = 40;

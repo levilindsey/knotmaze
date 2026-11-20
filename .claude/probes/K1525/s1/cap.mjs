@@ -60,8 +60,10 @@ async function freeze(page, t, par) {
     }
     await window.__knotStepUntil(t);
     window.__capSim = window.__knotPS?.()?.simTime;
-    const r = window.__knotRenderer();
-    r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0;
+    // K1530: pin through the shared hook (paint + tickPaint at dt 0 + background
+    // + fabric explore); the old hand pin left tickPaint running, so the flow
+    // clock moved between redraws and every thread differed.
+    window.__knotPinClocks(100);
     window.__knotLoop?.({ continuous: true });
     const d = await window.__knotPhysDump();
     const h = d?.hashes ?? d; return String(h?.all ?? JSON.stringify(h).slice(0, 80));
