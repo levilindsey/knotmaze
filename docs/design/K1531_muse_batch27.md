@@ -1,6 +1,6 @@
 # K1531: Muse batch 27, captures and guards that can be trusted (2026-11-19)
 
-Run tags 27A-27G (27E and 27F were added 2026-11-19 23:55; 27E was withdrawn and 27G added 2026-11-20 01:25), started by Claude through Paseo with the K1053 chain, one after another in the main
+Run tags 27A-27I (27E and 27F were added 2026-11-19 23:55; 27E was withdrawn and 27G added 2026-11-20 01:25; 27H and 27I were added 2026-11-20 06:00), started by Claude through Paseo with the K1053 chain, one after another in the main
 checkout. **This brief is the authority and is self-contained: do not read the older batch briefs' rule
 lists.** Levi (2026-11-11): junctions and outlines are the priority; a Claude agent is on rp=gf's corner
 faults (K1482) and judges them with captures, the K1436 bar and the fade and drag guards. Three stages this
@@ -238,3 +238,48 @@ its stops at 0 px in the box after a loss. 3. The `stats` error: its throw site 
 in any load; fixed only if the site is outside the hands-off files and the fix is the same cause, else one
 line for the coordinator to file. 4. A `src/` change ends with How to work's guards and `npm test` green, and
 with a unit test where the fix has a pure part. K1537 closed only under (a) or (c).
+
+## Run H (27H): fade.mjs's dot rule catches the dotted line it was written for (K1548)
+
+Added 2026-11-20 06:00. Run 27C (03bc0d4c4) changed the dot rule in `.claude/probes/K1458/fade.mjs`: a dot must
+now beat its brightest neighbour by 0.08, as well as today's pixel by 0.2 and the neighbour mean by 0.12, so
+that rp=gf's one-pixel edge steps stop counting. Its only control was synthetic. The rule exists to catch one
+real fault: rp=gf drew a dotted line across the faded under thread, on the over thread's edge (K1460; fixed by
+a8d36be33, which changed `gf_look.ts` only; its parent 1de01c120 still draws the line). A run of dots along an
+edge is not one isolated speck, so the new rule may no longer see it.
+Done: 1. Build both commits (`pwsh scripts/preview.ps1 -Port <p> -Ref 1de01c120`, and a8d36be33). On each, at
+fl 0 / 0.5 / 1.2 / 0.14, for gf (and gfh where the build has it): the sides with more than 2 dots under the
+OLD rule (today's pixel and the neighbour mean only) and under the NEW rule. If today's `fade.mjs` cannot
+drive a build of that date (a hook it needs is missing), capture with that commit's own copy (`git show
+1de01c120:.claude/probes/K1458/fade.mjs`) and apply today's two counts to those captures; say which you did.
+4x crops with surroundings of the three sides of 1de01c120 with the most dots under the old rule, today | gf |
+gf with the counted pixels marked under each rule: are they the dotted line? 2. One of two. (a) The new rule
+fails 1de01c120 on the sides the crops show as a dotted line and passes a8d36be33: put the numbers in
+`fade.mjs`'s comment and close K1548. (b) It does not: change the rule until it fails 1de01c120's dotted sides,
+passes a8d36be33, and still reads 0 dots on master at every fade for gf and gfh (the edge steps 27C showed
+stay uncounted); the handoff has the counts per fade for the three builds, before and after. 3. `fade.mjs` on
+master: FADE GUARD PASS, 3 runs in a row agree. 4. `npm test` green; K1548 closed with the commit, or what is
+left recorded in it. Probes only: no `src/` change. Stop the preview servers and remove their directories.
+
+## Run I (27I): two loads of the plain link agree, or the cause is named (K1544)
+
+Added 2026-11-20 06:00. K1544 in `LEDGER.md`: two loads of ONE build of `?3&xp=off&am=instant`, asleep, at one
+physics hash (0cbb8f07), differ by 193,124 px (today's renderer) and 101,249 px (rp=gf fill) over 24 levels in
+the thread area (run 26Z; captures `.claude/probes/K1223/out/26Z`). Link A gives 0-3 px. Not established:
+whether the two loads hold particle positions the hash cannot tell apart, or draw one state differently.
+Done: 1. The repro, a tool under `.claude/probes/K1544/` (tracked: `git add -f`; its captures untracked): 6
+loads of the plain link on one build of master, with today's renderer and with `rp=gf&gfh=1`, each brought to
+one state the way `.claude/probes/K1458/dragcheck.mjs` does (`alignFreezeParity`), asleep. Per load: the probe
+hash, a whole dump of the stepping state (`src/physics/probe_dump.ts` has the dumps and their hashes), the
+view (scale and offset) and a shot. Per pair of loads: the largest position difference in world units and in
+device px, whether the views agree, and the px over 24 levels in the thread area. 2. Name the cause from
+those numbers, one of: (a) the states differ (by how much, in which particles, and what the hash leaves out
+or rounds so that it is equal), (b) the states agree to the bit and the views differ, (c) both agree and the
+draw differs (name the layer: hide it or tint it to prove it). 3. Fix what is fixable outside the hands-off
+files and outside the physics step: for (a) the capture recipe (a fixed sim time before the shot, as link A's
+checks use, or a finer hash that the probes compare before they trust a pair), for (b) the view, for (c) the
+layer if its code is not hands-off. Then 6 loads agree pairwise at link A's floor (0-3 px over 24 levels in
+the thread area) for both renderers. A cause inside the physics step itself (two loads of one link reaching
+different rest states) is NOT fixed here: file it with the numbers and stop that part. 4. `probes.md` gains
+two or three lines: how to take a 0 px check on the plain link, or why not to. 5. `npm test` green; K1544
+closed with the commit, or what is left recorded in it.

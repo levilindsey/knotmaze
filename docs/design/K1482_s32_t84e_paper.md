@@ -1,7 +1,9 @@
 # K1482 stage 32: t84e's wedge, by giving the corner's own fold paper (K1526; Claude agent stage)
 
-**Queued behind stage 31** (j59's step, `docs/design/K1482_s31_j59_band_end.md`): one code agent at a time in
-`src/render/gpu_field/`. Start only when the coordinator says the stage before it has landed or stopped.
+**Started 2026-11-20 05:45** on master c83dc2588, after stage 31 stopped with nothing in `src/` (its band-end
+rule, runT, cleared j59's step but tapered t81s, t76e, t53e and t36s: `### Handoff K1482 s31` in
+`docs/design/K1482_s31_j59_band_end.md`; do not shorten those wedges). Stage 30's tools are tracked in
+`.claude/probes/K1482/s30`. Agent worktrees are siblings: use absolute paths.
 
 Levi, 2026-11-19, on K1490: **"Fix the wedges and notches, accept the slivers."** His bar: at junctions and
 under-tail ends the over thread's outline runs on unbroken, with no dot, stub, wedge, tick, notch or sliver.
