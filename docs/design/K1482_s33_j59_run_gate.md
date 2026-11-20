@@ -1,7 +1,12 @@
 # K1482 stage 33: j59's step, by ending the under bands only along a long run (K1526; Claude agent stage)
 
-**Queued behind stage 32** (t84e's wedge, `docs/design/K1482_s32_t84e_paper.md`): one code agent at a time in
-`src/render/gpu_field/`. Start only when the coordinator says the stage before it has landed or stopped.
+**Started 2026-11-20 07:50** from master with stage 32 merged (6fe470618). Stage 32 (t84e's wedge) stopped at
+its cap: its lone-fold rule is in `eval.ts` (on only with env `GF_S32=1`) and in `gf_glsl.ts` (`loneFold`,
+exported, never called), so master draws as before it. **Leave that code as it is**: its next step is a Muse
+run (27J in `docs/design/K1531_muse_batch27.md`), held until this stage has landed or stopped. New since stage
+31: `.claude/probes/K1482/guards.ps1` (tracked; usage in its header) runs the seven guards of Done below, each
+through the perf lock with its whole output in a file, and `.claude/probes/K1482/cap.mjs` captures on the
+first try (K1539).
 
 Levi, 2026-11-19, on K1490: **"Fix the wedges and notches, accept the slivers."** His bar: at junctions and
 under-tail ends the over thread's outline runs on unbroken, with no dot, stub, wedge, tick, notch or sliver.
@@ -60,7 +65,7 @@ unless env `GF_KRETRY=1` (K1536): set that for a Node probe and for the bar, and
    port the gate. Say which pairs break it, with their crops, and try a technique local to j59; the brief's
    goal still holds and you own the technique.
 
-Stage 32 may have changed the corner code since this was written: re-read `git log -5 -- src/render/gpu_field`
+Stage 32 added code since this was written (off, see the top): re-read `git log -5 -- src/render/gpu_field`
 at your start and take your "today" captures from your own base.
 
 ## The goal

@@ -1,6 +1,6 @@
 # K1531: Muse batch 27, captures and guards that can be trusted (2026-11-19)
 
-Run tags 27A-27I (27E and 27F were added 2026-11-19 23:55; 27E was withdrawn and 27G added 2026-11-20 01:25; 27H and 27I were added 2026-11-20 06:00), started by Claude through Paseo with the K1053 chain, one after another in the main
+Run tags 27A-27J (27E and 27F were added 2026-11-19 23:55; 27E was withdrawn and 27G added 2026-11-20 01:25; 27H and 27I were added 2026-11-20 06:00; 27J, held, 07:45), started by Claude through Paseo with the K1053 chain, one after another in the main
 checkout. **This brief is the authority and is self-contained: do not read the older batch briefs' rule
 lists.** Levi (2026-11-11): junctions and outlines are the priority; a Claude agent is on rp=gf's corner
 faults (K1482) and judges them with captures, the K1436 bar and the fade and drag guards. Three stages this
@@ -295,3 +295,59 @@ the thread area) for both renderers. A cause inside the physics step itself (two
 different rest states) is NOT fixed here: file it with the numbers and stop that part. 4. `probes.md` gains
 two or three lines: how to take a 0 px check on the plain link, or why not to. 5. `npm test` green; K1544
 closed with the commit, or what is left recorded in it.
+
+## Run J (27J): t84e's fold rule drawn by the shader at master's frame rate, then switched on (K1526)
+
+Added 2026-11-20 07:45. **Held in the queue behind a `#` until the coordinator removes it.** This run changes
+`src/render/gpu_field/` (`gf_glsl.ts`, `eval.ts`, `tables.ts` if you bake a flag): the one exception to How to
+work's hands-off list, so it runs only while no Claude agent works there. Leave K1526 and K1482 open.
+
+**t84e** is one of the 14 sites Levi named on link A (K1490: "Fix the wedges and notches, accept the
+slivers"): 1554,914 on the 3200x1800 frame, its wedge near 1541,940. K1482 stage 32 found a rule that removes
+the wedge in the CPU copy (`### Handoff K1482 s32` in `docs/design/K1482_s32_t84e_paper.md`; the entry LONE
+FOLD in `.claude/rules/render-gpu-field.md`; read both first): `eval.ts`'s `foldD` past `!inOther` plus the
+sibling burial, on master only with env `GF_S32=1` (and `GF_KRETRY=1`). On the CPU copy link A changes in ONE
+place (`.claude/probes/K1482/s32/wd32.ts`, stride 2, thr 0.02: 1537,938, 32 samples, all lost ink), and with
+the second corner try off (`GF_KRETRY` unset) in none. One faint px stays at 1540,950 (ink 0.225): leave it.
+Its shader twin, `loneFold(src)` in `gf_glsl.ts`, is exported and never called. Applied in `retryForm`
+(`return loneFold(homeBurial(src));`, commit 8cc774eb8, `npm test` green there), Chrome drew 3 composites in
+the 4.6 s after its switch to gf where master drew 90 in 3.2 s (`diag32.mjs`), and `cap.mjs`'s forced redraw
+timed out at 240 s twice. **Not established: whether that is a slow frame or a compile stall.** The record
+ends 4.6 s after the switch and both profiles were cold (K1456: master's cold gf compile takes 34-117 s); a
+shader with two more loops may only compile longer. Stage 32's suspects, untested: `member()` and `depth()`
+inlined in `foldD` inside the faces loop; the D search's two extra segment loops for every face pixel of a
+lone piece; the zb form's second copy. Its suggestion: bake a per-piece "lone fold" flag and the fold's foot
+group at the piece scan (`tables.ts`) and run the D search only where the plain loop found a turned segment.
+The split (packed) form has no arc table and the retry does not use it: leave it uncovered and say so.
+Tools, tracked in `.claude/probes/K1482/s32/` (usage in each header): `diag32.mjs <url> <profileDir>`
+(composites, `switchedMs`, frames every 5 s for 14 samples: lengthen it), `wd32.ts <scene.json> <sites.json>`
+(the CPU copy's whole-link diff, rule off against on), `mimg32.ts` (the CPU copy's ink at a place, before |
+after | diff), `px32.ts`, `glsl32.ts` (every tier's shader text), `sheet32.py`. `scene_gf.json` and
+`sites_gf.json` come from `.claude/probes/K1482/cap.mjs` with env `SCENE=1`.
+Done: 1. **The cause, before any change.** Two builds: master, and master with the one-line switch of
+8cc774eb8. Per build a first load on a fresh profile (cold) and a second load in the same profile (warm), with
+diag32 lengthened to 180 s past the switch to gf: seconds to the switch, composites per second in each 5 s
+window after it, the windows with none. Under the perf lock, in the order master, candidate, master. Say which
+it is, with the numbers: a slow frame (the warm rate is under master's), a compile stall (cold only), or both.
+2. **The cure.** A slow frame: make the rule cheap (the technique is yours; the suggestion above is one) and
+change the CPU copy with it so the two stay twins, until the warm rate is within 10% of master's and
+`cap.mjs` captures link A on the first try in 3 loads of 3. A compile stall only: no rewrite, the cold switch
+time is the number (2 fresh profiles per build). 3. **Switched on** (`retryForm` applies `loneFold`; `eval.ts`'s
+`s32` follows the retry switch and env `GF_S32=0` turns it off, as in 8cc774eb8) only if all of this holds on
+your tip, measured before the commit that switches it on: (a) link A's border look (`&tlk=border`), new
+against master, loads of one state (hash fff8c9e5) and one view, the floor first (two loads of one build, 0
+px): every px that changes at a luminance step of 1 lies inside x 1497-1577, y 898-978; its count, gain and
+loss go in the handoff beside the CPU copy's 32 samples; (b) with `&gfk=0`, and in the fill look
+(`&tlk=fill`): 0 px in the whole frame; (c) `wd32.ts` on your tip still names one place; (d) the warm rate
+within 10% of master's, and the cold switch time at most 15% over master's (one session, fresh profiles); (e)
+`.claude/probes/K1482/guards.ps1` with `-Ref` your tip and `-BaseRef` master before your first commit: seven
+PASS; `npm test` green (a pin that moves is re-frozen in the same commit and named in its message). If only
+the cold time fails, land the cheap form OFF with both times in the handoff: the coordinator decides. 4.
+**Sheets, no verdict.** Under `.claude/probes/K1482/out/27J/` (untracked): master gf | new at t84e (a 400 px
+crop with its surroundings and a red box, then the box at 6x; contrast stretched, the outline is only about 15
+levels darker than a pinhole inside it), and the same pair at the four clean fold points a bare angle gate
+could not tell from t84e: 1689,224, 1571,252, 1895,1358 and 1543,1602. Write what you see at each, including
+what is worse. The coordinator looks at t84e on your capture before anyone calls it fixed. 5. Three or four
+lines under LONE FOLD in `.claude/rules/render-gpu-field.md`. 6. If no form reaches the rate by the stop line:
+the rule stays OFF on master (it renders as today), what you built stays as a patch under
+`.claude/probes/K1482/s32/` (untracked), and the handoff has the cost of each part you measured.
