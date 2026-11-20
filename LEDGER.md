@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1533.
+Next free ID: K1536.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -346,8 +346,10 @@ Next free ID: K1493.
   30 px or more (`unnamed_c1_ranked.txt` and the sheets in the s22 worktree's `.claude/probes/K1482/out/s22/`;
   clean arcs at the 24 largest, by the coordinator's eye). Levi's call, asked 2026-11-19: round them (C1
   becomes the default), keep today's sharp corners (C1 stays off, and j14 needs a gate that tells a faulty
-  meeting from a clean point), or name the rows to keep. K1482 stage 23 puts C1 on master behind `gfk=1`, off
-  by default, so he can compare live. fix3 (s20, 37eda49e8) failed the bar with 10 finds and is superseded;
+  meeting from a clean point), or name the rows to keep. C1 is live behind `gfk=1` since 2026-11-19 (K1482
+  stage 23, 1485fee2b; off by default): link A with and without `&gfk=1` shows the two looks. On "take": make
+  it the default and delete docs/design/K1524_keep_fault_gate.md; on "keep": run that brief's stage. fix3
+  (s20, 37eda49e8) failed the bar with 10 finds and is superseded;
   delete the local probe branch `k1482s21-kclr` (7b2b22e99) once this is answered. Card:
   https://claude.ai/artifact/GU7kbzAG1uofdBLFD2UBh1 (sheets, `card.py`, `card_bar.py` and `card_c1.py` in
   untracked `.claude/probes/K1524/`)
@@ -670,9 +672,9 @@ Next free ID: K1493.
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `c54f5c36a`
+  - branch: mainline; last commit: `b3f4be04a`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 26X passed its gate 2026-11-19 12:44 (K1475 closed, K1461's fade part struck); 26Y (K1461: border.mjs, drag.mjs) running since 12:44. Still queued from this batch, now behind batch 27's 27A, 27B, 27D (K1531): 26W (K1467: closed items' probe output leaves the index), 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). K1479 and K1494 went to 27D and 27C. When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26W, 26Z and 26Z2 have reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held until K1482's corner work lands: K1502 (tables.ts)
+  - next: 26Y passed its gate 2026-11-19 14:17 (K1461 closed in 6ba929f17; its border numbers filed as a residual). Still queued from this batch behind batch 27's 27A (running), 27B, 27D (K1531): 26W (K1467: closed items' probe output leaves the index), 26Z (K1223: the dead quiet path leaves the paint code), 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26W, 26Z and 26Z2 have reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held while K1482's stages edit tables.ts: K1502
   - brief: `docs/design/K1464_muse_batch26.md`
 - **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
@@ -754,11 +756,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `a5016731195d015ff` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 13:53, 2 h cap ~15:53)
-  - branch: `worktree-agent-a5016731195d015ff`, worktree `.claude/worktrees/agent-a5016731195d015ff`; last commit: `98a11ec30`
-  - evidence: .claude/probes/K1482/s23 and out/s23 (untracked, in the s23 worktree); C1: branch worktree-agent-adabb55bc67661562 at 23a0a73aa (src a294f3271), with .claude/probes/K1482/s22, out/s22 and .claude/probes/K1436/out/bar/k1482s22 (untracked, in worktree .claude/worktrees/agent-adabb55bc67661562, kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (branch at 845a3e704, kept); .claude/probes/K1524 (the card)
-  - next: stage 22 ended 2026-11-19 13:50 with nothing landable while K1524 is open (C1 finishes j14 and passes the bar and every guard, but rounds 98 unnamed corners on link A). Stage 23 running since 13:55: C1 on master behind gfk=1, off by default and equal to master. On its report: check off = master from its numbers and one crop, merge its commits (tools/agent_merge.ps1), watch the deploy, send Levi the two live links with the K1524 card. Then stage 24 in the same file area, on a kind that does not wait on K1524: K1527 (t81s, t4s) or K1528 (the four converging sites), then K1526 (design doc first; builds on the retry), K1523, j64 (K1517), K1525's field stage, K1419's partner capture. Tell the running agent before Muse 26Z2 starts (it edits gf_look.ts or gf_pass.ts)
-  - brief: `docs/design/K1482_s23_corner_switch.md`
+  - owner: agent `a1ac1faa36f86dcc4` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 15:54, 2 h cap ~17:54)
+  - branch: `worktree-agent-a1ac1faa36f86dcc4`, worktree `.claude/worktrees/agent-a1ac1faa36f86dcc4`; last commit: `2dc1d5d92`
+  - evidence: .claude/probes/K1482/s24 and out/s24 (untracked, in the s24 worktree); stage 23: .claude/probes/K1482/s23, out/s23 and .claude/probes/K1436/out/bar/k1482s23 (untracked, in worktree .claude/worktrees/agent-a5016731195d015ff, kept; branch worktree-agent-a5016731195d015ff at c72e267c2); C1: worktree .claude/worktrees/agent-adabb55bc67661562 (kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (kept); .claude/probes/K1524 (the card)
+  - next: Stage 23 merged 2026-11-19 15:43 (1485fee2b, c72e267c2; deploy green, the live bundle carries gfk): C1 behind `gfk=1` (only with gfh=1), off by default; off = master and on = C1 at 0 px, bar PASS 0/0/0, npm test green. It landed with its four lock guards NOT run (hold 60/60 off and on, panelopen, both dragchecks; the lock never freed, K1533): the coordinator runs them on master through scripts/perf_lock.ps1 (run23.ps1 in the s23 worktree, -Port 6072 on a preview of master); a failure is fixed forward or the switch reverted. Then put the two live links in the K1524 card. Stage 24 (K1527: t81s, t4s) running since 16:02. On its report: look at its t81s and t4s crops, merge (tools/agent_merge.ps1 when the main checkout is clean, else rebase + ff + push from the coordinator worktree), watch the deploy. Then one at a time in this file area: stage 25 (K1528, brief docs/design/K1482_s25_side_fillet.md), K1526 (write its page brief after stage 24 reports), K1523, j64 (K1517), K1525's field stage, K1419's partner capture. Tell the running agent before Muse 26Z2 starts (it edits gf_look.ts or gf_pass.ts)
+  - brief: `docs/design/K1482_s24_tick_step.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -795,9 +797,9 @@ Next free ID: K1493.
   the fade guard's verdict. Probe runs first; hands off tables.ts, eval.ts, gf_keys.ts, gf_glsl.ts,
   gf_look.ts, gf_pass.ts (K1482's agent)
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `1e0575f28`
+  - branch: mainline; last commit: `b3f4be04a`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: queued 2026-11-19 12:58 behind 26Y (running): 27A, 27B, 27D, then batch 26's 26W, 26Z, 26Z2, then 27C. On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. 26Z2 edits gf_look.ts or gf_pass.ts: tell the Claude agent holding that area before it starts
+  - next: 27A (K1530) running since 2026-11-19 14:18, cap about 16:18; it pushed b3f4be04a (tickPaint pinned at dt 0 in __knotPinClocks). Then 27B, 27D, batch 26's 26W, 26Z, 26Z2, then 27C. On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. From 27B on the brief requires scripts/perf_lock.ps1 (K1533): check the run's lock lines read "muse-27<X> | <time> | <what>" and that it never removes another owner's lock. 26Z2 edits gf_look.ts or gf_pass.ts: tell the Claude agent holding that area before it starts
   - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
@@ -1196,11 +1198,13 @@ Every other item below waits on the trigger it names.
   k2f; patches in the s22 worktree's .claude/probes/K1482/s22) left the tick exactly as it was, and only
   dropping the s8 slot rule (k2e) moved it, opening a new gap. Next: trace which corner term owns the fill's
   corner at the tick and why the outline does not take it (`### Handoff K1482 s22` in
-  docs/design/K1482_s22_landable_corners.md)
+  docs/design/K1482_s22_landable_corners.md). K1482 stage 24 is on it since 2026-11-19 16:02
+  (docs/design/K1482_s24_tick_step.md; K1482's handle)
 - **K1528** · rp=gf corners, leftover kind 3 (t59s's twist foot, j15's Z, t58e's second V, t23e's patch): two
   outlines converge with no corner at all, so no ball exists; needs a new side-to-side fillet. j41 (a sharp
   ">" kept by a 0.26h first-pass corner; retrying it changes nothing visible) fits no kind yet (`### Handoff
-  K1482 s21` in docs/design/K1482_s21_corners_rest.md)
+  K1482 s21` in docs/design/K1482_s21_corners_rest.md). Brief ready, queued behind K1482 stage 24:
+  docs/design/K1482_s25_side_fillet.md
 - **K1530** · rp=gf: on `?3&xp=off&am=instant&rp=gf` master draws a different picture on two redraws of ONE
   frozen state (every shot UNSTABLE in K1525 s1's cap.mjs with paint clocks and background pinned; link A is
   stable, two-load control 0 px). Cause not found; suspects K390's start-marker flip, fog / explore ticks.
@@ -2540,6 +2544,19 @@ Every other item below waits on the trigger it names.
   differs from the start build at 29 px by 1 level of 255, spread over the frame. Two fill-neutral probe
   builds give 0 px, so the 29 are C1's own; cause untested (`### Handoff K1482 s22`, Numbers, in
   docs/design/K1482_s22_landable_corners.md)
+- **K1534** · rp=gf capture floor between sessions: two loads of master on link A (`bgs=0`, 1600x900, DSF 2,
+  hash fff8c9e5, one view) shot in different capture sessions differ by 26 px at 1 level in the fill look;
+  loads of one session agree at 0 px (border and fill). Cause not found. Until it is, compare only loads of
+  one session (`### Handoff K1482 s23`, docs/design/K1482_s23_corner_switch.md; cap23.mjs in the s23
+  worktree's .claude/probes/K1482/s23)
+- **K1535** · The border look (`tlk=border`) reads differently in today's renderer and rp=gf (Muse 26Y's
+  border.mjs, 5 runs each, links WITHOUT `xp=off`): `?3&tlk=border` today rgb(42,29,32), depth 5.7, width 2.60
+  px, a stroke on 443/446 edges; gf rgb(39,47,68), depth 20.0, width 3.76 px, 446/446. Link A: today depth
+  5.5, width 4.69 px, 372-373/600 edges; gf 566/600. By the coordinator's eye on an unstretched crop today's
+  stroke is faint red-brown and patchy, gf's uniform blue-grey. Not known: whether explore mode causes it
+  (repeat with `xp=off`: `border_pair.ps1` in untracked .claude/probes/K1535/ takes the four shots from
+  the live site, run through scripts/perf_lock.ps1), and which of the two Levi approved. If they still differ with explore off it is a look
+  question for Levi, with a picture (`### Handoff 26Y`, docs/design/K1464_muse_batch26.md)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2913,6 +2930,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1533** · The perf lock had no fair way in: Muse 27A took it with "remove whatever is there, write my line, run" and re-took it with no gap for 80 minutes (2026-11-19 14:19-15:50), so K1482 stage 23's guards waited and never ran before it landed. Done in 2dc1d5d92 (2026-11-19).
 - **K1461** · K1458 tools: border.mjs crashes with Target closed while measuring, so gf's border look vs today's has no numbers (K1458 Do 4); .claude/probes/K1444/drag.mjs aims at the slider's filled bar, so its stops land off target (0.14 -> 0.28, 0.5 -> 0.62) and the first drag does nothing (fade part done in 67fb28720, 26X: one physics state per load by parity alignment; 10/10 fade runs on f9d72040). Done in 6ba929f17 (2026-11-19).
 - **K1475** · Probe: .claude/probes/K1458/dragcheck.mjs for gf at fade 1.2 sometimes finds no fresh load in state f9d72040 within 4 tries, so the stop compares nothing (2 of 3 runs in K1460 s5; K550's worker nondeterminism suspected, untested). Done in 67fb28720 (2026-11-19).
 - **K1499** · rp=gf fades the thread away from the start and exit markers as today's does: Muse run 26K did this work and recorded it under K1500 (the run's brief carried the wrong ID); the dives item that K1500 held is re-filed as K1525. Done in 281a7c8c6 (2026-11-18).

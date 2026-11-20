@@ -112,6 +112,12 @@ removes a lock under 30 minutes old, releases when the command ends or
 fails, and makes an owner that just released wait 45 s, so a waiter
 gets a turn. A hand-written "remove it, write my line, run" took the
 lock with no gap for 80 minutes, and an agent's guards never ran.
+PROBE LORE (2026-11-19, K1482 s23): **shoot rp=gf's border look only
+once the view holds bit-exact still** (10 equal world transforms,
+frames forced; `B2=1` in `.claude/probes/K1482/s23/cap23.mjs`). A
+load's first border shot catches its last transition: 22,183 px
+between two loads of one build, 0 px after the reshoot. Compare only
+loads of one capture session (26 px at 1 level across sessions, K1534).
 
 PROBE LORE, same round: the renderer resets every fill/erase mesh's
 `visible` each frame (hide with `renderable = false`, or per layer);
