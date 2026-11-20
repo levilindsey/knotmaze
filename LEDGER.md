@@ -658,8 +658,10 @@ Next free ID: K1493.
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `b7e8e805`
+  - branch: mainline; last commit: `0c4be2b78`
   - evidence: .claude/probes/K1053/chain.log, done.txt
+  - next: runs 26X (K1475 + K1461's fade part: drag and fade guards reach one physics state), 26Y (K1461: border.mjs, drag.mjs) and 26W (K1467: closed items' probe output leaves the index) are queued in that order since 2026-11-19 09:55; when the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt (next tag 26Z) and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Held until K1482 s20 lands: K1502 (tables.ts)
+  - brief: `docs/design/K1464_muse_batch26.md`
 - **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
   band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars

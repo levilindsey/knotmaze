@@ -928,3 +928,65 @@ Done 4 (planted still found). The pair's screen half cannot run here: 17053a36's
 
 Tests and guards. `npm test` green (256 files, 3199 passed, 9 skipped; tsc clean; no test changed - probes only, and the bar above is the maintained check, with `k1519_freeze.mjs` kept as its freeze stand). Guards (preview of 3ae03fdcb on :5653, one kept profile `%TEMP%\k26v-guards-profile`): `hold.mjs` 60 250 5000 PASS on `?3&xp=off&am=instant&rp=gf` (first composite 78.4 s cold; 60/60, edges min 102844) and on `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` (48.7 s; 60/60, min 6886); `dragcheck.mjs` PASS for gf (every stop 0 px over TOL 24 on the re-run; the first run's stop 0.5 found no fresh load in the dragged state - dragcheck's own two-hash lottery, outside this run's files) and PASS for gfh (every stop 0 px). `fade.mjs` prints FAIL on this build with the standing K1494 numbers (fl=0: 678/679 sides, fl=1.2: 439/451) - that guard's question, not this run. K1519 closed in 3ae03fdcb; K1464, K1451 and K1460 left open and untouched. Preview servers (5651, 5653) and probe Chromes stopped; the bars' `-Keep` builds and profiles stay in `%TEMP%\k1436s3-prev` / `k1436s3-profile-*`.
 
+## Run W (26W): closed items' probe output leaves the tree (K1467)
+
+Added 2026-11-19. Repo plumbing, no `src/` change. `.gitignore` keeps `.claude/` untracked, yet 1,035 MB in
+9,477 files under `.claude/probes` were force-added over the weeks (`git ls-tree -r -l HEAD .claude/probes`:
+png 516 MB, bin 313, json 142; K1435 316, K1482 100, K1395 73, K1186 64, K1407 60, K863 56, K1198 44). Every
+agent worktree and preview build copies them: the desktop's disk filled on 2026-11-17 and loses 26 GB a day
+this week (claude-config CC156). A tracked file under `.claude/probes/<ID>/` leaves the index when all hold:
+(a) it is output (a picture, capture, dump or log: under an `out/` directory, or png jpg webp gif svg bin, or a
+json/txt/csv over 100 KB); tools and records (.mjs .ts .py .ps1 .sh .md .patch .diff) stay whatever the
+item's state. (b) Its item is closed: in LEDGER.md's Done, in `docs/ledger_done.md`, or dropped. (c) Nothing
+live names it or its directory: no open ledger item, no `docs/design/` file of an open item, nothing under
+`src/`, `test/`, `scripts/`, and no tracked probe script of an open item (a scene's dumps that the bar, the
+census or a test loads are inputs: they stay). Open items' files stay; list their bytes.
+Done: 1. the table before: tracked bytes and files by ID, ledger state, verdict and the condition that keeps
+each kept ID (top 20 and the totals in the handoff). 2. One commit, `git rm --cached` only (the files stay on
+this checkout's disk: 20 sampled paths shown present after it; no history rewrite; nothing named by
+`docs/design/K1482_s20_wedges_notches.md` leaves, a Claude agent is in that stage and its worktree loses
+what you untrack at its next rebase). 3. Numbers: the tracked total after, and two fresh `git worktree add
+--detach` checkouts under `$env:TEMP` (starting commit, new commit) measured on disk; at least 300 MB less,
+or the handoff names the condition that kept each of the ten largest IDs. 4. In the fresh checkout of the
+new commit (it has none of the untracked files): `npm ci` and `npm test` green, `k1436_bar.ps1 -Ref
+master -Base master -Scenes ring,def` PASS, and the mirror scan (`k1436_scan.ts`) over the twelve census
+scenes reads what it reads on the starting commit, so every input a check loads is still tracked. Remove
+the two checkouts you made, no other. 5. A guard in `npm test` (`test/repo/probe_budget.test.ts`): the tracked total
+under `.claude/probes` over the after-number plus 100 MB fails with a message naming `git rm --cached` (the
+K1493 mistake, 362 MB in one commit, must trip it); it skips where there is no git checkout. 6. K1467's
+entry carries the numbers and what remains by ID; three lines at most in `.claude/rules/probes.md` say what
+may be force-added (tools, and the sheets a brief names). Do not edit CLAUDE.md. Known and accepted: checking
+out an older commit in this checkout and returning deletes the untracked copies (history keeps them: name
+the last commit that tracks them in the handoff).
+
+## Run X (26X): the drag and fade guards reach one physics state (K1475, K1461's fade part)
+
+Added 2026-11-19. Handoff 26V named why two loads of one build freeze on two states: the live substep
+count's parity before `__knotStepUntil`, fixed for the bar alone in `k1436_screen.mjs` (3ae03fdcb). The
+guards still play that lottery: `.claude/probes/K1458/dragcheck.mjs` and `.claude/probes/K1492/dragcheck_b.mjs`
+print "no fresh load in the dragged state" (K1475; 26V's first gf run, 26U's "PASS on the third run"), and
+`fade.mjs` prints FAIL when its two loads settle on 49c20566 / f9d72040 (K1461). Done: 1. evidence that the
+same parity splits these probes' states, or the other cause named with numbers. 2. Each probe reaches one
+state per load by construction, not by retrying (a retry may stay as a net that the handoff shows never
+fired). Probes only: the fix lives in each probe, as 26V's does in `k1436_screen.mjs`, or in one helper
+under `.claude/probes/` that they import. No `src/` change: moving the hook itself (`__knotStepUntil`) would
+move every stored state and base under the Claude agent now working in `src/render/gpu_field/`; if the
+numbers say the hook is the right home, write that up as a ledger item and leave it. 3. Numbers on
+master's preview, under the perf lock: `dragcheck.mjs` for gf and for gfh and `dragcheck_b.mjs`, 10 runs
+each in a row: 10/10 PASS, 0 retries, 0 "no fresh load" lines; `fade.mjs` 10 runs: both loads on one state
+hash every time (its FAIL on K1494's standing side counts is not this run's question: report the counts).
+4. `npm test` green. 5. K1475 closed, K1461's fade part struck, each with the commit.
+
+## Run Y (26Y): border.mjs and drag.mjs measure what they aim at (K1461's other two parts)
+
+Added 2026-11-19. Probes only. `border.mjs` (K1458's tools) dies with "Target closed" while measuring, so
+rp=gf's border look has no numbers against today's renderer (K1458 Do 4); `.claude/probes/K1444/drag.mjs`
+aims at the slider's filled bar, so its stops land off target (asked 0.14, got 0.28; asked 0.5, got 0.62)
+and its first drag does nothing. Done: 1. each failure's cause named with evidence (for "Target closed": what
+closes the target: a context loss, a navigation, a timeout, the GPU process). 2. `border.mjs` completes 5
+runs in a row on `?3&xp=off&am=instant&rp=gf` and on link A (`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`),
+each printing its numbers; the two links' numbers in the handoff, with the run-to-run spread. 3. `drag.mjs`:
+every stop lands within 0.01 of the value asked (read back from the control, stops 0, 0.14, 0.5, 1.2), the
+first drag moves it, 5 runs in a row. 4. `npm test` green, no `src/` change. 5. K1461 closed with the
+commit, or what is left recorded.
+
