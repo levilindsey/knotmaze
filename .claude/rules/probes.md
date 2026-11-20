@@ -810,6 +810,10 @@ for a flow-on retrace).
   a lingering `cp=0` in a live tab's URL silently poisons every later
   evaluation (Vite reloads preserve query params).
 
+- *Force-adding under `.claude/probes/` (K1467):* only tools (.mjs .ts .py .ps1 .sh .md .patch .diff) and the
+  sheets a brief names may be force-added; output (out/, images, dumps/logs, json/txt/csv over 100 KB) stays
+  untracked, and a closed item's tracked output leaves the index with `git rm --cached` (disk and history keep it).
+
 ## Where the rest of the probe lore lives
 
 K173 (2026-10-14) moved each topic to a file that attaches only with the
