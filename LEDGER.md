@@ -1135,10 +1135,6 @@ Every other item below waits on the trigger it names.
   .claude/probes/K1395/out/25B/). The next run's bar is per-thread, not a pixel count: each partly revealed
   run gf draws has today's stroke width within 1 px and no run today draws is missing; Handoff 25B's mechanism
   (today hands the fill to the fan rim inside the junction cut) stands
-- **K1461** · K1458 tools: border.mjs crashes with Target closed while measuring, so gf's border look vs
-  today's has no numbers (K1458 Do 4); .claude/probes/K1444/drag.mjs aims at the slider's filled bar, so its
-  stops land off target (0.14 -> 0.28, 0.5 -> 0.62) and the first drag does nothing (fade part done in
-  67fb28720, 26X: one physics state per load by parity alignment; 10/10 fade runs on f9d72040)
 - **K1462** · rp=gf's cfg dashes: the weighted configuration mix of a ramping piece in member() / homeRamp
   fades the over outline into straight-ended dashes (90 finds, 3584 px, plus the 52 tie finds the reach window
   relabels ramp); its own stage after K1451 s2, same files (Handoff K1451,
@@ -2917,6 +2913,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1461** · K1458 tools: border.mjs crashes with Target closed while measuring, so gf's border look vs today's has no numbers (K1458 Do 4); .claude/probes/K1444/drag.mjs aims at the slider's filled bar, so its stops land off target (0.14 -> 0.28, 0.5 -> 0.62) and the first drag does nothing (fade part done in 67fb28720, 26X: one physics state per load by parity alignment; 10/10 fade runs on f9d72040). Done in 7e56f0fc3 (2026-11-19).
 - **K1475** · Probe: .claude/probes/K1458/dragcheck.mjs for gf at fade 1.2 sometimes finds no fresh load in state f9d72040 within 4 tries, so the stop compares nothing (2 of 3 runs in K1460 s5; K550's worker nondeterminism suspected, untested). Done in 67fb28720 (2026-11-19).
 - **K1499** · rp=gf fades the thread away from the start and exit markers as today's does: Muse run 26K did this work and recorded it under K1500 (the run's brief carried the wrong ID); the dives item that K1500 held is re-filed as K1525. Done in 281a7c8c6 (2026-11-18).
 - **K1519** · The K1436 bar is noisy run to run on g41_user_tw64: two loads of identical src in one physics hash gave 14 finds under STRICT=1 (frames differ by 1-2 levels; .claude/probes/K1482/out/s13/bar.txt, bar_sheet.png). Done in 3ae03fdcb (2026-11-19).
