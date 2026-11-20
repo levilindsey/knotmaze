@@ -83,3 +83,8 @@ re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K
 report: the commits to land by SHA in order, what changed at the site by eye, the numbers, each guard's result
 with the path of its whole output file, the sheets' absolute paths, a `Ledger items` list and K1482's handle
 fields. Never push, never edit `LEDGER.md`.
+
+### WIP K1482 s31 (05:00)
+
+- The mirror rule (eval.ts runT): a group's side band and vertex cap narrow to W*t where a lone piece over it (z up 0.05-0.2) faces the outline point across a gap under 5 aa (t 0 at 1 aa). Mirror A/B at j59 (`.claude/probes/K1482/out/s31/mi31_c.png`): the step and the cap's knob gone, the sliver untouched; a small 43:+1 tick at 1039-1044,1502-1507 and a blunt pink end at about 1024,1523 remain.
+- GLSL port as text in retryForm (RUNT, RT_FACE, RT_VTX): gfk=0 and home-off programs unchanged. Not yet looked at on the GPU.
