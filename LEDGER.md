@@ -326,11 +326,6 @@ Next free ID: K1493.
   master; b88a4108 removed them from the tree, so checkouts are clean, but the blobs stay in history (every
   fresh clone downloads them). Dropping them needs a history rewrite and a force-push of master: do it (rebase
   everything after 82405bf9 without them), or leave it?
-- **K1515** · At fused junctions today's renderer draws straight fan strokes through the junction where
-  rp=gf's border look follows the threads' curves (j55, j36, j87, t16e, t2s on his link; K1482 stage 12).
-  Which should the border look show there? Picture: .claude/probes/K1482/out/s12/step1_a.png (today | flat
-  today | gf). Options: keep gf's curves as they are; make gf draw today's straight strokes. Until answered
-  gf's own picture is the reference (stage 13)
 
 ## In progress
 
@@ -2835,6 +2830,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1515** · At fused junctions today's renderer draws straight fan strokes through the junction where rp=gf's border look follows the threads' curves (j55, j36, j87, t16e, t2s on his link; K1482 stage 12). Dropped: Levi 2026-11-19: 'Keep the curves'. At fused junctions rp=gf's border look keeps following the threads' curves; gf's own picture stays the reference, today's straight fan strokes are not copied (2026-11-19).
 - **K1522** · rp=gf, the last two joint-side sites (j29, j49) are ordinary under-pass gaps ending next to a joint; closing them means joining the under thread's outline to the over thread's (no gap) at about 74 other crossings (u19) or about 11-17 under-tail and junction gaps (v19 / w19, a dot left at j50), which removes the over/under cue there. Dropped: Levi 2026-11-19: 'Keep today's gaps'. j29 and j49 stay as ordinary crossing-gap endings; the u19/v19/w19 joining rules are not landed (patches stay in .claude/probes/K1482/s19/) (2026-11-19).
 - **K1490** · rp=gf border look at sharp V's (K1482 stage 3): where two threads' outlines converge at a sharp angle the ink runs together into a dark wedge, or leaves a light sliver under a pixel wide (wedge sites j15 j50 j82 j143 j158 t23e t59s t73e t84e, slivers j95 j147 t43s t56s: 13 of the 46 faulted sites). Dropped: answered, Levi 2026-11-19: 'Fix the wedges and notches, accept the slivers'. The 14 sites (wedge j15 j50 t23e t59s t81s t84e; notch j4 j14 j41 j47 j59 t4s t45s t58e) are K1482 stage 20; the 5 slivers (j71 j95 j147 t43s t56s) are accepted (2026-11-19).
 - **K1521** · rp=gf, Crossing fade at joints: since K1482 s15/s18 an outline cut beside a fused joint (flagged crossing sides, about 1000+ slots on link A) starts at the over thread's edge and fades over 0.3 of the slider's length, so at a large fade (1.2) those outlines run nearly up to the over thread while ordinary crossings fade over the full length (29k px on link A; picture .claude/worktrees/agent-a077003d003b40d70/.claude/probes/K1482/out/s18/sheets/fl12_top.png). Dropped: Levi 2026-11-19: keep. Joint-side outlines keep the short 0.3 fade at every Crossing fade setting; no change (2026-11-19).
