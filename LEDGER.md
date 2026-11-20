@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1530.
+Next free ID: K1531.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -757,7 +757,7 @@ Next free ID: K1493.
   - owner: agent `adabb55bc67661562` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 12:25, 2 h cap ~14:25)
   - branch: `worktree-agent-adabb55bc67661562`, worktree `.claude/worktrees/agent-adabb55bc67661562`; last commit: `fa6640ebf`
   - evidence: .claude/probes/K1482/s22 and out/s22 (untracked, in the s22 worktree); stage 21: .claude/probes/K1482/s21, out/s21 and .claude/probes/K1436/out/bar/k1482s21 (untracked, in worktree .claude/worktrees/agent-afdf2b8bb494bb380, branch worktree-agent-afdf2b8bb494bb380 at 845a3e704, kept); fix3: branch worktree-agent-a0f22901bb5fca4a4 at 37eda49e8 (= a9985b1d3 on the s21 branch); .claude/probes/K1524 (the card)
-  - next: stage 22 running since 2026-11-19 12:27: from master, a change that can land (at least one named site finished or better, nothing unnamed moved, the outline on the fill, the K1436 bar passing on ring, def, muse_hash, g41_user_tw64). Stage 21 (handoff on master fa6640ebf) fixed no site beyond fix3 and found fix3 fails the bar with 10 new finds (K1524). On its report: look at every site and every moved place in context before relaying, land the commits that pass by SHA, then message Levi. gf_look.ts and gf_pass.ts are K1525s until it stops: message the agent when they are free. If Levi answers K1524, message the agent. Then the leftover kinds (K1526, K1527, K1528), K1523, j64 (K1517)
+  - next: stage 22 running since 2026-11-19 12:27; told at 12:50 that gf_look.ts and gf_pass.ts are free (K1525 s1 landed no src change). On its report: look at every site and every moved place in context before relaying, land the commits that pass by SHA, then message Levi. If Levi answers K1524, message the agent. Then the leftover kinds (K1526, K1527, K1528), K1523, j64 (K1517), and in the same file area K1525's field stage (coverage at dives) and K1419's partner capture
   - brief: `docs/design/K1482_s22_landable_corners.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
@@ -781,11 +781,14 @@ Next free ID: K1493.
   at fl 0 a dark block, gap lines that loop on around the thread and small triangles where today's draws one
   thin line; at fl 0.5 and 1.2 straight hard edges across the ramp (.claude/probes/K1495/out/sheet_dives.png,
   four dives, 2026-11-18). Filed as K1500 on 2026-11-18 and overwritten by 26K's close; re-filed 2026-11-19.
-  Stage 1 also takes the fill's junction spots K1419 (colour wedges) and K1463 (notch at ?3)
-  - owner: agent `a63f2fb4fcbd5d82d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 10:57, 2 h cap ~12:57)
-  - branch: `worktree-agent-a63f2fb4fcbd5d82d`, worktree `.claude/worktrees/agent-a63f2fb4fcbd5d82d`; last commit: `330069e61`
-  - evidence: .claude/probes/K1525/s1, out/s1 (untracked, in the agent's worktree); .claude/probes/K1495/out/sheet_dives.png
-  - next: stage 1 running (started 2026-11-19 about 11:00): re-shoot the four dives, K1419's and K1463's spots, fix what lives in the look (gf_look.ts, gf_pass.ts), name what is the field's. On its report: look at every spot in context against today's before relaying, then merge what holds; a cause in tables.ts / eval.ts waits for K1482's corner work to land
+  Stage 1 (2026-11-19, no src change): the four dives are the FIELD's, not the look's: where gf is dark and
+  today's draws ink the raw coverage is 0 and the px carry no label (d1 336 px, d2 45, d3 30; the nearest piece
+  sits 1.02-1.44 h away; d4 129 px at coverage 0..1, part cut by a gap). lkGap from the over chain only and
+  skipping lkFringe both moved nothing. K1419 and K1463 went back to their own items
+  - owner: nobody since 2026-11-19 12:49 (agent `a63f2fb4fcbd5d82d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 10:57, 2 h cap ~12:57); stage 1 stopped 2026-11-19 12:46 with no src change: the dives are the field's, which K1482's stage holds)
+  - branch: `worktree-agent-a63f2fb4fcbd5d82d`, worktree `.claude/worktrees/agent-a63f2fb4fcbd5d82d` (kept; its node_modules junction needs .Delete() before the worktree is removed); last commit: `859d9abe6`
+  - evidence: .claude/probes/K1525/s1 (tools, notes.md, run_checks.ps1, k1419_attempts_dbg.patch: on master); outputs untracked in the agent's worktree under .claude/probes/K1525/out/s1 (sheets_final/dives_tip2.png: d1-d4 at fl 0, 0.14, 0.5, 1.2, today's | master gf | attempt) and .claude/probes/K1436/out/bar/k1525s1/bar.txt
+  - next: a field stage, once K1482's corner stage has stopped (one agent in tables.ts / eval.ts / gf_glsl.ts): make coverage reach the px beside a dive where today's draws ink (d1 1968,432; d2 2224,976; d3 1904,1136; d4 1248,1104 in link A's fill capture; counts in the class table of the handoff), then re-shoot the four dives at the four fades against today's. The look side is ruled out
   - brief: `docs/design/K1525_s1_fill_dives.md`
 
 ## Next, in order
@@ -1087,7 +1090,14 @@ Every other item below waits on the trigger it names.
   category run (K1407 order: broken, then stray).
 - **K1419** · rp=gf paint at junction spots: hard run-colour wedges where the dots were (.claude/probes/K1407/out/c2/
   c2_sheet_fixed.png rows 1-4, 11, 13), where today's is smooth: gf_look.ts steps the colour label between chains
-  (K1407 Handoff c2); blend it across the switch, after Muse batch 24
+  (K1407 Handoff c2); blend it across the switch. K1525 s1 (2026-11-19): the wedge is the boundary between
+  two chains' piece labels (mdt r1: chains 77/68), not the corner bisector; blending the other corner arm's
+  colour or the nearest other-chain piece left every wedge (px off today's 453 -> 436, 740 -> 732, 515 -> 506,
+  493 -> 502; patch .claude/probes/K1525/s1/k1419_attempts_dbg.patch), because the distances the look reads
+  come from the last ramp configuration and the label from the best. Next: capture the partner piece inside
+  layers() where the label is set (gf_glsl.ts ~1324), carry it out with the best configuration as gf_look.ts
+  ~2417 carries lkJ/lkS, blend the two composed colours by the distance difference (Handoff K1525 s1,
+  docs/design/K1525_s1_fill_dives.md). Touches gf_glsl.ts and gf_look.ts: after K1482's stage stops
 - **K1426** · rp=gf vertex cap (K1407 c3, d547dab6) costs GPU: net p50 +14-15% over 13365909 on def and fat
   drag (11.0 -> 12.6 ms; work p50 level); c5 after c4: cut it to within 10% (the cap is the only shader
   change; inferred, not profiled) (docs/design/K1407_c3_bar.md Handoff c3)
@@ -1126,7 +1136,7 @@ Every other item below waits on the trigger it names.
   .claude/probes/K1451/out/tie_causes.png)
 - **K1463** · rp=gf: a small notch where the pink arm meets the blue thread at ?3 (lower right of
   .claude/probes/K1458/live/zoom_a.png): the look's colour/fill, present before K1458, the field is clean
-  there (Handoff K1451)
+  there (Handoff K1451). Not judged in K1525 s1: same-state captures of that link are unstable (K1530 first)
 - **K1467** · a fresh checkout is 0.81 GB and 0.78 GB of it is tracked probe output (.claude/probes: K1435 316
   MB, K1186 64, K1407 60, K863 56, K1198 43), so each agent worktree costs 0.8 GB (224 worktrees = 123 GB when
   C: filled on 2026-11-17, claude-config CC156). Stop tracking closed items' sheets (history keeps them) or
@@ -1147,7 +1157,12 @@ Every other item below waits on the trigger it names.
 - **K1494** · fade.mjs guard prints FAIL on cfe66a7d (fl=0: 677/679 sides pass, 348/350 crossings complete;
   fl=1.2: 439/451 sides, 287/299) while its distances match today (p90 |d-today| 0.0001-0.0124 world) - is the
   FAIL its crossing-completeness/dot criterion rather than a distance failure? Seen in Muse batch 26 Run F's
-  guards (.claude/probes/K1474/out/26F/guards_fade/summary.txt); not a Run F Done item
+  guards (.claude/probes/K1474/out/26F/guards_fade/summary.txt); not a Run F Done item. Answered by K1525 s1
+  on 330069e61 (2026-11-19): yes, the dot criterion: distances pass at every fl (678/679, 627/631, 439/451,
+  676/679 sides at fl 0 / 0.5 / 1.2 / 0.14) and 79 / 98 / 68 / 103 sides carry more than 2 dots, gf and gfh
+  alike; 26X saw the same FAIL 10/10 on one state. Unchecked: whether the dot test passed when K1460 closed
+  (7fe4b9c6). Run it there first; if it passed, find the commit since that brought the dots back, else name
+  what the count sees, then fix it or re-pin the guard
 - **K1504** · rp=gf j64 on Levi's link: a pinhole about 0.1 wide where chains 28 and 56 of one surface part
   (in the CPU mirror too, so geometry, not the look: .claude/probes/K1482/out/s7/j64_gm.png). Fill holes in
   one surface's union narrower than about a stroke width (Handoff K1482 s7)
@@ -1177,6 +1192,11 @@ Every other item below waits on the trigger it names.
   outlines converge with no corner at all, so no ball exists; needs a new side-to-side fillet. j41 (a sharp
   ">" kept by a 0.26h first-pass corner; retrying it changes nothing visible) fits no kind yet (`### Handoff
   K1482 s21` in docs/design/K1482_s21_corners_rest.md)
+- **K1530** · rp=gf: on `?3&xp=off&am=instant&rp=gf` master draws a different picture on two redraws of ONE
+  frozen state (every shot UNSTABLE in K1525 s1's cap.mjs with paint clocks and background pinned; link A is
+  stable, two-load control 0 px). Cause not found; suspects K390's start-marker flip, fog / explore ticks.
+  Name what changes between the two redraws (which px, which uniform or table), pin it in the capture or fix
+  it, then two redraws agree 10/10; K1463 waits on it (.claude/probes/K1525/s1/notes.md, jobs_q3.json)
 
 ## Residuals (known, not fixed)
 
