@@ -29,10 +29,13 @@ opt-in (`rp=gf` in a link). **Today's look** is the default renderer. Link A is
   directories and Chrome profiles when you finish (the disk is short); a tool with a `-Port` (the bar) takes
   one of yours. Never `--virtual-time-budget`; headed real-GPU Chrome off-screen (`probes.md`). Never touch
   the phone. At most 4 parallel Chrome or Node workers.
-- **The perf lock** (`$env:TEMP\claude-perf.lock`, one line: owner, start time, what) for every pixel-exact
-  capture and every timing. If another owner holds it, wait inside one blocking command (poll each minute, up
-  to 30 minutes). A lock older than 30 minutes counts as stale and others remove it: hold it for one capture
-  sequence of at most 25 minutes, delete it, and take it again for the next.
+- **The perf lock** for every pixel-exact capture and every timing, **taken only through
+  `scripts/perf_lock.ps1`** (changed 2026-11-19, K1533): `pwsh scripts/perf_lock.ps1 -Owner "muse-27<X>" -What
+  "<what>" -Cmd "<the capture command>"`. It waits while another owner holds the lock (one blocking command, up
+  to `-MaxWaitMin`, default 60), takes it, runs the command and releases it, also when the command fails. One
+  capture sequence of at most 25 minutes per call. Never write or `Remove-Item` `$env:TEMP\claude-perf.lock`
+  yourself: 27A's "remove it, write my line, run" removed whatever lock was there and re-took its own with no
+  gap, so the Claude agent's guards waited 80 minutes and never ran.
 - **Same-state captures:** freeze through `.claude/probes/freeze_parity.mjs`'s `alignFreezeParity`
   (Handoffs 26V and 26X in `docs/design/K1464_muse_batch26.md`: only those two handoffs, by Select-String).
   Compare two captures only when their physics hashes agree, and say which hash.

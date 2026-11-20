@@ -64,8 +64,15 @@ and `.claude/probes/K1482/out/s24` (untracked: do not `git add` raw captures or 
 from the s22 worktree and change nothing there. At most three preview builds alive at once; stop yours and
 remove their directories when you finish (the disk is short); a worktree needs `node_modules` through a
 junction for `scripts/preview.ps1`, unlinked with `(Get-Item <path>).Delete()` when you finish. Muse runs
-capture work in the main checkout: it takes `$env:TEMP\claude-perf.lock` for up to 25 minutes at a time, so
-wait for the lock in ONE blocking loop (60 min at most). Later today its run 26Z2 edits `gf_look.ts` or
+capture work in the main checkout and holds the perf lock for up to 25 minutes at a time. **Take the lock only
+through `scripts/perf_lock.ps1`** (K1533): `pwsh scripts/perf_lock.ps1 -Owner "claude K1482 s24" -What "<what>"
+-Cmd "<one command that runs the whole guard sequence>"`; it waits (60 min by default), takes the lock, runs
+the command and releases it. Never write or remove `$env:TEMP\claude-perf.lock` yourself. If it exits 3 (the
+lock never freed), report the guards as not run; do not run them without the lock. Stage 23's four guards
+(hold off and on, panelopen, both dragchecks) did not run before it landed; the coordinator runs them on
+master, so if one fails on your tip, run it on your merge base too before calling it yours
+(`.claude/probes/K1482/s23/run23.ps1` in the s23 worktree, `agent-a5016731195d015ff`, is the whole sequence).
+Later today Muse's run 26Z2 edits `gf_look.ts` or
 `gf_pass.ts` on master: `git merge origin/master` again before your final checks.
 
 **Stop rule.** Stop when every Done holds, or after 2 h of wall clock from your start (`Get-Date` at the start

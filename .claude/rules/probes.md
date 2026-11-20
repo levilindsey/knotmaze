@@ -106,6 +106,12 @@ on it (`render-explore.md`, the probe lesson). Hook only the app's
 canvas: Pixi's `isWebGLSupported` test canvas loses its context on
 purpose, so a hook on every canvas sees one loss per load, flag off
 included (K868 S3a2, inferred from Pixi's source).
+TAKE IT THROUGH `scripts/perf_lock.ps1 -Owner <who> -What <what> -Cmd
+<command>` (K1533, 2026-11-19): it waits for another owner, never
+removes a lock under 30 minutes old, releases when the command ends or
+fails, and makes an owner that just released wait 45 s, so a waiter
+gets a turn. A hand-written "remove it, write my line, run" took the
+lock with no gap for 80 minutes, and an agent's guards never ran.
 
 PROBE LORE, same round: the renderer resets every fill/erase mesh's
 `visible` each frame (hide with `renderable = false`, or per layer);

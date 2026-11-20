@@ -6,6 +6,10 @@ checkout. Batch 25's rules (`docs/design/K1448_muse_batch25.md`, its first list)
 
 - Your tag is `26<X>`; commit messages end `(Muse batch 26 Run <X>, 26<X>)`; append `### Handoff 26<X>`
   under your run's section here.
+- **The perf lock only through `scripts/perf_lock.ps1`** (changed 2026-11-19, K1533; this replaces the older
+  briefs' lock rule): `pwsh scripts/perf_lock.ps1 -Owner "muse-26<X>" -What "<what>" -Cmd "<the capture
+  command>"`, one capture sequence of at most 25 minutes per call. It waits for another owner, takes the lock,
+  runs the command and releases it. Never write or `Remove-Item` `$env:TEMP\claude-perf.lock` yourself.
 - **Hands off the junction field**: `tables.ts`, `eval.ts`, `gf_keys.ts` and the field evaluation in
   `gf_glsl.ts`. A Claude agent (K1451 s2) is changing them, flag off and on, and its merge moves the tables
   digest and the flag-off pins: after a pull, re-take your "master gf" baseline from the new master.
