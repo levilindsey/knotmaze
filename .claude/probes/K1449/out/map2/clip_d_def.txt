@@ -1,1 +1,0 @@
-def	clip_d	finds 116	{"rstray:tie":7,"rthin:plain":93,"rthin:tie":11,"rthin:ramp":5}	{"px":13809720,"act":7084305,"msPerMpx":2459,"usPerAct":4.79,"pcallsPerAct":0.291,"segsPerAct":2.56,"cfgsPerAct":1.021,"nSegPerAct":27.8,"nKPerAct":0.59}

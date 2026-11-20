@@ -1,1 +1,0 @@
-muse_default_tw	tgrfl	finds 99	{"rbreak:plain":1,"rstray:ramp":9,"rstray:tie":11,"rthin:plain":77,"rthin:ramp":1}	{"px":13866240,"act":7050389,"msPerMpx":2226,"usPerAct":4.38,"pcallsPerAct":0.28,"segsPerAct":2.38,"cfgsPerAct":1.048,"nSegPerAct":27.3,"nKPerAct":0.87}

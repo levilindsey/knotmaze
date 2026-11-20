@@ -1,1 +1,0 @@
-def	base_0	finds 160	{"dbreak:tie":8,"dstray:tie":28,"rbreak:tie":3,"rstray:tie":20,"rthin:plain":97,"rthin:ramp":3,"rthin:tie":1}	{"px":13809720,"act":7084305,"msPerMpx":1605,"usPerAct":3.13,"pcallsPerAct":0.287,"segsPerAct":2.53,"cfgsPerAct":1.036,"nSegPerAct":27.8,"nKPerAct":0.59}

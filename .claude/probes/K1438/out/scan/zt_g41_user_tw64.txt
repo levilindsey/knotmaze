@@ -1,1 +1,0 @@
-g41_user_tw64	zt	finds 319	{"dbreak:tie":1,"rbreak:plain":50,"rstray:ramp":11,"rthin:plain":203,"rthin:ramp":53,"rthin:thru":1}	{"px":6482592,"act":3474290,"msPerMpx":2532,"usPerAct":4.73,"pcallsPerAct":0.282,"segsPerAct":2.79,"cfgsPerAct":1.036,"nSegPerAct":33.9,"nKPerAct":0.4}

@@ -1,1 +1,0 @@
-fat	zt_d	finds 401	{"rbreak:plain":3,"rthin:plain":398}	{"px":13194064,"act":6399268,"msPerMpx":796,"usPerAct":1.64,"pcallsPerAct":0,"segsPerAct":0,"cfgsPerAct":1,"nSegPerAct":26.1,"nKPerAct":0}

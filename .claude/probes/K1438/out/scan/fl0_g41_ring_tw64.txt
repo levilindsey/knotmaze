@@ -1,1 +1,0 @@
-g41_ring_tw64	fl0	finds 177	{"dbreak:tie":9,"dstray:tie":15,"rbreak:plain":34,"rbreak:tie":11,"rstray:tie":3,"rthin:plain":100,"rthin:tie":5}	{"px":6212316,"act":2201641,"msPerMpx":1338,"usPerAct":3.78,"pcallsPerAct":0.132,"segsPerAct":1.12,"cfgsPerAct":1,"nSegPerAct":26.6,"nKPerAct":0.23}

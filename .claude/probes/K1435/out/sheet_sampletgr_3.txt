@@ -1,6 +1,0 @@
-columns: master | tgr | ol
-row 1: muse_hash:17.00:27.83
-row 2: muse_default_tw:2.00:23.47
-row 3: g41_user_tw64:4.94:18.87
-row 4: muse_hash:14.46:15.63
-row 5: muse_hash:19.52:7.74

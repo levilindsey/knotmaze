@@ -1,1 +1,0 @@
-def	sh_d	finds 110	{"rstray:tie":15,"rthin:plain":93,"rthin:ramp":2}	{"px":13809720,"act":7084305,"msPerMpx":1769,"usPerAct":3.45,"pcallsPerAct":0.291,"segsPerAct":2.56,"cfgsPerAct":1.043,"nSegPerAct":27.8,"nKPerAct":0.59}

@@ -1,1 +1,0 @@
-g41_user_tw64	base_1.2	finds 292	{"dbreak:tie":1,"rbreak:plain":48,"rbreak:ramp":2,"rstray:plain":1,"rstray:ramp":2,"rthin:plain":155,"rthin:ramp":82,"rthin:thru":1}	{"px":6482592,"act":3474290,"msPerMpx":2419,"usPerAct":4.51,"pcallsPerAct":0.301,"segsPerAct":2.99,"cfgsPerAct":1.139,"nSegPerAct":33.9,"nKPerAct":0.4}

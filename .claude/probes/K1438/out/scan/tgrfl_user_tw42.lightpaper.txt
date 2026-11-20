@@ -1,1 +1,0 @@
-user_tw42.lightpaper	tgrfl	finds 129	{"rbreak:plain":50,"rbreak:ramp":1,"rstray:ramp":10,"rstray:tie":5,"rthin:plain":62,"rthin:ramp":1}	{"px":6426640,"act":2463396,"msPerMpx":1803,"usPerAct":4.7,"pcallsPerAct":0.218,"segsPerAct":1.59,"cfgsPerAct":1.058,"nSegPerAct":23.9,"nKPerAct":0.47}

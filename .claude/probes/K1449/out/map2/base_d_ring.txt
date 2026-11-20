@@ -1,1 +1,0 @@
-ring	base_d	finds 86	{"dbreak:tie":1,"dstray:tie":1,"rbreak:plain":20,"rbreak:tie":2,"rstray:tie":1,"rthin:plain":57,"rthin:ramp":1,"rthin:tie":3}	{"px":6132842,"act":2025607,"msPerMpx":1229,"usPerAct":3.72,"pcallsPerAct":0.14,"segsPerAct":1.1,"cfgsPerAct":1.018,"nSegPerAct":24.7,"nKPerAct":0.27}

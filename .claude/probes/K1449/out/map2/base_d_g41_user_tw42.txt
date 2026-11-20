@@ -1,1 +1,0 @@
-g41_user_tw42	base_d	finds 127	{"rbreak:plain":49,"rbreak:ramp":1,"rstray:tie":6,"rstray:ramp":7,"rthin:plain":63,"rthin:ramp":1}	{"px":6426640,"act":2463353,"msPerMpx":1371,"usPerAct":3.58,"pcallsPerAct":0.217,"segsPerAct":1.58,"cfgsPerAct":1.057,"nSegPerAct":23.9,"nKPerAct":0.47}

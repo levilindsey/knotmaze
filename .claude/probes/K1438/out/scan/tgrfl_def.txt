@@ -1,1 +1,0 @@
-def	tgrfl	finds 122	{"rstray:tie":20,"rstray:ramp":7,"rthin:plain":93,"rthin:ramp":2}	{"px":13809720,"act":7084305,"msPerMpx":2072,"usPerAct":4.04,"pcallsPerAct":0.294,"segsPerAct":2.59,"cfgsPerAct":1.053,"nSegPerAct":27.8,"nKPerAct":0.59}

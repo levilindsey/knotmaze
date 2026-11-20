@@ -1,1 +1,0 @@
-def	zt_1.2	finds 92	{"rthin:plain":71,"rthin:ramp":21}	{"px":13809720,"act":7084305,"msPerMpx":1986,"usPerAct":3.87,"pcallsPerAct":0.297,"segsPerAct":2.61,"cfgsPerAct":1.099,"nSegPerAct":27.8,"nKPerAct":0.59}

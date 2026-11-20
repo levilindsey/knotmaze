@@ -1,1 +1,0 @@
-user_tw42.lightpaper	base_1.2	finds 108	{"rbreak:plain":50,"rbreak:ramp":1,"rthin:plain":49,"rthin:ramp":8}	{"px":6426640,"act":2463396,"msPerMpx":1199,"usPerAct":3.13,"pcallsPerAct":0.226,"segsPerAct":1.65,"cfgsPerAct":1.096,"nSegPerAct":23.9,"nKPerAct":0.47}

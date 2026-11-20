@@ -1,1 +1,0 @@
-g41_ring_tw64	tgrfl	finds 144	{"dbreak:tie":2,"dstray:tie":5,"rbreak:plain":34,"rbreak:tie":3,"rstray:tie":2,"rstray:ramp":1,"rthin:plain":89,"rthin:ramp":4,"rthin:tie":4}	{"px":6212316,"act":2201641,"msPerMpx":1721,"usPerAct":4.86,"pcallsPerAct":0.144,"segsPerAct":1.23,"cfgsPerAct":1.024,"nSegPerAct":26.6,"nKPerAct":0.23}

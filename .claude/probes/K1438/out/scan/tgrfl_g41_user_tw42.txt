@@ -1,1 +1,0 @@
-g41_user_tw42	tgrfl	finds 128	{"rbreak:plain":49,"rbreak:ramp":1,"rstray:ramp":10,"rstray:tie":5,"rthin:ramp":1,"rthin:plain":62}	{"px":6426640,"act":2463353,"msPerMpx":1964,"usPerAct":5.12,"pcallsPerAct":0.218,"segsPerAct":1.59,"cfgsPerAct":1.058,"nSegPerAct":23.9,"nKPerAct":0.47}

@@ -1,1 +1,0 @@
-muse_hash	tgrfl	finds 624	{"dbreak:tie":18,"dstray:tie":18,"dstray:ramp":1,"rbreak:tie":8,"rstray:plain":17,"rstray:tie":13,"rstray:ramp":10,"rthin:ramp":173,"rthin:plain":332,"rthin:tie":32,"rthin:thru":2}	{"px":14876088,"act":10100660,"msPerMpx":2961,"usPerAct":4.36,"pcallsPerAct":0.329,"segsPerAct":3.8,"cfgsPerAct":1.062,"nSegPerAct":39.2,"nKPerAct":0.59}

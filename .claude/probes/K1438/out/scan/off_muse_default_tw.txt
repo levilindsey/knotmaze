@@ -1,1 +1,0 @@
-muse_default_tw	off,new,tgrfl	finds 126	{"dbreak:tie":4,"dstray:tie":19,"rbreak:tie":2,"rbreak:plain":1,"rstray:tie":16,"rthin:plain":80,"rthin:ramp":2,"rthin:tie":2}	{"px":13866240,"act":7050389,"msPerMpx":1101,"usPerAct":2.17,"pcallsPerAct":0.274,"segsPerAct":2.33,"cfgsPerAct":1.081,"nSegPerAct":27.3,"nKPerAct":0.87}

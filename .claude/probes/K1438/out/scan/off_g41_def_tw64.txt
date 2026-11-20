@@ -1,1 +1,0 @@
-g41_def_tw64	off,new,tgrfl	finds 688	{"dbreak:tie":50,"dstray:tie":146,"rbreak:tie":53,"rstray:tie":82,"rthin:plain":314,"rthin:tie":40,"rthin:ramp":2,"rthin:thru":1}	{"px":14041776,"act":8356431,"msPerMpx":1226,"usPerAct":2.06,"pcallsPerAct":0.286,"segsPerAct":2.92,"cfgsPerAct":1.105,"nSegPerAct":32.9,"nKPerAct":0.51}

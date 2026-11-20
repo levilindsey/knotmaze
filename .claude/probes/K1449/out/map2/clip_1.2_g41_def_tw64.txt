@@ -1,1 +1,0 @@
-g41_def_tw64	clip_1.2	finds 311	{"dbreak:tie":1,"rstray:ramp":1,"rthin:ramp":120,"rthin:plain":187,"rthin:tie":1,"rthin:thru":1}	{"px":14041776,"act":8356431,"msPerMpx":2202,"usPerAct":3.7,"pcallsPerAct":0.331,"segsPerAct":3.37,"cfgsPerAct":1.14,"nSegPerAct":32.9,"nKPerAct":0.51}

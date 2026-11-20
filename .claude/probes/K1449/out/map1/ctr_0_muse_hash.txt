@@ -1,1 +1,0 @@
-muse_hash	ctr_0	finds 655	{"dbreak:tie":40,"dstray:tie":18,"dstray:plain":2,"rbreak:tie":11,"rstray:plain":18,"rthin:plain":545,"rthin:tie":19,"rthin:thru":2}	{"px":14876088,"act":10100660,"msPerMpx":1336,"usPerAct":1.97,"pcallsPerAct":0.306,"segsPerAct":3.53,"cfgsPerAct":1,"nSegPerAct":39.2,"nKPerAct":0.59}

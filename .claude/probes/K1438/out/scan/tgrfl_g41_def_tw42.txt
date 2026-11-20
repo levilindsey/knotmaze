@@ -1,1 +1,0 @@
-g41_def_tw42	tgrfl	finds 8	{"rbreak:plain":1,"rstray:tie":5,"rstray:ramp":1,"rthin:ramp":1}	{"px":13616484,"act":5978087,"msPerMpx":1982,"usPerAct":4.51,"pcallsPerAct":0.26,"segsPerAct":1.93,"cfgsPerAct":1.066,"nSegPerAct":23.8,"nKPerAct":0.57}

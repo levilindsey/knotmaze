@@ -1,1 +1,0 @@
-g41_def_tw64	ctr_d	finds 347	{"dbreak:tie":1,"rstray:tie":12,"rthin:plain":296,"rthin:ramp":14,"rthin:tie":23,"rthin:thru":1}	{"px":14041776,"act":8356431,"msPerMpx":1386,"usPerAct":2.33,"pcallsPerAct":0.315,"segsPerAct":3.22,"cfgsPerAct":1.036,"nSegPerAct":32.9,"nKPerAct":0.51}

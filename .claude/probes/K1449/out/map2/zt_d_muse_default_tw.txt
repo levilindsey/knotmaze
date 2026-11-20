@@ -1,1 +1,0 @@
-muse_default_tw	zt_d	finds 90	{"rbreak:plain":1,"rstray:ramp":12,"rthin:plain":77}	{"px":13866240,"act":7050389,"msPerMpx":2240,"usPerAct":4.41,"pcallsPerAct":0.28,"segsPerAct":2.38,"cfgsPerAct":1.029,"nSegPerAct":27.3,"nKPerAct":0.87}

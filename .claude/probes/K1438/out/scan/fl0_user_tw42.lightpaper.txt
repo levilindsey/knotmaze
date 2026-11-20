@@ -1,1 +1,0 @@
-user_tw42.lightpaper	fl0	finds 132	{"dstray:tie":2,"rbreak:plain":50,"rbreak:ramp":1,"rstray:tie":8,"rstray:ramp":7,"rthin:plain":63,"rthin:ramp":1}	{"px":6426640,"act":2463396,"msPerMpx":1624,"usPerAct":4.24,"pcallsPerAct":0.216,"segsPerAct":1.58,"cfgsPerAct":1.056,"nSegPerAct":23.9,"nKPerAct":0.47}

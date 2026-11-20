@@ -1,1 +1,0 @@
-g41_ring_tw64	ztfl0	finds 151	{"dbreak:tie":4,"dstray:tie":5,"rbreak:plain":34,"rbreak:tie":4,"rthin:plain":100,"rthin:tie":4}	{"px":6212316,"act":2201641,"msPerMpx":1842,"usPerAct":5.2,"pcallsPerAct":0.137,"segsPerAct":1.17,"cfgsPerAct":1,"nSegPerAct":26.6,"nKPerAct":0.23}

@@ -1,1 +1,0 @@
-g41_user_tw64	new	finds 327	{"dbreak:tie":1,"rbreak:plain":49,"rbreak:ramp":1,"rstray:ramp":1,"rstray:tie":5,"rthin:plain":225,"rthin:ramp":30,"rthin:tie":14,"rthin:thru":1}	{"px":6482592,"act":3474290,"msPerMpx":2779,"usPerAct":5.19,"pcallsPerAct":0.274,"segsPerAct":2.72,"cfgsPerAct":1.037,"nSegPerAct":33.9,"nKPerAct":0.4}

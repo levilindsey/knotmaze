@@ -1,1 +1,0 @@
-ring	fl1.2	finds 84	{"dbreak:tie":1,"dstray:tie":1,"rbreak:plain":20,"rbreak:tie":2,"rthin:plain":52,"rthin:ramp":6,"rthin:tie":2}	{"px":6132842,"act":2025607,"msPerMpx":1496,"usPerAct":4.53,"pcallsPerAct":0.142,"segsPerAct":1.11,"cfgsPerAct":1.061,"nSegPerAct":24.7,"nKPerAct":0.27}

@@ -1,4 +1,0 @@
-fl=1.2 bs: span sides 679, banded 137 [x0-@911,316 x1-@896,334 x4+@589,96 x5+@614,112 x6+@876,94 x7-@893,78 x10-@957,136 x12-@1006,144 x13+@1031,117 x15-@1060,74], extra steps 195.29411764705918 (today 132.94117647058846), rough mean 0.0241 (today 0.0190), spread excess mean 0.0298, |c-today| mean 0.0617; dots 440 of 27153 edge px
-  site 580,70 fl=1.2 x3+ span 53: today rough 0.0109 extra 0.12 spreadEx 0.000 dev 0.000 | bs rough 0.0105 extra 0.24 spreadEx 0.003 dev 0.003 | dots {"bs":0}
-  site 941,75 fl=1.2 x8+ span 37: today rough 0.0197 extra 0.00 spreadEx 0.000 dev 0.000 | bs rough 0.0186 extra 0.00 spreadEx 0.003 dev 0.007 | dots {"bs":0}
-  site 941,75 fl=1.2 x8- span 55: today rough 0.0099 extra 0.12 spreadEx 0.000 dev 0.000 | bs rough 0.0098 extra 0.12 spreadEx 0.005 dev 0.004 | dots {"bs":0}

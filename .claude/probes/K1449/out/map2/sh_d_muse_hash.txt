@@ -1,1 +1,0 @@
-muse_hash	sh_d	finds 628	{"dbreak:tie":18,"dstray:tie":18,"dstray:ramp":1,"rbreak:tie":8,"rstray:plain":17,"rstray:tie":10,"rstray:ramp":2,"rthin:ramp":125,"rthin:plain":368,"rthin:tie":59,"rthin:thru":2}	{"px":14876088,"act":10100660,"msPerMpx":2075,"usPerAct":3.06,"pcallsPerAct":0.321,"segsPerAct":3.7,"cfgsPerAct":1.045,"nSegPerAct":39.2,"nKPerAct":0.59}

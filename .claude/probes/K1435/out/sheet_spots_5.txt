@@ -1,6 +1,0 @@
-columns: master | tgr | ol
-row 1: muse_default_tw:24.25:10.56
-row 2: muse_default_tw:23.98:27.41
-row 3: muse_default_tw:23.75:27.63
-row 4: def:3.60:13.52
-row 5: def:30.88:12.42

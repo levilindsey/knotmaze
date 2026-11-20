@@ -1,1 +1,0 @@
-g41_ring_tw64	zt_1.2	finds 142	{"dbreak:tie":2,"dstray:tie":5,"rbreak:plain":34,"rbreak:tie":3,"rthin:plain":78,"rthin:ramp":16,"rthin:tie":4}	{"px":6212316,"act":2201641,"msPerMpx":1786,"usPerAct":5.04,"pcallsPerAct":0.147,"segsPerAct":1.25,"cfgsPerAct":1.061,"nSegPerAct":26.6,"nKPerAct":0.23}

@@ -1,1 +1,0 @@
-g41_user_tw42	ztfl0	finds 127	{"rbreak:plain":49,"rbreak:ramp":1,"rstray:tie":5,"rstray:ramp":7,"rthin:plain":64,"rthin:ramp":1}	{"px":6426640,"act":2463353,"msPerMpx":1324,"usPerAct":3.45,"pcallsPerAct":0.216,"segsPerAct":1.58,"cfgsPerAct":1.039,"nSegPerAct":23.9,"nKPerAct":0.47}

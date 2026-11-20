@@ -1,1 +1,0 @@
-ring	clip_0	finds 90	{"dbreak:tie":3,"dstray:tie":1,"rbreak:plain":22,"rbreak:tie":2,"rthin:plain":60,"rthin:tie":2}	{"px":6132842,"act":2025607,"msPerMpx":1626,"usPerAct":4.92,"pcallsPerAct":0.137,"segsPerAct":1.07,"cfgsPerAct":1,"nSegPerAct":24.7,"nKPerAct":0.27}

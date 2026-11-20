@@ -1,1 +1,0 @@
-g41_user_tw42	zt_d	finds 125	{"rbreak:plain":49,"rbreak:ramp":1,"rstray:ramp":12,"rthin:ramp":1,"rthin:plain":62}	{"px":6426640,"act":2463353,"msPerMpx":1734,"usPerAct":4.52,"pcallsPerAct":0.218,"segsPerAct":1.59,"cfgsPerAct":1.041,"nSegPerAct":23.9,"nKPerAct":0.47}

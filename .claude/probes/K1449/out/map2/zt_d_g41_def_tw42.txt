@@ -1,1 +1,0 @@
-g41_def_tw42	zt_d	finds 4	{"rbreak:plain":1,"rstray:tie":1,"rstray:ramp":1,"rthin:ramp":1}	{"px":13616484,"act":5978087,"msPerMpx":2068,"usPerAct":4.71,"pcallsPerAct":0.26,"segsPerAct":1.93,"cfgsPerAct":1.049,"nSegPerAct":23.8,"nKPerAct":0.57}

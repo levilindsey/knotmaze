@@ -1,1 +1,0 @@
-ring	fl0	finds 101	{"dbreak:tie":4,"dstray:tie":4,"rbreak:plain":21,"rbreak:tie":7,"rthin:plain":62,"rthin:tie":3}	{"px":6132842,"act":2025607,"msPerMpx":1550,"usPerAct":4.69,"pcallsPerAct":0.133,"segsPerAct":1.05,"cfgsPerAct":1.007,"nSegPerAct":24.7,"nKPerAct":0.27}

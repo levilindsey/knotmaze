@@ -1,1 +1,0 @@
-muse_default_tw	base_d	finds 94	{"rbreak:plain":1,"rstray:tie":10,"rthin:plain":81,"rthin:ramp":2}	{"px":13866240,"act":7050389,"msPerMpx":1797,"usPerAct":3.53,"pcallsPerAct":0.276,"segsPerAct":2.35,"cfgsPerAct":1.039,"nSegPerAct":27.3,"nKPerAct":0.87}

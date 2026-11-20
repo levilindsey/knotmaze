@@ -1,1 +1,0 @@
-g41_user_tw64	ctr_d	finds 329	{"dbreak:tie":1,"rbreak:plain":49,"rbreak:ramp":1,"rstray:ramp":1,"rstray:tie":6,"rthin:plain":226,"rthin:ramp":30,"rthin:tie":14,"rthin:thru":1}	{"px":6482592,"act":3474290,"msPerMpx":1747,"usPerAct":3.26,"pcallsPerAct":0.274,"segsPerAct":2.71,"cfgsPerAct":1.035,"nSegPerAct":33.9,"nKPerAct":0.4}

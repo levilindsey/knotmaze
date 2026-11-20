@@ -1,1 +1,0 @@
-muse_default_tw	fl0	finds 117	{"dbreak:tie":4,"dstray:tie":15,"rbreak:tie":2,"rbreak:plain":1,"rstray:tie":12,"rthin:plain":80,"rthin:ramp":2,"rthin:tie":1}	{"px":13866240,"act":7050389,"msPerMpx":2052,"usPerAct":4.04,"pcallsPerAct":0.274,"segsPerAct":2.33,"cfgsPerAct":1.033,"nSegPerAct":27.3,"nKPerAct":0.87}

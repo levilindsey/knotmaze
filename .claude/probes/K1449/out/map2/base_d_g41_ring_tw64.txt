@@ -1,1 +1,0 @@
-g41_ring_tw64	base_d	finds 146	{"dbreak:tie":2,"dstray:tie":5,"rbreak:plain":34,"rbreak:tie":3,"rstray:tie":2,"rthin:plain":91,"rthin:ramp":4,"rthin:tie":5}	{"px":6212316,"act":2201641,"msPerMpx":1406,"usPerAct":3.97,"pcallsPerAct":0.142,"segsPerAct":1.21,"cfgsPerAct":1.017,"nSegPerAct":26.6,"nKPerAct":0.23}
