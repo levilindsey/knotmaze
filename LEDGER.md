@@ -321,13 +321,6 @@ Next free ID: K1493.
   page's home build (K1482 s5, not landed) three tails join as a clean T or Y (t18e, t50s, muse_hash j49:
   .claude/probes/K1482/out/s5/fade_sheet_wide.png rows 2-3, columns 1-3 master, 4-6 home); stage 6 keeps them
   short until Levi answers
-- **K1490** · rp=gf border look at sharp V's (K1482 stage 3): where two threads' outlines converge at a sharp
-  angle the ink runs together into a dark wedge, or leaves a light sliver under a pixel wide (wedge sites j15
-  j50 j82 j143 j158 t23e t59s t73e t84e, slivers j95 j147 t43s t56s: 13 of the 46 faulted sites). A fault to
-  fix, or how the border look should meet? Picture: .claude/probes/K1482/out/s4/card_sharp_v.png (stage 4's
-  item 0; until then out/s3/hair_00.png rows j95, j147, t43s). Options: keep as it is; fix (the agent then
-  owns how). Stage 4: the 9 notch sites are the same family (a T's cut through arm with no corner); rounding
-  them with longer corner arms also rounds these V's, so the notches wait on this answer too (22 of 46)
 - **K1493** · d39e363f (2026-11-18, the coordinator's mistake: `git add -f .claude/probes` on the whole
   directory) pushed 1292 untracked probe output files (362 MB: K1444 660, K1407 546, K1362 62, K1436 24) to
   master; b88a4108 removed them from the tree, so checkouts are clean, but the blobs stay in history (every
@@ -2848,6 +2841,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1490** · rp=gf border look at sharp V's (K1482 stage 3): where two threads' outlines converge at a sharp angle the ink runs together into a dark wedge, or leaves a light sliver under a pixel wide (wedge sites j15 j50 j82 j143 j158 t23e t59s t73e t84e, slivers j95 j147 t43s t56s: 13 of the 46 faulted sites). Dropped: answered, Levi 2026-11-19: 'Fix the wedges and notches, accept the slivers'. The 14 sites (wedge j15 j50 t23e t59s t81s t84e; notch j4 j14 j41 j47 j59 t4s t45s t58e) are K1482 stage 20; the 5 slivers (j71 j95 j147 t43s t56s) are accepted (2026-11-19).
 - **K1521** · rp=gf, Crossing fade at joints: since K1482 s15/s18 an outline cut beside a fused joint (flagged crossing sides, about 1000+ slots on link A) starts at the over thread's edge and fades over 0.3 of the slider's length, so at a large fade (1.2) those outlines run nearly up to the over thread while ordinary crossings fade over the full length (29k px on link A; picture .claude/worktrees/agent-a077003d003b40d70/.claude/probes/K1482/out/s18/sheets/fl12_top.png). Dropped: Levi 2026-11-19: keep. Joint-side outlines keep the short 0.3 fade at every Crossing fade setting; no change (2026-11-19).
 - **K1520** · the K1436 bar never prunes: one ~1 GB build + src worktree per compared commit under TEMP\k1436s3-prev (10 GB) filled the disk 2026-11-18 21:13 and ended Muse Run P's checks; prune at start, refuse under 6 GB free (Muse Run Q part 1, docs/design/K1464_muse_batch26.md). Done in 7e5e87c9 (2026-11-18).
 - **K1512** · K1482 j49's tick needs how far a fused joint's fan reaches along the OVER thread (today's fan paints the over's outline across the under's faded tip); the window bake carries only the under thread's joints, so it is a new baked number, after Muse Run M leaves the bake (docs/design/K1482_s10_borders.md handoff, out/s10/pixels.txt). Dropped: folded into K1482 stage 15 (the baked per-crossing flag) (2026-11-18).
