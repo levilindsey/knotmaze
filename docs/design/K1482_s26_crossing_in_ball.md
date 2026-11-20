@@ -78,3 +78,26 @@ and at each milestone), whichever comes first; keep the last 30 minutes for the 
 stop: re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K1482 s26` here, commit,
 and report: the commits to land by SHA in order, the numbers, the sheets' absolute paths, a `Ledger items`
 list and K1482's handle fields. Never push, never edit `LEDGER.md`.
+
+2026-11-19 18:30 (s26): cause at j50, measured in the tables: the retry ball (K237, r 0.672h) grows into the tube
+of chain 71's own over pass (X317), and the arc's buriers skip the corner's own chains, so nothing hides it.
+Candidate: the retry's third bound (`GF_KXB`, tables.ts): the spine of a crossing pass that cuts either arm bounds
+the ball like the arms' far parts. Over every crossing (217bfb130) it shrinks almost all 109 retry corners; over
+the corner's own chains only (`GF_KXBS`, 303eec6b6) it moves 18 (j50 0.672h -> 0.171h). GPU captures queued.
+
+### Handoff K1482 s26
+
+2026-11-19 19:45. Fix landed on the branch: 44fd1b814 (the corner retry's third bound, `GF_KXB`/`GF_KXBS`,
+tables.ts only). Sites, as it loads: **j50 better** (the retry ball no longer runs through chain 71's own crossing:
+r 0.672 -> 0.171 h, the arc turns in a small round; the paper sliver below it stays, which Levi accepts); **j4, j47,
+j59 same** (their arms are cut by OTHER chains: the ball is tiny or rejected, and a third bound only shrinks it);
+**t84e, t45s same** (no retry corner; their stubs show with `gfk=0` too). With `gfk=0` all six are 0 px.
+Link A (hash fff8c9e5, one view, load floor 0 px): `gfk=0` 0 px border and fill; as it loads border 645 px at 16
+places (the ten largest judged by eye: j50, t43e, t27s lose a wedge or blob; t63e, t75e gain a round; t34e, t30e,
+t21s round less; all one clean join), fill 0 px. Bar PASS new 0 grown 0 gone 0 (under load). Guards on 303eec6b6
+(same build): hold 60/60 both, panelopen, both drag checks PASS. Sheets: `.claude/probes/K1482/out/s26/`
+`six_c2_a.png`, `six_c2_b.png`, `top10_a.png`, `top10_b.png`, `z_j50_c2.png` (master | new).
+Next (j4, j47, j59, t84e, t45s): solve a corner between the uncut arm's outline and the crossing pass's near outline
+(the crossing is the corner's real partner), which needs a new corner kind in tables.ts, gf_glsl.ts and eval.ts;
+a smaller or larger ball between the cut arms cannot make that join. Capture views can differ by 2e-5 between
+loads of one hash (c1/c2 `gfk=0` did): compare `gf_b2view.txt` before trusting a diff.
