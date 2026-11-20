@@ -1,6 +1,6 @@
 # K1531: Muse batch 27, captures and guards that can be trusted (2026-11-19)
 
-Six runs (tags 27A-27F; 27E and 27F were added 2026-11-19 23:55), started by Claude through Paseo with the K1053 chain, one after another in the main
+Run tags 27A-27G (27E and 27F were added 2026-11-19 23:55; 27E was withdrawn and 27G added 2026-11-20 01:25), started by Claude through Paseo with the K1053 chain, one after another in the main
 checkout. **This brief is the authority and is self-contained: do not read the older batch briefs' rule
 lists.** Levi (2026-11-11): junctions and outlines are the priority; a Claude agent is on rp=gf's corner
 faults (K1482) and judges them with captures, the K1436 bar and the fade and drag guards. Three stages this
@@ -162,30 +162,13 @@ Done 4 (bar control). `k1436_bar.ps1 -Ref master -Base master -Port 5486 -Tag 27
 
 Done 5: `npm test` green (257 files passed, 2 skipped; 3206 tests passed, 9 skipped; tsc clean). K1479 closed in 7b5d80a78; K1531 and K1482 left open. Tried and left: nothing failed and was dropped — the bar's 30-minute lock wait and the under-load base captures are recorded above; `fix_s3.mjs` (the one-shot patch that applied the s3-table edit) is kept with the run's tools. Preview :5485, the bar's :5486, and the run's Chrome profiles (`k1479-screen-profile`, `k1479-ab-profile`) stopped and removed.
 
-## Run E (27E): the test run that failed once gets a name (K1543)
+## Run E (27E): withdrawn 2026-11-20 01:25 (K1543's cause was found first)
 
-Added 2026-11-19 23:55. Between 22:46 and 23:08 that day `npm test` failed once, 3 tests in 1 file, in K1482
-stage 28's guard sequence: right after its two drag checks, while 27D's bar was capturing. The script kept the
-last 6 lines, so nobody knows which tests. Four later runs of the same code passed. Machine load is a guess,
-not tested. `vitest.config.ts` sets `testTimeout: 30000` and some tests set their own. Piped, the default
-reporter prints no per-test times: add the JSON reporter (`npx vitest run --reporter=default --reporter=json
---outputFile=<file>`; `npm test` runs `tsc` first, time that apart).
-Done: 1. The idle table: one run on master with nothing else running (through `scripts/perf_lock.ps1`: it is a
-timing). The 20 slowest tests: file, name, ms, its timeout, ms / timeout. 2. Six loaded runs, each one's whole
-output and JSON kept under `.claude/probes/K1543/out/27E/` (untracked). A run starts while the bar's control
-captures run in another process (`k1436_bar.ps1 -Ref <master> -Base <master> -Scenes
-ring,def,muse_hash,g41_user_tw64 -Port <yours> -Tag 27E_load`, started again when it ends; the bar takes the
-perf lock itself, the test run takes none). Per run: every failed test by file and name with the first line of
-its error, and the same 20-slowest table. 3. The verdict, one of three. (a) A test failed: say whether it is a
-timeout or an assertion. A timeout: cut the test's work where that keeps what it guards, else give it its own
-timeout of at least 4x its slowest loaded time, with a comment giving the idle and loaded times measured here.
-An assertion that depends on wall-clock time or on another process: remove that dependence. Then 6 more loaded
-runs with 0 failures. (b) Nothing failed, and a test ran past half its timeout under load: the same fix, then 3
-loaded runs with every test under half. (c) Neither: both tables go into the handoff with the three tests
-nearest their timeouts, K1543 stays open (the coordinator updates its text from the handoff), and the run
-stops. Never raise the global `testTimeout`; never skip, loosen or delete an assertion. 4. `npm test` green on
-an idle machine. K1543 closed only under (a) or (b). A change outside `test/` needs its reason in the commit
-message; none in the hands-off files.
+Not a run: its line left the queue before the chain reached it. The failure it was to name is not load. K1482
+stage 28's `run28.ps1` sets `$env:GF_KRETRY = "1"` for the bar and leaves it set through `npm test`, and
+`test/render/gf_k1482_switch.test.ts` pins the Node default off: 3 of its 7 tests fail with the variable set,
+all pass without (coordinator, 2026-11-20; stage 27's agent hit the same and named the tests). Run F's guard
+script clears the variable; K1543 holds what is left.
 
 ## Run F (27F): the corner stages' tools: captures without the lottery (K1539), one guard script
 
@@ -206,9 +189,38 @@ ordinary links with the second corner try on and with `gfk=0`, panel open, the f
 `npm test`, the K1436 bar): the header lists each with its pass line. New: each guard's whole output goes to
 `<OutDir>/<guard>.txt`; one line per guard, `PASS|FAIL <guard>: <its numbers>`; a failed `npm test` prints the
 failed tests' files and names (the JSON reporter, as in Run E); every capture guard runs through
-`scripts/perf_lock.ps1` with `-Owner`; the exit code is the number of failed guards. 3. Proof. The script on a
+`scripts/perf_lock.ps1` with `-Owner`; the exit code is the number of failed guards; `npm test` runs with `GF_KRETRY` removed from its environment (K1543: the stage scripts set it to 1 for the bar and left it set, and 3 tests of `test/render/gf_k1482_switch.test.ts` then fail), each other guard gets the value its source line gives it, set for that one child process. 3. Proof. The script on a
 preview of master, twice: every guard PASS both times, the two runs' numbers side by side in the handoff. The
 failure path once: in a scratch worktree (`git worktree add` under `$env:TEMP`, removed afterwards with `git
 worktree remove`) make one test fail, and show that the `FAIL npm test` line names it and the exit code is 1.
 4. Three lines at most in `.claude/rules/probes.md` on the two tools (where, usage, what PASS means). `npm
 test` green.
+
+## Run G (27G): the start marker's glow ring comes back after a context loss (K1537)
+
+Added 2026-11-20 01:25. K1537 in `LEDGER.md` has the one sighting (2026-11-19): after the probe Chrome's GPU
+process restarted during a cold gf compile, a ring around the start marker was missing from then on (about
+1,600 px, levels <= 28, device px x 745-826, y 78-159 in the fill drag check's view), and the page had logged
+`Cannot read properties of undefined (reading 'stats')`. Not established: which object the ring is (first
+suspect: the walker's glow, `WALKER_GLOW_TEX` in `src/render/fabric_maze_renderer.ts`, a canvas texture cached
+at module level), whether today's renderer loses it too, and whether the app or the probe loses it (the drag
+check pins clocks on a renderer the restore may have rebuilt). The app's handlers are in
+`src/app/context_loss.ts`; `probe_hooks.ts` counts lost and restored events.
+Done: 1. The repro, a tool under `.claude/probes/K1537/` (tracked: `git add -f`; its captures untracked). Load
+K1537's link, and the same link without `rp=gf&gfh=1`; reach one state (`alignFreezeParity`, as
+`.claude/probes/K1458/dragcheck.mjs` does) and shoot. Lose the app canvas's context
+(`getExtension("WEBGL_lose_context").loseContext()`), restore it 2 s later, wait until the page draws again,
+shoot. Count the px over tol 6 between the two shots, inside the ring's box and outside it (give the box for
+your view). The floor first: two shots with no loss between them. 5 loads per renderer. 2. One of three. (a)
+Something is missing after the restore in at least 1 load of 5: name the object (hide or tint it to prove
+it) and why the restore does not bring it back, fix it in `src/` outside the hands-off files, then 5 of 5 loads
+per renderer at the floor, in the box and outside. A second object that stays missing is fixed too if it is
+the same cause; else it is listed with its px and its box, for the coordinator to file. (b) Nothing differs in
+5 loads per renderer: try the sighting's own shape, a loss within 1 s of the load under `rp=gf&gfh=1` with the
+restore 5 s later, 5 loads. Still nothing: the numbers go in the handoff, K1537 gains "not reproduced by
+WEBGL_lose_context (N loads)" from the coordinator, and the run stops with no `src/` change. (c) The app draws
+the ring and only the drag check loses it (its pinned clocks sit on a rebuilt renderer): fix the probe, show
+its stops at 0 px in the box after a loss. 3. The `stats` error: its throw site by file and line if it shows
+in any load; fixed only if the site is outside the hands-off files and the fix is the same cause, else one
+line for the coordinator to file. 4. A `src/` change ends with How to work's guards and `npm test` green, and
+with a unit test where the fix has a pure part. K1537 closed only under (a) or (c).

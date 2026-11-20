@@ -791,7 +791,7 @@ Next free ID: K1544.
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
   - branch: mainline; last commit: `40ee10834`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 27A passed its gate 2026-11-19 16:24 and 27B (K1529; 434a34092, 2a287c5c5) at 21:26. 27D (K1479) passed its gate at 22:56 (7b5d80a78, 40ee10834; probes only: ab.mjs aligns the freeze parity, the bar and the s3 census count g41_user_tw42 and user_tw42.lightpaper once; the coordinator read the diff and the control bar's record, PASS 0/0/0 deduped 1 in .claude/probes/K1436/out/bar/27D_ctrl/bar.txt in the main checkout, and did not re-run its 10-load sets). Left in this batch: 27C (K1494), after batch 26's 26Z (running since 2026-11-19 23:58:11, cap 03:58; 26W passed its gate at 23:57); then 27E (K1543: the one-off npm test failure, every test timed idle and under a bar capture's load) and 27F (K1539's cure in K1482/cap.mjs, and one tracked guard script for the corner stages), both added to the brief and the queue 2026-11-19 23:55; then 26Z2 (it edits gf_look.ts or gf_pass.ts, K1482's file area: held with a # before its line in queue.txt since 2026-11-19 21:24 while K1482 stages run back to back; take the # off when the gpu_field slot is free; queue.txt.bak-s24 is the order before it moved last). A run that outlives the 4 h cap but ends by itself is adopted and gated by the restart. Both Muse briefs say to pull before a ledger add (27B's duplicate K1536 became K1539). On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Check that no run removes another owner's lock.
+  - next: 27A passed its gate 2026-11-19 16:24 and 27B (K1529; 434a34092, 2a287c5c5) at 21:26. 27D (K1479) passed its gate at 22:56 (7b5d80a78, 40ee10834; probes only: ab.mjs aligns the freeze parity, the bar and the s3 census count g41_user_tw42 and user_tw42.lightpaper once; the coordinator read the diff and the control bar's record, PASS 0/0/0 deduped 1 in .claude/probes/K1436/out/bar/27D_ctrl/bar.txt in the main checkout, and did not re-run its 10-load sets). Left in this batch: 27C (K1494), after batch 26's 26Z (running since 2026-11-19 23:58:11, cap 03:58; 26W passed its gate at 23:57); then 27F (K1539's cure in K1482/cap.mjs, and one tracked guard script for the corner stages, which clears GF_KRETRY for npm test) and 27G (K1537: the start marker's glow ring after a WebGL context loss), queued 2026-11-19 23:55 and 2026-11-20 01:25 (27E, for K1543, was withdrawn before the chain reached it: the cause was found); then 26Z2 (it edits gf_look.ts or gf_pass.ts, K1482's file area: held with a # before its line in queue.txt since 2026-11-19 21:24 while K1482 stages run back to back; take the # off when the gpu_field slot is free; queue.txt.bak-s24 is the order before it moved last). A run that outlives the 4 h cap but ends by itself is adopted and gated by the restart. Both Muse briefs say to pull before a ledger add (27B's duplicate K1536 became K1539). On each gate line read the run's Handoff in the brief, look at its crops, file its ledger items; restart a stopped chain with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Check that no run removes another owner's lock.
   - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
@@ -1215,19 +1215,19 @@ Every other item below waits on the trigger it names.
 
 - **K1537** · After a WebGL context loss and restore the glow ring around the start marker is missing. Seen
   once, 2026-11-19 17:42, build 083a8cb1c, in the fill drag check (.claude/probes/K1458/dragcheck.mjs, link
-  `?3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&fl=1.2&rp=gf&gfh=1`): the probe Chrome's GPU
-  process restarted during a cold gf compile (K1468; crash dump 17:42:07), the page error `Cannot read
-  properties of undefined (reading 'stats')` followed 26 s later (gf disposed and rebuilt), and from then on
-  the dragged page differed from a fresh load by 1672 and 1600 px, all in one ring at device px x 745-826, y
-  78-159 (css 372,39 to 413,80), levels <= 28, threads 0 px. Not established: which sprite it is (first
-  suspect: the walker's glow, fabric_maze_renderer.ts `WALKER_GLOW_TEX`, a canvas texture cached at module
-  level), whether today's renderer loses it too, and whether it is the app's or the probe's (the probe pins
-  `advanceClocks`, `paintClock` and `pulseBorn` on a renderer the restore may have rebuilt). Repro to try:
-  lose and restore the app canvas's context with `WEBGL_lose_context`, then compare that ring with a shot from
-  before. A bounded Muse fix run fits once it reproduces (numeric: the ring's px against the shot before the
-  loss). Evidence, untracked in the coordinator worktree .claude/worktrees/agent-af52b1a95572b7c1a:
-  .claude/probes/K1524/flip (dcf_marker_stops.png, dcf_diff_1.2.png, dcf_diff_0.14.png, dcf_diff.py, notes.md,
-  the two GPU-process dumps)
+  `?3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&fl=1.2&rp=gf&gfh=1`): the probe Chrome's GPU process
+  restarted during a cold gf compile (K1468; crash dump 17:42:07), the page error `Cannot read properties of
+  undefined (reading 'stats')` followed 26 s later (gf disposed and rebuilt), and from then on the dragged page
+  differed from a fresh load by 1672 and 1600 px, all in one ring at device px x 745-826, y 78-159 (css 372,39
+  to 413,80), levels <= 28, threads 0 px. Not established: which sprite it is (first suspect: the walker's glow,
+  fabric_maze_renderer.ts `WALKER_GLOW_TEX`, a canvas texture cached at module level), whether today's renderer
+  loses it too, and whether it is the app's or the probe's (the probe pins `advanceClocks`, `paintClock` and
+  `pulseBorn` on a renderer the restore may have rebuilt). Repro to try: lose and restore the app canvas's
+  context with `WEBGL_lose_context`, then compare that ring with a shot from before. Muse run 27G is queued for
+  it (docs/design/K1531_muse_batch27.md, 2026-11-20): it tries that repro first (numeric: the ring's px against
+  the shot before the loss). Evidence, untracked in the coordinator worktree
+  .claude/worktrees/agent-af52b1a95572b7c1a: .claude/probes/K1524/flip (dcf_marker_stops.png, dcf_diff_1.2.png,
+  dcf_diff_0.14.png, dcf_diff.py, notes.md, the two GPU-process dumps)
 - **K1536** · rp=gf: a Node build still leaves the second corner try OFF (tables.ts `GF_KRETRY` reads env
   `GF_KRETRY=1`) while the page has it on since K1524 (083a8cb1c, frame_loop.ts sets `__knotGfKRetry` unless
   `gfk=0`). So every Node probe and the K1436 bar's mirror scan need `$env:GF_KRETRY = '1'` to match the page,
@@ -2578,12 +2578,14 @@ Every other item below waits on the trigger it names.
   corner, on link A (1040,267 on the stage's frame: outline 18,20,27 to paper 29,31,47; nothing to see at 6x).
   Untested guess: the burial's membership test sits on a float boundary of chain 28's group. Take it with
   K1526's next stage; sooner if a corner shows it larger
-- **K1543** · `npm test` failed once, 3 tests in 1 file, in K1482 stage 28's guard sequence (2026-11-19
-  between 22:46 and 23:08, right after the dragchecks, while a Muse bar run was capturing); run28.ps1 kept the
-  last 6 lines only, so the tests are unnamed. Four later runs of the same code passed (two the agent's, two
-  the coordinator's). Cause not found; machine load is a guess, not tested. Stage 27's guard script keeps each
-  guard's whole output: when it fails again, name the tests here and look for a timeout.
-  Muse run 27E is queued for it (docs/design/K1531_muse_batch27.md)
+- **K1543** · `npm test` fails 3 of the 7 tests in test/render/gf_k1482_switch.test.ts whenever env
+  `GF_KRETRY=1` is set: the file pins the Node default off (run alone with and without the variable,
+  2026-11-20). This matches K1482 stage 28's one-off failure of 2026-11-19 (3 tests in 1 file, names not kept):
+  its run28.ps1 sets the variable for the bar and leaves it set through `npm test`, and the four green reruns
+  ran outside the script. Stage 27's guard script hit the same and named the tests. Not load. Left: the test
+  file drops the variable before it imports tables.ts (coordinator, once stage 27 has merged), or K1536 removes
+  the env switch; the shared guard script of Muse run 27F clears it for `npm test`
+  (docs/design/K1531_muse_batch27.md).
 
 ## Approved, to schedule (2026-10-11)
 

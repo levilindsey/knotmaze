@@ -72,8 +72,10 @@ nothing in `src/` has not reached the goal while time remains.
 `git merge origin/master` in your worktree first. Then as stage 24's `How to work`
 (`docs/design/K1482_s24_tick_step.md`), with these changes: ports 6190-6209, profiles `$env:TEMP\k1482s29-*`,
 probe directories `.claude/probes/K1482/s29` and `.claude/probes/K1482/out/s29` (untracked: do not `git add`
-raw captures or dumps); stage 28's `run28.ps1` in its worktree is the guards as one sequence (it keeps only
-each guard's last lines: change that in your copy). Commit WIP at every milestone, broken or not, and add
+raw captures or dumps); stage 28's `run28.ps1` in its worktree is the guards as one sequence. Change two
+things in your copy: it keeps only each guard's last lines, and it leaves `GF_KRETRY=1` set after the bar, so
+its `npm test` fails 3 tests of `test/render/gf_k1482_switch.test.ts` (K1543: that file pins the Node default
+off): clear the variable before `npm test`. Commit WIP at every milestone, broken or not, and add
 two or three handoff lines here each time. Read code through the shell (`Select-String`, a range of
 `Get-Content`); use the Read tool only on a file you are about to edit.
 
