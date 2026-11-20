@@ -56,8 +56,8 @@ strokes toward today's, and do not use today's border strokes as a bar.
 - THE POCKET INCIRCLE, REJECTED (K1482 s28, `GF_KXO` at 1d7facd32, not landed): an ink-only retry corner on the
   ball tangent to both arms AND the crossing pass's outline left the five sites as they were on the GPU (j4 4 px,
   t84e 0; j47, j59, t45s found no pocket) and turned 22 V points Levi never named into rounds, some with a spur or
-  step (t10e, j95, t44e, t77s). j4's notch is a 10 px eye's square left end (chain 82's -1 outline meets arm a0's
-  at 90 degrees): its 3.5 px round there moves ~3 px. An ink-only arc only adds ink, so a wedge (t84e) needs
+  step (t10e, j95, t44e, t77s). At j4 a 10 px paper eye sits between chain 82's -1 outline and arm a0's (square at
+  its bottom left): a 3.5 px round on that 90-degree corner moves ~3 px. An ink-only arc only adds ink, so a wedge (t84e) needs
   paper. The mirror (kRetry, `withHome`, `GfEval`) matched the GPU's border ink at j4, j139, t56e and t10e: judge
   a candidate there before capturing.
 

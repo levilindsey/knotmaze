@@ -93,10 +93,12 @@ pocket's close. The kept pockets must close at the cut arm, and each arc's sag m
     t58e, t4s, j143. With a spur, a step or a thickened tip: t10e, j95, t44e, t77s.
   - `&gfk=0`: the two loads settled on views 2e-5 apart, so its 42 + 30 px is unread. The tables are master's by
     construction.
-- **What j4's notch is.** `wimg28.ts` (who draws each pixel, `out/s28/wj4.png`, beside the GPU crop, s20's framing
-  1626,182 at 8x) shows it. The eye at the top left is about 10 px across. Its left side and top are chain 82's -1
-  outline, one continuous stroke. Its bottom is the -1 outline of chain 68's arm a0. The left end reads square:
-  the top-left is chain 82's own curve, but the bottom-left corner is a sharp 90 degrees.
+- **What is at j4's notch.** `wimg28.ts` (who draws each pixel, `out/s28/wj4.png`, beside the GPU crop, s20's
+  framing 1626,182 at 8x; s20's own sheet row is `out/s28/s20j4row.png`) shows a paper eye at the junction's top
+  left, about 10 px across. Its left side and top are chain 82's -1 outline, one continuous stroke. Its bottom is
+  the -1 outline of chain 68's arm a0, which meets chain 82's at a square 90-degree corner (the eye's bottom
+  left); the eye's right end is an acute tip. NOT confirmed: whether Levi's "notch" is the whole eye (paper cut
+  into the outline, which only closing the eye would fix) or its square end.
 - **Why GF_KXO did not move it.** Its pocket ball (the tubes of a0, b1 and chain 82; r 0.205 h, centre about
   1640, 191) is the right ball, and the (chain 82, a0) corner sits at that bottom-left vertex. But a 3.5 px round
   on a 90-degree corner changes about 3 px, which is the 4 px measured.
