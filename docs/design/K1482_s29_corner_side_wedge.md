@@ -1,7 +1,9 @@
 # K1482 stage 29: t84e's wedge from the corner's side, j59's step, j47's block (K1526; Claude agent stage)
 
-**Queued behind stage 27** (`docs/design/K1482_s27_flag_step.md`): one code agent at a time in
-`src/render/gpu_field/`. Start only when the coordinator says the stage before it has landed or stopped.
+**Started 2026-11-20 01:29** on master 0aadaa385, after stage 27 landed (the fold shift). Stage 27's tools are the
+better starting point (`.claude/worktrees/agent-a198fbb25c384a8cf/.claude/probes/K1482/s27`: `run27.ps1` keeps
+each guard's whole output and clears `GF_KRETRY` before `npm test`; `capseq28.ps1` and `diff28.ps1` gave
+byte-identical repeat loads). `npm test` runs without the perf lock; the lock's guards wait in one command.
 
 Levi, 2026-11-19, on K1490: **"Fix the wedges and notches, accept the slivers."** His bar: at junctions and
 under-tail ends the over thread's outline runs on unbroken, with no dot, stub, wedge, tick, notch or sliver.
