@@ -73,3 +73,16 @@ and at each milestone), whichever comes first; keep the last 30 minutes for the 
 stop: re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K1482 s27` here, commit,
 and report: the commits to land by SHA in order, the numbers, the sheets' absolute paths, a `Ledger items`
 list and K1482's handle fields. Never push, never edit `LEDGER.md`.
+
+### Handoff K1482 s27
+
+- t4s: eff52514d (src). Chain 66's -1 outline point q sits in a shallow own fold (pieceD(66) 0.37-0.38 < h) and
+  chain 4's arm-extension end disc (c4 [0,3], centred on 66's spine, radius h) partly buried it: the step and the
+  pinhole. Fix: another piece m buries a side point only past its own fold (m's distance + fo, fo faded out over
+  2-4 aa of fold depth: unfaded, j58's 0.14 fold drew a stray line in a fill). GPU, link A, loads of one state
+  (floor m vs m: 0 px border and fill, on and gfk=0): t4s's hole and step gone; outside the two sites 5 places
+  (on) / 4 (gfk=0) change by 1 px each, all ink gained, 0 lose ink (j38's pinhole filled, the rest invisible);
+  fill 0 px. Sheets: `.claude/probes/K1482/out/s27/sheet_t4s*.png`, `sheet_places.png`.
+- t81s: no fix (`.claude/rules/render-gpu-field.md`, t81s entry): its tick pixels are unfolded, so the fold shift
+  leaves it; all slots k348-370 of crossing 9:45 carry bits 3, so a flag switch cannot separate it. Next: run
+  45's +1 in-leg on from its corner to chain 9's band (a corner, not a cut), then the short out-leg can go.

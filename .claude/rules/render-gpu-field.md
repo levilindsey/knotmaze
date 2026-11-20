@@ -65,6 +65,13 @@ strokes toward today's, and do not use today's border strokes as a bar.
   inks no deeper inside B's other-chain tubes than their band (pd[m] < h - W): stub ends mitre (j47, t45s, j59's stub).
   Only against partners at z 0 (|z| ramp 0.004..0.02; t56s's partner dips under, its outline is the over-pass line),
   z read as pkey + pd zK: a packed P1 never sets ps (depth(ps) there bit t56s on the GPU only). t84e is out of reach.
+- FOLD SHIFT (K1482 s27, side faces' burial in eval.ts and gf_glsl.ts layers(); zb's regex and ko's text follow it): a
+  side point q sitting fo inside its own piece's tube (a swallowtail fold) is buried by another piece m only past that
+  fold: m's distance + fo. t4s: chain 4's arm-extension end disc rides chain 66's spine, nibbling 66's -1 fold into a
+  step and a pinhole. Unfaded, a deep fold (j58, 0.14) drew a stray line in a fill: fo fades out over 2-4 aa of depth.
+- t81s (K1482 s27, open): its tick pixels are unfolded (own distance h): chain 45's +1 corner sits 2-3 px below
+  chain 9's outline, and the flagged short cut keeps 45's out-leg from that corner up to 9's band (all slots k348-370
+  of 9:45 carry bits 3, so no flag switch separates it). Removing that leg opens the corner: it needs the in-leg run on.
 
 ## The pass on the Pixel (stage 4, `K1362_s4_shader.md`)
 
