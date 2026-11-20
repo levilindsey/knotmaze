@@ -1145,10 +1145,6 @@ Every other item below waits on the trigger it names.
   gfh=1 capture) and j24 dash (25.4, 0.8); g41_def_tw42 j132 wedge and dash, j89 notch and dash; g41_ring_tw42
   j8 notch; lightpaper j29 wedge, j7 dash and notch, j27 smear, j23 notch and dash; muse_hash j144 tick. One
   bounded Muse run per site or cause once 26G and 26H show the pattern
-- **K1479** · K868 census states are not one per scene: ring froze on two physics hashes (50dd4ffd, 0a0ee15e)
-  within one build in K1436's bar control, and g41_user_tw42 freezes on user_tw42.lightpaper's state, so its
-  finds repeat lightpaper's. Find what the freeze leaves unpinned (K1468 s2's ab.mjs saw two hashes per link
-  too) and re-take the stale diag hashes (Handoff K1436 s3, docs/design/K1436_s3_screen_bar.md)
 - **K1494** · fade.mjs guard prints FAIL on cfe66a7d (fl=0: 677/679 sides pass, 348/350 crossings complete;
   fl=1.2: 439/451 sides, 287/299) while its distances match today (p90 |d-today| 0.0001-0.0124 world) - is the
   FAIL its crossing-completeness/dot criterion rather than a distance failure? Seen in Muse batch 26 Run F's
@@ -2947,6 +2943,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1479** · K868 census states are not one per scene: ring froze on two physics hashes (50dd4ffd, 0a0ee15e) within one build in K1436's bar control, and g41_user_tw42 freezes on user_tw42.lightpaper's state, so its finds repeat lightpaper's. Done in 7b5d80a78 (2026-11-19).
 - **K1529** · rp=gf capture A/Bs: some loads of one build land on a view shifted by under a pixel (76,609 px differ, all on antialiased edges and soft shadows; not the reload after a hash miss, not concurrent GPU use, not the background; a per-page view state such as the eased camera's offset is inferred, not tested). Done in 434a34092 (2026-11-19).
 - **K1524** · rp=gf corners: is rounding welcome at the sharp corners Levi did not name? Levi, 2026-11-19: "take the rounding". The second corner try is the default under gfh=1 (`gfk=0` turns it off), docs/design/K1524_keep_fault_gate.md deleted, probe branch `k1482s21-kclr` deleted; live 18:02. Done in 083a8cb1c (2026-11-19).
 - **K1535** · rp=gf's border look differs from today's renderer's (Muse 26Y's numbers). Dropped: already decided: Levi 2026-11-17 kept gf's own border look (K1455, .claude/rules/render-gpu-field.md). With explore off the two differ the same way (four live shots 2026-11-19, untracked .claude/probes/K1535/out), so nothing to ask (2026-11-19).
