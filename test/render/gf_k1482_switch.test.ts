@@ -2,14 +2,18 @@
 // unless `gfk=0` (K1524). Off, a Node build's default: the tables carry no retry field, as a build forced off, field for
 // field (gf_home_glsl.test.ts keeps master's key and pack digests, untouched), and no program changes. On: retry
 // corners exist and every one passes both gates (GF_KRMIN, GF_KSAG); the programs are retryForm of the home ones.
+// The default is read with env GF_KRETRY removed: a guard script that set it for the bar and left it set once
+// failed three tests here (K1543).
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { FieldScene } from "../../src/render/field/scene";
 import { tablesDiff } from "../../src/render/gpu_field/gf_build";
 import { GF_VS, homeForm, retryForm } from "../../src/render/gpu_field/gf_glsl";
 import { GfPass } from "../../src/render/gpu_field/gf_pass";
 import { buildTables, GF_KRETRY, GF_KRMIN, GF_KSAG, withHome, type GfTables } from "../../src/render/gpu_field/tables";
+
+vi.hoisted(() => { delete process.env.GF_KRETRY; });
 
 const dir = join(__dirname, "field", "scenes");
 const load = (n: string): FieldScene => {
