@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1532.
+Next free ID: K1533.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -339,18 +339,18 @@ Next free ID: K1493.
   clone pays; the 89 text files hold nothing private (searched); a rewrite re-IDs 164 commits and strands 21
   local branches, about 100 worktrees, Muse's checkout and the laptop's clone. Recommended to Levi: leave it,
   or one rewrite later together with K1467 (same page as K1444)
-- **K1524** · rp=gf corners: K1482 s20's fix3 (second corner try with longer arms, ink only; branch
-  `worktree-agent-a0f22901bb5fca4a4`, 37eda49e8, not landed) also rounds about 27 sharp loop tips and V
-  corners Levi did not name (t39e t65e t69s t17e t29e t80e t5e t5s t55e ...). Stage 21 (2026-11-19): fix3 as
-  built cannot land whatever the answer: it fails the K1436 bar on def, g41_user_tw64 and muse_hash with 10 new
-  finds (the arc leaves a sharp fill corner bare, a square stub, ticks at the old apex of V mitres;
-  `.claude/probes/K1436/out/bar/k1482s21/` in the s21 worktree). Levi's call, asked 2026-11-19: is rounding
-  welcome at corners he did not name (it then has to be made clean in every maze, the outline on the fill), or
-  do today's sharp corners stay (recommended since stage 21, and what stage 22 works to until he answers), or
-  name the rows to keep. GF_KCLR (local probe branch `k1482s21-kclr`, 7b2b22e99; delete it once this is
-  answered) returns 4 of the unnamed corners to today's look, a part of a "keep" answer. Card:
-  https://claude.ai/artifact/GU7kbzAG1uofdBLFD2UBh1 (sheets, `card.py` and `card_bar.py` in untracked
-  `.claude/probes/K1524/`)
+- **K1524** · rp=gf corners: is rounding welcome at sharp corners Levi did not name? K1482 s22's C1 (a294f3271
+  on branch `worktree-agent-adabb55bc67661562`: the second corner try with longer arms, ink only, kept where
+  r >= 0.1 h and sag <= 0.35 h) finishes j14 and passes the K1436 bar on ring, def, muse_hash and g41_user_tw64
+  and every guard, but on link A it rounds 98 sharp loop tips and V corners he did not name, 70 of them by
+  30 px or more (`unnamed_c1_ranked.txt` and the sheets in the s22 worktree's `.claude/probes/K1482/out/s22/`;
+  clean arcs at the 24 largest, by the coordinator's eye). Levi's call, asked 2026-11-19: round them (C1
+  becomes the default), keep today's sharp corners (C1 stays off, and j14 needs a gate that tells a faulty
+  meeting from a clean point), or name the rows to keep. K1482 stage 23 puts C1 on master behind `gfk=1`, off
+  by default, so he can compare live. fix3 (s20, 37eda49e8) failed the bar with 10 finds and is superseded;
+  delete the local probe branch `k1482s21-kclr` (7b2b22e99) once this is answered. Card:
+  https://claude.ai/artifact/GU7kbzAG1uofdBLFD2UBh1 (sheets, `card.py`, `card_bar.py` and `card_c1.py` in
+  untracked `.claude/probes/K1524/`)
 
 ## In progress
 
@@ -754,11 +754,11 @@ Next free ID: K1493.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: agent `adabb55bc67661562` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 12:25, 2 h cap ~14:25)
-  - branch: `worktree-agent-adabb55bc67661562`, worktree `.claude/worktrees/agent-adabb55bc67661562`; last commit: `fa6640ebf`
-  - evidence: .claude/probes/K1482/s22 and out/s22 (untracked, in the s22 worktree); stage 21: .claude/probes/K1482/s21, out/s21 and .claude/probes/K1436/out/bar/k1482s21 (untracked, in worktree .claude/worktrees/agent-afdf2b8bb494bb380, branch worktree-agent-afdf2b8bb494bb380 at 845a3e704, kept); fix3: branch worktree-agent-a0f22901bb5fca4a4 at 37eda49e8 (= a9985b1d3 on the s21 branch); .claude/probes/K1524 (the card)
-  - next: stage 22 running since 2026-11-19 12:27; told at 12:50 that gf_look.ts and gf_pass.ts are free (K1525 s1 landed no src change). On its report: look at every site and every moved place in context before relaying, land the commits that pass by SHA, then message Levi. If Levi answers K1524, message the agent. Then the leftover kinds (K1526, K1527, K1528), K1523, j64 (K1517), and in the same file area K1525's field stage (coverage at dives) and K1419's partner capture
-  - brief: `docs/design/K1482_s22_landable_corners.md`
+  - owner: agent `a5016731195d015ff` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-19 13:53, 2 h cap ~15:53)
+  - branch: `worktree-agent-a5016731195d015ff`, worktree `.claude/worktrees/agent-a5016731195d015ff`; last commit: `98a11ec30`
+  - evidence: .claude/probes/K1482/s23 and out/s23 (untracked, in the s23 worktree); C1: branch worktree-agent-adabb55bc67661562 at 23a0a73aa (src a294f3271), with .claude/probes/K1482/s22, out/s22 and .claude/probes/K1436/out/bar/k1482s22 (untracked, in worktree .claude/worktrees/agent-adabb55bc67661562, kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (branch at 845a3e704, kept); .claude/probes/K1524 (the card)
+  - next: stage 22 ended 2026-11-19 13:50 with nothing landable while K1524 is open (C1 finishes j14 and passes the bar and every guard, but rounds 98 unnamed corners on link A). Stage 23 running since 13:55: C1 on master behind gfk=1, off by default and equal to master. On its report: check off = master from its numbers and one crop, merge its commits (tools/agent_merge.ps1), watch the deploy, send Levi the two live links with the K1524 card. Then stage 24 in the same file area, on a kind that does not wait on K1524: K1527 (t81s, t4s) or K1528 (the four converging sites), then K1526 (design doc first; builds on the retry), K1523, j64 (K1517), K1525's field stage, K1419's partner capture. Tell the running agent before Muse 26Z2 starts (it edits gf_look.ts or gf_pass.ts)
+  - brief: `docs/design/K1482_s23_corner_switch.md`
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -1191,12 +1191,16 @@ Every other item below waits on the trigger it names.
 - **K1526** · rp=gf corners, leftover kind 1 (j50, j4, j47, t84e, j59, t45s on link A): a crossing thread runs
   through the retry ball, or the arms past the cut are too short for one. The ball needs the crossing pass's
   near outline as a third bound; longer arms do not help (GF_KFROM and GF_KX2 rejected, patches in the s21
-  worktree's .claude/probes/K1482/s21). K1482 stage 22 may take it (`### Handoff K1482 s21` in
+  worktree's .claude/probes/K1482/s21). Not taken by stage 22; it builds on the retry (C1, behind `gfk=1`
+  after stage 23), so write the design doc first (`### Handoff K1482 s21` in
   docs/design/K1482_s21_corners_rest.md)
-- **K1527** · rp=gf corners, leftover kind 2 (t81s's top tick, probably t4s's step): an outline cut by a
-  crossing at a shallow angle to another outline, so the cut's square end pokes out (stage 13's lkGap class,
-  in the look, not the corner solver): clip the cut to the other outline (`### Handoff K1482 s21` in
-  docs/design/K1482_s21_corners_rest.md)
+- **K1527** · rp=gf corners, leftover kind 2 (t81s's top tick, probably t4s's step): the outline does not
+  follow its fill's corner. At 6x the fill's edge turns a corner at the tick; the ink follows the rising part
+  and ends square there. Not the crossing cut, as stage 21 filed it: five probes on `lkCut` (k2, k2b, k2d, k2g,
+  k2f; patches in the s22 worktree's .claude/probes/K1482/s22) left the tick exactly as it was, and only
+  dropping the s8 slot rule (k2e) moved it, opening a new gap. Next: trace which corner term owns the fill's
+  corner at the tick and why the outline does not take it (`### Handoff K1482 s22` in
+  docs/design/K1482_s22_landable_corners.md)
 - **K1528** · rp=gf corners, leftover kind 3 (t59s's twist foot, j15's Z, t58e's second V, t23e's patch): two
   outlines converge with no corner at all, so no ball exists; needs a new side-to-side fillet. j41 (a sharp
   ">" kept by a 0.26h first-pass corner; retrying it changes nothing visible) fits no kind yet (`### Handoff
@@ -2536,6 +2540,10 @@ Every other item below waits on the trigger it names.
   not the background; a per-page view state such as the eased camera's offset is inferred, not tested). Until
   the capture pins the view, compare only within loads that agree (`The 76,609 px fill difference` in `###
   Handoff K1482 s21`, docs/design/K1482_s21_corners_rest.md; out/s21/sd_sheet.png in the s21 worktree)
+- **K1532** · rp=gf with the corner retry on (C1, K1482 s22; gfk=1 after stage 23): the fill look on link A
+  differs from the start build at 29 px by 1 level of 255, spread over the frame. Two fill-neutral probe
+  builds give 0 px, so the 29 are C1's own; cause untested (`### Handoff K1482 s22`, Numbers, in
+  docs/design/K1482_s22_landable_corners.md)
 
 ## Approved, to schedule (2026-10-11)
 
