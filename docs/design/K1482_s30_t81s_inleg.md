@@ -106,3 +106,23 @@ added; guards started at 03:56 (`run30.ps1`, outputs in `out/s30/raw/guards/`).
 **s30 progress (04:05).** `npm test` on a2c806440 failed one text pin (gf_look.test.ts K1492: lkRun split the
 composite's `lkHiA *= ...; if (lkCo.a ...)` line). lkRun moved after that line (it reads only ink and lkg, so the
 same program); the WIP commits squashed into 808d724e6 so each commit is green; guards restarted on it (port 6213).
+
+### Handoff K1482 s30
+
+**t81s is fixed on link A** (808d724e6, look only): the nub below the joint is gone; chain 45's +1 in-leg outline runs
+straight on into chain 9's outline in a V corner, no gap; the same with `&gfk=0`; fill 0 px. Every Done holds.
+
+- Commits to land, in order: 808d724e6 (gapRunOn + lkRun + the anchor-reach rule; npm test green, no pin moved),
+  5961f106b (lore, probes, progress) and this handoff. The WIP 276dbbfbd and a2c806440 are squashed away
+  (a2c806440 failed the K1492 text pin in gf_look.test.ts).
+- Link A, today (dbee156b4) vs new, one capture session: floor 0 (repeat loads byte-identical, on and off); new =
+  a2c806440's shots byte for byte. 488 px in 13 places at luminance step 1, as it loads = gfk=0: t81s 62 px; outside
+  it 12 places, 426 px: 4 gain-only (t66s, j6:30:5, j51:50:-50, t47e), 0 lose-only, 8 mixed (t28e 87, j161 69, t61s
+  56, j83 55, j51 54, j31 38, t7s 14, j42 5). By eye (sheets top_c2_a/b, z_*): each is an old tooth, notch or rounded
+  pocket turned into a clean V corner, or unchanged in look; j83 and j51's new V wedges hold a one-pixel lighter
+  speck in the ink near the tip (sliver class). Fill 0 px.
+- Guards on 5961f106b (src = 808d724e6), whole outputs in `.claude/probes/K1482/out/s30/raw/guards/`: bar PASS new 0
+  grown 0 gone 0 (taken under load: it ran beside the locked guards); hold 60/60 as it loads and with gfk=0;
+  panelopen 1; dragcheck_b and dragcheck PASS; npm test 258 files passed.
+- Open: none at t81s. The run-on fires at 14 groups on link A (`runs30.ts`); a maze outside the bar's four could
+  hold a run-on that reads worse, which only a wider sweep would find.
