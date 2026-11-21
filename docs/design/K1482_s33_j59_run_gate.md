@@ -114,3 +114,50 @@ re-read this brief and `git log`. On stopping: commit WIP, append `### Handoff K
 report: the commits to land by SHA in order, what changed at the site by eye, the numbers, each guard's result
 with the path of its whole output file, the sheets' absolute paths, a `Ledger items` list and K1482's handle
 fields. Never push, never edit `LEDGER.md`.
+
+## Step 1: the measurement (stage 33, 2026-11-20)
+
+Probe: `.claude/probes/K1482/s33/run33.ts` (the CPU copy with s31's runT on everywhere, `GfEval.S33 = "all"`,
+against it off; every pixel whose ink moves by more than 0.02 is grouped by (band chain C, over chain M)). The
+run is the arc of C's offset outline, on the changed side, that stays within a tolerance of M's tube: at 0.03,
+0.06 and 0.12 h (0.5, 1 and 2 px on link A). dCM is the least centerline distance from C to M over all of C,
+in h (2.0: the tubes touch; less: C dives under M). Crops: `out/s33/mimg_A`, `mimg_g41`, `mimg_def`,
+`mimg_cl` (`mimg33.ts`, before | runT | diff). ring: no pair. muse_hash is link A's maze (the same 12 pairs,
+plus C37/M68: 1 px, dCM 1.91).
+
+| maze | place | C/M | px lost | run h at 0.03 / 0.06 / 0.12 | run px at 0.06 | dCM | by eye |
+|---|---|---|---|---|---|---|---|
+| A | t23e (j59) | 23/7 | 192 | 1.06 / 1.14 / 1.44 | 19.4 | 1.98 | **step** (band along the outline, ends square) |
+| g41_user_tw64 | 1012,788 | 1/2 | 333 | 0.48 / 0.98 / 1.76 | 20.6 | 1.57 | wedge, cut |
+| A | t76e | 76/48 | 94 | 0.78 / 0.98 / 1.16 | 16.7 | 1.78 | wedge, cut |
+| A | t20e (1340,1487) | 20/44 | 14 | 0.44 / 0.94 / 1.22 | 16.0 | 1.91 | chain-end cap, nicked |
+| g41_user_tw64 | 278,271 | 9/7 | 113 | 0.48 / 0.68 / 0.88 | 14.3 | 0.00 | wedge, cut (C9 crosses under M7) |
+| A | t81s | 81/9 | 131 | 0.26 / 0.56 / 1.28 | 9.5 | 1.63 | wedge, cut |
+| A | t73e | 73/67 | 5 | 0.16 / 0.40 / 0.90 | 6.8 | 0.00 | - |
+| A | t0e | 0/72 | 3 | 0.18 / 0.36 / 0.80 | 6.1 | 0.00 | - |
+| A | t36s | 36/71 | 33 | 0.12 / 0.28 / 1.04 | 4.8 | 1.75 | wedge, cut |
+| g41_user_tw64 | 213,1112 | 6/26 | 145 | 0.14 / 0.28 / 0.68 | 5.9 | 0.00 | wedge, cut |
+| A | t53e | 53/84 | 81 | 0.10 / 0.20 / 0.42 | 3.4 | 0.01 | wedge, cut |
+| A | t14e | 14/38 | 5 | 0.08 / 0.20 / 0.40 | 3.4 | 1.67 | - |
+| def | 1180,258 | 79/61 | 4 | 0.08 / 0.12 / 0.86 | 1.4 | 0.00 | - |
+| A | t81s, j21, t34e | 45/9, 6/64, 75/34 | 1, 1, 20 | <= 0.04 / 0.14 / 0.34 | <= 2.4 | 0.00 | - |
+
+**Verdict: the run length does not separate them.** j59's step is the only step; at 0.06 h it outruns the
+nearest wedges (t76e, g41 C1/M2, both 0.98 h) by 0.16 h, under the 0.2 h the brief asks. At 0.03 h the margin
+is 0.28 h (t76e 0.78), but a wedge's run grows about 0.2 h per 0.03 h of tolerance, so the order rests on the
+tolerance; at 0.12 h g41 C1/M2 (1.76) outruns j59 (1.44). Breaking pairs: t76e C76/M48 and g41 C1/M2 (wedges
+at 0.98 h), t20e C20/M44 (a cap at 0.94 h). The gate is not ported (step 3). What does set j59 apart on the five
+mazes: its band never dives under the over chain (dCM 1.98: side contact; next t20e and muse C37/M68 at 1.91,
+every wedge 1.78 or less) AND it lies along it for a long run (t20e: 0.44 h at 0.03 h). Step 3 tries that as a
+per-(band chain, over chain) switch baked in `tables.ts`: local to j59 by construction, its margins thin
+(0.07 h on dCM), and it says nothing about steps on mazes not measured.
+- 08:02 WIP 1: step 1 measured (table above); `eval.ts` carries runT again behind a per-chain switch `T.rtM` (absent: master's look; probes set `GfEval.S33` = `all` / `0`), `tables.ts` declares `rtM` and bakes nothing yet. Next: bake the side-contact switch, check the CPU copy at every pair, then the GLSL.
+- 08:09 WIP 2: the switch baked (`tables.ts` sideRuns: tubes never nearer than 1.945 h, within 2.03 h over >= 0.6 h; marks only C23/M7 and C7/M23 on the five mazes, 10-20 ms of a 65 ms build) and packed (chain texel 3 .y = rtM + 1); `gf_glsl.ts` RUNT / RT_FACE / RT_VTX in homeBurial (retry programs only). The CPU copy changes link A only at t23e (192 px, `out/s33/run33g_A.txt`). Next: previews, the browser check, captures.
+- 08:33 WIP 3: browser check of WIP 2's build (base 4413372e3 on 6270, candidate on 6271; `capseq28.ps1` m / c1 / m2 in one locked session, `out/s33/caps_2.txt`): link A as it loads loses 153 px at ONE place (1034,1515 near t23e, lose-only, box 1024,1505-1044,1528: the doubled band and its square end), stage 31's count; the sliver's border (the short band 1013-1027,1523-1531) stays; fill 0 px, `&gfk=0` border and fill 0 px; floor 0 px (repeat loads hash-equal). t81s, t76e, t53e, t36s, j58: 0 px. Tools: `s33/diff33.py` (places, floor, sheet). Next: guards, lore.
+- 08:36 WIP 4: lore (SIDE-RUN GATE in `render-gpu-field.md`); the by-eye sheet `out/s33/sh/s33_places.png` (j59, t23e, t81s, t76e, t53e, t36s, j58; as it loads and `&gfk=0`). A 1-2 px shoulder stays on chain 7's lower edge at 1043,1504-1505, where the doubled band ended (the CPU copy's ungated runT changes the same pair only, so s31 left it too). Guards started 08:33 (`out/s33/guards`).
+
+### Handoff K1482 s33
+
+- 07:45-09:35. Lands in order: 45bac3ad1 (WIP 1), 9935885b0 (WIP 2, the src), 094df7ef9 (WIP 3, tools), 71eb4ae09 (WIP 4, lore), and this commit. Step 1: the run length does not separate j59 from the wedges; the never-dives test (`tables.ts` sideRuns -> `rtM`) does, by a thin margin (j59 1.98 h; a cap 1.91 h, wedges 1.78 h or less), and marks only C23/M7 and C7/M23 on the five mazes.
+- Link A as it loads: 153 px lost at ONE place (1034,1515, t23e; box 1024,1505-1044,1528). Stage 31's ungated runT drew the same pixels there (its c1 against this c1: 0 px in 1000-1070,1490-1545). Fill 0 px; `&gfk=0` border and fill 0 px; repeat loads hash-equal (floor 0). t81s, t76e, t53e, t36s, j58 unchanged. A 1-2 px shoulder stays on chain 7's lower edge at 1043,1504-1505. Sheets: `out/s33/sh/s33_places.png`, `out/s33/d/on_b2_top.png`.
+- Guards on 094df7ef9 (`out/s33/guards/summary.txt`): bar PASS new 0 grown 0 gone 0; hold 60/60 and gfk=0 60/60; panelopen 1; dragcheck_b max 12; dragcheck max 88 (earlier builds 0-67); npm test 3198 passed, 18 skipped. Residual: sideRuns costs about 9 ms per table build in the browser pool as it loads (tms 21.8-28.5 against 12.2-17.3 ms; gfk=0 unchanged). Next: the cost (cache it per topology or make it cheaper), and validate the margin on more mazes.

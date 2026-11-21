@@ -2,7 +2,8 @@
 // the GPU pass (gf_glsl.ts). Pure: no GL here, so Node tests pin the layout.
 //
 // Layout, in texels of a GF_TW-wide texture (index i at (i & (TW-1), i >> LOG)):
-//   CH   3 per chain:  (cV0, cNV, cClosed, cLen) (cS0, cPin0, cPinN, cArm0) (cArmN, 0, 0, 0)
+//   CH   3 per chain:  (cV0, cNV, cClosed, cLen) (cS0, cPin0, cPinN, cArm0) (cArmN, rtM + 1, 0, 0)   K1482 s33: rtM, the retry's
+//                      side-run partner (tables.ts sideRuns; 0 = none, and without the retry)
 //   V    1 per vertex: (vx, vy, vs, 0)
 //   PIN  1 per pin:    (pinS, pinZ, pinWL, pinWR)   K1451: the key windows
 //   ARM  2 per arm:    (aSR, aDir, aL, aLcut) (aG, aHome, 0, 0)    aHome only with T.homeOn (K1438), else 0
@@ -58,7 +59,7 @@ export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKe
   for (let c = 0; c < T.nC; c++) {
     put(o.ch + 3 * c, T.cV0[c], T.cNV[c], T.cClosed[c], T.cLen[c]);
     put(o.ch + 3 * c + 1, T.cS0[c], T.cPin0[c], T.cPinN[c], T.cArm0[c]);
-    put(o.ch + 3 * c + 2, T.cArmN[c], 0, 0, 0);
+    put(o.ch + 3 * c + 2, T.cArmN[c], T.rtM !== undefined ? T.rtM[c] + 1 : 0, 0, 0);
   }
   for (let v = 0; v < T.nV; v++) put(o.v + v, T.vx[v], T.vy[v], T.vs[v], 0);
   for (let i = 0; i < T.pinS.length; i++) put(o.pin + i, T.pinS[i], T.pinZ[i], T.pinWL[i], T.pinWR[i]);
