@@ -19,10 +19,14 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1566.
+Next free ID: K1571.
 
 ## Waiting on Levi
 
+- **K1567** · rp=gf t81s (K1560): stage 35's candidate is built, not landed (9d42c8f90 on
+  worktree-agent-a36a75a8057e449f5): a 5 px step on the under thread's right edge, 18 px. Reply "t81s fine" /
+  "t81s take it" / "t81s more"; my pick: leave it. Card: the decision page, #t81s-candidate; what each reply
+  starts: K1482's handle
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -716,11 +720,11 @@ Next free ID: K1566.
   the key window to the overlap's end, key windows at a thread's end for j49, then the STRICT bar and the sweep.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
-  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5; stage 36 its Claude agent (started 2026-11-20 16:35, cap 2 h); stage 35: nobody since 2026-11-20 16:21, finished as a candidate that waits on Levi
-  - branch: mainline; stage 36 on worktree-agent-a02a2591885b583a9 (.claude/worktrees/agent-a02a2591885b583a9, starts at a52f098bd); stage 35 on worktree-agent-a36a75a8057e449f5 (.claude/worktrees/agent-a36a75a8057e449f5, kept): candidate src `9d42c8f90`, its last commit `996a342f6`; last commit: `a52f098bd`
+  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5; stage 37 its Claude agent (started 2026-11-20 about 17:50, cap 2 h); stage 35: nobody since 2026-11-20 16:21, a candidate that waits on Levi; stage 36: nobody since 17:30, finished as a classing and merged
+  - branch: mainline; stage 37 on the newest worktree-agent-* branch (.claude/worktrees/agent-*, made 2026-11-20 after this commit); stage 35 on worktree-agent-a36a75a8057e449f5 (kept): candidate src `9d42c8f90`, its last commit `996a342f6`; stage 36's worktree .claude/worktrees/agent-a02a2591885b583a9 kept for its untracked captures and sheets; last commit: `d5253d4ff`
   - evidence: stage 26: .claude/probes/K1482/s26 and out/s26 (untracked, in worktree .claude/worktrees/agent-a306305e3593e9802, kept; landed 102355098) and its live look .claude/probes/K1482/s26_live (untracked, coordinator worktree .claude/worktrees/agent-af52b1a95572b7c1a); stage 25: .claude/probes/K1482/s25 and out/s25 (untracked, in worktree .claude/worktrees/agent-a886c0bec734229eb, kept; branch worktree-agent-a886c0bec734229eb at 5052e0e82, its handoff and lore landed in e4c612410); the flip guards: .claude/probes/K1524/flip (untracked, coordinator worktree); stage 24: .claude/probes/K1482/s24 and out/s24 (untracked, in worktree .claude/worktrees/agent-a1ac1faa36f86dcc4, kept); stage 23: .claude/probes/K1482/s23, out/s23 (raw/hold_tip, hold_tip_on, dcf_tip, dcb_tip the failed run, dcb_tip2_1, dcb_tip2_2) and .claude/probes/K1436/out/bar/k1482s23 (untracked, in worktree .claude/worktrees/agent-a5016731195d015ff, kept; branch worktree-agent-a5016731195d015ff at 826acea50); C1: worktree .claude/worktrees/agent-adabb55bc67661562 (kept); stage 21: worktree .claude/worktrees/agent-afdf2b8bb494bb380 (kept); .claude/probes/K1524 (the card); stage 28: .claude/probes/K1482/s28 and out/s28 in worktree agent-a1c1c68a332de8029 (untracked), the bar's output .claude/probes/K1436/out/bar/k1482s28 in the main checkout, the coordinator's before and now sheet .claude/probes/K1482/cards/s28_landed.png; stage 28's live look .claude/probes/K1482/s28_live (coordinator worktree, untracked; build 66ec58c on levi.dev 23:42: live_pairs.png shows t45s, t50s and t38e clean and t23e's spur gone with its patch left; against the 20:57 live shot the picture moves only at the trimmed corners); stage 27: .claude/probes/K1482/s27 and out/s27 (untracked, in worktree .claude/worktrees/agent-a198fbb25c384a8cf, kept; landed 198469fc7..f41d6b68c; guard outputs whole in out/s27/raw/guards), the coordinator's before and now sheets .claude/probes/K1482/cards/s27_landed.png, s27_sites.png, s27_places.png and the live look .claude/probes/K1482/s27_live (coordinator worktree, untracked); stage 29: .claude/probes/K1482/s29 and out/s29 (untracked, in worktree .claude/worktrees/agent-af74bc71e7b05839a, kept; landed f0fe2f692..3fdf4f49f; guard outputs whole in out/s29/raw/guards), the coordinator's before and now sheet .claude/probes/K1482/cards/s29_landed.png and the live look .claude/probes/K1482/s29_live (coordinator worktree, untracked); stage 30: .claude/probes/K1482/s30 (tracked tools) and out/s30 (untracked, in worktree .claude/worktrees/agent-a19d082bada33a2d3, kept; landed 05155fa4e..f26a6519a; guard outputs whole in out/s30/raw/guards), the coordinator's sheets .claude/probes/K1482/s30_check, the cards .claude/probes/K1482/cards/s30_t81s.png and s30_others.png and the live look .claude/probes/K1482/s30_live (coordinator worktree, untracked); stage 31: .claude/probes/K1482/s31 and out/s31 (untracked, in worktree .claude/worktrees/agent-a48af51230e66ddb3, kept; nothing in src, lore and handoff merged in 5f48001c1, the attempt is caee39847; its GPU sheet out/s31/sheet_c1_top_on.png); stage 32: .claude/probes/K1482/s32 (tracked tools: the CPU copy's ink before | after at a place, its whole-link diff, per-pixel pieces, diag32.mjs) and out/s32 (untracked, in worktree .claude/worktrees/agent-a7fb17d3cfe160646, kept; merged 3ee641a4e with the rule off, the commit with it on is 41500f1e6; the CPU copy's pictures out/s32/mimg_t84e_hmdh.png and view_hmdh.png, the browser records diag_m.txt, diag_n.txt and cap_n1.txt); stage 33: .claude/probes/K1482/s33 (tracked tools) and out/s33 (untracked, in worktree .claude/worktrees/agent-a0d17558535ed150b, kept; merged 928ed154a; its capture record out/s33/caps_2.txt), the coordinator's live look .claude/probes/K1482/s33_live (coordinator worktree, untracked); the run-on's removal: .claude/probes/K1482/out/k1545 (coordinator worktree, untracked: caps.txt, diff.txt, the sheets) and its live look .claude/probes/K1482/k1545_live; stage 34: .claude/probes/K1482/s34 (tools, committed on its branch) and out/s34 in worktree .claude/worktrees/agent-aaaed0ce23a8c0478 (untracked), the coordinator's pictures of the spur .claude/probes/K1482/out/s34/j15_close.png and j15_now.png (coordinator worktree, untracked)
-  - next: RUNNING: stage 36, the wedge class on link A's sister mazes A_5, A_7, A_8 (127 wedge flags in run 27L's census). On its report: look at its pictures (`.claude/probes/K1482/out/s36/pics/` in its worktree) before relaying anything; it lands only if link A's j59, t23e, t84e and t81s stay at 0 px and no viewed place got worse, else it is a candidate for Levi; its branch is on the new history (a plain merge is allowed). STAGE 35 (K1560, t81s's under pass) is finished as a CANDIDATE, not landed, bar not run: 18 px at t81s, a 5 px step on the right edge; on the decision page (#t81s-candidate) with three replies. "t81s take it": run the bar (`guards.ps1 -Ref 9d42c8f90 -BaseRef 221644ed7 -BarOnly`, `GF_KRETRY=1`), settle the one unexplained pixel near t53e (1510,963) and the CPU copy's 34 px against the GPU's 18, fix the nits in `### Handoff K1482 s35` (the old a34 formula in the END-ARM BURIAL lore and in gf_pack.ts's layout comment, the probe-only knobs GF_S35 / GF_S35D), then cherry-pick 9d42c8f90. "t81s fine": drop 9d42c8f90, nothing depends on it. "t81s more": one last stage at this place (the two-stage stop). Also open: K1561 (the fill look's nub: Muse run 27Q, gf_look.ts; look at its pictures of every moved place before telling Levi), K1565 (the corner loops' compile cost, a Muse run after 27Q), K1564 (stage 34b's probe leftovers), ideas K1559 / K1555 (rounder corners). After stage 35: from run 27L's census of 20 other mazes (K1551, Handoff 27L) take the commonest fault kind and brief one stage. Stage 34b's worktree (agent-a43cedfab1488c9f2) is kept
-  - brief: `docs/design/K1482_s36_wedge_class.md`; stage 35: `docs/design/K1482_s35_t81s_under_pass.md` with its handoff, on its branch only
+  - next: RUNNING: stage 37, a CANDIDATE that removes the ball at a thread end (stage 36: of 127 wedge flags on A_5, A_7, A_8 only 13 sites / 7 blobs are real faults; 5 of the 7 come from a fillet tangent point inside its corner's own arm, which the burial loop skips; link A's j57+t22e is the same kind). On its report: look at its before | after sheets (`.claude/probes/K1482/out/s37/pics/` in its worktree), then put them on the decision page: link A moves at a place Levi has not named, so it lands only on his yes (a plain merge, new history). STAGE 35 (K1560, K1567) is a finished CANDIDATE, not landed, bar not run: on the decision page (#t81s-candidate). "t81s take it": run the bar (`guards.ps1 -Ref 9d42c8f90 -BaseRef 221644ed7 -BarOnly`, `GF_KRETRY=1`), settle the one unexplained pixel near t53e (1510,963) and the CPU copy's 34 px against the GPU's 18, fix the nits in `### Handoff K1482 s35` (the old a34 formula in the END-ARM BURIAL lore and gf_pack.ts's layout comment, the probe-only knobs GF_S35 / GF_S35D), then cherry-pick 9d42c8f90. "t81s fine": drop 9d42c8f90, nothing depends on it. "t81s more": one last stage there (the two-stage stop). Also open: K1566 (the nub fix is too wide: Muse run 27R, gf_look.ts), K1565 (the corner loops' compile cost, a Muse run), K1568 (stage 36's unexplained blobs), K1569 (the census's wedge kind), K1564 and K1570 (probe leftovers), ideas K1559 / K1555 (rounder corners).
+  - brief: `docs/design/K1482_s37_tangent_ball.md`; stage 36's classing: `docs/design/K1482_s36_wedge_class.md` (its handoff); stage 35: `docs/design/K1482_s35_t81s_under_pass.md` with its handoff, on its branch only
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -757,9 +761,9 @@ Next free ID: K1566.
   the fade guard's verdict. Probe runs first; hands off tables.ts, eval.ts, gf_keys.ts, gf_glsl.ts,
   gf_look.ts, gf_pass.ts (K1482's agent)
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `9fa2bba1d`
+  - branch: mainline; last commit: `496938d4e`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 27I done (K1544 closed in ec4dccd82: the cause was the flow clock, the capture recipe is fixed). Chain restarted 2026-11-20 after stage 34b's deploy with 27Q first (K1561, the fill nub: gf_look.ts is lifted from hands-off for that run only), then 27K, 27P. At each run's end: read its handoff against primary records; for 27Q look at `.claude/probes/K1561/out/27Q/` (main checkout) before telling Levi the nub is fixed. If the chain stops: .claude/probes/K1053/chain.log says why; restart with start.ps1 from the main checkout. To brief: K1565 (corner loops' compile cost) once 27Q has landed; K1548's link-A follow-up
+  - next: 27Q done (dcd8e81e6; Muse closed K1561, every Done of its brief holds). Claude's cross-check found the fix wider than the bug (K1566), so 27R narrows it: queued first on 2026-11-20 about 17:50 (gf_look.ts lifted from hands-off for that run only), then 27K, 27P. At each run's end: read its handoff against primary records; for 27R run `.claude/probes/K1561/place_check.py` on its diffcap.json (it must end `WITHOUT: 0 (0 px)`) and look at `.claude/probes/K1561/out/27R/` (main checkout) before telling Levi the nub is fixed. If the chain stops: .claude/probes/K1053/chain.log says why; restart with start.ps1 from the main checkout. To brief: K1565 (corner loops' compile cost) once 27Q has landed; K1548's link-A follow-up
   - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
@@ -780,6 +784,10 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1566** · rp=gf fill look: K1561's fix (dcd8e81e6) is wider than the bug. 89 of the 288 places it changed
+  (6,556 px) have no nub-counter place within 0.35 world, and at some a real gap line is cut to a stub
+  (muse_hash 30.744:20.181, 21.722:34.462). Narrow it to fused-joint pieces: Muse run 27R
+  (`docs/design/K1531_muse_batch27.md`; the test is `.claude/probes/K1561/place_check.py`)
 - **K1560** · rp=gf, t81s on link A: for 30 px below the over thread the under thread shows only its step-side
   border, so it reads narrower (a 20-26 px gap, 34 px above) and off its heading (Levi 2026-11-20; look rule
   1): its right edge is junction j103's mouth. Candidate: a step on the branch side, shown to Levi before /
@@ -1148,6 +1156,10 @@ Every other item below waits on the trigger it names.
   docs/design/K1531_muse_batch27.md, tools `.claude/probes/K1552/`). Candidate: one loop over the corners in
   place of three, or per-corner terms moved to the table build; 0 px on the bar's scenes, compile seconds
   saved over the floor. A Muse fix run after 27Q (same file area)
+- **K1569** · K1551's census: its wedge kind flags the WANTED double line (two borders side by side read 2.0
+  strokes, the line is 1.85). Stage 36: 96 of 127 flags on A_5, A_7, A_8 are not faults, so run 27L's wedge
+  counts are not fault counts. Recalibrate `.claude/probes/K1551/census.py` on stage 36's 127 verdicts, or
+  drop the kind, before the census picks another stage
 
 ## Residuals (known, not fixed)
 
@@ -2541,6 +2553,14 @@ Every other item below waits on the trigger it names.
   q probe modes, the `s34n` / `s34w` fields, the unpacked `aCutC` / `aCutS`. Remove it with no look change
   (captures of one session 0 px, `npm test`; first check nothing else reads `aCutC` / `aCutS`). Handoff s34b
   in docs/design/K1482_s34_j15_spike.md
+- **K1568** · rp=gf, stage 36's classing of A_5, A_7, A_8: two fault blobs with no cause read (A_5 j117, a
+  vertex-cap ball; A_7 j37+t28s, a flag-headed stub) and 10 borderline blobs with no verdict (`### Handoff
+  K1482 s36` in `docs/design/K1482_s36_wedge_class.md`; sheets in the s36 worktree,
+  `.claude/probes/K1482/out/s36/`)
+- **K1570** · stage 35 and 36 probe leftovers in `$env:TEMP`: `km-s35` (preview builds), Chrome profiles
+  `k1482s34b-s35m`, `k1482s34b-s35c`, `k1482s36-m`, and `k1482s36` (a REGISTERED git worktree `src-a52f098bd`
+  plus its build: `git worktree remove`, not a folder delete). The s36 worktree lost its node_modules
+  junction: recreate it before running probes there
 
 ## Approved, to schedule (2026-10-11)
 

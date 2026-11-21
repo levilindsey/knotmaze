@@ -712,3 +712,43 @@ Done 4 (guards, both with `GF_KRETRY=1`; `npm test` with it unset). `.claude/pro
 Done 5 (pictures, no verdict from this run). `.claude/probes/K1561/out/27Q/pics/` holds one picture per changed fill place, all 291 of them (`make_pics.py` from the session's m1/f1 pair): each shows master | fix | changed pixels in red over a surroundings crop, and the same three tiles at 4x under it; `out/27Q/places.txt` lists scene, world x:y and changed px for each (the same list, with file names, is `pics/places.txt`). The ledger's place is `pics/g41_user_tw64_p002_370px.png` (world 4.663:7.438): on master a dark notch of ground cuts into the pale thread from the left thread's edge where it meets the thread it ends on; with the fix the thread body runs whole to that edge, and the red tile is exactly the notch. This run does not judge the look at any place; it notes only the measurements above - every changed pixel moved from ground toward a thread colour, none the other way, and the border look is unchanged everywhere, so every thread keeps both borders at these places by that measure. Claude and Levi judge the pictures.
 
 Done 6: the fix and the tools are committed and pushed as dcd8e81e6 and its deploy is green, above. K1561 is closed with that commit; K1531 and K1482 are left open. Tried and left: the count's window march on the scene polylines against the real bake (199 of 255 places correspond within 0.35 world; the remaining counted places sit in windows the real bake caps shorter by its neighbour and joint rooms, which the tool does not cap - named in `nub_count.ts`'s header); the first fix-profile load of g41_ring_tw64 taken before its warm pass (Done 3), recaptured warm rather than chased.
+
+## Run R (27R): the nub fix leaves real gap lines alone (K1566)
+
+Added 2026-11-20 after Run Q. K1566 in `LEDGER.md`. Run Q's fix (dcd8e81e6: in `lkGap` the coverage cut
+takes the window's named over chain only) removed the nub (K1561) but is WIDER than the bug. Checked against
+the nub counter's own places (`.claude/probes/K1561/place_check.py`, tolerance 0.35 world): of the 288 fill
+places the fix changed on the counter's scenes, 199 (18,627 px) lie at a place the counter names and 89
+(6,556 px) do not: no fused joint is involved there. Claude's look at those: some are small cleanups, but at
+others a real gap line, the one that shows which thread passes over, is cut to a stub that ends inside the
+thread (muse_hash world 30.744:20.181, 21.722:34.462 and 6.178:4.541; g41_user_tw64 15.305:6.316), the kind
+of shape Levi called a bug. Run Q's brief had no test for that; this run adds it.
+**For this run `src/render/gpu_field/gf_look.ts` is NOT hands-off: you may edit it, and only it, of the six
+gpu_field files.** BASE below is 221644ed7 (master before Run Q's fix); Q is dcd8e81e6.
+Done: 1. Reproduce the finding: `python .claude/probes/K1561/place_check.py
+.claude/probes/K1561/out/27Q/diffcap.json .claude/probes/K1561/out_before.txt` ends with
+`WITHOUT: 89 (6556 px)`. 2. The fix in `lkGap`, Run Q's second option: every piece cuts as on BASE, except a
+piece that is a fused joint with the label's chain and is not the window's named over chain (`nub_count.ts`'s
+own definition of a nub's cutter), which is skipped, in the K1458 far-reach term too. Give `nub_count.ts` a
+mode that models this rule. If `lkGap` cannot tell a fused joint from what `gf_look.ts` already reads, stop:
+push nothing under `src/` and record which table and how many texels it would need. 3. Numbers, per scene,
+from ONE capture session that loads BASE, your fix, Q, BASE, your fix (Run Q's tools:
+`.claude/probes/K1561/screen3.mjs`, `make_jobs.mjs`, `diffcap.py`; ports 5480-5499; every capture through `scripts/perf_lock.ps1`, and no lock left behind when a capture ends: after Run Q a `muse-27Q` lock stood for 30 min and held a Claude stage for 24): (a) the nub count is 0 with your fix on every scene; (b) `place_check.py` on BASE
+against your fix ends with `WITHOUT: 0 (0 px)`; (c) at the 89 places your fix's fill pixels equal BASE's,
+0 px; (d) at the 199 places, the fill pixels that differ between Q and your fix: the count per place, each
+such place listed; (e) the border look (`tlk=border`) differs by 0 px between BASE and your fix on every
+scene, and every changed pixel of the plain shot lies inside a changed fill place; (f) no fill pixel that is
+thread on BASE is ground with your fix: 0; (g) BASE against BASE and your fix against your fix are 0 px, or
+that session is not counted (K1534). 4. Guards, both with `GF_KRETRY=1`: `.claude/probes/K1482/guards.ps1`,
+and the K1436 bar (`.claude/probes/K1436/k1436_bar.ps1 -Ref <your commit> -Port <one of yours>`) with new 0
+and grown 0. `npm test` green with `GF_KRETRY` unset. 5. Pictures for Claude's look, untracked under
+`.claude/probes/K1561/out/27R/`: for every place whose fill pixels differ between BASE and your fix, and for
+every place of (d), ONE sheet with four panels of the same crop: BASE fill | Q fill | your fix's fill | your
+fix's plain shot, at two zooms (the place with its surroundings, and close), no wider than 1800 px, named by
+scene and place, plus `places.txt` (scene, world x:y, changed px, sheet path). Levi's rules bind: a thread
+keeps both borders, its width and its heading. You do not judge the look; you deliver the pictures and the
+numbers. 6. What returns with the narrowing is expected and is not yours to fix: the small artifacts BASE had
+at some of the 89 places (g41_user_tw64 3.377:9.416's ragged tip, g41_def_tw42's specks). List them in the
+handoff. 7. If (a) to (g) and the guards hold: commit the fix and the tools (tools tracked with `git add -f`,
+outputs untracked), push, see the deploy pass, close K1566 with the commit. If one of them cannot be met in
+the time, push nothing under `src/`: commit the tools and the handoff only, and record what stood in the way.
