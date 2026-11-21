@@ -141,6 +141,9 @@ export interface GfTables {
    * K1482 s23: only a build with the retry on (GfOpts.kRetry / GF_KRETRY) carries these fields.
    */
   kExt?: Uint8Array; nKAlt?: number; cellK0Alt?: Int32Array; cellKNAlt?: Int32Array; cellKListAlt?: Int32Array; cellKPListAlt?: Int32Array;
+  /** K1482 s33: per chain, the over chain along whose lone pass its band ends in a long tangent run (eval.ts runT,
+   * retry programs only), or -1. Absent: none. */
+  rtM?: Int32Array;
   /** Build time per part, ms. */
   ms: { vtx: number; pins: number; arms: number; corners: number; bins: number; kp: number; total: number };
 }
