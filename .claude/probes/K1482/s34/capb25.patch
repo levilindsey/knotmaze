@@ -1,0 +1,30 @@
+diff --git a/src/render/gpu_field/eval.ts b/src/render/gpu_field/eval.ts
+index 66b56fee3..8eeb26d97 100644
+--- a/src/render/gpu_field/eval.ts
++++ b/src/render/gpu_field/eval.ts
+@@ -28,6 +28,8 @@ export const MAXK = 6; // corners per pixel
+ export const GF_FADE_LENGTH = 0.14;
+ const TANGENT_TERMS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_TANG !== "0";
+ const SELF_BURIAL =(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
++// K1482 s25 probe: a member end cap's stroke buried by a chain that is a member of the cap's group elsewhere
++export const GF_CAPB = { on: (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_CAPB === "1" };
+ const MAXS = MAXP + MAXK; // surfaces
+ 
+ export function ss(e0: number, e1: number, x: number): number {
+@@ -146,6 +148,7 @@ export class GfEval {
+     this.mg = g; this.mramp = ramp;
+   }
+   private mg = -1; private mramp = 1;
++  private chainInG(c: number, S: number): boolean { const T = this.T; for (let i = T.cArm0[c]; i < T.cArm0[c] + T.cArmN[c]; i++) if (T.aG[i] === S) return true; return false; }
+ 
+   /** member()'s depth at the last depth() call: today's window (tables.depthAt). */
+   private mz = 0;
+@@ -518,7 +521,7 @@ export class GfEval {
+         const qx = this.pfx[j] + (h * (x - this.pfx[j])) / X; const qy = this.pfy[j] + (h * (y - this.pfy[j])) / X;
+         let bur = 0;
+         for (let m = 0; m < this.np && bur < 1; m++) {
+-          if (m === j || this.psurf[m] !== S) continue;
++          if (m === j || (this.psurf[m] !== S && !(GF_CAPB.on && this.chainInG(this.pc[m], S)))) continue;
+           const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
+           if (wb2 > bur) bur = wb2;
+         }

@@ -247,8 +247,25 @@ function homeBurial(src: string): string {
     if (n !== undefined && parts.length - 1 !== n) throw new Error(`gfFs s28: expected ${n} "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
     src = parts.join(b);
   };
-  rep("int mg; float mramp;\n", "int mg; float mramp; int mhb; // K1482 s28: the home group of a piece left out for depth\n", 1);
-  rep("  mg = g; mramp = ramp;\n}\n", "  mg = g; mramp = ramp; mhb = g < 0 ? hg : -1;\n}\n", 1);
+  rep("int mg; float mramp;\n", "int mg; float mramp; int mhb; // K1482 s28: the home group of a piece left out for depth\n" +
+    "int m34; IQ int p34[MAXP]; // K1482 s34: member()'s end-arm code per piece (eval.ts m34, p34)\n", 1);
+  // K1482 s34: eval.ts member()'s m34, line for line (the arm record's .z holds tables.ts arms34; key-bin arms cover
+  // d up to max(aL, aHome), gf_keys.ts)
+  rep("  mg = g; mramp = ramp;\n}\n",
+    "  m34 = 0; int G34 = g >= 0 ? g : hg;\n" +
+    "  if (G34 >= 0) {\n" +
+    "    int C34 = -1; int e34 = 0;\n" +
+    "    for (int i = a0; i < a0 + an; i++) {\n" +
+    "      vec4 A1 = F(KAB + 2 * i + 1); int q34 = int(A1.z + 0.5); if (int(A1.x) != G34 || q34 == 0) continue;\n" +
+    "      vec4 A = F(KAB + 2 * i); float d = (s - A.x) * A.y;\n" +
+    "      if (g >= 0 && (q34 & 1) == 1 && d > -1e-12 && d < max(A.z, A1.y) + 1e-12) e34 = 1;\n" +
+    "      if (C34 < 0 && q34 >= 2 && d > -1e-12 && d < A1.y + 1e-12) C34 = (q34 >> 1) - 1;\n" +
+    "    }\n" +
+    "    m34 = (C34 + 1) * 2 + e34;\n" +
+    "  }\n" +
+    "  mg = g; mramp = ramp; mhb = g < 0 ? hg : -1;\n}\n", 1);
+  rep("member(PC(j), ps[j], KB, mz);", "member(PC(j), ps[j], KB, mz); p34[j] = m34;", 2);
+  rep("member(PC(j), sj, KB, mz);", "member(PC(j), sj, KB, mz); p34[j] = m34;", 1);
   rep("pg[j] = mg;", "pg[j] = mg >= 0 ? mg : -2 - mhb;");
   rep(": mg >= 0 && pr >= 1.0 ? mg : -1 - j)", ": mg >= 0 && pr >= 1.0 ? mg : -1 - j - MAXP * ((mg >= 0 ? mg : mhb) + 1))");
   rep("psurf[j] = mem ? pg[j] : -1 - j;", "psurf[j] = mem ? pg[j] : -1 - j - MAXP * ((pg[j] >= 0 ? pg[j] : -2 - pg[j]) + 1);");
@@ -266,7 +283,16 @@ function homeBurial(src: string): string {
   const HB = "      if (bur < 1.0 && S < -MAXP) { int B = (-1 - j - S) / MAXP - 1; for (int m = 0; m < np && bur < 1.0; m++) { if (PSURF(m) != B || PC(m) == PC(j)) continue;" +
     " float wb2 = 1.0 - ss(h - W - aa, h - W + aa, pd[m]); if (!(wb2 > bur)) continue;" +
     " wb2 *= 1.0 - ss(1e-4, 1e-3, abs(pkey[m] + pd[m] * (uZt / h))); if (wb2 > bur) bur = wb2; } } // K1482 s28: home burial\n";
-  rep(VAL[0], HB + VAL[0], 1);
+  // K1482 s34: eval.ts layers()'s end-arm burial: a member piece on its group's end-rooted arm (p34 & 1) inks nowhere
+  // inside the tube of a partner out of the group S whose home or ramp is S and whose cut arm names j's chain
+  // (p34 >> 1). The partner's group or home is read from its surface id (as HB's B). A split's pass 2 without the
+  // keys never sets p34 (the app runs no split: gf_app.ts), so it keeps no term.
+  const T34 = "#if !defined(SPLIT2) || defined(SPLITK)\n" +
+    "      if (bur < 1.0 && S >= 0 && (p34[j] & 1) == 1) { for (int m = 0; m < np && bur < 1.0; m++) { int Sm = PSURF(m);" +
+    " if (Sm >= -MAXP || PC(m) == PC(j) || (-1 - m - Sm) / MAXP - 1 != S || (p34[m] >> 1) - 1 != PC(j)) continue;" +
+    " float wb2 = 1.0 - ss(h - W - aa, h - W + aa, pd[m]); if (wb2 > bur) bur = wb2; } } // K1482 s34: end-arm burial\n" +
+    "#endif\n";
+  rep(VAL[0], HB + T34 + VAL[0], 1);
   return src;
 }
 

@@ -50,11 +50,20 @@ export interface GfPixel {
 
 /** Scratch for one pixel; reused. */
 export class GfEval {
+  /** K1482 s34 (probes): "0" turns the end-arm burial off (the retry programs keep it: gf_glsl.ts T34); a probe may
+   * set it between evals. Env GF_S34 at load. */
+  static S34 = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S34 ?? "";
+  /** K1482 s34 (probes): pixels where the end-arm burial took ink. */
+  s34n = 0;
+  /** K1482 s34 (probes): the last burial's [chain, s] of the inked piece and of the burying partner, ... */
+  s34w: number[] = [];
   readonly T: GfTables;
   // pieces
   private pc = new Int32Array(MAXP); private ps = new Float64Array(MAXP); private pd = new Float64Array(MAXP);
   private pfx = new Float64Array(MAXP); private pfy = new Float64Array(MAXP); private plo = new Int32Array(MAXP); private phi = new Int32Array(MAXP);
   private pz = new Float64Array(MAXP); private pkey = new Float64Array(MAXP); private pg = new Int32Array(MAXP); private pramp = new Float64Array(MAXP); private phb = new Int32Array(MAXP);
+  /** K1482 s34: member()'s m34 per piece (the keys loop). */
+  private p34 = new Int32Array(MAXP);
   private ptx = new Float64Array(MAXP); private pty = new Float64Array(MAXP); private pend = new Uint8Array(MAXP);
   private psurf = new Int32Array(MAXP);
   private np = 0;
@@ -143,10 +152,27 @@ export class GfEval {
       const r = this.homeRamp(Math.abs(z));
       if (r > 0 && !(g === hg && ramp >= r)) { g = hg; ramp = r; }
     }
-    this.mg = g; this.mramp = ramp; this.mhb = g < 0 ? hg : -1;
+    // K1482 s34 (retry tables, T.a34; gf_glsl.ts homeBurial's member, line for line): m34 = (C + 1) * 2 + e over
+    // the arms of the piece's group or home G (no wrap: e needs an open chain, and a cut root's home lies past it).
+    // e = 1: the piece lies on an end-rooted arm of its group (g >= 0) within max(aL, aHome); C: the first arm of G
+    // holding it within aHome whose a34 names a cutting chain.
+    let m34 = 0; const A34 = T.homeOn ? T.a34 : undefined; const G = g >= 0 ? g : hg;
+    if (A34 && G >= 0) {
+      let C = -1; let e = 0;
+      for (let i = a0; i < a0 + an; i++) {
+        const q = A34[i]; if (T.aG[i] !== G || q === 0) continue;
+        const d = (s - T.aSR[i]) * T.aDir[i];
+        if (g >= 0 && (q & 1) === 1 && d > -1e-12 && d < Math.max(T.aL[i], T.aHome[i]) + 1e-12) e = 1;
+        if (C < 0 && q >= 2 && d > -1e-12 && d < T.aHome[i] + 1e-12) C = (q >> 1) - 1;
+      }
+      m34 = (C + 1) * 2 + e;
+    }
+    this.mg = g; this.mramp = ramp; this.mhb = g < 0 ? hg : -1; this.m34 = m34;
   }
   /** K1482 s28: member()'s home group for a piece left out of every group (its arm's home, too deep in z), else -1. */
   private mhb = -1;
+  /** K1482 s34: member()'s end-arm code (tables.ts arms34). */
+  private m34 = 0;
   /** K1482 s32: the t84e fold rule (retry programs: foldD's lone fold, the sibling burial); OFF unless env GF_S32=1. */
   private s32 = false;
   private mg = -1; private mramp = 1;
@@ -456,7 +482,7 @@ export class GfEval {
     let nr = 0; const rIdx = [0, 0]; // the ramping pieces
     for (let j = 0; j < np; j++) {
       this.pz[j] = this.depth(this.pc[j], this.ps[j]); this.pkey[j] = this.pz[j] - this.pd[j] * zK;
-      this.member(this.pc[j], this.ps[j], this.mz); this.pg[j] = this.mg; this.pramp[j] = this.mramp; this.phb[j] = this.mhb;
+      this.member(this.pc[j], this.ps[j], this.mz); this.pg[j] = this.mg; this.pramp[j] = this.mramp; this.phb[j] = this.mhb; this.p34[j] = this.m34;
       if (this.mg >= 0) this.pkey[j] -= this.tipSink(this.pc[j], this.ps[j]);
       if (this.mg >= 0 && this.mramp > 0 && this.mramp < 1) {
         if (nr < MAXR) rIdx[nr++] = j;
@@ -624,6 +650,21 @@ export class GfEval {
             if (!(wb2 > bur)) continue;
             wb2 *= 1 - ss(1e-4, 1e-3, Math.abs(this.pkey[m] + (this.pd[m] * T.zt) / h));
             if (wb2 > bur) bur = wb2;
+          }
+        }
+        // K1482 s34 (with the retry): the converse of s28. A group's piece on an arm rooted at its chain's open end
+        // (a thread that starts in the junction) inks nowhere inside the tube of a partner left out of that group by
+        // depth (mhb = the group: its home there, diving under a crossing next to the junction). j15: chain 70's start
+        // turns sharply at s 0, and that corner's band ran across chain 5's paper, whose group-15 arm chain 70's own
+        // pass cuts (the Z spike); chain 5 ranks under the group's key there, so nothing covered it.
+        // The tables decide which arms (tables.ts arms34): j's end bit (p34 & 1, its arm of S rooted at an open end),
+        // m's cutting chain (p34 >> 1, an arm of S cut at its root by another pass of j's chain, 2 or more of arc from
+        // that chain's end arms in S). gf_glsl.ts homeBurial's T34, the same test.
+        if (bur < 1 && S >= 0 && kxh && GfEval.S34 !== "0" && (this.p34[j] & 1) === 1) {
+          for (let m = 0; m < this.np && bur < 1; m++) {
+            if (this.psurf[m] === S || this.pc[m] === this.pc[j] || (this.pg[m] >= 0 ? this.pg[m] : this.phb[m]) !== S || (this.p34[m] >> 1) - 1 !== this.pc[j]) continue;
+            const wb2 = 1 - ss(h - W - aa, h - W + aa, this.pd[m]);
+            if (wb2 > bur) { if (wb2 - bur > 0.02 && band2(h - X) > 0.02) { this.s34n++; this.s34w = [this.pc[j], this.ps[j], this.pc[m], this.ps[m], S, this.pg[m], this.psurf[m], this.pkey[j], this.pkey[m], this.pramp[m], this.pd[m] / h, X / h]; } bur = wb2; }
           }
         }
         const val = (1 - bur) * band2(h - X);

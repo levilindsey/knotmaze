@@ -5,7 +5,8 @@
 //   CH   3 per chain:  (cV0, cNV, cClosed, cLen) (cS0, cPin0, cPinN, cArm0) (cArmN, 0, 0, 0)
 //   V    1 per vertex: (vx, vy, vs, 0)
 //   PIN  1 per pin:    (pinS, pinZ, pinWL, pinWR)   K1451: the key windows
-//   ARM  2 per arm:    (aSR, aDir, aL, aLcut) (aG, aHome, 0, 0)    aHome only with T.homeOn (K1438), else 0
+//   ARM  2 per arm:    (aSR, aDir, aL, aLcut) (aG, aHome, a34, 0)  aHome only with T.homeOn (K1438), else 0;
+//                      a34 (K1482 s34, tables.ts arms34) only with T.homeOn and a retry build, else 0
 //   K    6 per corner: (kCx, kCy, kR, kRmax) (kThru, kRV, kG, kJ) (kEax, kEay, kEbx, kEby)
 //                      (kCa, kCb, kSa, kSb) (kZa, kZb, kTax, kTay) (kTbx, kTby, ext, 0)
 //   CHK  2 per chunk:  (chV0, chN, chC, 0) (box x0, y0, x1, y1)
@@ -63,9 +64,10 @@ export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKe
   for (let v = 0; v < T.nV; v++) put(o.v + v, T.vx[v], T.vy[v], T.vs[v], 0);
   for (let i = 0; i < T.pinS.length; i++) put(o.pin + i, T.pinS[i], T.pinZ[i], T.pinWL[i], T.pinWR[i]);
   const home = T.homeOn; // K1438: aHome rides the arm record's free .y only when the switch is on (off: master's bits)
+  const a34 = home ? T.a34 : undefined; // K1482 s34: the free .z, retry builds only (else master's bits)
   for (let a = 0; a < T.nA; a++) {
     put(o.arm + 2 * a, T.aSR[a], T.aDir[a], T.aL[a], T.aLcut[a]);
-    put(o.arm + 2 * a + 1, T.aG[a], home ? T.aHome[a] : 0, 0, 0);
+    put(o.arm + 2 * a + 1, T.aG[a], home ? T.aHome[a] : 0, a34 ? a34[a] : 0, 0);
   }
   for (let k = 0; k < T.nK; k++) {
     const b = o.k + 6 * k;
@@ -88,7 +90,7 @@ export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKe
   for (let q = 0; q < keys.nKA; q++) {
     const a = keys.ka[q];
     put(o.ka + 2 * q, T.aSR[a], T.aDir[a], T.aL[a], T.aLcut[a]);
-    put(o.ka + 2 * q + 1, T.aG[a], home ? T.aHome[a] : 0, 0, 0);
+    put(o.ka + 2 * q + 1, T.aG[a], home ? T.aHome[a] : 0, a34 ? a34[a] : 0, 0);
   }
   for (let i = 0; i < T.cellKPList.length; i++) data[4 * o.kp + i] = T.cellKPList[i];
   return { data, rows, o };
