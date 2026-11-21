@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1577.
+Next free ID: K1579.
 
 ## Waiting on Levi
 
@@ -319,6 +319,10 @@ Next free ID: K1577.
 - **K1562** · The laptop's knotmaze clone, after K1493's history rewrite (2026-11-20): on a clean tree run
   `git fetch`, then `git reset --hard origin/master` (or clone afresh). Do not `git pull` there first: a pull
   merges the old history, and a push after it brings the 362 MB back (docs/ledger_notes.md `## K1493`)
+- **K1577** · rp=gf junction work, what comes after the ball (K1572): Claude proposed on 2026-11-20 21:35 to
+  stop rule stages on places Levi has not named and to take next what he named and parked: the rounder step
+  corner at t81s (K1559) and t4s's corner (K1527); or first a review page of about six mazes from the live
+  build for Levi to mark. Levi's call: corners / review page / something else
 
 ## In progress
 
@@ -786,6 +790,11 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1578** · rp=gf look candidates: view every changed place on ALL test mazes before a candidate goes on the
+  decision page or gets a pick (stage 37's ball got a yes from Claude before five more mazes showed a broken
+  border, K1572). The mirror (GfEval) can list changed places without a capture (stage 40 uses it first): if
+  its list matches stage 39's 17 captured places, write the gate into `.claude/rules/render-gpu-field.md` and
+  keep the tool under `.claude/probes/K1482/`
 - **K1572** · rp=gf: the round ball where a thread end meets a joint. Stage 37's candidate (src `df2e1c8bb`,
   not on master) is cleaner at 8 of 22 changed places on nine mazes, but stage 39's sheets show it cuts a slit
   through a border line on A_b (1077,1509, near t22s) and a notch into a join on A_a (2257,991, near t29s) and
