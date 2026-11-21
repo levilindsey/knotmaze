@@ -23,26 +23,6 @@ Next free ID: K1583.
 
 ## Waiting on Levi
 
-- **K1572** · rp=gf: the round ball where a thread end meets a joint. WAITS ON LEVI since 2026-11-21 03:10
-  (page version 16, https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#ball-all): ball keep (the default and
-  Claude's pick; ball no means the same: close this with the look kept, then K1565 may be briefed), ball take
-  (land `4925aa786` as built by a squash onto master, after the checks not yet run on it: guards panelopen,
-  dragcheck_b and dragcheck, the K1436 bar, fill and `&gfk=0`, K1573), ball more (a third stage only as he
-  names it, aimed at the three places that are not clean). Stage 37's candidate (src `df2e1c8bb`) cut a slit
-  on A_b (1077,1509) and a notch on A_a (2257,991): not to land. Stage 40, the second and last try, built
-  `4925aa786` (local branch `worktree-agent-ac98db1b4872d612b`, not on master; `### Handoff K1482 s40` in
-  `docs/design/K1482_s40_ball_narrow.md`). The all-maze look (K1578's tool, Muse run 27V: all 21 mazes against
-  the start `d1c25f5fe`, both floors 0 px on every maze; outputs `.claude/probes/K1578/out/ball40/` in the
-  main checkout, untracked): 64 places on 10 mazes, each viewed by Claude against the start. Clean, the ball
-  or nub gone (8): A_b t25e (994,224), A_3 t22e (2290,919) and t26s (2099,1137), A_5 t65s (2042,893), A_9 t28e
-  (2154,126) and t47e (1894,1390), A_7 t83e (2269,507), A_d t88s (2102,995). Not clean (3, each a ball at the
-  start): A_4 t32s (937,1627) a smaller ball with a two-tooth bite on its right, a notch, so by the all-maze
-  rule not as built; A_8 t31s (1149,1576) the ball gone, the left border's tip standing about 4 px above the
-  right border's square end; A_5 t30e (1233,254) the ball only shrinks. No visible difference (53): A_4 t22s
-  (39 px), A_5 t34e (23 px), A_a t16s (3 px, the start's ball stays), A_b j142 (a marker's ring edges, 22 px),
-  46 places of 1 to 7 px on A_b (K1581), A_5 t14s, A_c j69, A_d j40. Stage 37's two broken places are not
-  among the 64; A_6 and D_1 to D_a differ by 0 px. Ran on the candidate: hold and hold_gfk0 60 of 60, npm test
-  3198 passed
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -336,6 +316,30 @@ Next free ID: K1583.
 
 ## In progress
 
+- **K1572** · rp=gf: the round ball where a thread end meets a joint. WAITS ON LEVI since 2026-11-21 03:10
+  (page version 16, https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#ball-all): ball keep (the default and
+  Claude's pick; ball no means the same: close this with the look kept, then K1565 may be briefed), ball take
+  (land `4925aa786` as built by a squash onto master, after the checks not yet run on it: guards panelopen,
+  dragcheck_b and dragcheck, the K1436 bar, fill and `&gfk=0`, K1573), ball more (a third stage only as he
+  names it, aimed at the three places that are not clean). Stage 37's candidate (src `df2e1c8bb`) cut a slit
+  on A_b (1077,1509) and a notch on A_a (2257,991): not to land. Stage 40, the second and last try, built
+  `4925aa786` (local branch `worktree-agent-ac98db1b4872d612b`, not on master; `### Handoff K1482 s40` in
+  `docs/design/K1482_s40_ball_narrow.md`). The all-maze look (K1578's tool, Muse run 27V: all 21 mazes against
+  the start `d1c25f5fe`, both floors 0 px on every maze; outputs `.claude/probes/K1578/out/ball40/` in the
+  main checkout, untracked): 64 places on 10 mazes, each viewed by Claude against the start. Clean, the ball
+  or nub gone (8): A_b t25e (994,224), A_3 t22e (2290,919) and t26s (2099,1137), A_5 t65s (2042,893), A_9 t28e
+  (2154,126) and t47e (1894,1390), A_7 t83e (2269,507), A_d t88s (2102,995). Not clean (3, each a ball at the
+  start): A_4 t32s (937,1627) a smaller ball with a two-tooth bite on its right, a notch, so by the all-maze
+  rule not as built; A_8 t31s (1149,1576) the ball gone, the left border's tip standing about 4 px above the
+  right border's square end; A_5 t30e (1233,254) the ball only shrinks. No visible difference (53): A_4 t22s
+  (39 px), A_5 t34e (23 px), A_a t16s (3 px, the start's ball stays), A_b j142 (a marker's ring edges, 22 px),
+  46 places of 1 to 7 px on A_b (K1581), A_5 t14s, A_c j69, A_d j40. Stage 37's two broken places are not
+  among the 64; A_6 and D_1 to D_a differ by 0 px. Ran on the candidate: hold and hold_gfk0 60 of 60, npm test
+  3198 passed
+  - owner: claude session 01SUPGULDxvE5gKXozfaFaFG (its opus agent for stage 41)
+  - branch: the agent worktree under .claude/worktrees, named in its report; never pushed
+  - evidence: .claude/probes/K1572/out/s41/ (untracked), docs/design/K1572_s41_ball_a8.md
+  - next: Levi 2026-11-21: Ball try. Stage 41 (third and last try) started 15:43: the stage-40 candidate plus the 27Z4 tight-turn gate plus a fix at A_8 t31s (ball gone, border tips level, no cut). When it reports: view its 17 sheets, then a Muse run confirms all 21 mazes (K1578 tool), then the 17 places to Levi before anything lands. If A_8 cannot be made clean: stop, today's look stays, close this.
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
