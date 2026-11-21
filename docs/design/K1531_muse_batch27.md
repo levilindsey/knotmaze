@@ -919,3 +919,83 @@ at every one. 6. Commit the tools (`git add -f` by file name; outputs stay untra
 output) and the handoff, push. K1578 and K1572 stay open: Claude closes them.
 Two of these commits are LOCAL (df2e1c8bb and 4925aa786 sit on other worktrees' branches, not on origin):
 build them by SHA only, and never check out, merge, cherry-pick or push them or their branches.
+
+### Handoff 27V (Muse, 2026-11-21, stopped at the time line: the tool and both controls hold; ball40 captured on 9 of 21 mazes, 12 left for the resume; K1578 and K1572 left open)
+
+Started 2026-11-20 23:38 PST, stopped 2026-11-21 01:19 PST. Starting master fd8f3978e; tools on master in 13e6b8475 (probes only: `.claude/probes/K1578/allmaze.ps1`, `cap_maze.ps1`, `analyze_maze.py`; nothing under `src/` or `test/` in the run's commits, so no deploy and, as a probe-only run, no ordinary-load guards). Previews under `$env:TEMP\k1578-<run>` on ports 5500-5501, stopped and removed at each run's end; every capture through `scripts/perf_lock.ps1 -Owner "muse-27V"`, one maze per hold, no lock left behind. Outputs untracked under `.claude/probes/K1578/out/{null,break,ball40}/` (`mazes.txt`, `places.txt`, `sheets/`, `look/`, `raw/`). The two local commits were built by SHA only (`preview.ps1 -Ref`), never checked out, merged or pushed.
+
+Done 1 (the tool). `allmaze.ps1 -Base <c> -Cand <c> -Name <run> [-Mazes ..] [-Fill] [-Off] [-Force]` builds both commits (`scripts/preview.ps1`, ports 5500-5519), then per maze one session of base, candidate, base, candidate (tags m/c/m2/c2 via `cap_maze.ps1` → stage 40's `cap40.ps1`/`cap34.mjs`, capseq40's 21-maze hash/link table verbatim), compared only inside the session by `analyze_maze.py` (diff33's places at 24 px cells, nearest site from the base load's `sites_gf.json`). `mazes.txt` carries hash, passes, both floors, base-vs-candidate px and place count and the repeat pair; `places.txt` carries maze, x, y, px gained, px lost, site and sheet; `sheets/` is place39's layout and `look/` its two brightened rows at 1300 px. A maze with its row is skipped unless `-Force`; a non-zero floor recaptures once, then flags. Two mends while building: (i) `cap_maze.ps1` resets `$LASTEXITCODE` at its end — cap40's robocopy profile copy leaves it 1 after a good capture and `perf_lock.ps1` propagates it (the first null run's four loads all landed on fff8c9e5 and the lock still exited 1); (ii) the cross-build listing reads the two builds' `gf_b2view.txt` still views: when they differ bit for bit, 1-level edge flips swamp step 1 (ball40 A_b: 7,027 px at step 1, 436 at 2, 97 at 6, the 6,561 px place at (1503,659) near j31 showing no visible difference on its sheet), because the fit snaps to each build's own drawn bounds (candidate scale 21.74032186 against base 21.74026042 on A_b) and no recapture aligns them; those mazes list places at step 3 and the row carries VIEW-DIFF with both views. Same-build floors and the repeat stay at step 1, and when the views agree (both controls, every other ball40 maze) the listing is step 1, the chain's numbers.
+
+Done 2 (null control). Base and candidate both d1c25f5fe, A_3: hash fff8c9e5 on all four loads (passes 591, 598, 609, 594), base-vs-base 0 px, cand-vs-cand 0 px, base-vs-cand 0 px in 0 places, repeat 0 px.
+
+Done 3 (known-break control). Base d1c25f5fe, candidate df2e1c8bb: A_b (hash 98ae3432, floors 0/0, repeat 99 px) lists (1077,1509) near t22s, 26 px lost, and (994,224) near t25e, 73 px lost; A_a (hash 11744900, floors 0/0, repeat 53 px) lists (2257,991) near t29s, 15 px lost, and (2270,848) near t16s, 38 px lost. Both briefed places at their exact coordinates (0 px off, inside the 4 px bound), at stage 39's 26 and 15 px. Views bit-identical on both mazes.
+
+Done 4 (ball40, partial). Base d1c25f5fe, candidate 4925aa786, in the brief's order; 9 of 21 mazes captured, every session on its table hash with `lost 0`, both floors 0 px and the repeat pair equal to the first pair on every maze. Beside stage 40's numbers for the three named mazes: A_b — stage 40 read 73 px in 1 place (t25e) with t22s (1077,1509) at 0; this run (VIEW-DIFF, step 3) reads t25e (994,224) at 71 px lost and no place at (1077,1509), plus 47 places of 1-22 px (95 px in all) scattered frame-wide, the step-3 remainder of the view difference above. A_a — stage 40 read 3 px in 1 place (t16s at 2270,848); this run reads 3 px lost at (2268,850) near t16s. A_4 — stage 40 read 122 px in 2 places; this run reads 122 px in 2 places, (937,1627) near t32s 83 px and (1948,1293) near t22s 39 px, the same places and counts. The remaining captured mazes read: A_3 80 px in 2, A_5 142 in 4, A_9 132 in 2, A_7 216 in 1, A_8 119 in 1 (their places in the table; each matches a place stage 40's table or mirror census names, at its count). A_6: 0 px, 0 places — no change. NOT captured (the time line): A_c, A_d, D_1 to D_a. Resume with `pwsh .claude/probes/K1578/allmaze.ps1 -Base d1c25f5fe -Cand 4925aa786 -Name ball40 -Mazes A_c,A_d,D_1,D_2,D_3,D_4,D_5,D_6,D_7,D_8,D_9,D_a`; the nine rows already in `out/ball40/mazes.txt` are skipped. Tools committed mid-run in 13e6b8475, as briefed once the A mazes were under way.
+
+Done 5 (every changed place of Done 4; gained = candidate darker, lost = candidate lighter; sheets under `.claude/probes/K1578/out/ball40/sheets/`, the same names under `look/`). No maze is flagged (every floor 0); A_b's row carries the VIEW-DIFF note above. Mazes with no change: A_6.
+
+| maze | x,y | gained | lost | site | sheet |
+|---|---|---|---|---|---|
+| A_b | 994,224 | 0 | 71 | t25e | A_b_994x224_t25e.png |
+| A_b | 803,126 | 10 | 12 | j142 | A_b_803x126_j142.png |
+| A_b | 980,731 | 3 | 4 | t63e | A_b_980x731_t63e.png |
+| A_b | 1477,231 | 1 | 5 | t57e | A_b_1477x231_t57e.png |
+| A_b | 2312,554 | 3 | 2 | j133 | A_b_2312x554_j133.png |
+| A_b | 2276,215 | 0 | 4 | t20s | A_b_2276x215_t20s.png |
+| A_b | 1422,694 | 3 | 0 | j165 | A_b_1422x694_j165.png |
+| A_b | 1418,1044 | 2 | 1 | t72s | A_b_1418x1044_t72s.png |
+| A_b | 1929,172 | 2 | 0 | j24 | A_b_1929x172_j24.png |
+| A_b | 1000,878 | 2 | 0 | t44s | A_b_1000x878_t44s.png |
+| A_b | 1338,867 | 0 | 2 | t77e | A_b_1338x867_t77e.png |
+| A_b | 1498,1238 | 1 | 1 | t34s | A_b_1498x1238_t34s.png |
+| A_b | 1793,1482 | 1 | 1 | j43 | A_b_1793x1482_j43.png |
+| A_b | 1185,176 | 1 | 0 | t28e | A_b_1185x176_t28e.png |
+| A_b | 2207,214 | 1 | 0 | j54 | A_b_2207x214_j54.png |
+| A_b | 869,217 | 0 | 1 | t68e | A_b_869x217_t68e.png |
+| A_b | 1048,252 | 0 | 1 | t25e | A_b_1048x252_t25e.png |
+| A_b | 1017,295 | 1 | 0 | j63 | A_b_1017x295_j63.png |
+| A_b | 2241,327 | 1 | 0 | j132 | A_b_2241x327_j132.png |
+| A_b | 1132,335 | 0 | 1 | t56e | A_b_1132x335_t56e.png |
+| A_b | 1576,340 | 1 | 0 | j5 | A_b_1576x340_j5.png |
+| A_b | 1724,398 | 0 | 1 | j22 | A_b_1724x398_j22.png |
+| A_b | 1032,432 | 1 | 0 | t36s | A_b_1032x432_t36s.png |
+| A_b | 1985,468 | 1 | 0 | j28 | A_b_1985x468_j28.png |
+| A_b | 1243,483 | 1 | 0 | t18s | A_b_1243x483_t18s.png |
+| A_b | 942,484 | 0 | 1 | t84s | A_b_942x484_t84s.png |
+| A_b | 1537,571 | 0 | 1 | t69s | A_b_1537x571_t69s.png |
+| A_b | 850,608 | 1 | 0 | j93 | A_b_850x608_j93.png |
+| A_b | 1787,626 | 1 | 0 | j125 | A_b_1787x626_j125.png |
+| A_b | 1512,654 | 1 | 0 | j31 | A_b_1512x654_j31.png |
+| A_b | 1606,667 | 1 | 0 | j31 | A_b_1606x667_j31.png |
+| A_b | 1304,771 | 0 | 1 | t53s | A_b_1304x771_t53s.png |
+| A_b | 1083,789 | 0 | 1 | j73 | A_b_1083x789_j73.png |
+| A_b | 1154,916 | 0 | 1 | j72 | A_b_1154x916_j72.png |
+| A_b | 2253,967 | 1 | 0 | j64 | A_b_2253x967_j64.png |
+| A_b | 994,977 | 1 | 0 | t43s | A_b_994x977_t43s.png |
+| A_b | 1162,1049 | 0 | 1 | t4s | A_b_1162x1049_t4s.png |
+| A_b | 2122,1086 | 1 | 0 | j49 | A_b_2122x1086_j49.png |
+| A_b | 1618,1092 | 0 | 1 | t74s | A_b_1618x1092_t74s.png |
+| A_b | 1952,1137 | 1 | 0 | j179 | A_b_1952x1137_j179.png |
+| A_b | 1384,1169 | 0 | 1 | t54e | A_b_1384x1169_t54e.png |
+| A_b | 979,1208 | 0 | 1 | t71s | A_b_979x1208_t71s.png |
+| A_b | 1541,1210 | 1 | 0 | j79 | A_b_1541x1210_j79.png |
+| A_b | 1883,1237 | 1 | 0 | j95 | A_b_1883x1237_j95.png |
+| A_b | 1927,1279 | 0 | 1 | t37s | A_b_1927x1279_t37s.png |
+| A_b | 1574,1401 | 0 | 1 | t47s | A_b_1574x1401_t47s.png |
+| A_b | 1512,1485 | 0 | 1 | j37 | A_b_1512x1485_j37.png |
+| A_b | 1077,1607 | 0 | 1 | j16 | A_b_1077x1607_j16.png |
+| A_a | 2268,850 | 0 | 3 | t16s | A_a_2268x850_t16s.png |
+| A_4 | 937,1627 | 0 | 83 | t32s | A_4_937x1627_t32s.png |
+| A_4 | 1948,1293 | 0 | 39 | t22s | A_4_1948x1293_t22s.png |
+| A_3 | 2290,919 | 0 | 55 | t22e | A_3_2290x919_t22e.png |
+| A_3 | 2099,1137 | 0 | 25 | t26s | A_3_2099x1137_t26s.png |
+| A_5 | 2042,893 | 0 | 77 | t65s | A_5_2042x893_t65s.png |
+| A_5 | 1233,254 | 0 | 40 | t30e | A_5_1233x254_t30e.png |
+| A_5 | 2345,852 | 0 | 23 | t34e | A_5_2345x852_t34e.png |
+| A_5 | 1064,410 | 0 | 2 | t14s | A_5_1064x410_t14s.png |
+| A_9 | 2154,126 | 0 | 97 | t28e | A_9_2154x126_t28e.png |
+| A_9 | 1894,1390 | 0 | 35 | t47e | A_9_1894x1390_t47e.png |
+| A_7 | 2269,507 | 0 | 216 | t83e | A_7_2269x507_t83e.png |
+| A_8 | 1149,1576 | 0 | 119 | t31s | A_8_1149x1576_t31s.png |
+
+Done 6: tools 13e6b8475 and this handoff are committed and pushed; `npm test` green on the final tree (258 files passed, 2 skipped; 3,210 tests passed, 9 skipped; tsc clean). K1578 and K1572 stay open (Claude closes them; the 12 uncaptured mazes above are K1578's remainder, and no place above is called fixed, better or worse by this run — Claude looks at every sheet). Tried and left: a step-1 listing on VIEW-DIFF mazes (the 7,027 px reading in Done 1 (ii), replaced by the step-3 listing in the same tool, not captured again — the re-listing ran on the session's own PNGs); nothing else failed. Preview servers and the run's Chrome profiles (`k1482s40-m/c/m2/c2` under `$env:TEMP`) stopped and removed at the stop line.
