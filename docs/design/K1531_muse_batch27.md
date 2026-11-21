@@ -564,3 +564,46 @@ under master's of the same session. 7. The ordinary-load guards (How to work), `
 green. Close K1553 with the commit. **If the target is out of reach** with an identical result, land nothing
 in `src/` and say in the handoff what the best identical version costs and where the rest of the time goes:
 the coordinator then weighs taking stage 33 back out (Levi called j59's look before it fine).
+
+## Run P (27P): the corner census again, on today's build, with sheets that can be judged (K1558)
+
+Added 2026-11-20 11:30. A measuring run: Levi approved the census, and this repeats it on the right build.
+Probes only, nothing in `src/` or `test/`, so no deploy. Tools: Run L's, tracked in `.claude/probes/K1551/`
+(`census.py`, `calib.py`), with `.claude/probes/K1482/cap.mjs` and `tiles.py`. Run L's outputs, untracked
+in this checkout: `.claude/probes/K1551/out/27L/` (per maze `A_4`..`A_d` and `D_1`..`D_a`: `gf.png`,
+`sites_gf.json`, `scores.tsv`; link A in `newA/` and `scores_newA.tsv`). Read `### Handoff 27L` first: it
+names the 20 links and how each was captured. Your outputs go to `.claude/probes/K1558/out/27P/`, untracked.
+
+Why: the coordinator checked Run L against its records. Its table recounts from the TSVs, but: (a) its
+"master" preview was built from 3f8d2f9d8 at the run's start, before the K1545 revert (6e432bbeb, on master
+since c55b6c397): `out/27L/newA/gf.png` equals the build WITH the rejected run-on at all eight places the
+revert changed, so every count is of a build that is no longer master; (b) the wedge number is quantized,
+and 146 of the 264 wedge flags sit on the first step over the 1.85 threshold (1.854 or 1.886), which is
+t84e's level, a site Levi has called fine; 89 sit at 2.0 or more; (c) the sheets were cut at R 18, which
+shows the paper inside a junction and none of its outline, so nobody can judge them; (d) no usable kind
+sees j15, the one site Levi says must be fixed. Levi's verdicts on link A as master draws it today: OPEN
+j15 (a spur across the under thread's paper), j59 with t23e (a stub, K1556), t81s (a small step, K1554);
+FINE as they are j4, t84e, j47, t59s, t58e, j41; FIXED j14, j50, t45s.
+
+Done: 1. **The build, proved.** Pull, then `git merge-base --is-ancestor 6e432bbeb HEAD` must pass. Build
+that commit (`scripts/preview.ps1 -Port <p> -Ref <sha>`, never a working tree built before a pull) and
+write the sha in the handoff. Capture link A twice (two loads) in link A's own look, as Run L did. First
+the two loads against each other: the pixels that differ are the floor. Then load 1 against
+`out/27L/newA/gf.png`: the pixels differing by 3 levels or more in the 48 px boxes centred on (1358,186)
+t28e, (1464,1325) j161, (914,1134) t81s, (1865,1529) j83, (1122,922) t61s, (2260,524) j51, (1017,847) j31
+and (2117,771) t66s. The coordinator's frames of the revert give 88, 69, 61, 56, 56, 54, 38 and 22; if
+yours give 0 everywhere, the build is the old one: stop and report. 2. **The same 20 mazes**, captured as
+Run L captured them, `census.py` UNCHANGED on each. Run L's table again (sites, wedge, sliver, thin, per
+maze and per 100) with two more columns: the wedge sites at 2.0 or more, and the sites whose flag of any
+kind differs from Run L's `scores.tsv` of that maze (link A's listed by name, with both numbers).
+3. **The detector against Levi's verdicts**: for the 13 sites named above, on your link A frame, each
+usable kind's number and flag, then two counts per kind: how many of the four open sites it flags and how
+many of the nine fine or fixed ones. Report only: change no threshold and no measure in this run.
+4. **Sheets that can be judged**, by a small tracked tool `.claude/probes/K1558/top_sheets.py`: across the
+20 mazes the 24 sites with the highest wedge number, the 16 highest sliver and the 16 highest thin (ties
+by maze, then site); each tile 81 px square around the site (R 40) at 3x, its levels stretched (the tile's
+1st to 99.5th percentile), 8 tiles a sheet, each tile labelled with maze, site and number; and one more
+pair of sheets with link A's 13 named sites in the order above. Look at two sheets yourself and say in the
+handoff whether each tile shows the junction's or tail end's whole outline. 5. Close K1558 with the commit
+(tools and handoff; outputs stay untracked). A probes-only commit needs no `npm test` and no ordinary-load
+guards: show in the handoff that nothing under `src/` or `test/` changed (`git diff --stat` of your commits).
