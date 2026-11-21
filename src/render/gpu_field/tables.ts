@@ -144,6 +144,11 @@ export interface GfTables {
   /** K1482 s33: per chain, the over chain along whose lone pass its band ends in a long tangent run (eval.ts runT,
    * retry programs only), or -1. Absent: none. */
   rtM?: Int32Array;
+  /** K1482 s34: per arm, the chain whose crossing set its cap aLcut (the pin ahead with the smallest cut), or -1
+   * (no cap, or the behind-pin cap lowered it). Retry builds only (eval.ts cutArm). */
+  aCutC?: Int32Array;
+  /** K1482 s34: with aCutC, that crossing's arc on the cutting chain (the pin's pinPS). */
+  aCutS?: Float64Array;
   /** Build time per part, ms. */
   ms: { vtx: number; pins: number; arms: number; corners: number; bins: number; kp: number; total: number };
 }
@@ -400,7 +405,7 @@ function footNear(T: GfTables | Pick<GfTables, "cV0" | "cNV" | "vx" | "vy" | "vs
 // per solveGfCorners call and every hint is per corner pair, so a slice's
 // corners are bit-identical to the cold build's (the t1 rule: the solve's
 // input bits are unchanged, only who runs them).
-export interface GfArm { c: number; j: number; ei: number; sR: number; dir: number; L: number; Lcut: number; g: number; ang: number; ux: number; uy: number; uB: number; L0: number; ahead: number; home: number }
+export interface GfArm { c: number; j: number; ei: number; sR: number; dir: number; L: number; Lcut: number; g: number; ang: number; ux: number; uy: number; uB: number; L0: number; ahead: number; home: number; /** K1482 s34: the pin (global index) whose crossing set Lcut, or -1 */ cutQ: number }
 export interface GfCorner { thru: number; rv: number; cx: number; cy: number; r: number; rmax: number; eax: number; eay: number; ebx: number; eby: number; g: number; j: number; a: number; b: number; theta: number; ca: number; cb: number; sa: number; sb: number; /** K1482 s20: 1 = home membership's only, 2 = home-off's only */ ext?: number }
 export interface GfRaw { cV0: Int32Array; cNV: Int32Array; vx: Float64Array; vy: Float64Array; vs: Float64Array }
 export interface GfPrefix {
@@ -502,10 +507,10 @@ export function buildGfArms(P: Pick<GfPrefix, "junctions" | "jGroup" | "jBase" |
     if (!R) { R = []; for (let k = P.rootsOff[c]; k < P.rootsOff[c + 1]; k++) R.push({ s: P.rootsS[k], j: P.rootsJ[k] }); rootsCache.set(c, R); }
     return R;
   };
-  const pinsCache = new Map<number, { s: number; theta: number }[]>();
-  const pinsFor = (c: number): { s: number; theta: number }[] => {
+  const pinsCache = new Map<number, { s: number; theta: number; q: number }[]>();
+  const pinsFor = (c: number): { s: number; theta: number; q: number }[] => {
     let R = pinsCache.get(c);
-    if (!R) { R = []; const b = P.cPin0[c]; const n = P.cPinN[c]; for (let k = 0; k < n; k++) R.push({ s: P.pinS[b + k], theta: P.pinTheta[b + k] }); pinsCache.set(c, R); }
+    if (!R) { R = []; const b = P.cPin0[c]; const n = P.cPinN[c]; for (let k = 0; k < n; k++) R.push({ s: P.pinS[b + k], theta: P.pinTheta[b + k], q: b + k }); pinsCache.set(c, R); }
     return R;
   };
   const armsT: GfArm[] = [];
@@ -518,18 +523,18 @@ export function buildGfArms(P: Pick<GfPrefix, "junctions" | "jGroup" | "jBase" |
       const delta = (s: number): number => { let d = (s - sR) * dir; if (cClosed[c]) d = ((d % len) + len) % len; return d; };
       let L = cClosed[c] ? len : dir > 0 ? cS0[c] + len - sR : sR - cS0[c];
       for (const q of rootsFor(c)) { const d = delta(q.s); if (d > 1e-9 && d < L) L = d; }
-      let Lcut = Infinity; let uB = Infinity; let ahead = Infinity;
+      let Lcut = Infinity; let uB = Infinity; let ahead = Infinity; let cutQ = -1;
       for (const x of pinsFor(c)) {
         const d = delta(x.s);
         if (cClosed[c] || d < -1e-12) uB = Math.min(uB, cClosed[c] ? len - d : -d);
         if (d >= 0 && d < ahead) ahead = d;
         if (d < -1e-12) continue;
         const t = Math.tan(x.theta / 2); const reach = t > 1e-12 ? h / t : Infinity;
-        const cc = d - reach - h; if (cc < Lcut) Lcut = cc;
+        const cc = d - reach - h; if (cc < Lcut) { Lcut = cc; cutQ = x.q; }
       }
       const sB = arm.kind === "end" ? norm(c, arm.s) : sR;
       chainAtInto(TT, c, sB, CA1); chainAtInto(TT, c, cClosed[c] ? norm(c, sB + dir * 2 * h) : Math.max(cS0[c], Math.min(cS0[c] + len, sB + dir * 2 * h)), CA2); const a0 = CA1; const a1 = CA2;
-      armsT.push({ c, j: jBase + ji, ei, sR, dir, L0: L, L: Math.max(0, Math.min(L, Lcut)), Lcut, g: -1, ang: Math.atan2(a1.y - a0.y, a1.x - a0.x), ux: (a1.x - a0.x) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uy: (a1.y - a0.y) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uB, ahead, home: 0 });
+      armsT.push({ c, j: jBase + ji, ei, sR, dir, L0: L, L: Math.max(0, Math.min(L, Lcut)), Lcut, g: -1, ang: Math.atan2(a1.y - a0.y, a1.x - a0.x), ux: (a1.x - a0.x) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uy: (a1.y - a0.y) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uB, ahead, home: 0, cutQ });
     });
   }
   const byJ = new Map<number, GfArm[]>();
@@ -547,7 +552,7 @@ export function buildGfArms(P: Pick<GfPrefix, "junctions" | "jGroup" | "jBase" |
       if (th < Math.PI) gMax = Math.max(gMax, Math.tan((Math.PI - th) / 4));
     }
     const k = gMax > 0 ? Math.min(4, Math.max(1, 1 / gMax)) : 4;
-    const cc = k * A.uB; if (cc < A.Lcut) A.Lcut = cc;
+    const cc = k * A.uB; if (cc < A.Lcut) { A.Lcut = cc; A.cutQ = -1; }
     A.L = Math.max(0, Math.min(A.L0, A.Lcut));
   }
   for (const A of armsT) A.g = P.jGroup[A.j - jBase];
@@ -1341,7 +1346,7 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
     nK: nB, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
     // K1482 s23: with the retry off (the default) the tables are master's, field for field
-    ...(P.kRetry ? { kExt, rtM: sideRuns(nC, cV0, cNV, vx, vy, h), nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
+    ...(P.kRetry ? { kExt, rtM: sideRuns(nC, cV0, cNV, vx, vy, h), aCutC: Int32Array.from(P.arms, (A) => (A.cutQ >= 0 ? pinPC[A.cutQ] : -1)), aCutS: Float64Array.from(P.arms, (A) => (A.cutQ >= 0 ? pinPS[A.cutQ] : 0)), nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
     ms: { vtx: ms.vtx, pins: ms.pins + walkMs, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
   };
 }

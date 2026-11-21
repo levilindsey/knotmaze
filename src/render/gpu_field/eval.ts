@@ -54,6 +54,13 @@ export interface GfPixel {
 export class GfEval {
   /** K1482 s33 (probes): env GF_S33 at load; a probe may set it between evals. */
   static S33 = S33E;
+  /** K1482 s34 (probes): "0" turns the home-piece burial off, "w" lets every piece of the group count (not only an
+   * end-rooted arm's); a probe may set it between evals. Env GF_S34 at load. */
+  static S34 = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S34 ?? "";
+  /** K1482 s34 (probes): pixels where the home-piece burial took ink. */
+  s34n = 0;
+  /** K1482 s34 (probes): the last burial's [chain, s] of the inked piece and of the burying partner. */
+  s34w: number[] = [];
   readonly T: GfTables;
   // pieces
   private pc = new Int32Array(MAXP); private ps = new Float64Array(MAXP); private pd = new Float64Array(MAXP);
@@ -151,6 +158,35 @@ export class GfEval {
   }
   /** K1482 s28: member()'s home group for a piece left out of every group (its arm's home, too deep in z), else -1. */
   private mhb = -1;
+  /** K1482 s34: (c, s) lies on an arm of group G rooted at an open end of c (the chain starts or ends in G), within
+   * that arm's span or home extent. */
+  private endArm(c: number, s: number, G: number): boolean {
+    const T = this.T; if (T.cClosed[c] === 1) return false;
+    const s0 = T.vs[T.cV0[c]]; const s1 = T.vs[T.cV0[c] + T.cNV[c] - 1];
+    for (let i = T.cArm0[c]; i < T.cArm0[c] + T.cArmN[c]; i++) {
+      if (T.aG[i] !== G || !(Math.abs(T.aSR[i] - (T.aDir[i] > 0 ? s0 : s1)) < 1e-4)) continue;
+      const d = (s - T.aSR[i]) * T.aDir[i];
+      if (d > -1e-12 && d < Math.max(T.aL[i], T.aHome[i]) + 1e-12) return true;
+    }
+    return false;
+  }
+  /** K1482 s34: (c, s) lies on an arm of group G, within its home, that a crossing cut at its root (aLcut <= 0)
+   * where chain cut passes at arc 2 or more from cs (tables.ts aCutC, aCutS: another pass of that chain than the
+   * run at cs; cut < 0: any chain's crossing). */
+  private cutArm(c: number, s: number, G: number, cut: number, cs: number): boolean {
+    const T = this.T; const C = T.aCutC; const CS = T.aCutS;
+    for (let i = T.cArm0[c]; i < T.cArm0[c] + T.cArmN[c]; i++) {
+      if (T.aG[i] !== G || !(T.aLcut[i] <= 0)) continue;
+      if (cut >= 0) {
+        if (!C || !CS || C[i] !== cut) continue;
+        let ds = Math.abs(CS[i] - cs); if (T.cClosed[cut] === 1) ds = Math.min(ds, T.cLen[cut] - ds);
+        if (!(ds >= 2)) continue;
+      }
+      const d = (s - T.aSR[i]) * T.aDir[i];
+      if (d > -1e-12 && d < T.aHome[i] + 1e-12) return true;
+    }
+    return false;
+  }
   /** K1482 s32: the t84e fold rule (retry programs: foldD's lone fold, the sibling burial); OFF unless env GF_S32=1. */
   private s32 = false;
   private mg = -1; private mramp = 1;
@@ -652,6 +688,24 @@ export class GfEval {
             if (!(wb2 > bur)) continue;
             wb2 *= 1 - ss(1e-4, 1e-3, Math.abs(this.pkey[m] + (this.pd[m] * T.zt) / h));
             if (wb2 > bur) bur = wb2;
+          }
+        }
+        // K1482 s34 (with the retry): the converse of s28. A group's piece on an arm rooted at its chain's open end
+        // (a thread that starts in the junction) inks nowhere inside the tube of a partner left out of that group by
+        // depth (mhb = the group: its home there, diving under a crossing next to the junction). j15: chain 70's start
+        // turns sharply at s 0, and that corner's band ran across chain 5's paper, whose group-15 arm chain 70's own
+        // pass cuts (the Z spike); chain 5 ranks under the group's key there, so nothing covered it.
+        if (bur < 1 && S >= 0 && kxh && GfEval.S34 !== "0" && (GfEval.S34 === "w" || this.endArm(this.pc[j], this.ps[j], S))) {
+          for (let m = 0; m < this.np && bur < 1; m++) {
+            if (this.psurf[m] === S || this.pc[m] === this.pc[j] || (this.pg[m] >= 0 ? this.pg[m] : this.phb[m]) !== S) continue;
+            if (GfEval.S34 !== "c" && !this.cutArm(this.pc[m], this.ps[m], S, GfEval.S34 === "p" || GfEval.S34 === "o" ? -1 : this.pc[j], this.ps[j])) continue;
+            if (GfEval.S34 === "p") { // (probes: the per-pixel form) another of the inking chain's pieces, out of S, passes over m here
+              let own = false;
+              for (let n = 0; n < this.np && !own; n++) own = n !== j && this.pc[n] === this.pc[j] && this.pg[n] !== S && this.psurf[n] !== S && this.pkey[n] > this.pkey[m];
+              if (!own) continue;
+            }
+            const wb2 = GfEval.S34 === "q" ? 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy))) : 1 - ss(h - W - aa, h - W + aa, this.pd[m]);
+            if (wb2 > bur) { if (wb2 - bur > 0.02 && band2(h - X) > 0.02) { this.s34n++; this.s34w = [this.pc[j], this.ps[j], this.pc[m], this.ps[m], S, this.pg[m], this.psurf[m], this.pkey[j], this.pkey[m], this.pramp[m], this.pd[m] / h, X / h]; } bur = wb2; }
           }
         }
         let val = (1 - bur) * band2(h - X);
