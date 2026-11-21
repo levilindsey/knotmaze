@@ -770,3 +770,41 @@ Done 5 (pictures, no verdict from this run). `.claude/probes/K1561/out/27R/pics2
 Done 6 (what returns, expected). Everywhere the narrowing equals BASE, BASE's own small artifacts return with it, unmeasured beyond equality: g41_user_tw64 3.377:9.416's ragged tip (80 px box BASE-against-narrow 0, Q 272), g41_def_tw42's specks (its 18 Q-without places, 524 px in Q, now BASE except the 187 tiny px of Done 3(b)), muse_hash's and g41_user_tw64's remaining Q-without places likewise. The coordinator and Levi judge them in the sheets.
 
 Done 7: (b), (c) on its tiny set, (g) and Done 4 cannot be met in the time, so nothing under `src/` is pushed and K1566 stays open. What stands in the way, in order: the counter's march does not name 20 small bake fused nubs (262 px) that any fused-joint narrowing must restore, so `WITHOUT: 0` needs the counter's windows taken from the bake (or the test reworded to the bake's places); `g41_ring_tw64` needs a warm recapture whose two loads land on one view before its numbers count; the literal BASE, fix, Q, BASE, fix session and the guards need lock turns behind the K1482 stages. The patch, the counts and the sheets above are the record to re-land from. K1531 and K1482 left open.
+
+## Run S (27S): the narrowed nub fix lands (K1566)
+
+Added 2026-11-20 after Run R. Run R built the narrowing (`lkFusedJoint` in `gf_look.ts`; kept as
+`.claude/probes/K1561/out/27R/narrow.patch`, untracked, main checkout) and measured it, and could not land it
+(its handoff above): test (b) was worded so that it cannot read 0, `g41_ring_tw64`'s load pair was not on one
+view, and the one-session order and the guards did not fit in the time. Claude's look at Run R's sheets: at
+g41_user_tw64 4.663:7.438 the nub is gone with the narrowing as with Q; nothing seen against it. This run
+lands it.
+**For this run `src/render/gpu_field/gf_look.ts` is NOT hands-off: you may edit it, and only it, of the six
+gpu_field files.** BASE is 221644ed7 (master before Run Q's fix); Q is dcd8e81e6 (today's master `src/`).
+Done: 1. Apply the patch's hunks under `src/` and `test/` (its `nub_count.ts` hunk is already on master); the
+`gf_gap`, `gf_look` and `gf_compile` tests pass. 2. ONE capture session that loads BASE, your fix, Q, BASE,
+your fix on the 12 scenes (Run Q's and R's tools: `.claude/probes/K1561/screen3.mjs`, `make_jobs.mjs`,
+`diffcap.py`, `diff27r.py`; ports 5480-5499; every capture through `scripts/perf_lock.ps1`, and no lock left
+behind when a capture ends). A scene COUNTS only when BASE against BASE and fix against fix are 0 px in fill,
+border and plain (K1534); a scene that fails this is captured again, warm, up to three times
+(`g41_ring_tw64` failed it in Run R). 3. Numbers per counted scene: (a) `nub_count.ts --narrow` reads 0 px,
+0 places; (b) REWORDED: list every BASE-against-fix changed fill place with no counter place within 0.35
+world (`place_check.py` with BASE's counter file `out/27Q/count_before.txt`). Each such place must have Q
+against fix 0 px in its 80 px box AND a largest per-pixel step of at most 8 levels (Run R found 20 such
+places, 262 px, at 1 to 3 levels: the bake's fused nubs that the march counter does not name). A place that
+fails either test blocks the landing and gets a four-panel sheet; (c) at the stub places (muse_hash
+30.744:20.181, 21.722:34.462 and 6.178:4.541; g41_user_tw64 15.305:6.316) fix against BASE is 0 px in the
+80 px box; (d) the places where Q against fix differs: the count, each listed with its px; (e) the border
+look (`tlk=border`) differs by 0 px between BASE and fix; (f) no fill pixel that is thread on BASE is ground
+with the fix: 0. 4. Guards, both with `GF_KRETRY=1`: `.claude/probes/K1482/guards.ps1`, and the K1436 bar
+(`.claude/probes/K1436/k1436_bar.ps1 -Ref <your commit> -Port <one of yours>`) with new 0 and grown 0.
+`npm test` green with `GF_KRETRY` unset (the `gf_gap` pin re-frozen and named in the commit). 5. If every
+counted scene passes (a) to (f), at least 11 of the 12 scenes count, and the guards hold: commit the fix and
+the tools (tools tracked with `git add -f`, outputs untracked), push, see the deploy pass, close K1566 with
+the commit; a scene that did not count is named in the commit and in the handoff's `Ledger items`. If one of
+them cannot be met in the time, push nothing under `src/`: commit the tools and the handoff only, and record
+what stood in the way. 6. Pictures for Claude's look, untracked under `.claude/probes/K1561/out/27S/`: one
+four-panel sheet (BASE fill | Q fill | fix fill | fix plain; the place with its surroundings, and close; no
+wider than 1800 px) for each of the four stub places of (c), for each place that fails (b), and for the ten
+largest places of (d), plus `places.txt`. Levi's rules bind: a thread keeps both borders, its width and its
+heading. You do not judge the look; you deliver the pictures and the numbers.
