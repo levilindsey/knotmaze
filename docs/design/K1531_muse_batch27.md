@@ -808,3 +808,42 @@ four-panel sheet (BASE fill | Q fill | fix fill | fix plain; the place with its 
 wider than 1800 px) for each of the four stub places of (c), for each place that fails (b), and for the ten
 largest places of (d), plus `places.txt`. Levi's rules bind: a thread keeps both borders, its width and its
 heading. You do not judge the look; you deliver the pictures and the numbers.
+
+## Run T (27T): `npm test` no longer reads the shell's `GF_KRETRY` (K1575)
+
+Added 2026-11-20. A test fix; nothing under `src/` (`eval.ts` and `gf_glsl.ts` are hands-off: Claude stages
+work there. If the only clean fix needs a `src/` change, stop and say which). Today `npm test` with
+`GF_KRETRY=1` in the shell fails `test/render/gf_home.test.ts` (it packs aHome into the arm record's free .y
+only with the switch on) and passes with the variable unset. The guards and the node probes run with it set,
+so every stage has to remember to unset it before the suite.
+Done: 1. Find every test whose outcome depends on a `GF_*` shell variable: run the suite with the variable
+unset, with `GF_KRETRY=1` and with `GF_KRETRY=0` (and each other `GF_*` variable `src/` reads from the
+environment, set to each value it tests for), and list the tests whose outcome differs. 2. Each such test
+sets the switch itself and restores it (per test or per file, so that no other file inherits it). Where the
+code has two states, the test covers BOTH. 3. Numbers: `npm test` in every shell of 1 reports the same file
+and test counts and 0 failed. 4. No pin value changes: a pin that moves means the fix changed what is
+tested, so stop. 5. Commit, push, see the deploy pass (a push under `test/` deploys), close K1575 with the
+commit.
+
+## Run U (27U): fade.mjs's dot rule gets its control on link A (K1548)
+
+Added 2026-11-20. Probes only (`.claude/probes/K1458/fade.mjs`, your tools under `.claude/probes/K1548/`);
+nothing under `src/` or `test/`, so no deploy. Read `### Handoff 27H` first. It found that the control cannot
+be given on fade's own link (the parent build draws no dotted line there) and that on link A
+(`3.FGH1HtvQeDjm6e4BII`, an env override in `fade.mjs`) the coverage read keeps 0 of 700 sides: 654 skip on
+`uu` (today's under colour sits within about 35 levels of the flat backdrop), 46 on `iu`. This run builds the
+read that works on link A and gives the control there.
+Done: 1. A coverage read for link A that does not need the under colour to stand off the backdrop (Run H's
+suggestion: the under colour against a non-backdrop reference; the technique is yours), behind an option, so
+that fade's own link reads exactly as today. On link A it keeps at least 300 of the 700 sides on each of
+1de01c120, a8d36be33 and master. 2. The dual count (OLD rule, NEW rule) on link A at fl 0, 0.5, 1.2 and 0.14
+for the three builds, in ONE capture session with each build loaded twice (two loads of a build agree within
+2 sides, or the pair is captured again; ports 5480-5499; every capture through `scripts/perf_lock.ps1 -Owner
+"muse-27U"`, and no lock left behind). 3. The control: the NEW rule counts at least one side with more than 2
+dots on 1de01c120 at the fade where K1460's dotted line shows (`.claude/probes/K1460/shot.mjs` names the
+place), and 0 such sides on a8d36be33 and on master. If it does not, mend the rule until it does AND master
+on fade's own link still reads FADE GUARD PASS three runs running. If no rule does both, change no rule and
+record the numbers. 4. `npm test` green. 5. Commit the tools (tracked with `git add -f`, outputs untracked)
+and the handoff, push. Close K1548 with the commit if 3 holds; else leave it open with the cause. 6. One
+sheet for Claude's look under `.claude/probes/K1548/out/27U/` (untracked): the control place on 1de01c120 |
+a8d36be33 | master with the counted pixels marked, at most 1800 px wide.

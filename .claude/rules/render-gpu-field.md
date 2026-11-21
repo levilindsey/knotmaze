@@ -105,6 +105,13 @@ strokes toward today's, and do not use today's border strokes as a bar.
   borders lying close together (j59's "doubled band") are two threads' edges, and both stay. A rule that thins, merges
   or drops one fails the look whatever its pixel counts say: before offering an outline change, check that every
   thread at the place still shows both borders, its width and its heading.
+- NAMED PLACES ONLY, AND THE ALL-MAZE LOOK (Levi, 2026-11-20: "Do it", to Claude's proposal after stage 37's ball
+  candidate cleaned 8 places and broke 2 on sister mazes; K1577, K1578): (1) no rule stage for a kind of place Levi
+  has not named; the work is the places he named, in his order. (2) A rule fires at every place of its kind on every
+  maze: a candidate gets no card on the decision page and no pick from the coordinator until EVERY changed place on
+  ALL the test mazes (A_3 to A_d, D_1 to D_a) is listed (the mirror's list first, captures confirm) and the
+  coordinator has looked at each against the start. One broken place (a slit, a notch, a lost border) means: not as
+  built.
 - BAND END ALONG A LONE OVER PASS, REJECTED (K1482 s31, runT in fe7b8f127/caee39847, backed out after them): narrowing a
   group's side band and cap to W*t where a lone over piece faces its outline point within 5 aa cleared j59's step (t23e,
   153 px) but also tapered every other band tail it reached (t81s, t76e, t53e, t36s...): those are short wedges running
