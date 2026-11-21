@@ -1,6 +1,6 @@
 # K1531: Muse batch 27, captures and guards that can be trusted (2026-11-19)
 
-Run tags 27A-27M (27E and 27F were added 2026-11-19 23:55; 27E was withdrawn and 27G added 2026-11-20 01:25; 27H and 27I were added 2026-11-20 06:00; 27J, held, 07:45; 27K 08:35; 27L and 27M, the two measuring runs Levi approved, 08:41), started by Claude through Paseo with the K1053 chain, one after another in the main
+Run tags 27A-27N (27E and 27F were added 2026-11-19 23:55; 27E was withdrawn and 27G added 2026-11-20 01:25; 27H and 27I were added 2026-11-20 06:00; 27J, held, 07:45; 27K 08:35; 27L and 27M, the two measuring runs Levi approved, 08:41; 27J was dropped and 27N added 10:52), started by Claude through Paseo with the K1053 chain, one after another in the main
 checkout. **This brief is the authority and is self-contained: do not read the older batch briefs' rule
 lists.** Levi (2026-11-11): junctions and outlines are the priority; a Claude agent is on rp=gf's corner
 faults (K1482) and judges them with captures, the K1436 bar and the fade and drag guards. Three stages this
@@ -322,6 +322,9 @@ closed with the commit, or what is left recorded in it.
 
 ## Run J (27J): t84e's fold rule drawn by the shader at master's frame rate, then switched on (K1526)
 
+**DROPPED 2026-11-20 10:52, never run.** Levi accepted t84e as it is (K1549: "j15 must be fixed. The others are
+fine"), and its line is out of the queue. What follows is kept as the record of the rule only.
+
 Added 2026-11-20 07:45. **Held in the queue behind a `#` until the coordinator removes it.** This run changes
 `src/render/gpu_field/` (`gf_glsl.ts`, `eval.ts`, `tables.ts` if you bake a flag): the one exception to How to
 work's hands-off list, so it runs only while no Claude agent works there. Leave K1526 and K1482 open.
@@ -479,7 +482,7 @@ text for a given form, so a Node script can call it for the program with and wit
 
 Done: 1. **The rule list**, at most 12 rows, drawn up from `gf_glsl.ts` and the dated stage entries of
 `.claude/rules/render-gpu-field.md`: every block a K1482 stage added or grew (the second corner try
-`retryForm`, the home burial `homeBurial`, the run-on rule, the rounding at joints, the lone fold
+`retryForm`, the home burial `homeBurial`, the rounding at joints, the lone fold
 `loneFold`, which is exported and not applied, and the rest), each with its function names, its commit and
 its size in characters in the dumped source. 2. **The floor.** Dump link A's sources from a build of master
 (`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&snd=none`). Three batches of two identical copies of
@@ -502,3 +505,44 @@ the handoff: rule | chars | compile seconds saved (over the floor or not) | read
 then the all-rules row, the 0007c8df row and the two draw numbers. Scripts under `.claude/probes/K1552/`
 (tracked), outputs under its `out/27M/` (untracked). Close K1552 with the commit that tracks the tools and
 this handoff.
+
+## Run N (27N): the side-run gate's table cost back to where it was (K1553)
+
+Added 2026-11-20 10:52. A fix run with ONE exception to the hands-off list: you may rewrite the BODY of
+`sideRuns` in `src/render/gpu_field/tables.ts` (K1482 stage 33, f7b965265) and nothing else in the six
+gpu_field files: its signature, the constants `RT_DMIN`, `RT_TOL`, `RT_RUN`, its call in `buildTables` and
+every other line stay. Before you edit: pull, then `ledger.mjs show K1482`; if its `owner:` line names a
+running stage, stop and report without editing (one agent per file area: a stage in that file lands first).
+
+Why: `sideRuns` fills `GfTables.rtM` (per chain C, the chain M whose tube C's lies beside over a long run
+without ever dipping under it; the doc comment above the function is the definition). It runs in every table
+build while the second corner try is on, and the tables are rebuilt for every physics snapshot while the knot
+moves. Measured in one capture session as link A loads (`tms`, the pool's last four table builds, printed in
+the capture tool's `pool {...}` line): 12.2-17.3 ms on master before it, 21.8-28.5 ms with it, about 9 ms a
+build; with `&gfk=0` (no `rtM` built) 9.2-38.8 ms on both. Tools, tracked, in `.claude/probes/K1482/s33/`:
+`rt33.ts` (its header: the chains marked on link A and on the bar's mazes, and the function's time in Node),
+`cap28.ps1` with `cap28.mjs` (the capture; `-Env 'GF=1,B2=1,FILL=1,SCENE=1'` also writes `scene_gf.json`,
+which `rt33.ts A` reads; a Node probe needs env `GF_KRETRY=1`, and `npm test` needs it unset).
+
+Done: 1. **The reference.** Copy today's function whole to `.claude/probes/K1553/side_ref.ts` (tracked): every
+later version is compared with it, element by element. 2. **Fixtures.** Link A's scene, the bar's four mazes
+(`ring`, `def`, `muse_hash`, `g41_user_tw64`, loaded as `rt33.ts K` loads them) and 100 moved copies of each
+of the five: every vertex shifted by a seeded random offset of up to 0.3 h, and in half of them one chain
+shifted whole by up to 2 h, so that tubes come to lie beside each other and dive under each other. Report
+how many of the 505 fixtures mark at least one chain and how many pairs sit within 0.05 h of a threshold: a
+comparison on fixtures that mark nothing proves nothing. 3. **The floor.** The reference's Node time on link
+A's tables, 200 calls, three repeats, under the perf lock: the median and the spread. 4. **The faster
+body**, returning the same Int32Array on all 505 fixtures. Measure first where the time goes (the cell lists
+built on every call, the 3x3 cell scan with a square root per segment, `ms.includes`); the technique is
+yours. The meaning does not change: a version that differs on one element of one fixture is not landed,
+however fast. Target: a quarter of the reference's Node time or less. 5. **A unit test**,
+`test/render/gf_side_runs.test.ts`: the new body against a frozen copy of the reference under
+`test/render/fixtures/` (as the paint tests keep theirs) on seeded random chains, under 2 s, with at least
+one pair that lies beside (marked), one that dives under (not marked) and an empty input. 6. **In the
+browser**, one capture session through the perf lock: a build of master before your commit, yours, master
+again, link A as it loads and with `&gfk=0`. The three pictures of each load (`gf.png`, `gf_b2.png`,
+`gf_fill.png`) are byte-equal across the three builds, and the median `tms` as it loads is at least 6 ms
+under master's of the same session. 7. The ordinary-load guards (How to work), `npm test`, the deploy
+green. Close K1553 with the commit. **If the target is out of reach** with an identical result, land nothing
+in `src/` and say in the handoff what the best identical version costs and where the rest of the time goes:
+the coordinator then weighs taking stage 33 back out (Levi called j59's look before it fine).
