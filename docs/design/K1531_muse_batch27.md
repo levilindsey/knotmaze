@@ -1226,6 +1226,21 @@ batches, the difference inside the worst twin spread or a saving. 7. `npm test` 
 the deploy green. 8. K1426 closed with the numbers, or cut down to what is left. The Pixel is not measured in
 this run (never touch the phone): say so in the handoff.
 
+### Handoff 27Z2 (Muse, 2026-11-21, done: Done 2 holds, no source change; K1426 closed with the table)
+
+Started 11:45 PST, stopped 12:02 PST. Starting master 82e22ac67; no `src/` or `test/` change (probes only: `.claude/probes/K1426/mk_nocap.mjs`, `bench27z2.ps1`, this handoff; no hands-off file touched, so no deploy and, as a probe-only run, no ordinary-load guards). Previews of master (82e22ac67) on :5480 and of the no-cap throwaway working tree on :5481 under `$env:TEMP\knotmaze-27Z2-*` (listeners' command lines and page stamps checked: master `82e22ac67`, throwaway `82e22ac67+`; stopped and removed at the stop line). Every bench sequence through `scripts/perf_lock.ps1 -Owner "muse-27Z2"`. Bench outputs under `.claude/probes/K1426/out/27Z2/` (untracked: `bench_A1/B1/B2/A2.json`). The Pixel was not measured in this run (the phone was not touched), as briefed.
+
+Done 1 (the cost today; drag span, `k1362c1_bench.mjs` unchanged, def = `b.FMKB4DIQ`, fat = `p9ar6.FMKB4DIQ`, both `&am=instant&snd=none&rp=gf`; A = master, B = throwaway master with the cap line stripped from every `gfFs` form by `mk_nocap.mjs` - the `VTX_LINE` text and the `fj` per-slot loop removed after all form transforms, `vtx` left defined but uncalled; never landed, reverted after the build, `git status` clean under `src/`). The `k1362c1_bench.ps1` wrapper was not used: it takes its own pre-K1533 lock with a hard-coded owner, so the bench ran as `bench.mjs` under `perf_lock.ps1`, as in 27Z; nothing under `.claude/probes/K1362/` changed. GPU net p50 (ms) and worker workMs p50/p95 (ms), interleaved A B B A:
+
+| drag | A1 master | B1 no-cap | B2 no-cap | A2 master | master median | no-cap median | cap cost | master spread |
+|---|---|---|---|---|---|---|---|---|
+| def | 15.54 (16.7/21.3) | 15.28 (16.4/21.6) | 15.04 (16.6/21.5) | 15.57 (16.0/20.6) | 15.55 | 15.16 | 0.39 ms, 2.5% | 0.03 |
+| fat | 13.65 (16.0/21.5) | 13.10 (16.0/22.7) | 13.05 (16.2/23.0) | 13.21 (16.6/22.8) | 13.43 | 13.07 | 0.36 ms, 2.7% | 0.44 |
+
+Pairwise the same way: def A1-B1 0.26 ms (1.7%), A2-B2 0.52 (3.4%); fat A1-B1 0.55 (4.0%), A2-B2 0.17 (1.2%). The worker's work p50/p95 (in brackets) is level across builds on both drags. So on today's shader the cap costs about 0.4 ms, not c3's inferred 1.6 ms: many stages have changed the program since, as the brief allowed.
+
+Done 2 (under 5%, so no cut). Both drags read under 5% of master's GPU net p50 (2.5% and 2.7%), and fat's cost is also under its spread. Done 3 to 6 are therefore not owed: no technique was cut, no pixel proof, no pin re-frozen (no pin moved; the golden snapshots stand), no compile timing. `npm test` green (259 files passed, 2 skipped; 3,241 tests passed, 9 skipped; tsc clean). K1426 is closed with this table; K1531 and K1482 left open. Tried and left: nothing failed - the throwaway's first form carried an untyped helper (tsc TS7006) and was reverted and re-applied typed before its build; its `gf_compile`/`gf_look` tests passed (18 tests).
+
 ## Run Z3 (27Z3): does a cold first visit under rp=gf still block the page? (K1384)
 Added 2026-11-21. K1384 dates from K1369 s1: on a cold desktop profile the gf shader compiled synchronously and
 froze the loader for about 6.7 s. Since then K1456 (`be6ae5f6f`) made the compile asynchronous
