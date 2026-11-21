@@ -1167,10 +1167,6 @@ Every other item below waits on the trigger it names.
   agent stage rebases it on that day's master and reads link A's sweep class table and the K1436 bar; land
   only if the faulted count falls with no new find, else delete the branch. Every spot it visibly changes gets
   a three-version sheet (.claude/probes/K1485/wide4.py layout)
-- **K1558** · Corner census again on today's build: K1551's counted the build before the hook revert (its
-  preview was of 6f645f3ce; link A's frame equals the run-on build at all eight reverted places), 146 of its
-  264 wedge flags sit on the first step over the threshold (t84e's level, which Levi called fine), no usable
-  kind sees j15, and its R 18 sheets cannot be judged. Muse run 27P (docs/design/K1531_muse_batch27.md, Run P)
 - **K1565** · rp=gf cold compile (K1456): of the corner rules on master only the three corner loops in
   `layers` (label, arc, tangent) cost compile time over the floor: 14.7 s of the largest program's about 50 s,
   for 3,351 chars; master's program is 13.9 s over 0007c8df's (Muse run 27M, its handoff in
@@ -3003,6 +2999,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1558** · Corner census again on today's build: K1551's counted the build before the hook revert (its preview was of 6f645f3ce; link A's frame equals the run-on build at all eight reverted places), 146 of its 264 wedge flags sit on the first step over the threshold (t84e's level, which Levi called fine), no usable kind sees j15, and its R 18 sheets cannot be judged. Done in 5d6dfe240 (2026-11-21).
 - **K1575** · `npm test` with `GF_KRETRY=1` set fails `test/render/gf_home.test.ts` (packs aHome into the arm record's free .y only with the switch on), on master too (stages 37 and 38 saw it on d1c25f5fe); green with the variable unset. Done in 9205e1952 (2026-11-21).
 - **K1578** · rp=gf look candidates, the all-maze look: `.claude/probes/K1578/allmaze.ps1` (any two commits, every test maze twice in one session, a sheet per changed place, places.txt) built by Muse run 27V with a null and a known-break control (tools `13e6b8475`), and run on the ball candidate on all 21 mazes (K1572); leftovers are K1581. Done in 8e7219f3b (2026-11-21).
 - **K1559** · rp=gf, a thread's tight inside bend drawn round: t81s's step corner on link A (907,1137; Levi 2026-11-20: 'we want the step', ideally its corner rounder; 'Do it', K1577) and t4s's inside corner (2174,632; K1555: 'nice to round out', not critical if too costly). Dropped: the second and last try (stage 43, 2026-11-21 00:32 to 01:15, mirror only) showed no visibly rounder step within the bar. Outer edge alone: 1.3 px deep at a 17 px radius, reads as before; from 25 px the step gets lower. Both edges: the corner rounds, but dots and a notch show where chain 81's start lies under chain 45 (about 910,1138). The coordinator viewed both on the stage's sheets. t81s's step corner stays as it is; no third try unless Levi names one. t4s's part is K1580. Handoff: docs/design/K1482_s43_bend_pictures.md (master 4a3311383). Page: https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#bends (2026-11-21).
