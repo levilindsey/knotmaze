@@ -2981,14 +2981,17 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   a sweep needs a switch that turns the run off (none exists) to capture each group both ways
 - **K1580** · rp=gf, t4s's inside corner on link A (2177,641): a maze-wide outer round of a thread's tight
   inside bend makes the pale wedge's square end visibly rounder at a 17 px radius (stage 43, mirror only:
-  GF_BEND=1 with OTHER=0.6 on the local branch worktree-agent-aaaeec79b5cca150f, `2e901a750`; pictures
-  .claude/probes/K1482/out/s43/sheets/t4s_2_outer_rf17.png in its worktree, and the page). It fires at 40 to
-  84 places a maze (71 on link A), none of them viewed, and a real build needs a bend table and a sector term
-  in every program variant that computes membership. Offered to Levi on the page 2026-11-21 with keeping as
-  the default (his cost line, K1527): no stage unless he says 't4s round'. Then first a review page of every
-  changed place on link A for him to mark, and the all-maze look (K1578) before any card. Handoff: `###
-  Handoff K1482 s43` in `docs/design/K1482_s43_bend_pictures.md`. Page:
-  https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#bends
+  GF_BEND=1 with OTHER=0.6 on the local branch worktree-agent-aaaeec79b5cca150f, `2e901a750`; sheets
+  .claude/probes/K1482/out/s43/sheets/t4s_1_outer_rf8.5.png and t4s_2_outer_rf17.png in its worktree). The
+  coordinator's look at those two sheets (2026-11-21): the corner itself is clean in the close row at both
+  radii, and barely rounder at 8.5 px; in the wide row at 17 px the loop just above t4s fills in at its inside
+  corner and its border there gets about twice as thick, which weighs against. The rule fires at 40 to 84
+  places a maze at 17 px (71 on link A; 67 to 109 at 8.5 px), none of the others viewed, and a real build
+  needs a bend table and a sector term in every program variant that computes membership. Told to Levi on the
+  page 2026-11-21 (version 15) as no question, keeping is the default (his cost line, K1527): no stage unless
+  he says 't4s round'. Then first a review page of every changed place on link A for him to mark, and the
+  all-maze look (K1578) before any card. Handoff: `### Handoff K1482 s43` in
+  `docs/design/K1482_s43_bend_pictures.md`. Page: https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#bends
 
 ## Done
 
