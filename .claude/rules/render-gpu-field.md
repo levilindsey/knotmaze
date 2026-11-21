@@ -90,6 +90,16 @@ strokes toward today's, and do not use today's border strokes as a bar.
   the far side of the over thread. A round hook does that; a point or a straight run-on narrows the thread and turns
   it. Never trade a hook for a point. s30's design (tags in V1's fraction, the anchor-reach rule that t56s needed) is
   in 05155fa4e and `docs/design/K1482_s30_t81s_inleg.md`.
+- END-ARM BURIAL (K1482 s34b, ac4387f28; in retry programs only: `gfk=0` builds are byte-identical; j15 on link A):
+  the border of a thread's last stretch, drawn on top of the thread it ends on, left a spur beside a small eye.
+  `tables.ts` `arms34()` gives each arm a code `a34 = (C + 1) * 2 + e` (e: the arm is rooted at its chain's open end;
+  C: the chain that cuts the arm at its root, counted only when that crossing lies 2 or more of arc from every arm of
+  C in the group); `gf_pack.ts` stores it in the arm record's second texel (.z) and its key copies. `eval.ts` (`m34`
+  in `member()`, kept per piece as `p34`, the face term in `layers()`) and `gf_glsl.ts` (`T34`) apply ONE form: j's
+  ink is buried with the s28 mitre when j sits on an end arm, the partner piece is on another chain in the same group
+  (or its home group) and the partner's arm is cut by j's chain. It fires at 1 place on link A (j15, 39 px) and 1 on
+  muse_hash, none on ring / def / g41_user_tw64 (`.claude/probes/K1482/s34/wd34.ts`); +6,180 chars of retry shader
+  text, no measurable compile or table cost. Brief and handoff: `docs/design/K1482_s34_j15_spike.md`.
 - NEVER REMOVE A THREAD'S BORDER (Levi, 2026-11-20, j59, binding): "It's completely removing a border and consequently
   widening the thread and destroying the visual indication of where that thread is and how it aligns with others". Two
   borders lying close together (j59's "doubled band") are two threads' edges, and both stay. A rule that thins, merges

@@ -658,3 +658,41 @@ pair of sheets with link A's 13 named sites in the order above. Look at two shee
 handoff whether each tile shows the junction's or tail end's whole outline. 5. Close K1558 with the commit
 (tools and handoff; outputs stay untracked). A probes-only commit needs no `npm test` and no ordinary-load
 guards: show in the handoff that nothing under `src/` or `test/` changed (`git diff --stat` of your commits).
+
+## Run Q (27Q): the fill look's nub of gap beside a joint is gone (K1561)
+
+Added 2026-11-20 14:00. K1561 in `LEDGER.md`; the diagnosis, with its numbers, is `docs/ledger_notes.md`
+`## K1561`: read it first. Levi saw the fault on 2026-11-20: in rp=gf's fill look (`tlk=fill`), where a thread
+comes out from under one thread and at once ends on another (a T joint), a notch of ground colour cuts into
+that thread's body beside the thread it ends on (bar scene g41_user_tw64, junction j71, world 4.981:7.472:
+chain 32 under chain 22, ending on chain 30; the notch is about 26 x 14 device px at dpr 3). Cause: `lkGap`
+in `src/render/gpu_field/gf_look.ts`. Inside a crossing window its loop's COVERAGE cut (`gA = max(gA, cj)`)
+takes every piece whose key is above the label's by more than `uZt`, the joint's host chain too; K1482
+stage 8 limited only the OUTLINE's cut to the window's named over chain (`cS`).
+**For this run `src/render/gpu_field/gf_look.ts` is NOT hands-off: you may edit it, and only it, of the six
+gpu_field files.** The CPU mirror (`eval.ts`) has no notch and stays as it is.
+Done: 1. The count, before any fix: turn `.claude/probes/K1470/nub_probe.ts` (it hard-codes chain 30) into a
+tool that counts, per scene, the pixels of a thread's body that the coverage cut removes through a piece that
+is a fused joint with the pixel's own chain (`crossing_gaps.ts` `isJointPair` and `eval.ts` `member()` say
+what a fused joint is). Run it on the K1436 bar's scenes (`.claude/probes/K1436/k1436_lib.ts` lists them;
+`$env:GF_KRETRY = '1'`, `node scripts/run_node.mjs <tool.ts> ...`): it must find j71's notch, and it lists
+every other place of the kind. 2. The fix in `lkGap`: where the window's slot names its over chain
+(`cS >= 0`), the coverage cut comes from that chain only (in the K1458 far-reach term too); or, if that moves
+pixels it should not, pieces that are a fused joint with the label's chain are skipped. Take the smaller
+change that meets Done 3 and 4. 3. Numbers, per scene from ONE capture session that loads master, the fix,
+master, the fix (`.claude/probes/K1482/s34/capseq34.ps1` and `diffseq34.ps1` did this for stage 34b: reuse or
+adapt them; ports 5480-5499; every capture through `scripts/perf_lock.ps1`): (a) the count of Done 1 is 0
+with the fix, on every scene; (b) the border look (`tlk=border`) and the plain gf shot differ by 0 px between
+master and the fix, every scene; (c) in the fill shots no changed pixel moves toward the ground colour: count
+the pixels that were thread on master and are ground with the fix, 0; (d) master against master and the fix
+against the fix are 0 px, or that session is not counted (K1534). 4. Guards, both with `GF_KRETRY=1`:
+`.claude/probes/K1482/guards.ps1`, and the K1436 bar (`.claude/probes/K1436/k1436_bar.ps1 -Ref <your commit>
+-Port <one of yours>`) with new 0 and grown 0. `npm test` green with `GF_KRETRY` unset. 5. Pictures for
+Claude's look, untracked under `.claude/probes/K1561/out/27Q/`: for EVERY place whose fill pixels changed, on
+every scene, one picture master | fix | changed pixels in red, at two zooms (the place with its
+surroundings, and close), named by scene and place, plus `places.txt` (scene, world x:y, changed px). Levi's
+rules bind: a thread keeps both borders, its width and its heading. You do not judge the look; you deliver
+the pictures and the numbers. 6. If (a) to (d) and the guards hold: commit the fix and the tool (tools
+tracked with `git add -f`, outputs untracked), push, see the deploy pass, close K1561 with the commit. If one
+of them cannot be met in the time, push nothing under `src/`: commit the tool and the handoff only, and
+record what stood in the way.
