@@ -319,10 +319,6 @@ Next free ID: K1580.
 - **K1562** · The laptop's knotmaze clone, after K1493's history rewrite (2026-11-20): on a clean tree run
   `git fetch`, then `git reset --hard origin/master` (or clone afresh). Do not `git pull` there first: a pull
   merges the old history, and a push after it brings the 362 MB back (docs/ledger_notes.md `## K1493`)
-- **K1577** · rp=gf junction work, what comes after the ball (K1572): Claude proposed on 2026-11-20 21:35 to
-  stop rule stages on places Levi has not named and to take next what he named and parked: the rounder step
-  corner at t81s (K1559) and t4s's corner (K1527); or first a review page of about six mazes from the live
-  build for Levi to mark. Levi's call: corners / review page / something else
 
 ## In progress
 
@@ -727,10 +723,10 @@ Next free ID: K1580.
   Stage 7 works on master's tables instead (the fragments: the j58/t23s T triangle, then dots, ticks, dashes,
   stubs, breaks)
   - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5; stage 40 (the ball candidate narrowed, its second and last try): claude agent ac98db1b4872d612b of that session, model opus, cap 2 h, started 2026-11-20 21:05; stage 39 (checks, no source change): nobody since 2026-11-20 20:55, stopped at its 1 h cap; stage 37: nobody since 19:28, its candidate not to land as built (K1572); stage 38: nobody since 19:35, its candidate waiting on Levi (K1560); stage 35: superseded by stage 38; stage 36: a classing, merged
-  - branch: mainline; stage 40 on worktree-agent-ac98db1b4872d612b (.claude/worktrees/agent-ac98db1b4872d612b; it merges stage 39's branch); stage 39 on worktree-agent-ad0904a323c8cdfe0 (.claude/worktrees/agent-ad0904a323c8cdfe0), its last commit `5b915117e`, no src or test change against `6254a1006`; stage 37 on worktree-agent-a014587de769261dc (.claude/worktrees/agent-a014587de769261dc): candidate src `df2e1c8bb`, pins `fa3e90967`, its last commit `6254a1006`; stage 38 on worktree-agent-a796b4f93cdebf0b2 (.claude/worktrees/agent-a796b4f93cdebf0b2; it holds a merge of stage 35's branch, so it lands only by cherry-pick or squash): candidate src `e569ccb47`, its last commit `6526a370b`; stage 35 on worktree-agent-a36a75a8057e449f5 and stage 36's worktree .claude/worktrees/agent-a02a2591885b583a9 kept; last commit: `dde81eae9`
+  - branch: mainline; stage 40 on worktree-agent-ac98db1b4872d612b (.claude/worktrees/agent-ac98db1b4872d612b; it merges stage 39's branch); stage 39 on worktree-agent-ad0904a323c8cdfe0 (.claude/worktrees/agent-ad0904a323c8cdfe0), its last commit `5b915117e`, no src or test change against `6254a1006`; stage 37 on worktree-agent-a014587de769261dc (.claude/worktrees/agent-a014587de769261dc): candidate src `df2e1c8bb`, pins `fa3e90967`, its last commit `6254a1006`; stage 38 on worktree-agent-a796b4f93cdebf0b2 (.claude/worktrees/agent-a796b4f93cdebf0b2; it holds a merge of stage 35's branch, so it lands only by cherry-pick or squash): candidate src `e569ccb47`, its last commit `6526a370b`; stage 35 on worktree-agent-a36a75a8057e449f5 and stage 36's worktree .claude/worktrees/agent-a02a2591885b583a9 kept; last commit: `f20a66f7d`
   - evidence: stage 39: tools .claude/probes/K1482/s39 (tracked on its branch), outputs .claude/probes/K1482/out/s39 (untracked, in its worktree: places.txt, mazes.txt, 17 sheets, guards/summary.txt); stage 40: .claude/probes/K1482/s40 and out/s40 in its worktree; stage 37: tools .claude/probes/K1482/s37 (tracked on its branch), outputs out/s37 in its worktree (pics, diff_raw, census, guards/summary.txt, barmirror/bar.txt); stage 38: s38 and out/s38 (pics, sisgpu, diff/diffseq.txt, guards) in its worktree; stage 36: out/s36 in its worktree; the page pictures' cut scripts are not kept (re-cut from the stages' sheets: rows 2, 4 and 3 of each 1616x3320 sheet); earlier stages: their handoffs in docs/design/K1482_s*.md, and K1571 for the worktrees the disk cleanup kept
-  - next: STAGE 40 RUNNING (the ball's second and last try; its cap is 23:05), and ONE ANSWER FROM LEVI (K1560). At stage 40's end: check its report against its branch (nothing pushed; src diff only in eval.ts, gf_glsl.ts and tests), view every changed-place sheet (A_b 1077,1509 and A_a 2257,991 as the start or clean; the eight better places kept), put its pictures on the decision page `#ball`, move K1572 back to Waiting on Levi (ball yes / ball no) and file its ledger items; if it failed, close K1572 with the look kept and tell Levi: no third ball stage unless he names it. Still to run on a candidate Levi takes, before it lands: the K1436 bar (new 0, grown 0), the mazes not captured, fill and gfk=0 on the sister mazes (K1573), then guards on the merge and the deploy check. K1560 (t81s): on t81s keep, close it; on t81s take, K1574's checks on `e569ccb47` first, landing by cherry-pick or squash; no third t81s stage unless Levi names it. If two candidates land, guards and the bar re-run on the two together
-  - brief: `docs/design/K1482_s40_ball_narrow.md` (master); stage 39's handoff in `docs/design/K1482_s39_ball_checks.md` on its branch only; the candidates' handoffs, each on its branch only: `docs/design/K1482_s37_tangent_ball.md`, `docs/design/K1482_s38_t81s_more.md`; stage 36's classing: `docs/design/K1482_s36_wedge_class.md`; stage 35: `docs/design/K1482_s35_t81s_under_pass.md` on its branch only
+  - next: STAGE 40 RUNNING (the ball's second and last try; its cap is 23:05), and ONE ANSWER FROM LEVI (K1560). At stage 40's end: check its report against its branch (nothing pushed; src diff only in eval.ts, gf_glsl.ts and tests), view every changed-place sheet (A_b 1077,1509 and A_a 2257,991 as the start or clean; the eight better places kept), put its pictures on the decision page `#ball`, move K1572 back to Waiting on Levi (ball yes / ball no) and file its ledger items; if it failed, close K1572 with the look kept and tell Levi: no third ball stage unless he names it. Still to run on a candidate Levi takes, before it lands: the K1436 bar (new 0, grown 0), the mazes not captured, fill and gfk=0 on the sister mazes (K1573), then guards on the merge and the deploy check. K1560 (t81s): on t81s keep, close it; on t81s take, K1574's checks on `e569ccb47` first, landing by cherry-pick or squash; no third t81s stage unless Levi names it. If two candidates land, guards and the bar re-run on the two together. AFTER STAGE 40, STAGE 41 (Levi 2026-11-20 'Do it': the corners he named, K1559 t81s's step and K1555 t4s, rounder; the first try at both): check `claude -p /usage` against the stop line, then launch one Opus agent from `docs/design/K1482_s41_step_corners.md` (same files as stage 40, so never beside it; re-read the brief's tools line against stage 40's branch first). Its candidate gets a card only after every changed place on all test mazes has been looked at (K1578)
+  - brief: `docs/design/K1482_s40_ball_narrow.md` (master); stage 39's handoff in `docs/design/K1482_s39_ball_checks.md` on its branch only; the candidates' handoffs, each on its branch only: `docs/design/K1482_s37_tangent_ball.md`, `docs/design/K1482_s38_t81s_more.md`; stage 36's classing: `docs/design/K1482_s36_wedge_class.md`; stage 35: `docs/design/K1482_s35_t81s_under_pass.md` on its branch only; stage 41 (the corners, to launch after stage 40): `docs/design/K1482_s41_step_corners.md` (master)
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
@@ -767,9 +763,9 @@ Next free ID: K1580.
   the fade guard's verdict. Probe runs first; hands off tables.ts, eval.ts, gf_keys.ts, gf_glsl.ts,
   gf_look.ts, gf_pass.ts (K1482's agent)
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `89aef5e58`
+  - branch: mainline; last commit: `f20a66f7d`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 27R ended 2026-11-20 19:21: the narrowing built and measured, nothing under src landed (K1566). RUNNING: 27K (K1550) since 19:34. Queued behind it: 27S (K1566, Run S of the brief: lands the narrowing), then 27P. At each run's end: read its handoff against primary records, view its sheets, check the deploy if src was pushed, archive the idle Paseo agent (27R's is archived or named in the round's commit), keep the queue full with bounded numeric fix runs (candidates: K1565, K1569, K1548's link A follow-up)
+  - next: RUNNING: 27K (K1550) since 2026-11-20 19:34; by 22:04 it had pushed its reload fix (5564d2665) and filed K1579, and was not yet in done.txt. Queued behind it: 27S (K1566: lands the narrowed nub fix), 27T (K1575, Run T: npm test stops reading the shell's GF_KRETRY), 27U (K1548, Run U: fade.mjs's dot rule gets its control on link A), then 27P (K1558, the census again; last, since census-picked stages are stopped, K1577). At each run's end: read its handoff against primary records, view its sheets, check the deploy if src was pushed, archive the idle Paseo agent, keep the queue full with bounded numeric fix runs (next: the all-maze changed-place tool, K1578, once stage 40's tools are on master; K1565 once the ball and corner candidates are decided)
   - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
@@ -790,11 +786,22 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1578** · rp=gf look candidates: view every changed place on ALL test mazes before a candidate goes on the
-  decision page or gets a pick (stage 37's ball got a yes from Claude before five more mazes showed a broken
-  border, K1572). The mirror (GfEval) can list changed places without a capture (stage 40 uses it first): if
-  its list matches stage 39's 17 captured places, write the gate into `.claude/rules/render-gpu-field.md` and
-  keep the tool under `.claude/probes/K1482/`
+- **K1559** · rp=gf, the corners Levi named: t81s's step on link A (929,1153) drawn rounder (Levi 2026-11-20:
+  'we want the step', ideally its corner rounder), and with it t4s's square inside corner (K1555). Levi
+  2026-11-20, to Claude's plan for after the ball: 'Do it' (K1577). Stage 41, the first try at both: brief
+  `docs/design/K1482_s41_step_corners.md`, one Opus agent, launched when stage 40 ends (same files). A
+  candidate: back to Levi with pictures once every changed place on all test mazes has been looked at (K1578)
+- **K1555** · rp=gf, t4s on link A (2172,615 on the 3200x1800 frame): its square inside corner could be
+  rounded. Levi 2026-11-20: 'this would be nice to round out, but is not too critical of the fix becomes too
+  difficult to make or too costly'. Stage 41 takes it with K1559 (`docs/design/K1482_s41_step_corners.md`),
+  t81s first; left as it is if it needs a costly rule of its own. Picture:
+  https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#t4s
+- **K1578** · rp=gf look candidates, the all-maze look (Levi 2026-11-20: 'Do it'; written into
+  `.claude/rules/render-gpu-field.md`): no card and no pick before every changed place on ALL test mazes is
+  listed and looked at. Left: (1) check that the mirror's changed-place list (stage 40's tools) names the 22
+  places stage 39 captured, so that the list can stand as the first pass; (2) one tool for it (any two
+  commits, every maze, a sheet per place and `places.txt`; stage 39's and 40's scripts are per stage): a Muse
+  run, briefed once stage 40's tools are on master
 - **K1572** · rp=gf: the round ball where a thread end meets a joint. Stage 37's candidate (src `df2e1c8bb`,
   not on master) is cleaner at 8 of 22 changed places on nine mazes, but stage 39's sheets show it cuts a slit
   through a border line on A_b (1077,1509, near t22s) and a notch into a join on A_a (2257,991, near t29s) and
@@ -1160,8 +1167,10 @@ Every other item below waits on the trigger it names.
   neighbour by 0.08 so that rp=gf's one-pixel edge steps stop counting (master now reads 0 dots at every fade,
   K1494), and checked the rule on synthetic pixels only. The rule exists to catch K1460's dotted line across
   the faded under thread (fixed by a8d36be33; its parent 1de01c120 still draws it), and a run of dots along an
-  edge is not one isolated speck. Run the count on 1de01c120 and a8d36be33: it must fail the first and pass
-  the second, or the rule is mended until it does (Muse run 27H, docs/design/K1531_muse_batch27.md)
+  edge is not one isolated speck. Run 27H: the control cannot be given on fade's own link (the parent build
+  draws no dotted line there), and on link A the coverage read keeps 0 of 700 sides. Muse run 27U builds a
+  read that works on link A and gives the control there: the rule must fail 1de01c120 and pass a8d36be33 and
+  master, or it is mended until it does (Run U in docs/design/K1531_muse_batch27.md)
 - **K1558** · Corner census again on today's build: K1551's counted the build before the hook revert (its
   preview was of 6f645f3ce; link A's frame equals the run-on build at all eight reverted places), 146 of its
   264 wedge flags sit on the first step over the threshold (t84e's level, which Levi called fine), no usable
@@ -1171,11 +1180,15 @@ Every other item below waits on the trigger it names.
   for 3,351 chars; master's program is 13.9 s over 0007c8df's (Muse run 27M, its handoff in
   docs/design/K1531_muse_batch27.md, tools `.claude/probes/K1552/`). Candidate: one loop over the corners in
   place of three, or per-corner terms moved to the table build; 0 px on the bar's scenes, compile seconds
-  saved over the floor. A Muse fix run after 27Q (same file area)
+  saved over the floor. A Muse fix run, once the ball's candidate (K1572) and stage 41's corner candidate
+  (K1559) are decided: all three work in the same loops
 - **K1569** · K1551's census: its wedge kind flags the WANTED double line (two borders side by side read 2.0
   strokes, the line is 1.85). Stage 36: 96 of 127 flags on A_5, A_7, A_8 are not faults, so run 27L's wedge
   counts are not fault counts. Recalibrate `.claude/probes/K1551/census.py` on stage 36's 127 verdicts, or
-  drop the kind, before the census picks another stage
+  drop the kind, before the census picks another stage. Parked 2026-11-20: census-picked stages are stopped
+  (K1577), and stage 36's `class.tsv` files hold no verdict column (the verdicts are in its handoff's text),
+  so a per-row verdict table comes first. Muse run 27P (the census again) runs last in the queue for the same
+  reason
 - **K1579** · K1550's gate, finished by hand (Run 27K landed the reload-once fix at 5564d2665 and its smoke;
   close K1550 only when these hold) - VERIFY: on a tip build, gf hook gate 0/45 off the floor with at least 3
   of 45 console-error rows, today 0/20, late 5/5 at floor with no reload, 0 pageerrors overall, plus
@@ -2611,7 +2624,8 @@ Every other item below waits on the trigger it names.
   `a34` formula (handoff: `docs/design/K1482_s38_t81s_more.md` on its branch)
 - **K1575** · `npm test` with `GF_KRETRY=1` set fails `test/render/gf_home.test.ts` (packs aHome into the arm
   record's free .y only with the switch on), on master too (stages 37 and 38 saw it on d1c25f5fe); green with
-  the variable unset. The test should set the switch itself instead of reading the shell's
+  the variable unset. The test should set the switch itself instead of reading the shell's. Muse run 27T (Run
+  T in docs/design/K1531_muse_batch27.md)
 - **K1576** · Stage 38's probe leftovers in `$env:TEMP` (stage 37's are gone: stage 39 removed them, checked
   2026-11-20 20:58): `k1482s38p` (builds, registered worktrees `src-d1c25f5fe` and `src-67f8756f2`),
   `k1482s38p_631*.log`, `k1482s38_*.py`, Chrome profiles `k1482s34b-s38m`, `k1482s34b-s38c`, `k1482s36-s38m`,
@@ -2997,17 +3011,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   link A and was judged only there and on the bar's four mazes (ring, def, muse_hash, g41_user_tw64); another
   maze could hold a run-on that reads worse. `.claude/probes/K1482/s30/runs30.ts` lists the groups of a maze;
   a sweep needs a switch that turns the run off (none exists) to capture each group both ways
-- **K1555** · rp=gf, t4s on link A (2172,615 on the 3200x1800 frame): its square inside corner could be
-  rounded. Levi 2026-11-20: 'this would be nice to round out, but is not too critical of the fix becomes too
-  difficult to make or too costly'. No stage planned: take it when a corner rule that rounds it comes cheap
-  (K1552's cost table) or with other corner work there. Picture:
-  https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#t4s
-- **K1559** · rp=gf, t81s's step on link A (929,1153): a rounder corner. Levi 2026-11-20: 'we want the step',
-  and ideally its corner rounder. Same kind as K1555 (t4s): one rounding stage could take both; not if it
-  turns out costly
 
 ## Done
 
+- **K1577** · what comes after the ball (asked 2026-11-20): Levi answered 'Do it' to all three changes: the corners he named are next (K1559 t81s's step, K1555 t4s's corner; stage 41), no card and no pick before the all-maze look (K1578), a fuller Muse queue (runs 27T and 27U). Done in f20a66f7d (2026-11-20).
 - **K1567** · rp=gf t81s (K1560): stage 35's candidate is built, not landed (9d42c8f90 on worktree-agent-a36a75a8057e449f5): a 5 px step on the under thread's right edge, 18 px. Dropped: answered by Levi 2026-11-20 17:48, "t81s more": one last stage at the place, K1482 stage 38 (`docs/design/K1482_s38_t81s_more.md`) (2026-11-20).
 - **K1561** · rp=gf fill look: a nub of gap cuts into a thread that comes out from under one thread and at once ends on another (g41_user_tw64 j71, 4.981:7.472; Levi 2026-11-20): `lkGap`'s coverage cut (gf_look.ts) takes every higher piece in a crossing window, a joint's host too (stage 8 fixed the outline only). Done in dcd8e81e6 (2026-11-20).
 - **K1528** · j15's spur is gone: stage 34b's end-arm burial (link A changes at j15 only, 39 px, only lighter; fill and gfk=0 shots 0 px; bar, guards, npm test pass; live 14:01). Done in ac4387f28 (2026-11-20).
