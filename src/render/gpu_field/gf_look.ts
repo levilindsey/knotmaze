@@ -2260,7 +2260,10 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
   // border's flag lane; today's slot cuts by its own over pass alone). Any higher piece used to cut there too: a
   // tucked tail's host, which is a fused joint and no crossing (crossing_gaps.ts isJointPair), cut the tail's
   // outline in a neighbour crossing's window and left a dot or dash of it beside the host's outline (link A t1s,
-  // t24s, t46e, t39s). y keeps every higher piece's cut for the coverage, so the fill look does not move.
+  // t24s, t46e, t39s). K1561 (27Q): y (the coverage) takes the named over chain only inside a window too:
+  // taking every higher piece there let a fused joint's host cut the coverage of a thread that had just come
+  // out from under the named over thread and at once ended on the host (g41_user_tw64 j71), leaving a nub of
+  // ground in the fill look beside the host. Outside a window (cS < 0) every higher piece still cuts both.
   int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;
   // K1482 s15: the slot's joint flag (the over chain's fraction, GfGapTable's gapJointFlags; bits 1 left of the under
   // tangent, 2 right, 3 both): on a flagged side the crossing's cut of the OUTLINE takes no margin and 0.3 of the fade
@@ -2286,9 +2289,9 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
     float sinT = abs(tu.x * to.y - tu.y * to.x);
     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
     float cj = lkCut(pd[j], sinT, exg, wm, pxw, sc);
-    gA = max(gA, cj);
+    if (cS < 0) gA = max(gA, cj); // K1561: inside a window (cS >= 0) the named piece adds its coverage cut below, with its outline cut
     if (cS < 0) g = max(g, cj);
-    else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); g0 = max(g0, cj); }
+    else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); g0 = max(g0, cj); gA = max(gA, cj); }
     // K1417: no casing term (the composite clears the gap to the background in every look).
   }
   // K1458: the over thread past the candidate list's reach. A piece enters the list only within

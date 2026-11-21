@@ -21,14 +21,15 @@ describe("K1423 lkGap shader: the cut is windowed by the baked winM", () => {
   it("K1482 s8: inside a baked window only the named crossing's over thread cuts", () => {
     const f = lookForm(gfFs(false, true));
     expect(f).toContain("int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;");
-    expect(f).toContain("gA = max(gA, cj);");
+    // K1561 (27Q): the coverage (gA) takes the named over chain inside a window too, not every higher piece
+    expect(f).toContain("if (cS < 0) gA = max(gA, cj);");
     expect(f).toContain("if (cS < 0) g = max(g, cj);");
     // K1482 s15: the slot's joint flag (the y fraction) cuts the outline with c1's reach on its flagged side
     expect(f).toContain("int jb = sl.x >= 0.0 ? int(fract(sl.x) * 8.0 + 0.5) : 0;");
     // K1482 s16: a flagged side's cut starts its fade a pixel inside the over's outline (margin -1 px through sc.x)
     expect(f).toContain("vec2 scJ = jf ? vec2(uLkG > 0.0 ? -pxw / uLkG : 0.0, 0.3 * sc.y) : sc;");
     expect(f).toContain("float e = d - uH - uLkG * sc.x;");
-    expect(f).toContain("else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); g0 = max(g0, cj); }");
+    expect(f).toContain("else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); g0 = max(g0, cj); gA = max(gA, cj); }");
     // K1482 s16: the coverage's far-reach term is gated by the unflagged cut, so the flag never reaches the fill
     expect(f).toContain("if (gA < 0.999 && g0 < 0.999) gA = max(gA, cN);");
     expect(f).toContain("ink *= 1.0 - g.x * (1.0 - aT); cov *= 1.0 - g.y * (1.0 - aT);");
