@@ -149,6 +149,9 @@ export interface GfTables {
   aCutC?: Int32Array;
   /** K1482 s34: with aCutC, that crossing's arc on the cutting chain (the pin's pinPS). */
   aCutS?: Float64Array;
+  /** K1482 s34: per arm, (C + 1) * 2 + e (arms34; the arm record's second texel .z, gf_pack.ts). Retry builds only
+   * (eval.ts member's m34, gf_glsl.ts homeBurial's T34). */
+  a34?: Int32Array;
   /** Build time per part, ms. */
   ms: { vtx: number; pins: number; arms: number; corners: number; bins: number; kp: number; total: number };
 }
@@ -1346,9 +1349,47 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
     nK: nB, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
     // K1482 s23: with the retry off (the default) the tables are master's, field for field
-    ...(P.kRetry ? { kExt, rtM: sideRuns(nC, cV0, cNV, vx, vy, h), aCutC: Int32Array.from(P.arms, (A) => (A.cutQ >= 0 ? pinPC[A.cutQ] : -1)), aCutS: Float64Array.from(P.arms, (A) => (A.cutQ >= 0 ? pinPS[A.cutQ] : 0)), nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
+    ...(P.kRetry ? { kExt, rtM: sideRuns(nC, cV0, cNV, vx, vy, h), ...arms34(P.arms, pinPC, pinPS, cClosed, cV0, cNV, vs, cArm0, cArmN), nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
     ms: { vtx: ms.vtx, pins: ms.pins + walkMs, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
   };
+}
+
+/**
+ * K1482 s34: GfTables.aCutC, aCutS and a34. Per arm i, aCutC/aCutS: the chain whose crossing set the arm's cap aLcut
+ * (buildGfArms cutQ) and that crossing's arc on it, or -1. a34[i] = (C + 1) * 2 + e:
+ * - e = 1: i is rooted at an open end of its chain (aSR at the first vertex's arc going forward, the last's going back,
+ *   within 1e-4): the thread starts or ends in i's junction group.
+ * - C: aCutC[i] when i is cut at its root (aLcut <= 0) by a pass of C that lies 2 or more of arc from every arm of C
+ *   rooted at an open end in i's group (from its root over max(aL, aHome)), and C has such an arm; else -1. That is,
+ *   C ends in the group and ANOTHER pass of C cuts i (j15's Z: chain 70 starts in group 15, and its pass at s 11.6
+ *   cuts chain 5's group-15 arm).
+ * eval.ts member() reads it into m34 and layers() buries an end arm's band of chain C inside the tube of a partner
+ * whose cut arm C names (gf_glsl.ts homeBurial, the same rule).
+ */
+export function arms34(arms: GfArm[], pinPC: Int32Array, pinPS: Float64Array, cClosed: Uint8Array, cV0: Int32Array, cNV: Int32Array, vs: Float64Array, cArm0: Int32Array, cArmN: Int32Array): { aCutC: Int32Array; aCutS: Float64Array; a34: Int32Array } {
+  const n = arms.length;
+  const aCutC = Int32Array.from(arms, (A) => (A.cutQ >= 0 ? pinPC[A.cutQ] : -1));
+  const aCutS = Float64Array.from(arms, (A) => (A.cutQ >= 0 ? pinPS[A.cutQ] : 0));
+  const endRoot = (i: number): boolean => {
+    const A = arms[i]; const c = A.c; if (cClosed[c] === 1) return false;
+    return Math.abs(A.sR - (A.dir > 0 ? vs[cV0[c]] : vs[cV0[c] + cNV[c] - 1])) < 1e-4;
+  };
+  const a34 = new Int32Array(n);
+  for (let i = 0; i < n; i++) {
+    const A = arms[i]; let C = -1;
+    if (A.Lcut <= 0 && aCutC[i] >= 0) {
+      const cc = aCutC[i]; const cs = aCutS[i]; let ok = false;
+      for (let k = cArm0[cc]; k < cArm0[cc] + cArmN[cc]; k++) {
+        const B = arms[k]; if (B.g !== A.g || !endRoot(k)) continue;
+        const e1 = B.sR + B.dir * Math.max(B.L, B.home); const lo = Math.min(B.sR, e1); const hi = Math.max(B.sR, e1);
+        if (!((cs < lo ? lo - cs : cs > hi ? cs - hi : 0) >= 2)) { ok = false; break; }
+        ok = true;
+      }
+      if (ok) C = cc;
+    }
+    a34[i] = (C + 1) * 2 + (endRoot(i) ? 1 : 0);
+  }
+  return { aCutC, aCutS, a34 };
 }
 
 /**

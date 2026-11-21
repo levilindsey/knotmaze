@@ -2,9 +2,12 @@
 // evaluated with GfEval.S34 = <mode>; where the rule took ink (E.s34n rose), again with S34 "0", and the ink compared
 // (|d| > 0.02). Places = 8-connected clusters of changed px (merge radius 6 px), with box, px lost/gained and the
 // nearest site (link A only).
-//   npx tsx wd34.ts A <scene.json> <sites.json> [mode ""|w]      (link A's device frame, sites' box +- 60 px)
+//   npx tsx wd34.ts A <scene.json> <sites.json> [mode ""]        (link A's device frame, sites' box +- 60 px)
 //   npx tsx wd34.ts K <k868 scene name> - [mode]                  (the scene's 2-aa frame)
-// env GF_KRETRY=1. Output: one line per place, then the totals.
+// env GF_KRETRY=1. Output: one line per place, then the totals. Since s34b the rule is the per-arm form (tables.ts
+// arms34) and mode "" is its only on mode. K mode: K1362's k1362s1_census.ts imports the MAIN checkout's
+// k1314_census.ts by an absolute "C:/..." path, which Node refuses; s34b ran it with a resolve hook mapping that path
+// to the worktree (`npx tsx --import file:///<this folder>/remap.mjs wd34.ts K ring -`; remap_hook.mjs names the worktree).
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
