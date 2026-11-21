@@ -80,16 +80,15 @@ strokes toward today's, and do not use today's border strokes as a bar.
 - t81s (K1482 s27): its tick pixels are unfolded (own distance h): chain 45's +1 corner sits 2-3 px below
   chain 9's outline, and the flagged short cut keeps 45's out-leg from that corner up to 9's band (all slots k348-370
   of 9:45 carry bits 3, so no flag switch separates it). Removing that leg opens the corner: it needs the in-leg run on.
-- IN-LEG RUN-ON (K1482 s30, `gapRunOn` in gf_look.ts, `lkRun` in its GLSL): where an under pass's side offset folds
-  within 0.35 fh outside the over outline and the in-leg's straight line reaches that outline within 0.75 fh, the bake
-  tags the slots from the crossing to the fold (V1 += 0.5 + code/4096, code = anchor delta + 32 + 64 if side -1;
-  `lkGwY` strips it, so lkGap reads V1 as before); lkRun draws that side's outline as the in-leg's line from the anchor,
-  cut by the gap and stopped at the over centre line, and drops the out-leg's. Coverage is untouched (fill 0 px).
-- The tagged run must reach its anchor: the slot just before the anchor must be one of the crossing's. t56s's fold
-  lay past the crossing's slots (anchor k17, slots 26..41 tagged, 18..25 not), so the bend's own outline stayed
-  between run-on and anchor: a step. Link A: 14 run-on groups (`.claude/probes/K1482/s30/runs30.ts` lists them),
-  t81s's nub gone; 12 other places changed (426 px, 4 gain-only, 0 lose-only), mostly ticks and notches turned V
-  corners; j83 and j51's new V wedges hold a one-pixel dark speck near the tip.
+- IN-LEG RUN-ON, REMOVED (K1482 s30, d98f62544: `gapRunOn` + `lkRun` in gf_look.ts; reverted 2026-11-20 on Levi's word,
+  K1545): where an under pass's side offset folded just outside the over outline, it drew that side's outline as the
+  in-leg's straight line into the over outline and dropped the out-leg's. It cleared t81s's nub and turned six round
+  hooks into points (j51, t28e, j83, j31, j161, t61s; 14 groups on link A). Levi: every one is "very bad".
+- THE UNDER PASS KEEPS ITS WIDTH AND ITS HEADING (Levi, 2026-11-20, binding): where a thread goes under another, its
+  two outlines must read as one thread of constant width travelling in the direction that lines it up with itself on
+  the far side of the over thread. A round hook does that; a point or a straight run-on narrows the thread and turns
+  it. Never trade a hook for a point. t81s's nub is open again and its fix must keep this. s30's design (tags in V1's
+  fraction, the anchor-reach rule that t56s needed) is in d98f62544 and `docs/design/K1482_s30_t81s_inleg.md`.
 - BAND END ALONG A LONE OVER PASS, REJECTED (K1482 s31, runT in 031a266a8/75e1a7949, backed out after them): narrowing a
   group's side band and cap to W*t where a lone over piece faces its outline point within 5 aa cleared j59's step (t23e,
   153 px) but also tapered every other band tail it reached (t81s, t76e, t53e, t36s...): those are short wedges running

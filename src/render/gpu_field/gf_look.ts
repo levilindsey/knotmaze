@@ -589,92 +589,6 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
   return out;
 }
 
-/** K1482 s30: the run-on's reach past the corner and the corner's room below the over thread's outline (in fh). */
-const GAP_RUN_ROOM = 0.35;
-const GAP_RUN_REACH = 0.75;
-const GAP_RUN_SPAN = 3;
-/**
- * K1482 s30 (t81s): an under pass that bends right after leaving the over thread. On the bend's inner side the
- * under outline's offset folds (a swallowtail) and its corner sits just outside the over thread's outline, so the
- * out-leg's outline from that corner up to the over band draws a short tick. The run-on: walking out from the
- * crossing (dir), side sd's offset curve (fh off the centreline) crosses itself at C, C lies within GAP_RUN_ROOM fh
- * outside the over outline, and the in-leg's tangent line from C reaches that outline within GAP_RUN_REACH fh. The
- * slots from the crossing to the bend's end (the out-leg and the bend) then draw side sd's outline as the in-leg's
- * straight run (lkRun): a corner where it meets the over band, no out-leg. Returns per slot of ks its code
- * (0 none, else (kept anchor - kept slot) + 32 + 64 (sd < 0)), the anchor being the in-leg's first sample past the fold.
- */
-export function gapRunOn(so: GapSamples, oC: number, su: GapSamples, kc: number, ks: readonly number[], fh: number, keptU: ArrayLike<number>): number[] {
-  const out = new Array<number>(ks.length).fill(0);
-  const P = su.positions, Q = so.positions, n = su.count, last = n - 1;
-  const idx = (k: number): number => (su.closed ? ((k % n) + n) % n : k);
-  const R = Math.max(GAP_OVER_RANGE, 4 * fh);
-  const q0 = Math.round((oC - R) / so.arcPer), q1 = Math.round((oC + R) / so.arcPer);
-  const dO = (x: number, y: number): number => {
-    let best = Infinity;
-    for (let q = q0; q < q1; q++) {
-      let a = q, b = q + 1;
-      if (so.closed) { a = ((a % so.count) + so.count) % so.count; b = ((b % so.count) + so.count) % so.count; } else if (a < 0 || b >= so.count) continue;
-      const ax = Q[2 * a], ay = Q[2 * a + 1], dx = Q[2 * b] - ax, dy = Q[2 * b + 1] - ay, l2 = dx * dx + dy * dy;
-      const u = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
-      const ex = x - ax - u * dx, ey = y - ay - u * dy;
-      best = Math.min(best, ex * ex + ey * ey);
-    }
-    return Math.sqrt(best);
-  };
-  const slot = new Map<number, number>();
-  ks.forEach((k, i) => slot.set(k, i));
-  const J = Math.ceil((4 * fh) / su.arcPer), M = Math.ceil((GAP_RUN_SPAN * fh) / su.arcPer);
-  for (const dir of [1, -1]) {
-    const ws: number[] = [];
-    for (let j = 0; j <= J; j++) { const k = kc + dir * j; if (!su.closed && (k < 0 || k > last)) break; ws.push(idx(k)); }
-    if (ws.length < 4) continue;
-    for (const sd of [1, -1]) {
-      const ox: number[] = [], oy: number[] = [];
-      for (const k of ws) {
-        const ka = su.closed ? idx(k - 1) : Math.max(0, k - 1), kb = su.closed ? idx(k + 1) : Math.min(last, k + 1);
-        let tx = P[2 * kb] - P[2 * ka], ty = P[2 * kb + 1] - P[2 * ka + 1];
-        const tl = Math.sqrt(tx * tx + ty * ty) || 1; tx /= tl; ty /= tl;
-        ox.push(P[2 * k] - sd * ty * fh); oy.push(P[2 * k + 1] + sd * tx * fh);
-      }
-      let hit: { a: number; b: number; x: number; y: number } | null = null;
-      for (let a = 0; a + 3 < ws.length && !hit; a++) {
-        for (let b = a + 2; b + 1 < ws.length && b - a <= M; b++) {
-          const ax = ox[a], ay = oy[a], rx = ox[a + 1] - ax, ry = oy[a + 1] - ay;
-          const bx = ox[b], by = oy[b], sx = ox[b + 1] - bx, sy = oy[b + 1] - by;
-          const den = rx * sy - ry * sx;
-          if (Math.abs(den) < 1e-12) continue;
-          const t = ((bx - ax) * sy - (by - ay) * sx) / den, u = ((bx - ax) * ry - (by - ay) * rx) / den;
-          if (t >= 0 && t <= 1 && u >= 0 && u <= 1) { hit = { a, b, x: ax + t * rx, y: ay + t * ry }; break; }
-        }
-      }
-      if (!hit) continue;
-      const room = dO(hit.x, hit.y) - fh;
-      if (!(room > 0 && room <= GAP_RUN_ROOM * fh)) continue;
-      // the in-leg's direction toward the corner, at the anchor (its first sample past the fold)
-      const ib = Math.min(ws.length - 1, hit.b + 1), ic = Math.min(ws.length - 1, hit.b + 2);
-      if (ic === ib) continue;
-      // the tagged run must reach the anchor: a fold past the crossing's slots (t56s) would leave the bend's own
-      // outline between the run-on and the anchor, a step
-      if (slot.get(ws[hit.b]) === undefined) continue;
-      let tx = P[2 * ws[ib]] - P[2 * ws[ic]], ty = P[2 * ws[ib] + 1] - P[2 * ws[ic] + 1];
-      const tl = Math.sqrt(tx * tx + ty * ty) || 1; tx /= tl; ty /= tl;
-      let meets = false;
-      for (let s = 0; s <= GAP_RUN_REACH * fh; s += 0.02 * fh) if (dO(hit.x + s * tx, hit.y + s * ty) <= fh) { meets = true; break; }
-      if (!meets) continue;
-      const kA = keptU[ws[ib]];
-      for (let i = 0; i <= hit.b; i++) {
-        const si = slot.get(ws[i]);
-        if (si === undefined) continue;
-        let dl = kA - keptU[ws[i]];
-        if (su.closed) { let nk = 1; for (let q = 0; q < n; q++) nk = Math.max(nk, keptU[q] + 1); dl = ((((dl + (nk >> 1)) % nk) + nk) % nk) - (nk >> 1); }
-        if (Math.abs(dl) > 31 || out[si]) continue;
-        out[si] = dl + 32 + (sd < 0 ? 64 : 0);
-      }
-    }
-  }
-  return out;
-}
-
 export class GfGapTable {
   /** The baked entries (samples, plus one a closed chain), in positions()' layout. */
   nPos = 0;
@@ -839,11 +753,9 @@ export class GfGapTable {
         }
       }
       const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, { c: x.underChain, km: keptOf(x.underChain, su) }) : null;
-      // K1482 s30: a slot of a bend's run-on carries its code past the joint flag in y's fraction (lkRun)
-      const run = r.overMember && !self ? gapRunOn(so, oC, su, kc, ks, r.fillHalf, keptOf(x.underChain, su)) : null;
       for (let i = 0; i < ks.length; i++) {
         const k = ks[i];
-        ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0) + (run && run[i] ? 0.5 + run[i] / 4096 : 0);
+        ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0);
         ent.o[3 * k + 1] = wr[2 * i];
         ent.o[3 * k + 2] = wr[2 * i + 1];
       }
@@ -1936,8 +1848,6 @@ float lkWinM(int c, vec2 q) {
   int b = int(H.y);
   return mix(GW(b + k), GW(b + min(k + 1, last)), u);
 }
-// K1482 s30: a slot's y without a run-on's code (gapRunOn: 0.5 + code / 4096 past the joint flag), as lkGap reads it
-float lkGwY(float y) { if (y < 0.0) return y; int jb = int(fract(y) * 8.0 + 1e-3); return jb >= 4 ? floor(y) + 0.125 * float(jb - 4) : y; }
 // K1458: the over pass whose window wins at segment q (the bake's y, z, w: over chain, its kept sample
 // nearest the under sample, the scan half-range in samples), or x < 0 when none does
 vec3 lkGwSlot(int c, vec2 q) {
@@ -1951,9 +1861,9 @@ vec3 lkGwSlot(int c, vec2 q) {
   if (k >= last) { k = last; u = 0.0; }
   int b = int(H.y);
   vec4 A = GW4(b + k); vec4 B = GW4(b + min(k + 1, last));
-  if (A.y >= 0.0 && floor(B.y) == floor(A.y) && abs(B.z - A.z) < A.w + B.w) return vec3(lkGwY(u < 0.5 ? A.y : B.y), mix(A.z, B.z, u), max(A.w, B.w));
+  if (A.y >= 0.0 && floor(B.y) == floor(A.y) && abs(B.z - A.z) < A.w + B.w) return vec3(u < 0.5 ? A.y : B.y, mix(A.z, B.z, u), max(A.w, B.w));
   vec4 P = (u < 0.5 && A.y >= 0.0) || B.y < 0.0 ? A : B;
-  return vec3(lkGwY(P.y), P.zw);
+  return P.yzw;
 }
 // K1458: the nearest point to p on chain c within w samples of kept sample s: (distance, segment, fraction)
 vec3 lkNearOn(int c, float s, float w, vec2 p, float aU, float sx) {
@@ -2431,54 +2341,6 @@ float lkMarker(int c, float arc, vec2 p) {
 // cut it, and the composite paints it in a labelled neighbour's colour: along the edge where form B's burial ends
 // the under thread beside an over pass, the uncut fringe drew a dotted line across the faded under thread. Cut the
 // fringe by its lowest covering piece's gap, keeping whatever pieces above that one cover the pixel.
-// K1482 s30 (t81s): a bend's run-on (gapRunOn). On its slots' side the under outline is the in-leg's straight run
-// on from its anchor vertex (the band's profile across that line, cut by the gap as the outline is): it meets the over
-// band in a corner, and the out-leg's own outline there (the tick) is dropped. The over thread's outline is kept, and
-// the run stops at the over thread's centre line (the anchor's side only). Coverage is untouched: the fill stays.
-float lkRun(vec2 p, vec2 qU, int cU, float ink, float g) {
-  if (!(uGwLive > 0.5)) return ink;
-  vec4 H = LKT(cU);
-  if (H.z < 1.0) return ink;
-  bool closed = H.w > 0.5;
-  vec4 C0 = F(uOCh + 3 * cU); int v0 = int(C0.x); int nv = int(C0.y);
-  int pad = !closed && F(uOV + v0).z < 0.0 ? 1 : 0;
-  int k = int(qU.x) - pad; float u = qU.y;
-  int last = closed ? int(H.z) : int(H.z) - 1;
-  if (k < 0) { k = 0; u = 0.0; }
-  if (k >= last) { k = last; u = 0.0; }
-  int b = int(H.y); int kB = min(k + 1, last);
-  vec4 A = GW4(b + k); vec4 B = GW4(b + kB);
-  bool useB = A.y >= 0.0 && floor(B.y) == floor(A.y) && abs(B.z - A.z) < A.w + B.w ? !(u < 0.5) : !((u < 0.5 && A.y >= 0.0) || B.y < 0.0);
-  vec4 S = useB ? B : A;
-  if (S.y < 0.0) return ink;
-  float fr = fract(S.y) * 8.0; int jb = int(fr + 1e-3);
-  if (jb < 4) return ink;
-  int code = int((fr - float(jb)) * 512.0 + 0.5);
-  int dl = code - (code / 64) * 64 - 32; float sd = code < 64 ? 1.0 : -1.0;
-  vec2 tu = lkTanS(cU, qU); vec2 fU = lkFoot(cU, qU);
-  if ((tu.x * (p.y - fU.y) - tu.y * (p.x - fU.x)) * sd < 0.0) return ink;
-  int ka = (useB ? kB : k) + dl;
-  if (closed) ka = pmod(ka, nv - 1); else ka = clamp(ka, 0, nv - 2 - pad);
-  ka += pad;
-  vec2 P = F(uOV + v0 + ka).xy;
-  vec2 t = lkTan(cU, float(dl > 0 ? ka : max(ka - 1, 0)));
-  vec2 n = sd * vec2(-t.y, t.x);
-  int cO = int(floor(S.y) + 0.5);
-  float ink9 = 0.0;
-  if (cO != cU) {
-    vec3 N = lkNearOn(cO, S.z, S.w, p, -1.0, 0.0);
-    if (N.y >= 0.0) {
-      vec4 O0 = F(uOCh + 3 * cO); int ov = int(O0.x) + int(N.y);
-      vec2 oa = F(uOV + ov).xy; vec2 ob = F(uOV + ov + 1).xy; vec2 fo = mix(oa, ob, N.z); vec2 to = ob - oa;
-      if ((to.x * (p.y - fo.y) - to.y * (p.x - fo.x)) * (to.x * (P.y - fo.y) - to.y * (P.x - fo.x)) < 0.0) return ink;
-      float Do = uH - N.x;
-      ink9 = (1.0 - ss(uW - max(3.0 * uAA, 0.02 * uH), uW, Do)) * ss(-uAA, uAA, Do);
-    }
-  }
-  float D = uH - dot(p - P, n);
-  float rb = (1.0 - ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)) * ss(-uAA, uAA, D);
-  return max(rb * (1.0 - g), ink9);
-}
 void lkFringe(vec2 p, inout float ink, inout float cov) {
   int jU = -1; float kU = BIG;
   for (int j = 0; j < np; j++) { if (pd[j] < uH + uAA && pkey[j] < kU) { kU = pkey[j]; jU = j; } }
@@ -2518,7 +2380,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); ink = lkRun(p, lq, lab, ink, lkg); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 
