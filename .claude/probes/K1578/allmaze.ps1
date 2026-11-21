@@ -17,6 +17,17 @@
 # candidate, wide and close, as drawn and brightened) and look/<the same name> (the sheet's two
 # brightened rows only, 1300 px wide). The diffed shot is gf_b2 (the still border shot), or
 # gf_fill with -Fill; -Off also captures and lists each maze with &gfk=0 (rows <maze>_off).
+# Mirror first pass (K1581, Muse batch 27 Run Y): the CPU mirror (census40.ts, candidate
+# worktree) may NOT stand as a first pass for this tool. On ball40's pair (d1c25f5fe ->
+# 4925aa786) matched against the tool's 64 captured places at 48 px (match27y.py): captured 64,
+# mirror 21, matched 17, captured-only 47, mirror-only 4. Every captured-only place sits on A_b:
+# 46 stroke-edge places of 1-7 px and the start marker's ring at j142 (22 px) - a view shift
+# between the two builds' fit landings (now pinned away in cap_maze.ps1) and a Pixi marker the
+# mirror's corner-ink census never evaluates. The mirror matched every real ink place (all 17
+# across the other nine mazes plus A_b's t25e), but it also splits two corners into two groups
+# (A_7 t83e/t83s, A_9 t28e) and sees 2 sub-level places of 1-3 px the screen step cannot list
+# (A_7 t37e, A_9 t10s). A mirror run can therefore shortlist corners, but a place it does not
+# list is not proven unchanged on screen, and this tool's captures stay the gate.
 # A maze that already has its mazes.txt row is skipped unless -Force. A maze whose base against
 # base or candidate against candidate is not 0 px is captured once more; if it is still not 0
 # its row is flagged with its px. The perf lock is taken PER MAZE (scripts/perf_lock.ps1

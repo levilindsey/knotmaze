@@ -12,6 +12,16 @@
 # cap40.ps1 appends &snd=none, &phw=0 and &rp=gf to every link and shoots only after gf's first
 # composite. The first load on a tag does cap40's warm run; later loads on that tag pass -NoWarm
 # (the .warm<port> marker in the tag's profile dir, capseq40's scheme).
+# One view per session (K1581, Muse batch 27 Run Y): two loads of one maze can land their fit
+# cameras ~6e-05 of scale apart (the eased fitCur stops inside the camera's 0.01 px converged
+# band; the landing follows the load's frame history, not its build, so a cross-build session
+# could list a view shift as a change). The first load (m) therefore shoots unpinned, its
+# gf_b2view still view is read back and passed as PINVIEW to the other three loads
+# (cap40pin.mjs, cap40's -Cap, sets the renderer root to it before each shot; at the shot the
+# camera has converged, so nothing overwrites it). Every load's own landed (unpinned) view is
+# printed as `view <tag> land <scale>`, and the pin as `view pin <scale>`: both scales stay
+# visible even though the shots share the pin. analyze_maze.py's VIEW-DIFF/step-3 path remains
+# as the net for a load whose pin did not hold.
 param([Parameter(Mandatory)][string]$Maze, [Parameter(Mandatory)][int]$BasePort,
       [Parameter(Mandatory)][int]$CandPort, [Parameter(Mandatory)][string]$RunOut,
       [switch]$Fill, [switch]$Off)
@@ -24,23 +34,34 @@ $M = @{
 if (-not $M.ContainsKey($Maze)) { throw "cap_maze: unknown maze $Maze" }
 $hash, $q0 = $M[$Maze]
 $cap40 = Join-Path $PSScriptRoot "..\K1482\s40\cap40.ps1"
+$capPin = "..\s40\cap40pin.mjs"
 $variants = @("")
 if ($Off) { $variants += "_off" }
 foreach ($v in $variants) {
   $q = "$q0&bgs=0&fw=0" + $(if ($v) { "&gfk=0" } else { "" })
   $envs = "GF=1,B2=1,HASH=$hash" + $(if ($Fill) { ",FILL=1" } else { "" })
+  $pin = $null
   foreach ($lp in @(@("m", $BasePort), @("c", $CandPort), @("m2", $BasePort), @("c2", $CandPort))) {
     $tag, $port = $lp[0], [int]$lp[1]
     $out = Join-Path $RunOut "raw/$tag/$Maze$v"
     $prof = Join-Path $env:TEMP "k1482s40-$tag"
     $warmMark = Join-Path $prof ".warm$port"
     "== $tag $Maze$v $((Get-Date).ToString('HH:mm:ss'))"
+    $loadEnvs = $envs + $(if ($pin) { ",PINVIEW=$pin" } else { "" })
     if (Test-Path $warmMark) {
-      & $cap40 -Port $port -Out $out -Tag $tag -Query $q -Env $envs -NoWarm -Limit 300 -ShotLimit 300 | Select-Object -Last 2
+      & $cap40 -Port $port -Out $out -Tag $tag -Query $q -Env $loadEnvs -Cap $capPin -NoWarm -Limit 300 -ShotLimit 300 | Select-Object -Last 2
     } else {
-      & $cap40 -Port $port -Out $out -Tag $tag -Query $q -Env $envs -Limit 300 -ShotLimit 300 | Select-Object -Last 3
+      & $cap40 -Port $port -Out $out -Tag $tag -Query $q -Env $loadEnvs -Cap $capPin -Limit 300 -ShotLimit 300 | Select-Object -Last 3
       New-Item -ItemType Directory $prof -Force | Out-Null
       New-Item -ItemType File -Force $warmMark | Out-Null
+    }
+    $landFile = Join-Path $out "gf_landview.txt"
+    $viewFile = Join-Path $out "gf_b2view.txt"
+    $land = if (Test-Path $landFile) { (Get-Content $landFile | Select-Object -First 1) } elseif (Test-Path $viewFile) { (Get-Content $viewFile | Select-Object -First 1) } else { "" }
+    "view $tag $Maze$v land $(($land -split ',')[0])"
+    if (-not $pin -and (Test-Path $viewFile)) {
+      $pin = ((Get-Content $viewFile | Select-Object -First 1) -replace ',', ';')
+      "view pin $Maze$v $(($pin -split ';')[0]) (from load $tag)"
     }
   }
 }

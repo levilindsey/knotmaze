@@ -4,19 +4,25 @@
 # base | candidate, wide and close, as drawn and brightened) and the sheet's two brightened rows
 # only, 1300 px wide, in <runOut>/look/.
 #   python analyze_maze.py <runOut> <maze> [--img gf_b2|gf_fill] [--undo]
-# The place finder is .claude/probes/K1482/s33/diff33.py's places() (luminance step >= T, changed
-# px grouped on 24 px cells, each place named by its nearest site in the base load's sites_gf.json;
-# gain = px the candidate draws darker, lose = px it draws lighter). Compared pairs: base vs base
-# and candidate vs candidate (the floors, T = 1), base vs candidate (the places), base2 vs
-# candidate2 (the repeat pair). The cross-build pair is read at T = 1 when the two builds' still
-# views (gf_b2view.txt) agree bit for bit, as in stage 40's sessions; when they differ (the fit
-# snaps to each build's own drawn bounds, so a candidate that changes ink at the knot's edge
-# shifts the target by ~1e-3 px and no recapture aligns them), 1-level edge flips swamp the
-# listing (measured on ball40 A_b: 7,027 px at T = 1, 436 at T = 2, 97 at T = 6, against the
-# break control's 99/96/91 at T = 1/3/6), so the places are listed at T = 3 and the row carries
-# a VIEW-DIFF note. Exit 2 when a floor is not 0 px (allmaze.ps1 then recaptures the maze once);
-# --undo removes the maze's rows (used before that recapture). An existing row for the maze is
-# replaced, never duplicated.
+# The listing step, exactly as the code below has it (K1581; Muse batch 27 Run Y):
+# lum(p) = (299*R + 587*G + 114*B) // 1000 per pixel (integer, floor). A pixel counts as
+# changed between two shots when |lum difference| >= the pair's step; a pixel whose RGB
+# moves but whose lum difference is 0 never counts, at any step. The floors (base vs base,
+# candidate vs candidate) always use step 1. The cross-build pairs (base vs candidate, and
+# the repeat base2 vs candidate2) use one step for the whole maze: step 1 when the two
+# builds' B2 still views agree bit for bit (the first line of raw/m/<maze>/gf_b2view.txt
+# equals raw/c's, and is not empty), else step 3, and the maze's row then carries a
+# VIEW-DIFF note with both views. So the step is not one number: on a view-agreeing maze a
+# 1-level pixel is listed (ball40 A_c j69: one pixel, lum 27 -> 28); on a VIEW-DIFF maze
+# 1- and 2-level pixels are never listed and only >= 3 counts (ball40 A_b). Changed px are
+# grouped on 24 px cells (8-connected through neighbouring cells), a place's centre is the
+# mean of its px, its site the nearest in the base load's sites_gf.json, gained = px the
+# candidate draws darker (lum difference < 0), lost = px it draws lighter. Why step 3 on a
+# view difference: two builds can land at fit scales apart enough that 1-level edge flips
+# swamp the listing (27V on ball40 A_b: 7,027 px at step 1, 436 at step 2, 97 at step 6,
+# against the break control's 99/96/91 at steps 1/3/6). Exit 2 when a floor is not 0 px
+# (allmaze.ps1 then recaptures the maze once); --undo removes the maze's rows (used before
+# that recapture). An existing row for the maze is replaced, never duplicated.
 import json, os, re, sys
 import numpy as np
 from PIL import Image
