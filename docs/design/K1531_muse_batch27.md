@@ -1080,6 +1080,24 @@ this run's, word for word, with these changes:
   build, on the fill look and on the border look; give both numbers beside their floors.
 - If every number of Done 2 holds on master there is no source change: close K1473 with the table and the crops.
 
+### Handoff 27X (Muse, 2026-11-21, done: every Done holds; no source change, K1473 closed with the table and the crops)
+
+Started 08:52 PST, stopped 09:14 PST. Starting master e64df08b0; no `src/` or `test/` change (probes only: `.claude/probes/K1473/realtime27x.mjs`, `crops27x.mjs`, this handoff; `gf_look.ts`/`gf_pass.ts` untouched, so no deploy and, as a probe-only run, no ordinary-load guards - Done 8 below). Preview of e64df08b0 on :5498 under `$env:TEMP\knotmaze-27X` (stopped and removed at the stop line); every capture sequence through `scripts/perf_lock.ps1 -Owner "muse-27X"`, no lock left behind. Captures under `.claude/probes/K1414/out/24C|24H/` (tags 27xfa/27xfb/27xfg, 27xba/27xbb/27xbg: seed 7, walk 0,220,203,173,172,171,209,273,272,271, pulses 4, tele chain 65 c0 6 c1 24 on every load); crops and real-time shots under `.claude/probes/K1473/out/27X/`.
+
+Done 1 (floor). Two loads of today's renderer: ratio 1.000, IoU 1.000 for pulse and telegraph at 100 / 100.45 / 101.3 in both looks (fill counts 1475 / 921 / 1396, tele 961; border 702 / 547 / 737, tele 1211; the loads' PNGs are byte-identical). The probes reach one state per load as written; no parity fix was needed.
+
+Done 2 (the table on master, today against gf; count ratio / IoU). Fill pulse: 0.966 / 0.950, 0.971 / 0.945, 0.973 / 0.956. Fill telegraph: 0.970 / 0.966 at all three clocks. Border telegraph: 1.017 / 0.958 at all three. Border pulse: 0.940 / 0.787, 1.033 / 0.748, 0.967 / 0.824.
+
+Done 3 (nothing is short, so no bisect and no fix). Fill meets 24C's bar (count within 15%, IoU at least 0.7; 24C read 0.956-0.964, IoU 0.931-0.938, telegraph 0.966 / 0.958). Border telegraph meets its bar (within 15%, IoU at least 0.8) and equals 25A's 1.017 / 0.958. Border pulse counts are within 15% and its IoUs sit no more than 0.02 under 25A's (floors 0.766 / 0.728 / 0.803 against measured 0.787 / 0.748 / 0.824); the head-fan residue stays K1447's. The extra 27X Done (a neither-feature frame) is owed only by a run that changes `src/`; there is none.
+
+Done 4 (an ordinary load, real time). `.claude/probes/K1473/realtime27x.mjs` (fill look, no pinning hooks, free paint clock, three on/nopulse pairs 0.5 s apart): today 1017 @ (613,588), 1336 @ (613,591), 1055 @ (613,587); gf 863 @ (614,594), 1389 @ (612,589), 1112 @ (613,586) - each gf count within 30% of today's same-round count (0.85 / 1.04 / 1.05) and the mask centroid sits elsewhere in every round of both renderers.
+
+Done 5 (the upload guard bites). With unit 9's upload in `gf_pass.ts` put back to R32F/RED, both tests of `test/render/gf_look_upload.test.ts` fail (`unit 9: 49152 floats for 2048x6x1`, and the RGBA32F expectation); restored, 2 passed. No test change was needed.
+
+Done 6 (crops, looked at). Twelve 4x sheets (today | gf) under `.claude/probes/K1473/out/27X/` (`fill_`/`border_crop_pulse|tele_t100|100_45|101_3.png`, centres (612,590) fill pulse, (692,316) fill tele, (611,593) border pulse, (692,315) border tele). Fill pulse: the bright crest bands cross the same threads at the same phase in both tiles at every clock (at 100.45 the white crest crosses left of the head marker exactly as today); gf's edges are a touch sharper, nothing is missing. Border pulse: the white hi dashes beside the marker and the head's gold run match in place and brightness; the faint grey fan wedges at the frame's top-left appear in both (25A's residue, unchanged). Telegraph, both looks: the red run and its rim circle sit identically; in fill gf's rim is marginally thinner on the lower-right arc (the 932 against 961 count), nothing absent. Nothing in gf reads worse beyond that residue.
+
+Done 7: `npm test` green (258 files passed, 2 skipped; 3,210 tests passed, 9 skipped; tsc clean). Done 8: probe-only run, so How to work's ordinary-load guards are skipped, as it directs; the run's own checks are Done 1-6. Done 9: K1473 is closed with this commit; K1531 and K1482 left open.
+
 ## Run Y (27Y): the all-maze tool's leftovers (K1581)
 Added 2026-11-21. Probe tools only (`.claude/probes/K1578/`, `.claude/probes/K1482/s40/`); nothing under `src/` or
 `test/`, so no deploy and no load guards. The tool is the gate every look candidate passes before Levi sees it
