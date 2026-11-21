@@ -145,6 +145,8 @@ makes a new profile each run;
 Keep a capture tool's whole output in a file: the first run kept six
 lines and lost these facts.
 K1539 (2026-11-20): `.claude/probes/K1482/cap.mjs` aligns the freeze parity before freezing, so a HASH-pinned capture lands on try 1 (the reload loop is only a fallback); `.claude/probes/K1482/guards.ps1 -Tag <t> -Port <p> -Ref <c> -BaseRef <c> -OutDir <d> -Owner <o>` runs the corner stages' guards (bar, holds, panel, drag checks, npm test) with one `PASS|FAIL <guard>: <numbers>` line each and whole outputs in `<OutDir>` (exit = failed count). PASS there means every guard's own pass line held on that build.
+K1544 (2026-11-20): a 0 px check on the plain link `?3&xp=off&am=instant` needs `fw=0`, one fixed aligned sim time, `__knotPinClocks(100)`, a bit-still view and a warmed gf profile; `.claude/probes/K1544/repro.mjs` + `analyze.py` then give pairwise 0 px over 24 in the thread area for six loads per renderer.
+Do not read the plain link's physics hash alone as a pixel floor: the asleep manual-pin recipe reaches 0cbb8f07 with bit-identical dumps and views, but leaves `flowTime` at a load-dependent phase and the pictures differ by tens to hundreds of thousands of px.
 
 PROBE LORE, same round: the renderer resets every fill/erase mesh's
 `visible` each frame (hide with `renderable = false`, or per layer);
