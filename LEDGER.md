@@ -1176,15 +1176,6 @@ Every other item below waits on the trigger it names.
   the faded under thread (fixed by a8d36be33; its parent 1de01c120 still draws it), and a run of dots along an
   edge is not one isolated speck. Run the count on 1de01c120 and a8d36be33: it must fail the first and pass
   the second, or the rule is mended until it does (Muse run 27H, docs/design/K1531_muse_batch27.md)
-- **K1552** · rp=gf: what each corner rule costs (K1549 d, Levi's yes 2026-11-20; with K1456): its GLSL size,
-  cold compile and link seconds, the redraw time with the second corner try on and off, and what each rule
-  reads, toward corner decisions baked into the tables at maze build. A measuring run, no src change: Muse run
-  27M, queued 2026-11-20 (docs/design/K1531_muse_batch27.md, Run M).
-  the second, or the rule is mended until it does (Muse run 27H, docs/design/K1531_muse_batch27.md) (27H,
-  2026-11-20: run on fade's seed-3 link, the two builds count the same dots under both rules and 1de's top
-  counted sides are edge steps, not the line - no gate separates them there; K1460's line was on link A,
-  which fade.mjs cannot measure (654/700 sides skip on uu). Left: a link-A-capable coverage read, then the
-  dual count there. Numbers in Handoff 27H and fade.mjs's dot comment.)
 - **K1553** · rp=gf: K1482 stage 33's side-run gate adds about 9 ms to every table build while the second
   corner try is on (`sideRuns` in src/render/gpu_field/tables.ts fills `rtM`; the tables are rebuilt at every
   physics snapshot while the knot moves). The pool's last four builds as link A loads, one capture session:
@@ -2998,6 +2989,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1552** · rp=gf: what each corner rule costs (K1549 d, Levi's yes 2026-11-20; with K1456): its GLSL size, cold compile and link seconds, the redraw time with the second corner try on and off, and what each rule reads, toward corner decisions baked into the tables at maze build. Done in e4240913c (2026-11-20).
 - **K1551** · rp=gf corner faults counted on 20 other mazes (K1549 c, Levi's yes 2026-11-20): a detector checked against link A's eye classes, then the faults per kind per maze, so the next corner rule is picked by how often its kind occurs. Done in ad3e2dbef (2026-11-20).
 - **K1526** · rp=gf corners, leftover kind 1 on link A (arms a crossing by another chain cut): j50 and t45s fixed (K1482 stages 28 and 29); j59's doubled band narrowed by stage 33's side-run gate (its leftover stub K1556, its table cost K1553); t84e (stage 32's lone-fold rule sits on master switched off, env GF_S32: docs/design/K1482_s32_t84e_paper.md), j47 and t23e accepted by Levi 2026-11-20 ('The others are fine', K1549); j4 fine (K1541). Each stage's numbers are in its handoff, docs/design/K1482_s26 to s33. Done in f7b965265 (2026-11-20).
 - **K1549** · rp=gf corners, the change of approach put to Levi 2026-11-20 after fourteen site stages. His answers: 'Sgtm' to (b) the two-stage stop rule (binding; K1482's next and memory feedback_two_stage_stop), (c) the fault kinds counted on 20 other mazes (K1551, Muse 27L) and (d) what each corner rule costs (K1552, Muse 27M); and to (a), which places to finish: 'j15 must be fixed. The others are fine, except the corner rounding I mentioned above'. So j15 is K1482 stage 34 (brief docs/design/K1482_s34_j15_spike.md); t84e, j47, j59 with t23e, t59s, t58e and j41 stay as they are, with no stage; t4s's rounding is K1555; Muse run 27J (t84e's fold rule) is dropped. Done in 818a4dfd0 (2026-11-20).
