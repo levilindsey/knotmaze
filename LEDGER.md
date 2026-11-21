@@ -2612,6 +2612,23 @@ Every other item below waits on the trigger it names.
   over outline (at most 8 of about 13 levels per channel), and one pixel beside j59 (1043,1503) moved by one
   level. None shows at the look's own contrast: mend them with the next change to `lkRun`, not on their own
   (the coordinator's sheets and numbers: .claude/probes/K1482/s30_check, coordinator worktree, untracked)
+- **K1549** · K1537's fault reproduced by WEBGL_lose_context in the sighting's own shape (27G,
+  docs/design/K1531_muse_batch27.md): a loss within ~1-2 s of load under rp=gf&gfh=1, restore 5 s later, kills
+  the whole Pixi-drawn fabric overlay for the page's life in about 1 of 5-8 loads (3 of 41 early loads; late
+  losses on a settled page: 0 of 10). Missing in the ring box (device x740-830 y74-164 at 1600x900 DSF2): the
+  start/head MarkerMeshes and the head glow sprite (gfE5_crop.png: marker centre white 255 -> bg 21,27,40;
+  threads pixel-identical); JS state stays perfect (markers visible/renderable at the right global pos, glow
+  alpha 0.3), and with gf's composite hidden Pixi still draws nothing there. Broken loads are exactly the ones
+  logging 5 Pixi shader compiles attempted on the lost context ('Could not initialize shader'); Pixi's
+  contextrestored handling never revives those first binds, while the frame loop's gf dispose+rebuild
+  (frame_loop.ts restore branch) is why the gf threads survive. In-page revivals that do NOT work: dropping
+  texture/geometry/buffer _gpuData, source.update(), buffer.update(). Fix directions for the coordinator: in
+  the restore branch, clear Pixi's shader program cache / re-emit renderer contextChange through the Pixi
+  renderer handle (unreached in-page - F.ribbons.renderer was not the handle), or rebuild the fabric overlay
+  and drop the page-lifetime caches (MARKER_MESHES, HEAD/WALKER/MINO glow textures in
+  fabric_maze_renderer.ts), then 5/5 early loads at the floor with .claude/probes/K1537/hunt.mjs. Evidence
+  .claude/probes/K1537/out/27G/ (untracked). The 'stats' page error of the sighting never appeared in 47
+  loads.
 
 ## Approved, to schedule (2026-10-11)
 
