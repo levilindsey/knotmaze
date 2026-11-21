@@ -847,3 +847,40 @@ record the numbers. 4. `npm test` green. 5. Commit the tools (tracked with `git 
 and the handoff, push. Close K1548 with the commit if 3 holds; else leave it open with the cause. 6. One
 sheet for Claude's look under `.claude/probes/K1548/out/27U/` (untracked): the control place on 1de01c120 |
 a8d36be33 | master with the counted pixels marked, at most 1800 px wide.
+
+## Run V (27V): one tool lists every place a candidate changes, on every test maze (K1578); first use, the ball candidate (K1572)
+
+Added 2026-11-20. Probes only (your tools under `.claude/probes/K1578/`); nothing under `src/` or `test/`, so
+no deploy. Why: a render rule fires at every place of its kind on every maze. Stage 37's ball rule cleaned 8
+places and broke 2 on sister mazes, and that was seen only because stage 39 captured them. From now on no
+candidate goes to Levi before every place it changes on ALL the test mazes has a picture Claude has looked
+at. Stages 39 and 40 did this by hand, with per-stage copies of one script chain: `.claude/probes/K1482/s40/`
+(`runseq40.ps1`, `capseq40.ps1`, which holds the 21 mazes' hashes and links, A_3 to A_d and D_1 to D_a,
+`diffseq40.ps1`, `analyze40.py`) and `.claude/probes/K1482/s39/place39.py` (a place's sheet). `### Handoff
+K1482 s40` in `docs/design/K1482_s40_ball_narrow.md` shows the chain in use, with its numbers. This run makes
+it ONE tool for any two commits and runs it on the ball candidate.
+Done: 1. `.claude/probes/K1578/allmaze.ps1 -Base <commit> -Cand <commit> -Name <run> [-Mazes ..] [-Fill]
+[-Off] [-Force]`: it builds both commits (`scripts/preview.ps1 -Port <p> -Ref <commit>`, ports 5500-5519),
+then per maze ONE capture session with the loads base, candidate, base, candidate, compared only inside that
+session. Under `.claude/probes/K1578/out/<run>/` it writes `mazes.txt` (per maze: hash, passes, base against
+base px, candidate against candidate px, base against candidate px and place count, the repeat pair's px),
+`places.txt` (per changed place: maze, x, y in device px, px gained, px lost, nearest site),
+`sheets/<maze>_<x>x<y>_<site>.png` (place39's layout: base | candidate, wide and close, as drawn and
+brightened) and `look/<the same name>` (the sheet's two brightened rows only, 1300 px wide). A maze that has
+its row is skipped unless `-Force`; a maze whose base against base or candidate against candidate is not 0 px
+is captured once more, then flagged with its px. The lock is taken PER MAZE (`scripts/perf_lock.ps1 -Owner
+"muse-27V"`, one maze per hold, no lock left behind): a Claude agent captures on this machine tonight and
+must be able to take its turn. 2. Null control: base and candidate both d1c25f5fe, on A_3: 0 px, 0 places.
+3. Known-break control: base d1c25f5fe, candidate df2e1c8bb (stage 37's ball rule), on A_b and A_a: the tool
+lists the place at (1077, 1509) on A_b and the place at (2257, 991) on A_a, each within 4 px of those
+coordinates (stage 39 measured 26 px and 15 px there). If control 2 or 3 fails and you cannot mend the tool,
+stop there and report the numbers. 4. The run proper: base d1c25f5fe, candidate 4925aa786 (stage 40's ball
+rule), run name `ball40`, all 21 mazes, in this order: A_b, A_a, A_4 (stage 40 measured 73 px in 1 place,
+3 px in 1 place and 122 px in 2 places: name your numbers beside them), A_3, A_5, A_9, A_7, A_8, A_6, A_c,
+A_d, then D_1 to D_a. Commit the tools once the A mazes are done. 5. `### Handoff 27V`: the two controls'
+numbers, and a table of EVERY changed place of item 4 (maze, x, y, px gained, px lost, site, sheet file), the
+mazes with no change named, any flagged maze named. Never call a place fixed, better or worse: Claude looks
+at every one. 6. Commit the tools (`git add -f` by file name; outputs stay untracked: never `git add -f` an
+output) and the handoff, push. K1578 and K1572 stay open: Claude closes them.
+Two of these commits are LOCAL (df2e1c8bb and 4925aa786 sit on other worktrees' branches, not on origin):
+build them by SHA only, and never check out, merge, cherry-pick or push them or their branches.
