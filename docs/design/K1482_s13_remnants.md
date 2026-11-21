@@ -25,7 +25,7 @@ j88 (link A `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`, hash fff8c9e5
    arc from the window's end to the joint room. Write `out/s13/sort.txt`.
 2. **The remnant rule, by patch first**: an outline remnant shorter than a threshold between a gap window's
    end and the under thread's joint room is cut too (the window's outline cut runs on to the joint room).
-   Muse's 9ae14f27 did the same for never-clearing windows in the bake; read it. Try thresholds; capture
+   Muse's 5dfb8810 did the same for never-clearing windows in the bake; read it. Try thresholds; capture
    link A; list every site whose outline ink moves by 10 px or more and look at each on 4x tiles master gf |
    patched gf, named better, same or worse against the bar. A candidate passes when its target sites are
    clean and no site turns worse.
@@ -67,10 +67,10 @@ named), the numbers, which commits are confirmed on screen, a `Ledger items` lis
 ### Handoff K1482 s13
 
 Claude agent ac8618d194aa1ac8d (claude session 09c7a672-a414-402a-97da-b3176839a2e5), 2026-11-18 17:32-19:30.
-Branch `worktree-agent-ac8618d194aa1ac8d`, rebased on origin/master b8e2027d. **No `src/` change**: no candidate
+Branch `worktree-agent-ac8618d194aa1ac8d`, rebased on origin/master 1dfe82a8. **No `src/` change**: no candidate
 passed step 2. Link A, K868 frozen state, hash fff8c9e5, border look, gf, ink = RGB sum <= 73.
 
-- **Step 1, the sort** (`out/s13/sort.txt`, 5509a0cd): the remnant goes 4 (j36, t79s, t70s, j88), the line closes
+- **Step 1, the sort** (`out/s13/sort.txt`, 52e22de7): the remnant goes 4 (j36, t79s, t70s, j88), the line closes
   7 (j49, j55, j87, j22, j29, t65s, t80s), neither 1 (t81s, a wedge in the joint's own outline). The brief's
   remnant (a window ending short of the joint room) is rarely there: at the faults the window already reaches the
   room (rem <= 0) or the joint is on the over chain. What shows is the crossing cut's own end (margin + fade) next
@@ -91,15 +91,15 @@ passed step 2. Link A, K868 frozen state, hash fff8c9e5, border look, gf, ink = 
 - **Step 3**: nothing committed to `src/`. The count test is ready for the next candidate: `s13/count13.py`
   (20 sites, master 0/20, c1 20/20; a pass also needs `--specks` against master to find none).
 - **Steps 4, 5**: not run (no `src/` change: the Crossing fade is master's).
-- **Done** (all measured on b9bcc137's `src/`, which my commits never change; the rebase onto b8e2027d brings
+- **Done** (all measured on e9c54923's `src/`, which my commits never change; the rebase onto 1dfe82a8 brings
   Muse's K1502, whose table arrays Muse reports bit-identical, not re-measured here): class table on the tip (sheets `out/s13/sheets/
   class_a.png`, `class_b.png`, tip | c1): 12 of 12 faulted, as the sort: tick 3 (j49, j55, j87), stub 2 (j36,
   t79s), break 3 (j22, j29, t65s), pocket 1 (t80s), wedge 1 (t81s), sliver 1 (t70s), dot 1 (j88). Fill look 0 px
   by construction. `hold.mjs` 60/60 PASS warm on link A (min 6828, max 8767 edges; first composite 1.8 s), on
-  b9bcc137's build (same `src/` as my commits). `npm test` green before the rebase (256 files, 3187 tests).
-  K1436 bar STRICT=1 `-Tag k1482s13` (`-Ref acb1eb76 -Base b9bcc137`; it waited on Muse's perf lock until the
+  e9c54923's build (same `src/` as my commits). `npm test` green before the rebase (256 files, 3187 tests).
+  K1436 bar STRICT=1 `-Tag k1482s13` (`-Ref acb1eb76 -Base e9c54923`; it waited on Muse's perf lock until the
   lock went stale at 18:41, then ran 18:41-19:16): **FAIL, new 11, grown 3, gone 2, all on g41_user_tw64**, but
-  ref and base have the SAME `src/` (`git diff b9bcc137 acb1eb76 -- src` is empty: my commits change only probes
+  ref and base have the SAME `src/` (`git diff e9c54923 acb1eb76 -- src` is empty: my commits change only probes
   and docs) and the same physics hash there (0d51331b). Observed: the two loads' border frames differ by mean
   0.03, p99 1 RGB-sum level, max 136 at 268 px (fill: 75,568 px over 30), not a shift; the scan turns that into
   the 14 finds. Each one at 4x (`out/s13/sheets/bar_sheet.png`, rows as `out/s13/bar_sheet.txt`; `bar.txt`):

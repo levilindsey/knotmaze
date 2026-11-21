@@ -25,7 +25,7 @@ Do not change how flagged sides follow the Crossing fade (K1521 waits on Levi).
   worse, `count13.py --specks` against your start 0 new.
 - Fill look 0 px against your starting commit ON BUILT PREVIEWS; `hold.mjs` 60/60 on link A; both dragchecks
   pass (`.claude/probes/K1482/s15/panelopen.mjs` first); `npm test` green.
-- The K1436 bar once, `STRICT=1 -NoPerfLock`, on `ring,def,muse_hash,g41_user_tw64`, `-Base` 2e70be908
+- The K1436 bar once, `STRICT=1 -NoPerfLock`, on `ring,def,muse_hash,g41_user_tw64`, `-Base` 0ceddbc54
   (stage 18's start, so ring and g41_user_tw64 are judged across stages 18 and 19), `-Tag k1482s19`: no new
   find, none grown; a scene that will not freeze after two bar runs is named.
 
@@ -49,10 +49,10 @@ table, the sheets' absolute paths (each site named), the numbers, which commits 
 ### Handoff K1482 s19
 
 Claude agent (worktree-agent-a5d6861178992f9ee), 2026-11-19 04:09-06:09. **No src change landed**: every probe was
-reverted, so the tip's `src/` and `test/` equal be41ee3ec. Each of the four sites was taken to its terms. Two
+reverted, so the tip's `src/` and `test/` equal 41368cbbd. Each of the four sites was taken to its terms. Two
 (j29, j49) can be closed only by changing an ordinary crossing gap's ending, at many other sites at once. That is a
 look for Levi, not a fix this stage may pick. The other two (t81s's V, j71) have no cut to fix: they are K1490's.
-Probe code is in `.claude/probes/K1482/s19/` (`u19_probe.patch`, `v19_t19_w19_probe.patch` apply to be41ee3ec;
+Probe code is in `.claude/probes/K1482/s19/` (`u19_probe.patch`, `v19_t19_w19_probe.patch` apply to 41368cbbd;
 `cap19.ps1`, `run19.ps1`, `log19.py`, `ov19.py`, `z19.py`). Sheets are in `.claude/probes/K1482/out/s19/sheets/`.
 
 - **j29 (break):** the term that removes the ink is **xi291's ordinary crossing cut (c67 over c66) on c66's
@@ -82,7 +82,7 @@ Probe code is in `.claude/probes/K1482/s19/` (`u19_probe.patch`, `v19_t19_w19_pr
   moves from GAP / K1470 to K1490. No fix. Sheets: `ov_t81s.png`, `z_t81sV.png`, `z_t81sW.png`, `ov_j71.png`,
   `sort_j71.png`, `z_j71.png`. `sort_dbg0.png` is the baked-term sort of the start.
 
-**Class table** (tip 24a9f83b2 against start be41ee3ec, its own build, hash fff8c9e5;
+**Class table** (tip 24a9f83b2 against start 41368cbbd, its own build, hash fff8c9e5;
 `.claude/probes/K1482/out/s19/classes_tip.txt`). 22 (start 22): wedge 6, notch 8, sliver 5, tick 1, break 1,
 dot 1; by owner K1490 19, GAP 2 (j29, j49), PIN 1 (j64). Every site was seen at 4x (`cls_1.png`, `cls_2.png`):
 all +0 -0 except j15 +1, an end-cap edge pixel. None moved, none worse.
@@ -100,7 +100,7 @@ all +0 -0 except j15 +1, an end-cap edge pixel. None moved, none worse.
   - With src identical to the start, this is load-state nondeterminism. The probe needs more retries, or a
     pinned state.
 
-**The K1436 bar** (`STRICT=1 -NoPerfLock`, ref 24a9f83b2 against base 2e70be908, scenes ring, def, muse_hash,
+**The K1436 bar** (`STRICT=1 -NoPerfLock`, ref 24a9f83b2 against base 0ceddbc54, scenes ring, def, muse_hash,
 g41_user_tw64, `-Tag k1482s19`; `.claude/probes/K1436/out/bar/k1482s19/bar.txt`):
 - **PASS: new 0, grown 0, gone 0.**
 - Each scene froze on the same hash on both builds: ring 50dd4ffd, def 910ff135, muse_hash 733ee14a,
@@ -109,8 +109,8 @@ g41_user_tw64, `-Tag k1482s19`; `.claude/probes/K1436/out/bar/k1482s19/bar.txt`)
 - So ring and g41_user_tw64 are judged across stages 18 and 19, and every scene froze.
 - Taken under load (no perf lock).
 
-**Confirmed on screen:** none of this stage's commits changes the picture (src equals be41ee3ec). Stage 18's
-merge cf38cf6bb holds at 22 on the tip's own build.
+**Confirmed on screen:** none of this stage's commits changes the picture (src equals 41368cbbd). Stage 18's
+merge 905abef19 holds at 22 on the tip's own build.
 
 **Ledger items:**
 - **j29: a look question for Levi.** Should an ordinary crossing whose over and under members both lie within

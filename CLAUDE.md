@@ -207,6 +207,15 @@ Phone and build A/Bs: `pwsh scripts/phone.ps1 [-Wireless] [-Ports 5173,5174] [-U
 
 Work lands directly on `master` (the GitHub default and only branch; there is no `main`). All changes must be end-to-end working before committing; no partial or broken work. Every push to `master` deploys (except one touching only the ledger, docs, `.claude/`, README or LICENSE): `.github/workflows/deploy.yml` runs `npm test` then publishes `dist` to Cloudflare Pages - a red suite leaves the previous deployment live. The code is all rights reserved (`LICENSE`, K117). The canonical URL is https://levi.dev/knotmaze/: levi.dev's Pages Function (`functions/knotmaze/[[path]].js` in the levi.dev repo, 2026-10-11) proxies it to https://knotmaze.pages.dev, so the address bar stays on levi.dev; `/knots` and its aliases 301 there with the query kept. That is why the Vite base is RELATIVE ("./") - absolute asset paths would load levi.dev's own files. Proxied non-HTML files get a 4-hour browser cache on levi.dev (hashed assets are unaffected; the HTML stays max-age=0), and Cloudflare injects levi.dev's Web Analytics beacon. Never run `wrangler pages project create` (or other project-scaffolding wrangler commands) inside this repo: it rewrites package.json, the lockfile and .gitignore and adds wrangler/vite configs.
 
+**History was rewritten on 2026-11-20 (K1493)** to take 362 MB of probe
+output files out of every commit; `docs/K1493_commit_map.txt` maps the
+319 renamed commit IDs. A branch or worktree that holds the old history
+(`git merge-base --is-ancestor d39e363fe <branch>` exits 0) lands only
+by `git cherry-pick` of its own commits or `git merge --squash`, never
+by a plain merge, a rebase or claude-config `tools/agent_merge.ps1`
+(it rebases): those push the old history and the files back. Never
+`git add -f` a probe's outputs.
+
 ## Versioning
 
 `package.json` `version` is `0.<roadmap phase>.0` (P4 = 0.4.0): bump the

@@ -87,14 +87,14 @@ screen, a `Ledger items` list and K1492's handle fields.
 ### Handoff K1492
 
 Agent aebdeea6fdd0e38c8, 2026-11-18 04:34-05:50, branch `worktree-agent-aebdeea6fdd0e38c8`, rebased on
-origin/master dedff12b. Commits: 8877d612 (the fix: `gf_look.ts` + `test/render/gf_look.test.ts`), acaacf1b
-(sheet, ramp tables, probes), 6b3d450c (sweep tiles). Not pushed.
+origin/master 2062e208. Commits: fc96656e (the fix: `gf_look.ts` + `test/render/gf_look.test.ts`), 703abeb2
+(sheet, ramp tables, probes), f707da69 (sweep tiles). Not pushed.
 
 **Cause.** The border look's composite thresholds the outline ink AFTER the gap has scaled it
 (`a = clamp((ink - 0.36) * 3.5)` on `ink *= 1 - lkg`). The outline therefore moves only while the cut ink sits
 in [0.36, 0.65]: about a fifth to a half of the gap's ramp. At fl 0.14 that is no ramp at all.
 
-**Fix (8877d612, `gf_look.ts` only).** The label site writes the gap's keep factor into the label flag lane,
+**Fix (fc96656e, `gf_look.ts` only).** The label site writes the gap's keep factor into the label flag lane,
 `lkCo.a = max(1 - lkg, 1/255)` for labelled pixels (it was 1). The border composite divides it back out before
 its threshold and multiplies after: `m = k.a > 0 ? k.a : 1; a = clamp((min(ink / m, 1) - 0.36) * 3.5) * m`.
 The outline is then thresholded on its uncut ink and faded by the gap's own ramp, exactly like the fill. The
@@ -146,7 +146,7 @@ crisp cut as master. Link B's tiles (not committed) look the same way.
 - The four dives were not measured separately.
 
 **Ledger items.**
-- K1492 · border outline fade: fixed on the branch (8877d612); merge it, then a look on screen with 26F's blend
+- K1492 · border outline fade: fixed on the branch (fc96656e); merge it, then a look on screen with 26F's blend
   change.
 - New: x75/x103 outline ramps short at fl 1.2 (probe or real; `out/t_prof.json`).
 - New: the fill's crossing ramp on link A at fl 1.2 is ~11.5 px against ~51 nominal: find what caps it.

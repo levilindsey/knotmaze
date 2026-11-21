@@ -5,7 +5,7 @@ One code agent at a time in `src/render/gpu_field/`: this stage runs alone there
 
 Levi, 2026-11-19, on K1490: **"Fix the wedges and notches, accept the slivers."** His bar: at junctions and
 under-tail ends the over thread's outline runs on unbroken, with no dot, stub, wedge, tick, notch or sliver.
-On K1524 the same day: **"take the rounding"**, so the second corner try's rounds (default since 083a8cb1c,
+On K1524 the same day: **"take the rounding"**, so the second corner try's rounds (default since 650aac4fa,
 `&gfk=0` turns them off) are the approved look wherever master draws one cleanly. The 14 sites he named on
 link A are in `The sites` of `docs/design/K1482_s20_wedges_notches.md`.
 
@@ -85,7 +85,7 @@ Nothing lands in `src/`. The try is in the WIP commits 5710afd7c and 1d7facd32. 
 crossing pass's outline (`tri3`, Newton on three tubes). It also emitted the corner (cut arm, crossing) at the
 pocket's close. The kept pockets must close at the cut arm, and each arc's sag must be within GF_KSAG.
 
-- **Captured** at 1d7facd32 vs dfcced282 on link A, as it loads, with matching views:
+- **Captured** at 1d7facd32 vs fd72dcb1b on link A, as it loads, with matching views:
   - border: 1256 px in 23 clusters; fill: 1 px (at t56e).
   - At the five sites, j4 moved 4 px and t84e 0. j47, j59 and t45s found no pocket: j47's candidate failed the
     close check, j59's ball is 0.011 h, and t45s's foot lands at the window start.
@@ -128,7 +128,7 @@ pocket's close. The kept pockets must close at the cut arm, and each arc's sag m
   - Requiring piece j itself at z 0 killed every fix, because the stubs sit at |z| 0.2-0.4. That is why they are
     left out of their group (`diffm28_zj.txt`, 0 clusters).
   - Only pg[j] < 0 halved the fixes and lost j47 (`diffm28_pgneg.txt`, 9 clusters).
-- **GPU vs master 7b5d80a78** (link A, `&snd=none`, matching gf_b2view; `out/s28/raw/n4_*` vs `m2_*`):
+- **GPU vs master fb18d719f** (link A, `&snd=none`, matching gf_b2view; `out/s28/raw/n4_*` vs `m2_*`):
   - border: 244 px, all of them ink removed, in 11 clusters: t50s 48, t45s 35, t38e 30, t62e 28, t23e (j59's stub)
     28, t46e 24, t67s 20, t18e 13, t53e 9, t17s (j47) 8, t56s 1.
   - fill: 0 px. `&gfk=0` (n4_off vs m2_off, matching views): 0 px on gf_b2, gf_fill and gf.png.
@@ -153,7 +153,7 @@ pocket's close. The kept pockets must close at the cut arm, and each arc's sag m
   - npm test: the first run, right after the dragchecks, failed 3 tests in 1 file. The runner kept only the last
     6 lines, so the file is not known. Two reruns on the same commit passed: vitest 257/257, then `npm test`
     exit 0 (3197 passed).
-  - The bar (k1436_bar.ps1: STRICT, GF_KRETRY=1, ring, def, muse_hash and g41_user_tw64, `-Base 7b5d80a78`,
+  - The bar (k1436_bar.ps1: STRICT, GF_KRETRY=1, ring, def, muse_hash and g41_user_tw64, `-Base fb18d719f`,
     `-Tag k1482s28`): PASS, new 0, grown 0, gone 0. It printed `taken under load` because the npm test rerun
     overlapped its captures (`.claude/probes/K1436/out/bar/k1482s28/`).
 - **Next.** For t84e, a corner-side change at k159 that buries k159's ink under c84's band. For t56s's 2 px, make

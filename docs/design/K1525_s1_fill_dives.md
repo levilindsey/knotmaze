@@ -76,8 +76,8 @@ and K1525's handle fields. Never push, never edit `LEDGER.md`.
 ### Handoff K1525 s1
 
 Claude agent, 10:56-12:56 2026-11-19, branch `worktree-agent-a63f2fb4fcbd5d82d`. **No src change lands**: the branch's
-`src/` equals 330069e61's. Two K1419 attempts failed Done and are kept as a patch with the debug views
-(`.claude/probes/K1525/s1/k1419_attempts_dbg.patch`, `git apply` onto 330069e61). Running notes:
+`src/` equals 930632b90's. Two K1419 attempts failed Done and are kept as a patch with the debug views
+(`.claude/probes/K1525/s1/k1419_attempts_dbg.patch`, `git apply` onto 930632b90). Running notes:
 `.claude/probes/K1525/s1/notes.md`.
 
 **Class table** (link A fill, same state: hash fff8c9e5, simT 20, par 0; counts = px of a 76 px box further than 32
@@ -121,18 +121,18 @@ from today's, master gf | tip; tip = master gf, the src is unchanged):
 
 **Confirmed on screen:** none lands; tip1 and tip2 were looked at in crops (wedges still there, r4 worse).
 
-**Checks on the tip** (6030 serves 330069e61's build, the tip's src):
+**Checks on the tip** (6030 serves 930632b90's build, the tip's src):
 - hold.mjs 60 / 250 / 5000: `?3&xp=off&am=instant&rp=gf` PASS 60/60 (12:08); link A PASS 60/60 (12:09).
 - K1458 dragcheck: gf PASS (stops 0.5 / 1.2 / 0.14: 99 / 131 / 0 px of 4357572 > 24 levels), gfh PASS (0 / 124 / 60).
 - fade.mjs (SHOTS=1, fl 0 / 0.5 / 1.2 / 0.14): FADE GUARD FAIL, on master's own build: the arc distances pass at every
   fl (678/679, 627/631, 439/451, 676/679 sides), K1460's dot test fails (79 / 98 / 68 / 103 sides with more than 2 dots,
   gf and gfh alike). Not this stage's (the src is master's); not investigated.
 - `npm test`: green (256 files passed, 2 skipped; 3190 tests passed, 18 skipped).
-- K1436 bar, STRICT=1 -NoPerfLock, ring,def,muse_hash,g41_user_tw64, -Ref 7e905988d -Base 330069e61, tag k1525s1:
+- K1436 bar, STRICT=1 -NoPerfLock, ring,def,muse_hash,g41_user_tw64, -Ref 7e905988d -Base 930632b90, tag k1525s1:
   PASS, new 0 grown 0 gone 0 (taken under load; `.claude/probes/K1436/out/bar/k1525s1/bar.txt`).
 - Two-load control: link A gf fill fl 0.14 and 1.2 captured again on the same build: 0 px differ from the first load.
 - Nothing else moves: the tip's src is master's, so A (fill, border) and `?3` at fl 0.14 / 1.2 are master gf to the px.
-- The branch was rebased onto origin/master at 12:46; origin/master has no src change since 330069e61.
+- The branch was rebased onto origin/master at 12:46; origin/master has no src change since 930632b90.
 
 **Ledger items**
 - K1525: dives d1-d4 are the field's (raw field coverage 0 where today's draws ink; numbers above): hand to the junction

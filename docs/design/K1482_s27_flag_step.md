@@ -17,7 +17,7 @@ change nothing there).
   where it passes under chain 9 (slots 348-367, the inner side of a sharp bend, where the outline's points
   pile up at the V). Gating that rule past the over thread's cut reach removed the tick and opened the
   outline at about 270 joint corners on link A (3902 px at 274 places: j63, j15, j148, t57e; backed out in
-  9b98e47b0). The over thread's distance, joint membership and an outline fold-back test do not separate
+  6e0a51c2f). The over thread's distance, joint membership and an outline fold-back test do not separate
   t81s's flags from those corners'. Untested idea: the tick is the step where one side's flag switches
   between neighbouring slots, so blend across the step instead of dropping the flag. First step: log each
   slot's flags at crossing 9:45, plot them on the t81s crop, and see whether the tick's square end falls
@@ -86,7 +86,7 @@ list and K1482's handle fields. Never push, never edit `LEDGER.md`.
 - t81s: no fix (`.claude/rules/render-gpu-field.md`, t81s entry): its tick pixels are unfolded, so the fold shift
   leaves it; all slots k348-370 of crossing 9:45 carry bits 3, so a flag switch cannot separate it. Next: run
   45's +1 in-leg on from its corner to chain 9's band (a corner, not a cut), then the short out-leg can go.- Checks on the tip (src = eff52514d): the bar (STRICT=1, -NoPerfLock, ring/def/muse_hash/g41_user_tw64, base
-  df4506594) PASS new 0 grown 0 gone 0; under the perf lock hold 60/60 on link A and 60/60 with gfk=0, panelopen,
+  66ec58c77) PASS new 0 grown 0 gone 0; under the perf lock hold 60/60 on link A and 60/60 with gfk=0, panelopen,
   dragcheck_b PASS, dragcheck PASS. npm test in that sequence: 3195 passed, 3 failed, all in
   gf_k1482_switch.test.ts, because run27.ps1 had set GF_KRETRY=1 (the Node default-off pins); without it that file
   is 7/7. Full outputs: `.claude/probes/K1482/out/s27/raw/guards/*.txt` (run27.ps1 now clears GF_KRETRY first).- The clean npm test rerun (GF_KRETRY unset) never got the perf lock (muse-26Z held it 00:39-01:22+, two waits gave

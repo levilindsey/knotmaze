@@ -131,7 +131,7 @@ leftover had been traced to its terms.
 - `dragcheck`: PASS (99 / 131 / 60 px).
 - These ran under the perf lock, 11:23 to 11:32 (log: `out/s21/raw/checks_tip.log`).
 - `npm test`: green (3190 passed, 18 skipped).
-- **K1436 bar** (`STRICT=1 -NoPerfLock`, `-Ref a9985b1d3 -Base ccd63bcde`, ring,def,muse_hash,g41_user_tw64,
+- **K1436 bar** (`STRICT=1 -NoPerfLock`, `-Ref a9985b1d3 -Base 30bb0c466`, ring,def,muse_hash,g41_user_tw64,
   `-Tag k1482s21`): **FAIL, new 10, grown 0** (`.claude/probes/K1436/out/bar/k1482s21/`). Stage 20 never ran the bar
   on fix3, so these are fix3's own finds:
   - def: 5 dstray, where sharp V mitres became arcs.

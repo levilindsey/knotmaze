@@ -86,21 +86,21 @@ fields.
 ### Handoff K1482 s7
 
 Claude agent, 2026-11-18. The coordinator narrowed the finish line on resume: no work on the gap family, which
-the next stage takes from here. Branch `worktree-agent-a59d82bf7d4d1b8cf`, rebased on origin/master 6edee1d7.
+the next stage takes from here. Branch `worktree-agent-a59d82bf7d4d1b8cf`, rebased on origin/master ec2cada0.
 
 **Landed.**
-- e51c69eb: the fold fix (`eval.ts`, `gf_glsl.ts` `foldD`). A hairpin's side face is now buried by the
+- 204aa6db: the fold fix (`eval.ts`, `gf_glsl.ts` `foldD`). A hairpin's side face is now buried by the
   piece's own far segments, the ones turned more than 120 degrees from the nearest. This applies only inside
-  another piece of the same surface. It fixes j58 (a tick) and t23s (a dash). Muse's 41c13cf6 (one corner-face
+  another piece of the same surface. It fixes j58 (a tick) and t23s (a dash). Muse's c6b0e770 (one corner-face
   loop) does not touch the fold line, which sits in the side-face loop: the full program holds `foldD` once
   and the `3 * nk` loop. Re-frozen pins in `test/render/gf_home_glsl.test.ts`.
-- 82ea4625: the class table, `.claude/probes/K1482/out/s7/classes.txt`. It is a probe-only commit.
+- 55fb23d2: the class table, `.claude/probes/K1482/out/s7/classes.txt`. It is a probe-only commit.
 
-**Confirmed on screen (rebased tip 82ea4625 against 6edee1d7, link A, both at hash fff8c9e5).**
+**Confirmed on screen (rebased tip 55fb23d2 against ec2cada0, link A, both at hash fff8c9e5).**
 - `out/s7/rb_fold_00.png` (master | tip | diff): j58 and t23s each lose their 16-pixel fault; t23e is
   unchanged (a K1490 wedge).
 - The site diff at a 1-pixel threshold changes no other site of the 327, so no clean site turns faulty.
-- `out/s7/mm_tiles_00.png` and `mm_gap3.png` show 0b9913dc against 6edee1d7. Muse's 9ae14f27 adds ink at 13
+- `out/s7/mm_tiles_00.png` and `mm_gap3.png` show 593a7388 against ec2cada0. Muse's 5dfb8810 adds ink at 13
   sites. To my eye it fixes three gap sites: j81 (a wedge), j138 (a sliver) and t18e (a stub).
 
 **Faulted count on the tip.** 41 by eye, not re-swept.
@@ -108,7 +108,7 @@ the next stage takes from here. Branch `worktree-agent-a59d82bf7d4d1b8cf`, rebas
 - By owner: K1490 22, GAP 17, K1470 1 (j71), PIN 1 (j64).
 
 **Checks.**
-- The K1436 bar ran with `STRICT=1`, Ref 82ea4625, Base 6edee1d7, Tag k1482s7 (`.claude/probes/K1436/out/
+- The K1436 bar ran with `STRICT=1`, Ref 55fb23d2, Base ec2cada0, Tag k1482s7 (`.claude/probes/K1436/out/
   bar/k1482s7/bar.txt`). Result: PASS, new 0, grown 0, gone 1. The gone find is the mirror rstray at
   muse_hash 4.73,33.55 (128 px), likely the fold fix in `eval.ts`; it was not viewed.
 - Each scene's two captures share a hash: ring 50dd4ffd, def 910ff135, muse_hash 733ee14a, g41_user_tw64
@@ -139,7 +139,7 @@ and `rest_tiles_00.png`. Context: `ctx_tiles_00.png`, `dots_*.png`, `brk_gm.png`
   another end. At t1s, chain 28 (under) is cut by chain 41's gap at margin distance 0.43-0.50, and the island
   sits before chain 1's start. The mirror has no gap, which is why it draws these sites solid.
 - **Tick, stub:** the cut removes a corner wedge where one outline joins another at a junction. The end left
-  behind is a soft, faded tip: the window-end fade `fs` in `lkCut`, plus 8877d612's fade over the whole ramp.
+  behind is a soft, faded tip: the window-end fade `fs` in `lkCut`, plus fc96656e's fade over the whole ramp.
   So the gap is cutting at a join, not at a crossing.
 - **Break:** a few-pixel cut in the middle of an outline with no visible over thread at that point.
 - **Pocket, wedge, sliver:** the same cut beside an oblique crossing.

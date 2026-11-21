@@ -130,5 +130,5 @@ Evidence: `.claude/probes/K1482/out/s10/pixels.txt` (step 1: 12 pixel rows, toda
   the under chain's joints only, so this is a new baked number (stop-and-report per this brief; it belongs to
   the window bake, Muse Run M's area). j55, j36, t70s are a different case (today's mask, not a fan): read
   which of today's mask terms keeps their outline and whether gf should match it at all. Before either, the
-  master frames (raw/m, 880ec605) must be recaptured: origin/master moved (K1502, 3971ec64, the reach key
+  master frames (raw/m, 604a4548) must be recaptured: origin/master moved (K1502, 41ddde50, the reach key
   windows) under this stage. If b3's j87 join is wanted alone, look at its 52 other changed sites first.

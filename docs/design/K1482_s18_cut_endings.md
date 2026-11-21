@@ -58,7 +58,7 @@ table, the sheets' absolute paths (each site named), the numbers, which commits 
 ### Handoff K1482 s18
 
 Agent `worktree-agent-a077003d003b40d70` (worktree `.claude/worktrees/agent-a077003d003b40d70`), 2026-11-19
-02:05-04:05. Start 2e70be908; landed **644f9bc39** (rebased onto 7fe5ee2a6; not pushed).
+02:05-04:05. Start 0ceddbc54; landed **34ffa004d** (rebased onto 0a9dd835a; not pushed).
 
 **Landed (step 1, and three of step 2's five).** `gapJointFlags` takes the under chain and its kept indices:
 a side of a slot is also flagged when a member sample of the UNDER chain within `GAP_JOINT_RA` (arc) of a
@@ -108,11 +108,11 @@ Earlier variants' regression sites sit at djC 1.6-2.6: a definition must stay in
 
 **Step 3 untried:** t81s's V (909-912,1168-1170) and j71.
 
-**Bar** (`STRICT=1 -NoPerfLock`, `-Ref 644f9bc39 -Base 2e70be908 -Tag k1482s18`, under load): PASS, new 0,
+**Bar** (`STRICT=1 -NoPerfLock`, `-Ref 34ffa004d -Base 0ceddbc54 -Tag k1482s18`, under load): PASS, new 0,
 grown 0, gone 0, but only def and muse_hash judged: g41_user_tw64 (ref never froze on 0d51331b) and ring (base
 never froze on 50dd4ffd) were skipped by K1519's freeze rule. Output `.claude/probes/K1436/out/bar/k1482s18/`.
 
-**Confirmed on screen:** 644f9bc39 (tip preview, every mover and class site, `mov_*`, `cls_*`,
+**Confirmed on screen:** 34ffa004d (tip preview, every mover and class site, `mov_*`, `cls_*`,
 `ord_*`, `fl12_top`); the u2 prototype it equals (0 sites over 10 px, tip vs u2).
 
 **Tools.** `s18/run18.ps1` (cap border + fill, hold, panelopen, both dragchecks), `cap18.ps1`, `eval18.mjs`

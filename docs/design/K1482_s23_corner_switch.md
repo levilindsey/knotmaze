@@ -14,7 +14,7 @@ outlines; `&tlk=fill` the fill.
 
 ## Do
 
-1. `git merge origin/master` in your worktree first. Bring C1's source: `git diff a83721537 a294f3271 -- src
+1. `git merge origin/master` in your worktree first. Bring C1's source: `git diff 80d80beb1 a294f3271 -- src
    test` is the whole change (87fc67c16's probe filter is gone again in 1881d319c). Cherry-pick 87fc67c16,
    1881d319c and a294f3271, or apply the net diff.
 2. Add the switch: `gfk=1` under `rp=gf` (another free name if `gfk` is taken), read where `gfh` is read
@@ -78,7 +78,7 @@ Claude agent agent-a5016731, 2026-11-19 13:53-15:45, branch `worktree-agent-a501
 cap with every Done holding except the perf-lock guards, which were never run.
 
 - **Commit to land:** df8880998 (the switch, C1's source, the test, the lore lines), then this handoff commit.
-  Neither overlaps master's commits since 98a11ec30. `npm test` at df8880998: 3197 passed, 18 skipped, no pin
+  Neither overlaps master's commits since 26aaf9ca1. `npm test` at df8880998: 3197 passed, 18 skipped, no pin
   re-frozen.
 - **Floor and off = master.** cap23.mjs on link A + `bgs=0`, 1600x900, DSF 2, hash fff8c9e5. `B2=1` reshoots
   the border after a bit-exact still view (10 equal world transforms, frames forced). All compared loads had
@@ -96,7 +96,7 @@ cap with every Done holding except the perf-lock guards, which were never run.
 - **j14, judged by eye** (`out/s23/j14_context.png`, `j14_detail.png`; panels off, on, C1): with the switch on,
   the notch at the top, the V at lower left and the kink on the right arm all meet in rounded corners with
   continuous borders. It is finished, and identical to C1.
-- **The bar:** STRICT=1, -NoPerfLock, `-Ref df8880998 -Base 98a11ec30`, scenes ring, def, muse_hash and
+- **The bar:** STRICT=1, -NoPerfLock, `-Ref df8880998 -Base 26aaf9ca1`, scenes ring, def, muse_hash and
   g41_user_tw64. Result: PASS, new 0, grown 0, gone 0, with equal hashes per scene.
   - The on repeat was skipped: k1436_bar.ps1 takes no link suffix (Base, HomeFlag, Port, Par, Tag, Keep,
     NoPerfLock, PrevRoot, PruneOnly), and k1436_screen.mjs reads its links from jobs.json.

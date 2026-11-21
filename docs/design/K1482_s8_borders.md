@@ -84,7 +84,7 @@ fields.
 ### Handoff K1482 s8
 
 Claude agent a453ce852efbe1ae6, 10:58-12:58 (2026-11-18), branch `worktree-agent-a453ce852efbe1ae6`, rebased on
-origin/master 0a328fcc (only LEDGER.md and docs moved upstream). Probes in `.claude/probes/K1482/s8/`, results
+origin/master f8d5c07d (only LEDGER.md and docs moved upstream). Probes in `.claude/probes/K1482/s8/`, results
 and sheets in `.claude/probes/K1482/out/s8/` (raw frames in `out/s8/raw/`, untracked).
 
 **Sweep: 41 on master -> 36 on the tip** (`out/s8/classes_tip.txt`, by eye on 4x tiles): wedge 10, notch 9,
@@ -98,8 +98,8 @@ island out of a neighbour's outline: dots j2/t1s (one dot, both tiles), t24s, t4
 a baked window only that crossing's over thread (`PC(j) == cS`) cuts. It also moved 975 px of the fill look
 (thin casing slivers beside crossings, `out/s8/fill_diff.png`), so lkGap now returns `vec2(outline gap,
 coverage gap)`: x (fix A's) cuts ink and the border's flag lane (lkCo.a), y (master's, every higher piece) cuts
-cov and lkHiA, all the fill look reads. Commits: 17b9dfc9 fix A, b0d4dbf4 fix A confirmed on screen, 7091c9a4
-the split, 5f09e4a3 the split confirmed.
+cov and lkHiA, all the fill look reads. Commits: 5b7a149f fix A, 22bd59d9 fix A confirmed on screen, 6dd647e0
+the split, d04c9c27 the split confirmed.
 - Numbers, link A at rest, hash fff8c9e5: fill look (tlk=fill) 0 px vs master; border frames at fls 0 / 1.2 /
   0.14 0 px vs fix A's own build (so the split leaves fix A's border bit for bit); fix A vs master: 25 changed
   blobs, 0 px of ink lost, 159 px gained, 14 sites change (all named in `out/s8/fixA.txt`); islands in a 64x64
@@ -110,14 +110,14 @@ the split, 5f09e4a3 the split confirmed.
   split build); ordinary crossings x84 x88 x52 0 px vs master at fl 0, 1.2 and 0.14.
 - `hold.mjs` (K1450) 60/60 PASS warm on link A (edges min 6854 / max 9593); `npm test` green (254 files, 3174
   tests).
-- The K1436 bar (STRICT=1, -Ref 7091c9a4 -Base ba0fb106, ring, def, muse_hash, g41_user_tw64): **PASS, new 0,
+- The K1436 bar (STRICT=1, -Ref 6dd647e0 -Base 850b7f58, ring, def, muse_hash, g41_user_tw64): **PASS, new 0,
   grown 0, gone 0**; every scene's base and ref captures froze at the same physics hash (`out/s8/bar.txt`). The
   bar's own run waited on Muse's perf lock (26K) at the ref's captures, which this brief says not to wait on, so
   its ref half ran by hand on the same served build with `s8/bar_ref.ps1` (the bar's lines and its compare, no
   lock wait).
 - Sheets: `fixA_m0..m4.png` (the 17 GAP sites, master | tip | diff, 4x), `fixA_blobs_0..3.png` (every changed
   blob, named), `fixA_t18s.png`, `fixA_j88j2.png` (today | master | tip | diff), `j88_zoom.png` (nogap | master |
-  tip, 10x), `fill_diff.png` (fix A's fill leak before the split). Attribution (b829a55d): `m_a/m_b.png` and
+  tip, 10x), `fill_diff.png` (fix A's fill leak before the split). Attribution (e67203c6): `m_a/m_b.png` and
   `split_a/split_b.png` (the 17, today | nogap | master [| onlyslot]), `os_others_a/b.png` (the other sites
   onlyslot moved), `var_*.png`, `mz_*.png`, `ov_b*.png` (window overlays: centrelines, crossings, joints).
 

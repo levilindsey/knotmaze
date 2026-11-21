@@ -1,6 +1,6 @@
 # K1482 stage 31: j59's step, by ending the under bands at the over band (K1526; Claude agent stage)
 
-**Started 2026-11-20 04:36** on master 8fb02309e, after stage 30 landed (d98f62544: the in-leg run-on, `gapRunOn`
+**Started 2026-11-20 04:36** on master f26a6519a, after stage 30 landed (05155fa4e: the in-leg run-on, `gapRunOn`
 and `lkRun` in `gf_look.ts`; at j59 it moved one pixel by one level, 1043,1503). Stage 30's tools are tracked in
 `.claude/probes/K1482/s30` (`run30.ps1` keeps each guard's whole output). Agent worktrees are siblings: use
 absolute paths.
@@ -93,8 +93,8 @@ fields. Never push, never edit `LEDGER.md`.
 
 ### Handoff K1482 s31 (05:40)
 
-- **No fix lands.** The GPU candidate c1 (031a266a8's build; 75e1a7949 only adds the same-chain skip and the `val > v` gate, seen in the mirror) clears j59's step: t23e loses 153 px, the inner leg's outline runs at one width into the junction, the sliver's border stays whole. Fill 0 px, gfk=0 0 px. But it also tapers every other band tail it reaches. Link A border at luminance step 1 (floor: m == m2, byte-identical): 15 places, 464 px lost and 8 gained. The losses: t81s 105 (s30's run-on lost, a blunt end and a gap), t76e 72 (broken outline, stray dot), t53e 65 (dotted hairline), t36s 21 (knob, dots), j58 14 (notch; the mirror's same-chain skip clears it), t20e 11, j21 7, t34e 7, t14e 4, j87 3, j84 2. The gains: t73e 4, t0e 3, t66s 1. Sheet: `.claude/probes/K1482/out/s31/sheet_c1_top_on.png`. Verdict: fails.
-- **The code is backed out in the commit holding this handoff** (src = 8fb02309e's). The attempt stays at 75e1a7949, which passed `npm test` (258 files).
+- **No fix lands.** The GPU candidate c1 (fe7b8f127's build; caee39847 only adds the same-chain skip and the `val > v` gate, seen in the mirror) clears j59's step: t23e loses 153 px, the inner leg's outline runs at one width into the junction, the sliver's border stays whole. Fill 0 px, gfk=0 0 px. But it also tapers every other band tail it reaches. Link A border at luminance step 1 (floor: m == m2, byte-identical): 15 places, 464 px lost and 8 gained. The losses: t81s 105 (s30's run-on lost, a blunt end and a gap), t76e 72 (broken outline, stray dot), t53e 65 (dotted hairline), t36s 21 (knob, dots), j58 14 (notch; the mirror's same-chain skip clears it), t20e 11, j21 7, t34e 7, t14e 4, j87 3, j84 2. The gains: t73e 4, t0e 3, t66s 1. Sheet: `.claude/probes/K1482/out/s31/sheet_c1_top_on.png`. Verdict: fails.
+- **The code is backed out in the commit holding this handoff** (src = f26a6519a's). The attempt stays at caee39847, which passed `npm test` (258 files).
 - **Why it fails.** Every place runT fires is a band tail against a lone over pass. All but j59 are short wedges converging into the over outline, which is s30's approved look. Only j59 is a long tangent run.
 - **Per-pixel run gate** (a probe-only env block in eval.ts, not committed). It takes |g| at q ± L·τ, with τ the piece's own tangent, max of the two sides. At L = h the medians are j59 2.5 px against ≥ 4.5 px elsewhere. Gated at 4-7 aa, it leaves t23e 128 px changed and t81s and t36s 7 each, but it leaves ink islands inside j59's step (`isl31.ts`: 74 px in 1015-1055,1490-1535), because each piece's own tangent gives its own gate. Taking τ from the band chain's tangent instead (`out/s31/why31_up.txt`) gives L = h medians of 1.3 px at j59 against 3.4-11 px at the wedges, but j59's p90 (5.2) overlaps t53e's p10 (2.4).
 - **Per-chain run length** (`out/s31/why31_run.txt`): the arc over which the band chain's outline stays within 1 px of the over pass's tube. t23e (chain 23 along 7): 19.4 px (1.14 h). t76e: 13.2 px (0.77 h). t73e: 6.7. t36s: 2.8. The rest: 0. At 2 px, t81s (29.6) outruns j59 (20.8). The margin is thin on link A alone.

@@ -34,7 +34,7 @@ strokes toward today's, and do not use today's border strokes as a bar.
   rounding") made it the page's default. A Node build still defaults to off: set env GF_KRETRY=1 to match the page (K1536).
 - GAP JOINT FLAGS (K1482 s24): s18's UNDER rule in `gapJointFlags` holds about 270 V-corner joint sites on link A
   (an arm's outline meets the joint's outline: j63, j15, j148, t57e). Gating it on dN >= reach removed t81s's tick
-  but opened all of them (3902 px at 274 places, backed out in 9b98e47b0). dN, dM and an offset-fold proxy do not
+  but opened all of them (3902 px at 274 places, backed out in 6e0a51c2f). dN, dM and an offset-fold proxy do not
   separate t81s from them. Diff a gap-flag change over all of link A's border look; the mirror has no gap cuts.
 - CONVERGING OUTLINES (K1482 s25, no fix): a third corner try for arms cut behind their root added ticks (backed out,
   edd983c0f). j15's Z spike is no corner: chain 70's start strokes over chain 5, whose group-15 arm its crossing with
@@ -81,7 +81,7 @@ strokes toward today's, and do not use today's border strokes as a bar.
   chain 9's outline, and the flagged short cut keeps 45's out-leg from that corner up to 9's band (all slots k348-370
   of 9:45 carry bits 3, so no flag switch separates it). Levi, 2026-11-20: "we want the step". It is NOT a fault and no
   stage removes it; a rounder step corner would be nicer (an idea in LEDGER.md).
-- IN-LEG RUN-ON, REMOVED (K1482 s30, d98f62544: `gapRunOn` + `lkRun` in gf_look.ts; reverted 2026-11-20 on Levi's word,
+- IN-LEG RUN-ON, REMOVED (K1482 s30, 05155fa4e: `gapRunOn` + `lkRun` in gf_look.ts; reverted 2026-11-20 on Levi's word,
   K1545): where an under pass's side offset folded just outside the over outline, it drew that side's outline as the
   in-leg's straight line into the over outline and dropped the out-leg's. It cleared t81s's nub and turned six round
   hooks into points (j51, t28e, j83, j31, j161, t61s; 14 groups on link A). Levi: every one is "very bad".
@@ -89,20 +89,20 @@ strokes toward today's, and do not use today's border strokes as a bar.
   two outlines must read as one thread of constant width travelling in the direction that lines it up with itself on
   the far side of the over thread. A round hook does that; a point or a straight run-on narrows the thread and turns
   it. Never trade a hook for a point. s30's design (tags in V1's fraction, the anchor-reach rule that t56s needed) is
-  in d98f62544 and `docs/design/K1482_s30_t81s_inleg.md`.
+  in 05155fa4e and `docs/design/K1482_s30_t81s_inleg.md`.
 - NEVER REMOVE A THREAD'S BORDER (Levi, 2026-11-20, j59, binding): "It's completely removing a border and consequently
   widening the thread and destroying the visual indication of where that thread is and how it aligns with others". Two
   borders lying close together (j59's "doubled band") are two threads' edges, and both stay. A rule that thins, merges
   or drops one fails the look whatever its pixel counts say: before offering an outline change, check that every
   thread at the place still shows both borders, its width and its heading.
-- BAND END ALONG A LONE OVER PASS, REJECTED (K1482 s31, runT in 031a266a8/75e1a7949, backed out after them): narrowing a
+- BAND END ALONG A LONE OVER PASS, REJECTED (K1482 s31, runT in fe7b8f127/caee39847, backed out after them): narrowing a
   group's side band and cap to W*t where a lone over piece faces its outline point within 5 aa cleared j59's step (t23e,
   153 px) but also tapered every other band tail it reached (t81s, t76e, t53e, t36s...): those are short wedges running
   into the over outline (s30's run-on), and lost them to blunt ends, dots and hairlines. Only the run's length tells j59
   apart (gap 1 h up the band's chain: median 1.3 px at j59, 3.4-11 px at the wedges, but per-pixel spreads overlap and a
   per-piece gate leaves islands): gate on a per-(chain, over pass) run length baked in the tables. Probes: copy
   `GfEval.eval()`'s result, which is one reused object.
-- SIDE-RUN GATE, REMOVED (K1482 s33, merge f7b965265: tables.ts `sideRuns` -> `rtM`, chain texel 3 .y, eval.ts runT /
+- SIDE-RUN GATE, REMOVED (K1482 s33, merge 928ed154a: tables.ts `sideRuns` -> `rtM`, chain texel 3 .y, eval.ts runT /
   gf_glsl.ts RUNT in retry programs; reverted 2026-11-20 on Levi's word, see NEVER REMOVE A THREAD'S BORDER): it
   narrowed chain C's band along the one chain M its tube lies BESIDE (never nearer than 1.945 h, within 2.03 h over
   >= 0.6 h), which at j59 (t23e, 153 px) took one of two close borders away, and cost ~9 ms of table build. j59 as it

@@ -1,6 +1,6 @@
 # K1482 stage 32: t84e's wedge, by giving the corner's own fold paper (K1526; Claude agent stage)
 
-**Started 2026-11-20 05:45** on master c83dc2588, after stage 31 stopped with nothing in `src/` (its band-end
+**Started 2026-11-20 05:45** on master 5f48001c1, after stage 31 stopped with nothing in `src/` (its band-end
 rule, runT, cleared j59's step but tapered t81s, t76e, t53e and t36s: `### Handoff K1482 s31` in
 `docs/design/K1482_s31_j59_band_end.md`; do not shorten those wedges). Stage 30's tools are tracked in
 `.claude/probes/K1482/s30`. Agent worktrees are siblings: use absolute paths.
@@ -115,7 +115,7 @@ fields. Never push, never edit `LEDGER.md`.
   wd32 (`out/s32/wd32_final2.txt`): only t84e changes, 1537,938, 32 samples at stride 2, all loss; with gfk=0
   (`wd32_final_gfk0.txt`) nothing changes. By eye (mirror, `out/s32/mimg_t84e_hmdh.png`, `_z`): the patch is gone,
   the diagonal and the ear meet at the cusp; one faint px stays at 1540,950 (ink 0.225: a D fold at cos 0.599).
-- The GLSL twin `loneFold` (gf_glsl.ts, statement for statement) was on in retryForm at 8cc774eb8 (npm test green) but in
+- The GLSL twin `loneFold` (gf_glsl.ts, statement for statement) was on in retryForm at 41500f1e6 (npm test green) but in
   Chrome its composites ran about 50x slower than master's (diag_n.txt: 3 composites in the 5 s after the switch; master's
   diag_m.txt: 90, then 237) and cap.mjs's forced redraw stalled past 240 s twice (cap_n1.txt). Turned OFF after it, so the
   tip renders as master. Not run: the capture diff and sheets, the bar, hold, panelopen, dragchecks.

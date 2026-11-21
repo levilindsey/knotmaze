@@ -1,6 +1,6 @@
 # K1482 stage 29: t84e's wedge from the corner's side, j59's step, j47's block (K1526; Claude agent stage)
 
-**Started 2026-11-20 01:29** on master 0aadaa385, after stage 27 landed (the fold shift). Stage 27's tools are the
+**Started 2026-11-20 01:29** on master 1bf4c77d0, after stage 27 landed (the fold shift). Stage 27's tools are the
 better starting point (`.claude/worktrees/agent-a198fbb25c384a8cf/.claude/probes/K1482/s27`: `run27.ps1` keeps
 each guard's whole output and clears `GF_KRETRY` before `npm test`; `capseq28.ps1` and `diff28.ps1` gave
 byte-identical repeat loads). `npm test` runs without the perf lock; the lock's guards wait in one command.
@@ -13,7 +13,7 @@ for the two kinds, with the sheet he answered on (`.claude/probes/K1490/out/k149
 "two outlines run together into a solid dark patch"; a **notch** is "an outline ends in a square or stepped
 cut where a corner should be". A notch is a stroke END, not a paper eye.
 
-Stage 28 landed the home burial (df4506594): a piece outside every group inks no deeper inside the tubes of
+Stage 28 landed the home burial (66ec58c77): a piece outside every group inks no deeper inside the tubes of
 the group it heads into than their own band. It trimmed 11 stub ends on link A (t45s is clean) and left three
 of K1526's sites. Read `### Handoff K1482 s28` in `docs/design/K1482_s28_crossing_outline_corner.md` and the
 HOME BURIAL lines in `.claude/rules/render-gpu-field.md` first. Its tools and sheets are in the s28 worktree
@@ -94,7 +94,7 @@ master.
 - **Commits, in order:**
   - 1bb6f9c19: the side-face burial along a tangent run (WIP).
   - e66fe43b4: the home burial's z guard ramps over 1e-4..1e-3 instead of 0.004..0.02 (eval.ts + gf_glsl.ts), and
-    drops 1bb6f9c19's rule. The net src diff against 0aadaa385 is that guard alone, 8+/4- lines.
+    drops 1bb6f9c19's rule. The net src diff against 1bf4c77d0 is that guard alone, 8+/4- lines.
   - 029a29ec2: lore.
   - this handoff.
 - **t56s, by eye:** the corner pixel 1040,267 is ink again, as with `gfk=0`, and the corner is square.
@@ -107,7 +107,7 @@ master.
   - Fill: 0 px.
   - In the mirror the same rule moves 4 px on the whole link (1039,266, 1040,267, 1880,1105 and 1800,1592), all of
     them ink put back.
-- **The bar** (STRICT, -NoPerfLock, ring, def, muse_hash, g41_user_tw64, -Base 0aadaa385): PASS, new 0, grown 0, gone 0.
+- **The bar** (STRICT, -NoPerfLock, ring, def, muse_hash, g41_user_tw64, -Base 1bf4c77d0): PASS, new 0, grown 0, gone 0.
 - **The guards** (`perf_lock.ps1`):
   - hold, as it loads and with `gfk=0`: PASS, 60 of 60 frames each.
   - panelopen: OK.

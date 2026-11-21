@@ -1,6 +1,6 @@
 # K1482 stage 33: j59's step, by ending the under bands only along a long run (K1526; Claude agent stage)
 
-**Started 2026-11-20 07:50** from master with stage 32 merged (6fe470618). Stage 32 (t84e's wedge) stopped at
+**Started 2026-11-20 07:50** from master with stage 32 merged (3ee641a4e). Stage 32 (t84e's wedge) stopped at
 its cap: its lone-fold rule is in `eval.ts` (on only with env `GF_S32=1`) and in `gf_glsl.ts` (`loneFold`,
 exported, never called), so master draws as before it. **Leave that code as it is**: its next step is a Muse
 run (27J in `docs/design/K1531_muse_batch27.md`), held until this stage has landed or stopped. New since stage
@@ -25,7 +25,7 @@ Stage 31 found a rule that clears the step and why it cannot land as it is. Read
 (`docs/design/K1482_s31_j59_band_end.md`) and the entry BAND END ALONG A LONE OVER PASS in
 `.claude/rules/render-gpu-field.md` first. In short:
 
-- **runT** (the attempt, `git show 75e1a7949 -- src`; it passed `npm test`): a group's side band and vertex cap
+- **runT** (the attempt, `git show caee39847 -- src`; it passed `npm test`): a group's side band and vertex cap
   narrow to nothing where a lone piece over it faces the outline point across a small gap. On the GPU it
   clears j59's step: the inner leg's outline runs at one width into the junction, the sliver's border is
   whole, fill 0 px, `&gfk=0` 0 px.
@@ -58,7 +58,7 @@ unless env `GF_KRETRY=1` (K1536): set that for a Node probe and for the bar, and
    outline that ends in a step (j59's kind), or a wedge that converges into the outline (the approved kind)?
    Then say whether one threshold puts every step on one side and every wedge on the other, and by what
    margin. Commit the table and the verdict in this brief before step 2.
-2. **If it separates:** bring runT back from 75e1a7949 with that switch: one value per (band chain, over
+2. **If it separates:** bring runT back from caee39847 with that switch: one value per (band chain, over
    pass), baked in `tables.ts`, constant along the band (no per-pixel gate: stage 31's islands). The CPU copy
    first, where a try costs seconds, then the GLSL, with the programs for `&gfk=0` and home-off unchanged.
 3. **If it does not** (a wedge over the threshold, a step under it, or a margin under about 0.2 h): do not
@@ -153,19 +153,19 @@ per-(band chain, over chain) switch baked in `tables.ts`: local to j59 by constr
 (0.07 h on dCM), and it says nothing about steps on mazes not measured.
 - 08:02 WIP 1: step 1 measured (table above); `eval.ts` carries runT again behind a per-chain switch `T.rtM` (absent: master's look; probes set `GfEval.S33` = `all` / `0`), `tables.ts` declares `rtM` and bakes nothing yet. Next: bake the side-contact switch, check the CPU copy at every pair, then the GLSL.
 - 08:09 WIP 2: the switch baked (`tables.ts` sideRuns: tubes never nearer than 1.945 h, within 2.03 h over >= 0.6 h; marks only C23/M7 and C7/M23 on the five mazes, 10-20 ms of a 65 ms build) and packed (chain texel 3 .y = rtM + 1); `gf_glsl.ts` RUNT / RT_FACE / RT_VTX in homeBurial (retry programs only). The CPU copy changes link A only at t23e (192 px, `out/s33/run33g_A.txt`). Next: previews, the browser check, captures.
-- 08:33 WIP 3: browser check of WIP 2's build (base 4413372e3 on 6270, candidate on 6271; `capseq28.ps1` m / c1 / m2 in one locked session, `out/s33/caps_2.txt`): link A as it loads loses 153 px at ONE place (1034,1515 near t23e, lose-only, box 1024,1505-1044,1528: the doubled band and its square end), stage 31's count; the sliver's border (the short band 1013-1027,1523-1531) stays; fill 0 px, `&gfk=0` border and fill 0 px; floor 0 px (repeat loads hash-equal). t81s, t76e, t53e, t36s, j58: 0 px. Tools: `s33/diff33.py` (places, floor, sheet). Next: guards, lore.
+- 08:33 WIP 3: browser check of WIP 2's build (base c910bf5ff on 6270, candidate on 6271; `capseq28.ps1` m / c1 / m2 in one locked session, `out/s33/caps_2.txt`): link A as it loads loses 153 px at ONE place (1034,1515 near t23e, lose-only, box 1024,1505-1044,1528: the doubled band and its square end), stage 31's count; the sliver's border (the short band 1013-1027,1523-1531) stays; fill 0 px, `&gfk=0` border and fill 0 px; floor 0 px (repeat loads hash-equal). t81s, t76e, t53e, t36s, j58: 0 px. Tools: `s33/diff33.py` (places, floor, sheet). Next: guards, lore.
 - 08:36 WIP 4: lore (SIDE-RUN GATE in `render-gpu-field.md`); the by-eye sheet `out/s33/sh/s33_places.png` (j59, t23e, t81s, t76e, t53e, t36s, j58; as it loads and `&gfk=0`). A 1-2 px shoulder stays on chain 7's lower edge at 1043,1504-1505, where the doubled band ended (the CPU copy's ungated runT changes the same pair only, so s31 left it too). Guards started 08:33 (`out/s33/guards`).
 
 ### Handoff K1482 s33
 
-- 07:45-09:35. Lands in order: 45bac3ad1 (WIP 1), 9935885b0 (WIP 2, the src), 094df7ef9 (WIP 3, tools), 71eb4ae09 (WIP 4, lore), and this commit. Step 1: the run length does not separate j59 from the wedges; the never-dives test (`tables.ts` sideRuns -> `rtM`) does, by a thin margin (j59 1.98 h; a cap 1.91 h, wedges 1.78 h or less), and marks only C23/M7 and C7/M23 on the five mazes.
+- 07:45-09:35. Lands in order: 885b29002 (WIP 1), 50314ee72 (WIP 2, the src), 23ee4e6ec (WIP 3, tools), e7e3e39c9 (WIP 4, lore), and this commit. Step 1: the run length does not separate j59 from the wedges; the never-dives test (`tables.ts` sideRuns -> `rtM`) does, by a thin margin (j59 1.98 h; a cap 1.91 h, wedges 1.78 h or less), and marks only C23/M7 and C7/M23 on the five mazes.
 - Link A as it loads: 153 px lost at ONE place (1034,1515, t23e; box 1024,1505-1044,1528). Stage 31's ungated runT drew the same pixels there (its c1 against this c1: 0 px in 1000-1070,1490-1545). Fill 0 px; `&gfk=0` border and fill 0 px; repeat loads hash-equal (floor 0). t81s, t76e, t53e, t36s, j58 unchanged. A 1-2 px shoulder stays on chain 7's lower edge at 1043,1504-1505. Sheets: `out/s33/sh/s33_places.png`, `out/s33/d/on_b2_top.png`.
-- Guards on 094df7ef9 (`out/s33/guards/summary.txt`): bar PASS new 0 grown 0 gone 0; hold 60/60 and gfk=0 60/60; panelopen 1; dragcheck_b max 12; dragcheck max 88 (earlier builds 0-67); npm test 3198 passed, 18 skipped. Residual: sideRuns costs about 9 ms per table build in the browser pool as it loads (tms 21.8-28.5 against 12.2-17.3 ms; gfk=0 unchanged). Next: the cost (cache it per topology or make it cheaper), and validate the margin on more mazes.
+- Guards on 23ee4e6ec (`out/s33/guards/summary.txt`): bar PASS new 0 grown 0 gone 0; hold 60/60 and gfk=0 60/60; panelopen 1; dragcheck_b max 12; dragcheck max 88 (earlier builds 0-67); npm test 3198 passed, 18 skipped. Residual: sideRuns costs about 9 ms per table build in the browser pool as it loads (tms 21.8-28.5 against 12.2-17.3 ms; gfk=0 unchanged). Next: the cost (cache it per topology or make it cheaper), and validate the margin on more mazes.
 
 ### Outcome (2026-11-20): reverted
 
 - Levi, on the live look at j59: "the new render is very bad. It's completely removing a border and consequently
   widening the thread and destroying the visual indication of where that thread is and how it aligns with others".
-- The gate's src changes (merge f7b965265) are reverted on master; the probe tools in `.claude/probes/K1482/s33/` stay.
+- The gate's src changes (merge 928ed154a) are reverted on master; the probe tools in `.claude/probes/K1482/s33/` stay.
   j59's two close borders are two threads' edges and both stay (lore: NEVER REMOVE A THREAD'S BORDER in
   `.claude/rules/render-gpu-field.md`). No further stage narrows that band.

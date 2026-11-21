@@ -83,11 +83,11 @@ list and K1482's handle fields. Never push, never edit `LEDGER.md`.
 
 ### Handoff K1482 s24 (final, 17:00): nothing lands in src; t81s and t4s stay open
 
-Outcome. The dN reach gate (83708a88a) removed t81s's tick, switch off and on, but it opened the outline at about
+Outcome. The dN reach gate (1c763ce39) removed t81s's tick, switch off and on, but it opened the outline at about
 270 joint corners of link A (border look, gf_b2 against master's: 3902 px removed at 274 places, luminance step > 6,
 nothing added; 678 px at a step > 12; the same 678 px with gfk=1; fill 150 px off and 0 px on, the load floor).
 At j63, j15, j148 and t57e an arm's outline now fades out before the joint's outline it should meet (the s18
-failure again). 9b98e47b0 backs it out: src and tests equal master, so no bar or perf guard was run.
+failure again). 6e0a51c2f backs it out: src and tests equal master, so no bar or perf guard was run.
 - Why the gate failed: the flags that hold those corners have dN 0.2-0.75, which overlaps t81s's (0.39-0.59). The
   over thread's membership (dM finite or none) does not separate them either, and neither does an offset-fold
   proxy (q nearer than 0.9 of the offset to another under sample; it is true for 3436 of the 9631 flags, and j63 and

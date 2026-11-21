@@ -13,9 +13,9 @@ named site finished or better, harms nothing, and passes every check below. You 
 
 ## Where it stands
 
-- Master's `src/` is the start build (a83721537; equal to ccd63bcde's). 14 named sites are open on it: wedge
+- Master's `src/` is the start build (80d80beb1; equal to 30bb0c466's). 14 named sites are open on it: wedge
   j15 j50 t23e t59s t81s t84e, notch j4 j14 j41 j47 j59 t4s t45s t58e.
-- **fix3** (the second corner try with longer arms, ink only; `git diff a83721537 a9985b1d3 -- src test`)
+- **fix3** (the second corner try with longer arms, ink only; `git diff 80d80beb1 a9985b1d3 -- src test`)
   finishes j14 and betters t23e, j59, t58e and t81s on link A. It cannot land as built:
   - It **fails the K1436 bar** in other mazes with 10 new finds
     (`C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-afdf2b8bb494bb380\.claude\probes\K1436\out\bar\k1482s21\`:
@@ -55,7 +55,7 @@ named site finished or better, harms nothing, and passes every check below. You 
 ## Done
 
 - **The bar** (`.claude/probes/K1436/k1436_bar.ps1`, `STRICT=1 -NoPerfLock`, scenes
-  `ring,def,muse_hash,g41_user_tw64`, `-Base a83721537`, `-Tag k1482s22`; stage 21's base captures are reusable
+  `ring,def,muse_hash,g41_user_tw64`, `-Base 80d80beb1`, `-Tag k1482s22`; stage 21's base captures are reusable
   if the tool allows): no new find, none grown, on your tip.
 - **Nothing unnamed moves** on link A: the mirror's moved-site list against the start build holds only named
   sites, or every other moved place is listed with a context crop and a detail crop and is clean by your own
@@ -158,7 +158,7 @@ or the field coverage's domain), not s13's lkGap class as s21 filed it.
 **Checks on the tip** (src a294f3271; none was repeated in the last 30 minutes because the src did not change after
 they ran):
 - `npm test`: green, 3190 passed, 18 skipped (256 files), run before 13:00.
-- **K1436 bar** (STRICT=1, -NoPerfLock, ring, def, muse_hash, g41_user_tw64, -Base a83721537, -Ref a294f3271,
+- **K1436 bar** (STRICT=1, -NoPerfLock, ring, def, muse_hash, g41_user_tw64, -Base 80d80beb1, -Ref a294f3271,
   -Tag k1482s22), 13:00 to 13:12: **PASS, new 0, grown 0, gone 0**, taken under load.
   - Output: `.claude/probes/K1436/out/bar/k1482s22/`.
   - At s21's 10 fix3 finds the tip equals the base by eye (`sheet_bar_fix3_finds.png`).

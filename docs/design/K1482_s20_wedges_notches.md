@@ -63,7 +63,7 @@ handle fields. Never edit `LEDGER.md`.
 Claude agent a0f22901, stopped 2026-11-19 about 10:45 PDT, before the 11:40 cap: every site has been tried, and
 the one candidate (fix3) changes the look at about 27 places Levi did not name, so it waits on his call rather
 than on more checks. **Nothing landed: master's `src/` is untouched.** The work is three WIP commits on branch
-`worktree-agent-a0f22901bb5fca4a4` (rebased on 67fb28720): 142179c03 (tables/eval/pack), 0e0dbc36f (fix1: GLSL)
+`worktree-agent-a0f22901bb5fca4a4` (rebased on 9e358eae0): 142179c03 (tables/eval/pack), 0e0dbc36f (fix1: GLSL)
 and 37eda49e8 (fix3). Their `src/` is identical to a70a5b489 and 4dc083c35, the builds the captures were taken on.
 Running notes: `.claude/probes/K1482/s20/notes.md`. All captures were taken under load (Muse 26X held the perf
 lock from 09:56), not same-state pinned.

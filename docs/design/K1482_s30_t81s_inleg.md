@@ -1,6 +1,6 @@
 # K1482 stage 30: t81s's tick, by running the in-leg on (K1527; Claude agent stage)
 
-**Started 2026-11-20 03:02** on master dbee156b4, after stage 29 landed (the home burial's depth guard; t56s
+**Started 2026-11-20 03:02** on master 3fdf4f49f, after stage 29 landed (the home burial's depth guard; t56s
 only). Stage 29's tools are in `.claude/probes/K1482/s29` of the worktree
 `C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-af74bc71e7b05839a` (`run29.ps1` keeps each guard's
 whole output; `capseq28.ps1` and `diff28.ps1` gave byte-identical repeat loads). Agent worktrees are siblings:
@@ -27,7 +27,7 @@ lines of `.claude/rules/render-gpu-field.md` first. In short:
   keeps chain 45's out-leg from that corner up to chain 9's band.
 - Every slot k348-370 of crossing 9:45 carries flag bits 3, so no flag switch separates the nub from the
   about 270 V-corner joints the same rule holds closed (stage 24's gate on dN >= reach removed the nub and
-  opened all of them: 3902 px at 274 places, backed out in 9b98e47b0). Do not gate the rule again.
+  opened all of them: 3902 px at 274 places, backed out in 6e0a51c2f). Do not gate the rule again.
 - The nub's pixels sit in no fold (own distance h), so stage 27's fold shift leaves them.
 - Removing the out-leg alone opens the corner.
 
@@ -115,7 +115,7 @@ straight on into chain 9's outline in a V corner, no gap; the same with `&gfk=0`
 - Commits to land, in order: 808d724e6 (gapRunOn + lkRun + the anchor-reach rule; npm test green, no pin moved),
   5961f106b (lore, probes, progress) and this handoff. The WIP 276dbbfbd and a2c806440 are squashed away
   (a2c806440 failed the K1492 text pin in gf_look.test.ts).
-- Link A, today (dbee156b4) vs new, one capture session: floor 0 (repeat loads byte-identical, on and off); new =
+- Link A, today (3fdf4f49f) vs new, one capture session: floor 0 (repeat loads byte-identical, on and off); new =
   a2c806440's shots byte for byte. 488 px in 13 places at luminance step 1, as it loads = gfk=0: t81s 62 px; outside
   it 12 places, 426 px: 4 gain-only (t66s, j6:30:5, j51:50:-50, t47e), 0 lose-only, 8 mixed (t28e 87, j161 69, t61s
   56, j83 55, j51 54, j31 38, t7s 14, j42 5). By eye (sheets top_c2_a/b, z_*): each is an old tooth, notch or rounded

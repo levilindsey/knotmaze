@@ -7,7 +7,7 @@
 
 ## What is known
 
-- K1492 (merged 3d7acffe; read `### Handoff K1492` in `docs/design/K1492_border_fade.md` whole) made the border
+- K1492 (merged 79b64bd8; read `### Handoff K1492` in `docs/design/K1492_border_fade.md` whole) made the border
   look's outline fade over the same ramp as the fill look's fill: `.claude/probes/K1492/out/sheet_fade.png`.
 - Its tables (`.claude/probes/K1492/prof.py`, `out/t_prof.json`) show that ramp is short on link A: the fill's
   10%-90% ramp at fl 1.2 has a median of about 11.5 device px, where the slider's value asks for about 51;
@@ -108,7 +108,7 @@ With both terms off, the fade still stops abruptly at about 43 px of arc from th
 where the slot's marched window ends. So a longer fade on links like this one means changing today's
 joint-room caps in crossing_gaps.ts, for both renderers. That decision is Levi's, not a gf port fix.
 
-**Item 1 table** (master 63d06c9f; the tip is the same because src is unchanged). Values are the median
+**Item 1 table** (master 69252127; the tip is the same because src is unchanged). Values are the median
 10-90% ramp in device px over 49 clean crossing sides. Per-site rows, with where each ramp starts and ends,
 are in `.claude/probes/K1495/out/prof_master.txt` / `.json`.
 
@@ -160,7 +160,7 @@ So it is not a gf fault. Their - outlines read 6.4 / 4.7 px.
 
 **Not done:** the src-change gates (sweep, dragchecks, hold, npm test) do not apply, since nothing in src
 changed.
-**Commits:** f15164a4 (probes, tables, sheets). The sheets confirm master 63d06c9f on screen.
+**Commits:** b725ddb3 (probes, tables, sheets). The sheets confirm master 69252127 on screen.
 **Next (Levi's call):** whether fl 1.2 should reach further on dense links, by relaxing today's joint caps
 (crossing_gaps.ts, both renderers). Separately: gf's junction-dive gap geometry and hard edges, and gf's
 missing marker-disc fade.

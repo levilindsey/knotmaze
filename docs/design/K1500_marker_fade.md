@@ -86,7 +86,7 @@ junction fan's near edge by that rule (`markerArmReach`): the exit's window coll
 the start's stands. An early iteration without the clip faded the exit stub (tile in
 `out/26K/tiles3fix2_m1.png`, right panel at fl 1.2) — that iteration is not what shipped.
 
-## The change (one commit, on top of starting master `0a328fcc`)
+## The change (one commit, on top of starting master `f8d5c07d`)
 
 - [gf_look.ts](/C:/Users/lsl/Repositories/knotmaze/src/render/gpu_field/gf_look.ts):
   `gfMarkerUniforms` bakes each disc (≤ 4, `GF_MARKER_SLOTS`) into two vec4 uniforms —
@@ -135,7 +135,7 @@ failed at the asleep stop's fresh-load hash race (fresh loads landing on the sta
 attractor, `49c20566`, under capture contention); on a quiet machine every stop passes, and the
 dragged page's rest state (`f9d72040`) is the same one master reaches.
 
-Final table after the rebase onto `0e3a0f6f` (K1482 s9's `lkGap` vec2 merge — the marker cut now
+Final table after the rebase onto `33bb0a9d` (K1482 s9's `lkGap` vec2 merge — the marker cut now
 folds into both components): `.claude/probes/K1500/out/26K/gf_fix4` reproduces the table above
 exactly (`prof_fix4.json`: start 5.1 / 9.4 / 30.1 / 40.7, exit 0.0, border 41.6 / 42.4 at fl 1.2).
 

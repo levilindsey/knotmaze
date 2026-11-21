@@ -4244,6 +4244,21 @@ The steps.
 
 Until the rewrite: merge, never rebase.
 
+Done 2026-11-20 14:14 PT (this section's commit IDs are from before the rewrite, except after an arrow). The quiet
+point: stage 34b landed and live, Muse's chain stopped between runs, no Paseo agent running. The list: 1292 paths
+(added in d39e363fe, deleted in b88a4108b, touched by no other commit, none in HEAD), 380.0 MB = 362 MiB. In a fresh
+bare clone, `git filter-repo --invert-paths --paths-from-file <list> --prune-empty never`: 5057 commits before and
+after, master's tree equal (10d43e80a40a), no listed path left in any object, 319 commits renamed (318 on master, 1
+on `muse-26p-wip`, the one other remote branch: it held the files too and was rewritten with its tree equal,
+d0f31f43b -> cb42d0ab2), the clone's pack 699 -> 531 MiB. Pushed atomically with a lease per ref: master 7c96f6a37
+-> 2c5e2ace2. No deploy ran (no file changed), so the live build's stamp reads 7c96f6a until the next deploying
+push. The main checkout and the coordinator's worktree moved with `git reset --soft` (same tree).
+`docs/K1493_commit_map.txt` holds the 319 pairs; the docs' commit IDs were renamed from it (467 in 35 files; tracked
+probe records under `.claude/probes/` keep the old IDs). Left: GitHub keeps the old objects until its own GC (closed
+PR #1 predates the files); the local object store keeps them while 34 old branches and 58 old worktrees live (K1563;
+a squash of one is safe: no tip tree still carries the files); nothing enforces the landing rule (CC159 in
+claude-config); the laptop's clone (K1562). Tools: the session's scratchpad only (the steps above are the recipe).
+
 ## K1560 (2026-11-20, Levi on t81s: "the under thread bottom side borders don't weem wide enough apart to
 properly indicate the thread width and alignment with the upper side of the under crossing?")
 
@@ -4253,7 +4268,7 @@ passes under at about (929.9, 1119.8). The branch is chain 81, which starts at j
 30 px (0.70 world, less than a thread's width) below the crossing.
 
 Observed (`.claude/probes/K1482/t81s_answer.py <gf.png> <gf_fill.png> <scene_gf.json> <out prefix>` on master
-cee854367's frames, `.claude/probes/K1482/out/rev33/raw/c1_on`, coordinator worktree, untracked). Along the over
+dfe919f00's frames, `.claude/probes/K1482/out/rev33/raw/c1_on`, coordinator worktree, untracked). Along the over
 thread's lower edge the under thread's true edges (centre line plus and minus the half width) come out at x
 907.2 and x 939.3: 34 px apart. Ink 2-4 px below that edge: a 6 px mark at x 907-912 (the step, at the true left
 edge), no ink from x 913 to 936, then a 23 px smear x 933-959 hugging the over outline (the branch's upper border
@@ -4281,12 +4296,12 @@ about (4.52, 7.41), (4.775, 7.35), (4.78, 7.49), (4.64, 7.56): 0.25 world wide, 
 at dpr 3), with a sharp vertical edge at x 4.78. Inside it the pixels are the ground colour (21, 27, 40) where
 chain 32's body (91, 159, 174) belongs. The border look draws a clean chevron at the same place.
 
-Observed. Today's master (the capture `base-cee85436` of stage 34b's bar run) and stage 19's build are equal to
+Observed. Today's master (the capture `base-dfe919f0` of stage 34b's bar run) and stage 19's build are equal to
 the pixel there: 0 px differ within 120 device px, both looks, hash 0d51331b
 (`.claude/probes/K1470/nub_pic.py <cap scene dir> <out.png> [older cap scene dir]`). The CPU mirror's coverage
 (GfEval) has no notch, so the cut is the look shader's.
 
-Cause. `lkGap` (`src/render/gpu_field/gf_look.ts`, line 2247 on cee854367). Inside a crossing window its loop
+Cause. `lkGap` (`src/render/gpu_field/gf_look.ts`, line 2247 on dfe919f00). Inside a crossing window its loop
 cuts by every piece whose key is above the label's by more than `uZt`. K1482 stage 8 limited the OUTLINE's cut
 (x) to the window's named over chain (`cS`), because a fused joint's host cut a tucked tail's outline in a
 neighbour crossing's window, and left the COVERAGE's cut (y, `gA`) taking every higher piece "so the fill look

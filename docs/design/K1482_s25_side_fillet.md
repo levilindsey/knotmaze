@@ -75,7 +75,7 @@ list and K1482's handle fields. Never push, never edit `LEDGER.md`.
   on link A, mostly the slivers Levi accepted, and left specks; G = 0.4 W left j15, t59s and t58e unchanged
   and put a round blob at t23e. Ruled out as is. Next: carry the half strokes into the overlap
   (w = (W - g) / 2 for -W < g < 0) so the band stays W through the spike.
-- 18:10 STOP, NO FIX: `src/` at the tip is origin/master's (083a8cb1c). Sites, rounding on and `gfk=0`: j15, t59s,
+- 18:10 STOP, NO FIX: `src/` at the tip is origin/master's (650aac4fa). Sites, rounding on and `gfk=0`: j15, t59s,
   t58e, t23e and j41 all the same as today.
 - The third corner try (9ee85c483, backed out in edd983c0f; the patch is `.claude/probes/K1482/s25/kroot25.patch`):
   where pass 1 still gives no pushable corner and an arm's cut is at or behind its root (Lcut <= 0), extend that arm

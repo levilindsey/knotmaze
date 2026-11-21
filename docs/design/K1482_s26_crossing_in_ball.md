@@ -125,10 +125,10 @@ j59, t84e, t45s (see the handoff above: a corner against the crossing's outline)
 
 ### Landed (coordinator, 2026-11-19 21:10)
 
-Merged as bffc289d3..a06826a57 (the code that counts: 8f1fafa22), deployed 20:49. The coordinator's own diff of the
+Merged as c40417678..102355098 (the code that counts: c651efe12), deployed 20:49. The coordinator's own diff of the
 captures `m_on` against `n4_on` (threshold 6 levels): border 33 px in one cluster at j50, fill 0 px; with `gfk=0`
-0 px in both. Live (levi.dev on a06826a, link A, `snd=none`, dsf 1.5, state not pinned) against a local load of
-66459246a: j50's eye edge is thinner (19 px). Two 6-px spots (device px 921-924, 325-331 and 1668-1670, 538-545)
+0 px in both. Live (levi.dev on 1023550, link A, `snd=none`, dsf 1.5, state not pinned) against a local load of
+6cb583f59: j50's eye edge is thinner (19 px). Two 6-px spots (device px 921-924, 325-331 and 1668-1670, 538-545)
 differ too; the same spots differ by 2 to 4 px between two loads of the old build, and the pinned captures show
 nothing there. The start marker's glint differs between frames of one load (an animation, not the build).
 Shots and scripts: `.claude/probes/K1482/s26_live/` (untracked, coordinator worktree `agent-af52b1a95572b7c1a`).

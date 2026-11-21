@@ -7,8 +7,8 @@ tick, notch, sliver, break or stray dash; gf's border look itself stays as it is
 acting on the outline as K1492 made it).
 
 **The scoreboard is the sweep**: link A (`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`) at rest, border
-look, 327 sites, faulted count by your own eyes on the 4x tiles. Last count: 36 at 880ec605
-(`.claude/probes/K1482/out/s8/classes_tip.txt`). Master has moved since (Muse's K1502, b0f4f9a7 and 3971ec64,
+look, 327 sites, faulted count by your own eyes on the 4x tiles. Last count: 36 at 604a4548
+(`.claude/probes/K1482/out/s8/classes_tip.txt`). Master has moved since (Muse's K1502, f0c73d94 and 41ddde50,
 the reach key windows in `tables.ts`), so that count is stale.
 
 Stage 10 found one candidate that helps: `s10/patch_b3.json` (no outline cut from an over piece inside a
@@ -73,13 +73,13 @@ the numbers, which commits are confirmed on screen, a `Ledger items` list and K1
 
 ### Handoff K1482 s11
 
-Stopped at 16:45 (started 15:28), no `src/` change: no rule landed. Tip = origin/master 314b1896 + probe files.
+Stopped at 16:45 (started 15:28), no `src/` change: no rule landed. Tip = origin/master ad89a560 + probe files.
 
 - **Step 1, recount** (`out/s11/classes_base.txt`, sheets `base_0..3.png`, `base_moved.png`, `base_moved_wide.png`,
-  `z_j36.png`, `z_j50.png`): starting commit c198e005, hash fff8c9e5 (as s8/s10). K1502 moved 10 sites by more than
+  `z_j36.png`, `z_j50.png`): starting commit be2df171, hash fff8c9e5 (as s8/s10). K1502 moved 10 sites by more than
   8 px (t50s, t18e, j36's top arm, t18s, j50 ...): its reach windows run an outline on past shallow crossings; none
   reads faulted. Count 36, unchanged: wedge 10, notch 9, sliver 6, tick 3, break 3, dot 2, stub 2, pocket 1 (K1490 22,
-  GAP 12, K1470 1, PIN 1). Tip: the same 36, by construction (tip `src/` = c198e005's).
+  GAP 12, K1470 1, PIN 1). Tip: the same 36, by construction (tip `src/` = be2df171's).
 - **Step 2, b3 on the new master** (`out/s11/b3_sites.txt`, sheets `b3_0..b3_7.png`, 12 groups each, today | base gf
   | b3 gf | ink diff; `sep_0.png`, `zoom_t16e.png`): ink changes 2341 px (gain 2194, loss 147), 86 groups of >= 10
   px. Better 2: j87 (today meets the over thread; base leaves a 2-3 px gap; b3 meets it), t16e (the same; least
@@ -101,7 +101,7 @@ Stopped at 16:45 (started 15:28), no `src/` change: no rule landed. Tip = origin
 - **Step 5**: not run; no `src/` change, so the Crossing fade is master's.
 - **Done**: counts above (36 = 36). Fill look: 0 px by construction (tip `src/` = starting commit's). `hold.mjs`
   60/60 PASS warm on link A (min 6855 edges, max 8260). `npm test` green on the tip (256 files, 3187 tests).
-  K1436 bar STRICT=1 `-Tag k1482s11` (`-Ref b0490d9d -Base c198e005`): **PASS**, new 0, grown 0, gone 0 (`out/s11/bar.txt`).
+  K1436 bar STRICT=1 `-Tag k1482s11` (`-Ref 4467d074 -Base be2df171`): **PASS**, new 0, grown 0, gone 0 (`out/s11/bar.txt`).
 - **Confirmed on screen**: none (no rule built).
 - **Next**: the joins at j49, j87, t16e need the over chain's fused-joint fan reach baked into gf's window (the
   window bake, Muse's area): measure it at those three against the worse sites (t21e, t2s) first. The mask case

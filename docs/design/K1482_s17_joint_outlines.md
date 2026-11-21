@@ -48,14 +48,14 @@ table, the sheets' absolute paths (each site named), the numbers, which commits 
 ### Handoff K1482 s17
 
 Stopped at 2:04 AM 2026-11-19 (start 12:22:28 AM). Branch `worktree-agent-a5430e2070cd377bc`, level with
-origin/master plus: 40c448105 (step 1), 6f0afcaac and 5690f7e55 (WIP: probes, sheets, class table) and this
+origin/master plus: f69d8ce6e (step 1), 4f18e8434 and b1a2da1d4 (WIP: probes, sheets, class table) and this
 handoff (origin/master had not moved, so no rebase: the SHAs are final). Source diff: `gf_look.ts` and
 `gf_gap.test.ts`; tables.ts, eval.ts, gf_glsl.ts and gf_app.ts untouched.
 
 **Step 1, the flag's arc end (j158/t73e).** The bake's joint flag ended along the under's arc before the
 cut's window did: at link A's crossing 72 under 46, slots k 276-281 (left side) read dM 0.31 <= dN 0.33 < fh,
 the nearest non-member being the over's own sample 46:170 just past its membership boundary (46:169), so they
-took the full cut and erased the joint's outline at 1638-1640,574-576. 40c448105 spreads the flag along each
+took the full cut and erased the joint's outline at 1638-1640,574-576. f69d8ce6e spreads the flag along each
 contiguous run of `near` slots (dM < reach and dM <= dN) that holds a slot flagged by the s15 rule, per side.
 Dev A/B (spread on vs off, same hash): 52 clusters of 5 px or more, every one viewed at 6x
 (`out/s17/sheets/c_1..6.png`), each closes a gap where a joint outline meets another; none worse. On the
@@ -100,7 +100,7 @@ outline"). A fix extends the flag to the under-member / non-member-over case, a 
 s14's v1-v7 variants were judged worse on: not attempted in the time left. t81s's V tip (904-906,1170-1173)
 filled under step 1; its GAP spot (904-912,1130-1134) is unchanged.
 
-**Done checks (tip 40c448105 on its own build, link A, hash fff8c9e5; raw/start = ae3155eac's build).**
+**Done checks (tip f69d8ce6e on its own build, link A, hash fff8c9e5; raw/start = fcca3855e's build).**
 - Class table `out/s17/classes_tip.txt`: 29 -> 27 (wedge 6, notch 8, sliver 6, tick 1, break 3, dot 2,
   stub 0, pocket 1; K1490 17, GAP 8, K1470 1, PIN 1). Fixed: j158 wedge, t73e wedge (one spot).
 - Movers (s11/boxdiff, ink 531758 -> 532328): 4 sites over 9 px, 31 over 3, losses at most 4; all viewed at
@@ -111,12 +111,12 @@ filled under step 1; its GAP spot (904-912,1130-1134) is unchanged.
 - `count13.py --specks` against the start: 0 new. Fill look 0 px (max 0) between the two builds.
 - hold.mjs 60/60 (link A + `&rp=gf`); panelopen, then dragcheck_b PASS and dragcheck PASS (0 px > 24 at each
   stop); `npm test` green (256 files, 3189 tests).
-- The K1436 bar (`STRICT=1 -NoPerfLock`, ring,def,muse_hash,g41_user_tw64, -Base ae3155eac -Ref 40c448105,
+- The K1436 bar (`STRICT=1 -NoPerfLock`, ring,def,muse_hash,g41_user_tw64, -Base fcca3855e -Ref f69d8ce6e,
   -Tag k1482s17): PASS, new 0, grown 0, gone 0; every scene froze on the same hash in both builds (ring
   50dd4ffd, def 910ff135, muse_hash 733ee14a, g41_user_tw64 0d51331b), taken under load
   (`.claude/probes/K1436/out/bar/k1482s17/bar.txt`).
 
-**Confirmed on screen.** 40c448105 on its own build (raw/tip against raw/start: the class table, the tiles,
+**Confirmed on screen.** f69d8ce6e on its own build (raw/tip against raw/start: the class table, the tiles,
 seamfind at j158 and j4), and before that in the dev A/B (c0 vs c1).
 
 **Probe notes.** eval17.mjs needs a DEV server and its page camera differs from the capture's: convert a
