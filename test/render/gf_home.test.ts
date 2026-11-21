@@ -4,12 +4,28 @@
 // fadeLengths and 0, and changing it needs no table rebuild (K1449).
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import type { FieldScene } from "../../src/render/field/scene";
 import { buildTables, GF_HOME, type GfTables } from "../../src/render/gpu_field/tables";
 import { GfEval, GF_FADE_LENGTH } from "../../src/render/gpu_field/eval";
 import { GF_BIG, packTables } from "../../src/render/gpu_field/gf_pack";
 import { PARAM_DEFAULTS } from "../../src/ui/url_state";
+
+// K1575: the GF_* switches are read once at module load (tables.ts, eval.ts), so this file pins its own
+// environment before those imports evaluate and restores the shell's values afterwards; no other file
+// inherits the pin (vitest isolates files). Both switch states are then covered through GfOpts below.
+const savedGfEnv = vi.hoisted(() => {
+  const keys = ["GF_HOME", "GF_KRETRY", "GF_KEXT", "GF_KCAP", "GF_KRMAX", "GF_KSAG", "GF_KRMIN", "GF_KXB", "GF_KXTOL", "GF_KXZ", "GF_NOCLIP", "GF_TANG", "GF_SELFBUR", "GF_S34", "GF_S32"];
+  const saved: Record<string, string | undefined> = {};
+  for (const k of keys) { saved[k] = process.env[k]; delete process.env[k]; }
+  return saved;
+});
+afterAll(() => {
+  for (const [k, v] of Object.entries(savedGfEnv)) {
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+});
 
 const dir = join(__dirname, "field", "scenes");
 const load = (n: string): FieldScene => {
@@ -111,14 +127,14 @@ describe("K1438 home membership", () => {
   });
 
   it("packs aHome into the arm record's free .y only with the switch on", () => {
-    for (const home of [false, true]) {
-      const T = buildTables(load("j_cross.json"), { aa: AA, home });
+    for (const home of [false, true]) for (const kRetry of [false, true]) {
+      const T = buildTables(load("j_cross.json"), { aa: AA, home, kRetry });
       const P = packTables(T);
       for (let a = 0; a < T.nA; a++) {
         const t = P.o.arm + 2 * a + 1;
         const want = home ? Math.fround(T.aHome[a] === Infinity ? GF_BIG : T.aHome[a]) : 0;
         expect(P.data[4 * t + 1]).toBe(want);
-        expect(P.data[4 * t + 2]).toBe(0);
+        expect(P.data[4 * t + 2]).toBe(home && kRetry ? (T.a34?.[a] ?? 0) : 0);
         expect(P.data[4 * t + 3]).toBe(0);
       }
     }

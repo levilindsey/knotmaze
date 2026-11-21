@@ -6,14 +6,28 @@
 // failed three tests here (K1543).
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import type { FieldScene } from "../../src/render/field/scene";
 import { tablesDiff } from "../../src/render/gpu_field/gf_build";
 import { GF_VS, homeForm, retryForm } from "../../src/render/gpu_field/gf_glsl";
 import { GfPass } from "../../src/render/gpu_field/gf_pass";
 import { buildTables, GF_KRETRY, GF_KRMIN, GF_KSAG, withHome, type GfTables } from "../../src/render/gpu_field/tables";
 
-vi.hoisted(() => { delete process.env.GF_KRETRY; });
+// K1575: every GF_* switch is read once at module load (tables.ts, eval.ts), so this file pins its own
+// environment before those imports evaluate and restores the shell's values afterwards; no other file
+// inherits the pin (vitest isolates files). The retry's two states are covered through GfOpts below.
+const savedGfEnv = vi.hoisted(() => {
+  const keys = ["GF_HOME", "GF_KRETRY", "GF_KEXT", "GF_KCAP", "GF_KRMAX", "GF_KSAG", "GF_KRMIN", "GF_KXB", "GF_KXTOL", "GF_KXZ", "GF_NOCLIP", "GF_TANG", "GF_SELFBUR", "GF_S34", "GF_S32"];
+  const saved: Record<string, string | undefined> = {};
+  for (const k of keys) { saved[k] = process.env[k]; delete process.env[k]; }
+  return saved;
+});
+afterAll(() => {
+  for (const [k, v] of Object.entries(savedGfEnv)) {
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+});
 
 const dir = join(__dirname, "field", "scenes");
 const load = (n: string): FieldScene => {
