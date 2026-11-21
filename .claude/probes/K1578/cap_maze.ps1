@@ -4,6 +4,11 @@
 # Run it through scripts/perf_lock.ps1 (allmaze does, one maze per hold, owner muse-27V).
 #   pwsh cap_maze.ps1 -Maze A_3 -BasePort 5500 -CandPort 5501 -RunOut <abs out dir> [-Fill] [-Off]
 # Hashes and queries are capseq40.ps1's 21-maze table, verbatim; &bgs=0 added (a still background).
+# &fw=0 added to every query (K1544: a bare-seed link's flow clock - flowStrength defaults to 0.3 -
+# sits at a load-dependent phase, so two loads of one build on one hash and one view differ by
+# ~100k px; cap34's freeze pins paintClock but not flowTime. Token links already carry flow 0, so
+# it changes nothing there; flow is render-only, so the table hash is unchanged. Measured on
+# ball40 D_1 before the mend: floors 105,148 / 46,844 px, bit-identical views.)
 # cap40.ps1 appends &snd=none, &phw=0 and &rp=gf to every link and shoots only after gf's first
 # composite. The first load on a tag does cap40's warm run; later loads on that tag pass -NoWarm
 # (the .warm<port> marker in the tag's profile dir, capseq40's scheme).
@@ -22,7 +27,7 @@ $cap40 = Join-Path $PSScriptRoot "..\K1482\s40\cap40.ps1"
 $variants = @("")
 if ($Off) { $variants += "_off" }
 foreach ($v in $variants) {
-  $q = "$q0&bgs=0" + $(if ($v) { "&gfk=0" } else { "" })
+  $q = "$q0&bgs=0&fw=0" + $(if ($v) { "&gfk=0" } else { "" })
   $envs = "GF=1,B2=1,HASH=$hash" + $(if ($Fill) { ",FILL=1" } else { "" })
   foreach ($lp in @(@("m", $BasePort), @("c", $CandPort), @("m2", $BasePort), @("c2", $CandPort))) {
     $tag, $port = $lp[0], [int]$lp[1]
