@@ -1197,15 +1197,6 @@ Every other item below waits on the trigger it names.
   (K1577), and stage 36's `class.tsv` files hold no verdict column (the verdicts are in its handoff's text),
   so a per-row verdict table comes first. Muse run 27P (the census again) runs last in the queue for the same
   reason
-- **K1579** · K1550's gate, finished by hand (Run 27K landed the reload-once fix at 5564d2665 and its smoke;
-  close K1550 only when these hold) - VERIFY: on a tip build, gf hook gate 0/45 off the floor with at least 3
-  of 45 console-error rows, today 0/20, late 5/5 at floor with no reload, 0 pageerrors overall, plus
-  probe:guards, probe:lace 3/3, the Done-6 crops and the deploy-green watch (breach: how the load-time reload
-  fires wrongly) - the exact probe commands and where the numbers land are in
-  .claude/probes/K1537/handoff27k.md. WHAT REMAINS: the run stopped at its 2 h line after the smoke (gf hook
-  4/4 clean on the fix, full npm test green); K1537 stays open regardless, and no load showed its smaller
-  shape. READY WHEN: master tips past 5564d2665. ODDS: 80-90% the gate holds (the cure is a fresh page; the
-  risk is tooling time and the late shape's no-reload edge).
 
 ## Residuals (known, not fixed)
 
@@ -2569,27 +2560,6 @@ Every other item below waits on the trigger it names.
 - **K1538** · rp=gf: while a pluck lives, the plucked thread's outline strokes turn dull red (42, 29, 32) against gf's
   near black (18, 20, 26); the pale pink blur matches today's render. Seen in music mode's auto plucks on link A. Cause
   not looked for. Record and crop names: `.claude/probes/K1524/flip/notes.md`, last section
-- **K1550** · K1537's fault reproduced by WEBGL_lose_context in the sighting's own shape (27G,
-  docs/design/K1531_muse_batch27.md): a loss within ~1-2 s of load under rp=gf&gfh=1, restore 5 s later, kills
-  the whole Pixi-drawn fabric overlay for the page's life in about 1 of 5-8 loads (3 of 41 early loads; late
-  losses on a settled page: 0 of 10). Missing in the ring box (device x740-830 y74-164 at 1600x900 DSF2): the
-  start/head MarkerMeshes and the head glow sprite (gfE5_crop.png: marker centre white 255 -> bg 21,27,40;
-  threads pixel-identical); JS state stays perfect (markers visible/renderable at the right global pos, glow
-  alpha 0.3), and with gf's composite hidden Pixi still draws nothing there. Broken loads are exactly the ones
-  logging 5 Pixi shader compiles attempted on the lost context ('Could not initialize shader'); Pixi's
-  contextrestored handling never revives those first binds, while the frame loop's gf dispose+rebuild
-  (frame_loop.ts restore branch) is why the gf threads survive. In-page revivals that do NOT work: dropping
-  texture/geometry/buffer _gpuData, source.update(), buffer.update(). Fix directions for the coordinator: in
-  the restore branch, clear Pixi's shader program cache / re-emit renderer contextChange through the Pixi
-  renderer handle (unreached in-page - F.ribbons.renderer was not the handle), or rebuild the fabric overlay
-  and drop the page-lifetime caches (MARKER_MESHES, HEAD/WALKER/MINO glow textures in
-  fabric_maze_renderer.ts), then 5/5 early loads at the floor with .claude/probes/K1537/hunt.mjs. Evidence
-  .claude/probes/K1537/out/27G/ (untracked). The 'stats' page error of the sighting never appeared in 47
-  loads.
-  Renumbered 2026-11-20 from a second K1549 (27G's checkout took the ID minutes after the coordinator's push;
-  K1549 is the corner work's change of approach). The fix: Muse run 27K, queued 2026-11-20
-  (docs/design/K1531_muse_batch27.md, Run K). Not tested by 27G: an early loss under today's renderer, where
-  the threads are Pixi's too; what the 14,107 px outside the ring box are.
 - **K1563** · K1493's rewrite left 34 local branches and 58 worktrees on the old history (desktop; none still
   carries the files in its tip tree): each lands only by cherry-pick or `git merge --squash` (CLAUDE.md,
   Commit Policy), and the local object store keeps the 362 MB while they live (claude-config CC157 decides the
@@ -3022,6 +2992,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1579** · The leftover gate was finished on tip 3a1bd40a4: gf 0/45, today 0/20, late 5/5+5/5, guards pass, deploy green; K1550 closed. Done in 5564d2665 (2026-11-20).
+- **K1550** · Early WebGL loss cured: the strong repro broke 7/10 gf and 4/10 today loads on master (Pixi draws nothing for the page's life, GPU objects healthy); a load-time loss reloads the page once per tab session, after which the tip gate read 0/45 gf and 0/20 today off the floor (23 error-logging loads), late 5/5 both renderers with no reload, 0 pageerrors. Closed by Run 27K's handoff. Done in 5564d2665 (2026-11-20).
 - **K1577** · what comes after the ball (asked 2026-11-20): Levi answered 'Do it' to all three changes: the corners he named are next (K1559 t81s's step, K1555 t4s's corner; stage 41), no card and no pick before the all-maze look (K1578), a fuller Muse queue (runs 27T and 27U). Done in f20a66f7d (2026-11-20).
 - **K1567** · rp=gf t81s (K1560): stage 35's candidate is built, not landed (9d42c8f90 on worktree-agent-a36a75a8057e449f5): a 5 px step on the under thread's right edge, 18 px. Dropped: answered by Levi 2026-11-20 17:48, "t81s more": one last stage at the place, K1482 stage 38 (`docs/design/K1482_s38_t81s_more.md`) (2026-11-20).
 - **K1561** · rp=gf fill look: a nub of gap cuts into a thread that comes out from under one thread and at once ends on another (g41_user_tw64 j71, 4.981:7.472; Levi 2026-11-20): `lkGap`'s coverage cut (gf_look.ts) takes every higher piece in a crossing window, a joint's host too (stage 8 fixed the outline only). Done in dcd8e81e6 (2026-11-20).

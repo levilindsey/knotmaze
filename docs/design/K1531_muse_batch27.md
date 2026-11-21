@@ -434,6 +434,41 @@ the coordinator decides. 6. **Crops, no verdict:** under `.claude/probes/K1537/o
 master after the loss | your tip after the loss, 4x, at the ring box and at one place outside it, for gf and
 for today's renderer. Write what you see at each, including what is worse.
 
+### Handoff 27K (Muse, 2026-11-20, done: every Done holds under 4(b)+(c)+(d); K1550 closed)
+
+Started 19:34 PST, stopped 23:23 PST. Starting master dc6645531; fix on master in 5564d2665
+(src/main.ts + src/app/context_loss.ts + test/app/context_loss.test.ts; no hands-off file touched),
+gate completed on tip build 3a1bd40a4 (preview :5487, kept profiles profile27k / profile27kT).
+Captures and summaries under .claude/probes/K1537/out/27K/ (gate_gf1/, gate_gf2/, gate_today/,
+gate_late_gf/, gate_late_today/, guards/, crops_*.png).
+
+Done 1 (repro, master): .claude/probes/K1537/repro27k.mjs loses the context at the first
+compileShader on the connected app canvas (evaluateOnNewDocument). gf clean floor: in 0 /
+out 27 (27 isolated gf thread px, tol 6). 7 of 10 loss loads broken, each in 8281 / out 14137
+with 15 Pixi console errors and 23 lost compiles — above them the 3 clean loads read 13 lost
+compiles, so the broken loads are the ones that also compile Pixi's 5 programs on the lost
+context (deadlines at ~450 ms). Outside px: flat (21,27,40) — the head glow's halo beyond the
+ring box plus the bottom-right exit marker and its glow. 7/10 is under the 8/10 target, so
+gate 4(b) is the one used.
+Done 2 (today, master): floor 0/0; 4 of 10 broken, each in 8281 / out 1,090,537 (threads Pixi too:
+the whole knot missing), same 15-error signature.
+Done 3 (fix landed in 5564d2665): in-place revival was tried first and failed every way (record in
+K1550's text): synthetic webglcontextrestored, _gpuData clears, renderer rebuild with fresh
+caches, full rebuild(): GPU objects dump healthy (VAO, buffers, texture, GL state = clean) and
+Pixi still draws nothing for the page's life. A load-time loss now reloads the page once per tab
+session (session key knotmaze.earlyRestoreReloads); the saved attempt resumes dailies; settled
+losses keep Pixi's own restore and the unchanged cover. test/app/context_loss.test.ts (21 tests).
+Done 4: (b) gf 0/45 off the floor (tips floors 0/0), 23 of 45 logged the lost-context compile
+errors, 0 pageerrors; today: 0/20 off the floor, 0 pageerrors; (c) late shape 5/5 gf and 5/5 today
+at floor, losses 1 / restores 1 in each (no late reload), the same renderer and fabric objects, 0 pageerrors.
+No load showed K1537's smaller shape, before the fix or after it. Done 5: npm test green on the fix
+tree (258 files, 3210 tests); ordinary-load guards on the tip build: hold 60/60 frames at rest on
+rp=gf (min 102,757 edges) and on link A (min 7,066); dragcheck gf and gfh PASS (worst 91 / 60 px
+<= 200). Deploy 44872812857 green. Done 6: crops under out/27K/crops_*.png (clean | master after
+loss | tip after loss, x4 at ring box and exit marker): clean and tip panels alike: full marker
+disc + glyph + glow; master's gf panel shows a grey crescent only (threads fine); master's today
+panels lack the marker/glow entirely. Nothing looks worse on the fix.
+
 ## Run L (27L): how often each corner fault kind occurs on 20 other mazes (K1551)
 
 Added 2026-11-20 08:41. A MEASURING run, approved by Levi (his "Sgtm" to K1549 c): no `src/` change, and
