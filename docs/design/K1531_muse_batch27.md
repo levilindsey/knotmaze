@@ -524,6 +524,39 @@ then the all-rules row, the 0007c8df row and the two draw numbers. Scripts under
 (tracked), outputs under its `out/27M/` (untracked). Close K1552 with the commit that tracks the tools and
 this handoff.
 
+### Handoff 27M (Muse, 2026-11-20, done: every Done holds; K1552 closed with the closing commit)
+
+Started 11:20 PST, stopped 12:15 PST. Starting master 5306e6666; probes only (`.claude/probes/K1552/` tools, this handoff; no `src/`, no hands-off file, so no deploy and, as a probe-only run, no ordinary-load guards). Previews of master on :5485 and of 0007c8df on :5486 under `$env:TEMP\knotmaze-27M*` (stopped and removed at the stop line, kept profiles removed); every capture and timing through `scripts/perf_lock.ps1 -Owner "muse-27M"`, no call over 16 minutes. Outputs under `.claude/probes/K1552/out/27M/` (untracked: `dump/`, `dump_old/`, `variants/`, `time/*.json`, `inventory.json`, `draw.json`).
+
+Done 1+2 (the list and the floor). The dumped link A sources (master, `dumpsrc.mjs`): 12 fragment programs, 41,995-88,696 chars; the largest is `11.frag`, 88,696 chars (a MAXP 3 / MAXK 2 tier; the MAXP 8 full programs are 86,503-87,881). That source is the base for every variant below. Floor, three batches of two identical copies of it: twin spreads 1.88 / 9.27 / 1.89 s (median floor 1.89 s; a saving below is called over the floor only when its median beats the worst twin spread, 9.27 s). In Node (`forms.ts`), `gfFs(false,true)` is 45,269 chars, `homeForm` adds 461, `retryForm` adds 2,013 (total 47,743) and `loneFold` would add 2,379 (50,122); the timed neutralisations below cover 1,021 of retryForm's 2,013 (the rest is its surface-id encoding in the scan, which no variant removed).
+
+Done 3 (compile cost per rule; median of three batches, each batch the variant against its own control copy of `11.frag`, compile+link seconds; every variant but loneFold's compiles and links ok).
+
+Done 5 (what each rule reads, from the GLSL of `11.frag`; per corner = the same answer for every pixel of that corner, per pixel = varies across the corner's pixels).
+
+Done 6 (the table; chars = chars the neutralisation removes from `11.frag`, or adds for loneFold).
+
+| rule (functions; commit) | chars | compile s saved, median (batches) | over floor? | reads | per corner / per pixel |
+|---|---|---|---|---|---|
+| second corner try, ink-only gates (`retryForm` KXT macro in `layers`; 1485fee2b s23, default 083a8cb1c) | 86 | -0.37 (0.28 / -0.37 / -0.78) | no | corner texel 5 `.z` only (`F(uOK + 6k + 5)`) | per corner |
+| home burial (`homeBurial` loop in `layers`; 3cb97db94 s28, guard d20c2a809 s29) | 333 | -3.32 (-0.21 / -4.85 / -3.32) | no | `PSURF/PC`, `pd[m]`, `pkey[m]` of partner pieces | per pixel |
+| side-run gate (`runT` + 2 calls; 9935885b0 / f7b965265 s33) | 602 | 10.72 (9.61 / 10.72 / 11.78) | yes | chain texel `.y` (rtM), `pkey/pd`, `pieceF(m, q)` | per pixel |
+| own-fold burial (`foldD`; e51c69ebd s7) | 1,342 | 2.56 (10.10 / 0.32 / 2.56) | no (over the median floor, under the worst spread) | own chain's vertex texels, `ps/pd`, face point q | per pixel |
+| fold shift (`layers` piece-face `fo`; 0b82e0960 s27) | 121 | 0.42 (0.42 / -4.46 / 2.00) | no | `pieceD(j, q)`, `pieceD(m, q)` at q | per pixel |
+| end-cap sink (`tipSink`; 0a84d3d13 s2, taper 059b5a04b s3) | 196 | 1.88 (1.88 / 4.49 / -5.69) | no (at the median floor) | chain and vertex texels, given the arc `s = ps[j]` | per pixel, through its arc |
+| rounding at joints (the three corner loops in `layers`: label, arc, tangent; K1362 s4 / K1407 c1-c4, KXT gates 1485fee2b) | 3,351 | 14.71 (14.39 / 15.55 / 14.71) | yes | corner texels (`uOK + 6k…`), the pixel p (rho, sector, q) | per pixel |
+| home membership extension (`member` hg/ramp; homeForm 903139692 K1439, pre-K1482) | 349 | -0.48 (-3.53 / -0.48 / 1.47) | no | arm texels, given `s = ps[j]` and depth `mz` | per pixel, through arc and depth |
+| gap joint flags (`lkGap` jb/jf/scJ; c44b564a6 s15, 708da671d/4c1267846 s16, 644f9bc39 s18) | 1,267 | 3.62 (4.63 / 3.62 / 1.23) | no (over the median floor, under the worst spread) | gap slot from the tables, the pixel's side of the tangent | per pixel |
+| lone fold (`loneFold`, exported, not applied; 8cc774eb8 s32, off 071a257a7) | +2,379 | not timed on `11.frag`: its variant fails to compile in 0.02-0.04 s on all three batches (`pg` undeclared at its line 431: this tier defines PGRP, which packs pg into pc; `loneFold` reads `pg[j]`). On the `gfFs` form it was written for (`forms.ts` pair, 47,743 chars) it adds 3.20 s (batches -2.87 / -3.25 / -3.20, tightly clustered) | no, on either reading | vertex texels, `ps/pd`, `member/depth` at the foot arc | per pixel |
+| retry third bound (`GF_KXB`; bffc289d3 s26) | 0 in the fragment source (tables only, so no variant to time) | - | - | at table build: the corner's drawn arc against its own chains' pass tubes | per corner, at build |
+| rejected or removed rules (s25 converging outlines, s28 pocket `GF_KXO`, s29 side-face burial, s30 in-leg run-on reverted by K1545, s31 ungated runT) | 0 | - | - | no code in the dumped source | - |
+
+All listed rules in the dumped source neutralised at once (`all.frag`, 7,607 chars removed, 81,089 left): saves 19.51 s (22.72 / 16.81 / 19.51), over the floor - less than the corner loops' and runT's savings added (14.71 + 10.72 = 25.43), so the compile costs are not additive. The full program of a build of 0007c8df (2026-11-17): `dumpsrc.mjs` drove that build as-is, its largest source is 79,510 chars (9,186 under master's 88,696), and it compiles in a median 36.52 s against master's control median 50.46 s in the same three batches, so master's program costs 13.94 s over the 2026-11-17 one, over the floor. Of the individual rules only two clear the worst-case floor: the corner loops in `layers` (14.71 s for 3,351 chars) and `runT` (10.72 s for 602 chars, its body inlined at two call sites with a `pieceF` loop over the pieces). Only the KXT gates and the third bound give one answer per corner; every other rule in the table varies per pixel, several of them only through the pixel's arc or its face point q. That is fact, no proposal.
+
+Done 4 (draw cost, warm, master preview, one kept profile, link A at rest after the switch; 100 forced redraws per repeat, redraw to `stats.composites` moving, timed in the page). Second corner try on (`gfh=1`): repeat medians 23.6 / 49.8 / 49.6 ms (pooled median 26.5, mean 50.2). Off (`&gfk=0`): 23.6 / 57.2 / 54.5 ms (pooled median 26.5, mean 52.6). The two draw numbers are therefore about 49.6 ms on and 54.5 ms off by repeat median (identical pooled medians); the on-to-off difference (about 5 ms, off slower) is under the floor from the repeats (repeat spread 26.2 ms on, 33.6 ms off), so it is not over the floor. Per-rule draw cost was not measured, as briefed (it needs builds).
+
+Done 7: `npm test` green (258 files passed, 2 skipped; 3,207 tests passed, 9 skipped; tsc clean). K1552 closed with the closing commit; K1531 and K1482 left open. Tried and left: `loneFold` on the dumped tier text, above (reported, not timed there, and timed instead on the `gfFs` form); nothing else failed - every other neutralised variant compiles and links, and no rule's variant needed a build.
+
 ## Run N (27N): the side-run gate's table cost back to where it was (K1553)
 
 Added 2026-11-20 10:52. A fix run with ONE exception to the hands-off list: you may rewrite the BODY of
