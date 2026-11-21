@@ -1150,3 +1150,61 @@ their spread, and the worker's build p50. The upload is not slower than master b
 worker's build grows by no more than the keys' own cost. Report the numbers as they are: a gain inside the spread
 is called inside the spread. 5. `npm test` green, the guards (How to work), the deploy green. 6. K1375 closed
 with the numbers. The Pixel is not measured in this run (never touch the phone): say so in the handoff.
+
+## Run Z2 (27Z2): the vertex cap's GPU cost (K1426)
+Added 2026-11-21. A performance fix; nothing changes on screen. K1407 c3 (`d547dab6`) added the vertex cap: per
+surface slot, where `v < 1` and `D > -aa`, `layers()` calls `vtx(S, p)` (`VTX_LINE` in `gf_glsl.ts`; the `fj` and
+`km` forms move the line; the mirror is `eval.ts`'s `vtx` and its cap line). c3's bench read the GPU's net p50 at
++14 to +15% on the default and the fat drag (11.0 to 12.6 ms) and laid it on the cap by inference, never by a
+profile (`docs/design/K1407_c3_bar.md`, Bench). Many stages have changed the shader since, so measure before you
+change anything. For this run the cap's own code is yours: `vtx`, the cap line in every form that carries it,
+their mirror in `eval.ts`, and, only if you add a bound the cap tests first, the table fields it reads
+(`tables.ts`, `gf_pack.ts`, `gf_keys.ts`). Every other line of `layers`, the corner loops above all, and
+`gf_look.ts` stay hands-off: a coordinator candidate edits those loops (K1572).
+Done: 1. The cost today. With `.claude/probes/K1362/k1362c1_bench.ps1` (mend it under its own directory if it no
+longer runs as written, and say what changed): master against a throwaway build of master with the cap line
+removed from every form (never landed), default and fat drag, interleaved (A B B A) under the perf lock, plus
+two rounds of master against itself for the spread. Report the GPU's net p50 and the worker's work p50 and p95
+per build, and the cap's cost in ms and in percent. 2. If the cap costs under 5% of master's GPU net p50, or
+less than the spread: no source change; close K1426 with the table and stop. 3. Else cut it. You own the
+technique (a cheap test in front of the call, a bound per surface or per vertex, whatever the numbers favour).
+The bar: at least half of the cost Done 1 measured is gone on both drags, same bench, interleaved, and the
+worker's work p50 is not worse beyond the spread. 4. No pixel moves: every pixel the cap changes today it changes
+the same way. The mirror tests stay green without a changed expectation, and same-state captures of master and
+of your build on link A (`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`), on its border look
+(`&tlk=border`) and on `?3&xp=off&am=instant&rp=gf` differ by no more than the floor of two loads of one build
+(both numbers, the hash). 5. Pins: the shader's text moves, so `gf_home_glsl.test.ts`'s master bytes are
+re-frozen and named in the commit; no golden snapshot moves. 6. The cold compile is no slower: the largest
+program's compile and link time with run 27M's tools (`.claude/probes/K1552/`), your build against master, three
+batches, the difference inside the worst twin spread or a saving. 7. `npm test` green, the guards (How to work),
+the deploy green. 8. K1426 closed with the numbers, or cut down to what is left. The Pixel is not measured in
+this run (never touch the phone): say so in the handoff.
+
+## Run Z3 (27Z3): does a cold first visit under rp=gf still block the page? (K1384)
+Added 2026-11-21. K1384 dates from K1369 s1: on a cold desktop profile the gf shader compiled synchronously and
+froze the loader for about 6.7 s. Since then K1456 (`be6ae5f6f`) made the compile asynchronous
+(`KHR_parallel_shader_compile`, polled; today's renderer draws until gf's first program is ready) and K1472 s2
+(`62964f14e`) lets the compile worker link first and persist to disk. Nobody has measured the main thread on a
+cold visit since. The length of the wait itself (the first gf composite came 55 to 106 s after a cold load, K1456
+s3) is NOT this run's subject: that is the largest program's own compile, K1456 and K1565. This run asks only
+whether the page stays responsive during that wait and at the takeover. For this run `gf_app.ts`, `gf_pass.ts`
+and `gf_compile_worker.ts` are yours; `tables.ts`, `eval.ts`, `gf_glsl.ts`, `gf_look.ts` and `gf_keys.ts` stay
+hands-off.
+Done: 1. A probe under `.claude/probes/K1384/` (start from `.claude/probes/K1450/cold.mjs`): a fresh Chrome
+profile for every load (headed, hardware GPU, real time; never `--virtual-time-budget`), three cold loads each of
+link A and of `?3&xp=off&am=instant&rp=gf`, and three cold loads of each link without `rp=gf` and `gfh` as the
+control. From the navigation until 10 s after gf's first composite (the control: its first 60 s), record every
+main-thread long task (start, duration), every gap between animation frames over 100 ms, and the time of gf's
+first composite. 2. The table, per load: the longest main-thread task and the longest frame gap (a) before the
+takeover and (b) from 1 s before it to 1 s after, beside the same link's control loads' longest. 3. The bar: in
+none of the six gf loads does the longest task or the longest frame gap exceed the same link's worst control
+load by more than 250 ms. If it holds: no source change; close K1384 with the table and stop. 4. If it fails:
+name the call that blocks (a CPU profile or a trace of such a load: function and line), and fix it where the fix
+lies inside your three files and leaves what is drawn alone (check first: a status, log or uniform query on a
+program before its `COMPLETION_STATUS_KHR` reads true, a program main compiles before the worker has persisted
+it, a `finish` or a readback, the first table upload). Then Done 1's loads again, and the bar holds. Where the
+cause lies outside your files, or cannot go without changing what is drawn: no source change; the handoff gives
+the trace and K1384 is rewritten to name the cause. 5. With a source change: the same picture warm on both links
+(the floor of two loads of one build), the takeover's jump at rest against master still 0 px (K1472 s3's check),
+`npm test` green, the guards (How to work), the deploy green. 6. K1384 closed with the table, or rewritten. The
+Pixel is not measured in this run (never touch the phone): say so in the handoff.
