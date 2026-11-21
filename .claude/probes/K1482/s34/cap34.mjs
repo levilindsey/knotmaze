@@ -1,4 +1,4 @@
-// K1482: one frozen rest state of a link under rp=gf AND today's renderer, at 1600x900 DSF 2, plus the scene's sites.
+// K1482 s34b: s33's cap28.mjs plus a cost line per load (COST below). K1482: one frozen rest state of a link under rp=gf AND today's renderer, at 1600x900 DSF 2, plus the scene's sites.
 // The K868 recipe (load, freeze, __knotStepUntil(SIMT), clocks pinned); each page is reloaded until its physics hash
 // is HASH (when given; else the gf page's first hash becomes the target), so today | gf compare one state.
 //
@@ -37,6 +37,7 @@ async function load(gf) {
   page.on("console", (m) => { const line = `[console.${m.type()}] ${m.text().slice(0, 500)}`; page.__capDiags.push(line); if (m.type() === "error") console.log(line.slice(0, 500)); });
   page.on("pageerror", (e) => { const line = `pageerror ${e.message.slice(0, 500)}`; page.__capDiags.push(line); console.log(line.slice(0, 200)); });
   await page.evaluateOnNewDocument(() => { window.__shaderErrors = []; if (window.__capCompileHooked) return; window.__capCompileHooked = true; if (typeof WebGL2RenderingContext === "undefined") return; const cs = WebGL2RenderingContext.prototype.compileShader; WebGL2RenderingContext.prototype.compileShader = function (sh) { cs.call(this, sh); try { if (!this.getShaderParameter(sh, this.COMPILE_STATUS)) { const log = this.getShaderInfoLog(sh) || "(empty shader info log)"; let srcHead = ""; try { srcHead = (this.getShaderSource(sh) || "").slice(0, 600); } catch {} (window.__shaderErrors ??= []).push({ log, srcHead }); } } catch {} }; });
+  await page.evaluateOnNewDocument(() => { window.__srcs = []; if (typeof WebGL2RenderingContext === "undefined" || window.__srcHooked) return; window.__srcHooked = 1; const ss = WebGL2RenderingContext.prototype.shaderSource; WebGL2RenderingContext.prototype.shaderSource = function (sh, src) { if (src.includes("#define MAXP")) window.__srcs.push({ n: src.length, t: Math.round(performance.now()) }); return ss.call(this, sh, src); }; }); // K1482 s34b: the field programs' source sizes
   await page.evaluateOnNewDocument((POOL0) => { window.__knotLoopMode = "continuous"; window.__lost = 0; if (POOL0) globalThis.__knotGfOpts = { pool: false }; try { localStorage.setItem("knotmaze.panelOpen", "0"); } catch {} const gc = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (...a) { if (!this.__h) { this.__h = 1; this.addEventListener("webglcontextlost", () => { if (this.isConnected) window.__lost++; }); } return gc.apply(this, a); }; }, process.env.POOL === "0");
   if (PATCH.length || PATCHF.length) await page.evaluateOnNewDocument((PT, PF) => { const ss = WebGL2RenderingContext.prototype.shaderSource; window.__patchHits = {}; WebGL2RenderingContext.prototype.shaderSource = function (sh, src) { for (const [a, b] of src.includes("#define MAXP") ? PF : []) { const n = src.split(a).length - 1; window.__patchHits["F:" + a.slice(0, 40)] = (window.__patchHits["F:" + a.slice(0, 40)] ?? 0) + n; src = src.split(a).join(b); } if (src.includes("lkGap")) for (const [a, b] of PT) { const n = src.split(a).length - 1; window.__patchHits[a.slice(0, 40)] = (window.__patchHits[a.slice(0, 40)] ?? 0) + n; src = src.split(a).join(b); } return ss.call(this, sh, src); }; }, PATCH, PATCHF);
   await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
@@ -85,10 +86,13 @@ async function freeze(page) {
     const h = d?.hashes ?? d; return String(h?.all ?? JSON.stringify(h).slice(0, 80));
   }, SIMT);
 }
+// K1482 s34b: the cost line: gf's switch time (first gf frame, ms from navigation), passes, every table build's ms
+// (n, median, min, max) and the field programs' sources handed to shaderSource (count, total chars, sizes).
+const COST = () => { const g = globalThis.__knotGf; const st = g?.stats ?? {}; const tm = [...(st.tablesMs ?? [])].sort((a, b) => a - b); const S = window.__srcs ?? []; return JSON.stringify({ switchedMs: st.switchedMs, passes: st.passes, tms: tm.length ? { n: tm.length, med: +tm[tm.length >> 1].toFixed(1), min: +tm[0].toFixed(1), max: +tm[tm.length - 1].toFixed(1) } : null, src: { n: S.length, chars: S.reduce((s, x) => s + x.n, 0), sizes: [...new Set(S.map((x) => x.n))] } }); };
 async function shoot(gf, name) {
   for (let k = 0; k < TRIES; k++) {
     const page = await load(gf);
-    if (process.env.WARM === "1") { console.log(T(), `warm ${gf ? "gf" : "today"} ok, lost ${await page.evaluate(() => window.__lost)}`); await page.close(); return true; }
+    if (process.env.WARM === "1") { console.log(T(), `warm ${gf ? "gf" : "today"} ok, lost ${await page.evaluate(() => window.__lost)}, cost ${await page.evaluate(COST)}`); await page.close(); return true; }
     await alignFreezeParity(page, SIMT);
     const h = await freeze(page);
     if (HASH && h !== HASH) { console.log(T(), `${name}: hash ${h} != ${HASH}, reload`); await page.close(); continue; }
@@ -145,7 +149,7 @@ async function shoot(gf, name) {
       writeFileSync(join(outDir, `sites_${name}.json`), JSON.stringify({ hash: h, query, simT: SIMT, ...S }, null, 1));
     }
     let poolInfo = ""; try { poolInfo = await page.evaluate(() => { const g = globalThis.__knotGf; if (!g) return JSON.stringify({ hits: window.__patchHits ?? null, tms: [], wms: null, pool: null, home: null, homeOn: null }); return JSON.stringify({ hits: window.__patchHits, tms: (g.stats?.tablesMs ?? []).slice(-4).map((v) => +v.toFixed(1)), wms: Array.isArray(g.stats?.workMs) ? g.stats.workMs.slice(-4).map((v) => +v.toFixed(1)) : g.stats?.workMs, pool: g.stats?.pool, home: g.home, homeOn: g.tables?.homeOn }); }); } catch (e) { poolInfo = `(pool info unavailable: ${(e.message ?? String(e)).slice(0, 120)})`; }
-    console.log(T(), `${name}: hash ${h}, lost ${await page.evaluate(() => window.__lost)}, pool ${poolInfo}`);
+    console.log(T(), `${name}: hash ${h}, lost ${await page.evaluate(() => window.__lost)}, pool ${poolInfo}, cost ${await page.evaluate(COST)}`);
     await page.close();
     return true;
   }
