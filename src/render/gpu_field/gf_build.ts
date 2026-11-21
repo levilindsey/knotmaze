@@ -5,7 +5,8 @@
 // when there is no worker (or `__knotGfOpts.worker === false`), so both give
 // the same tables for the same input.
 import { buildFieldSceneLean, type SceneExportInput } from "../field/scene_export";
-import { buildTables, type GfTables } from "./tables";
+import { buildKeys, keysTransfer, type GfKeys } from "./gf_keys";
+import { buildTables, withHome, type GfTables } from "./tables";
 
 /** The ctrl-arc the tables' depth window scales by (gf_app.ts's since s2). */
 export const CTRL_ARC = 0.47;
@@ -39,23 +40,32 @@ export function gfLookDraws(lookOpt: boolean | undefined, revealing: boolean): b
   return lookOpt !== false;
 }
 
+/** K1375: the worker's key finish for built tables: the home variant applied, then its keys. */
+export function gfKeysFor(T0: GfTables, home?: boolean): { T: GfTables; K: GfKeys } {
+  const T = home ? withHome(T0, true) : T0;
+  return { T, K: buildKeys(T) };
+}
+
 export interface GfBuilt {
   T: GfTables;
+  K: GfKeys;
   exportMs: number;
   tablesMs: number;
+  keysMs: number;
 }
 
 const now = (): number => (typeof performance !== "undefined" ? performance.now() : Date.now());
 
 /** K1482 s23: kRetry, the corner retry (the page passes it with `gfh=1` unless `gfk=0`; undefined = tables.ts GF_KRETRY). */
-export function gfBuild(input: SceneExportInput, aa: number, kRetry?: boolean): GfBuilt {
+export function gfBuild(input: SceneExportInput, aa: number, kRetry?: boolean, home?: boolean): GfBuilt {
   const t0 = now();
   const scene = buildFieldSceneLean(input);
   scene.look.ctrlArc ??= CTRL_ARC;
   const t1 = now();
-  const T = buildTables(scene, { aa, kRetry });
+  const { T, K } = gfKeysFor(buildTables(scene, { aa, kRetry }), home);
   const t2 = now();
-  return { T, exportMs: t1 - t0, tablesMs: t2 - t1 };
+  const t3 = now();
+  return { T, K, exportMs: t1 - t0, tablesMs: t2 - t1, keysMs: t3 - t2 };
 }
 
 /** The distinct buffers under the tables' typed arrays (a transfer list). */
@@ -66,6 +76,13 @@ export function tablesTransfer(T: GfTables): ArrayBuffer[] {
   }
   return [...out];
 }
+
+/** K1375: the tables' and keys' buffers together, each once. */
+export function builtTransfer(T: GfTables, K: GfKeys): ArrayBuffer[] {
+  return [...new Set([...tablesTransfer(T), ...keysTransfer(K)])];
+}
+
+export { keysTransfer } from "./gf_keys";
 
 /** Every typed array field of two table sets compared bit for bit (and the
  * scalars), `ms` aside: the field names that differ. */

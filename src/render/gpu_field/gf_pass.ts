@@ -8,7 +8,7 @@
 // subtract. Results arrive frames later (poll()).
 import { GF_VS, gfFs, homeForm, retryForm, type GfTier } from "./gf_glsl";
 import { GF_TW, packTables, type GfPacked } from "./gf_pack";
-import { buildKeys } from "./gf_keys";
+import { buildKeys, type GfKeys } from "./gf_keys";
 import { GfPieces } from "./gf_split";
 import { revealForm, type GfRevealTable } from "./gf_reveal";
 import type { GfExploreTable } from "./gf_explore";
@@ -784,11 +784,11 @@ export class GfPass {
     this.lk = { gap, fade };
   }
 
-  upload(T: GfTables): void {
+  upload(T: GfTables, K?: GfKeys): void {
     const gl = this.gl;
     const t0 = performance.now();
-    const Th = this.home && !T.homeOn ? withHome(T, true) : T; // K1439: the build differs from home: true only there (K1482 s20: its corners too)
-    this.packed = packTables(Th, this.packed ?? undefined, buildKeys(Th));
+    const Th = this.home && !T.homeOn ? withHome(T, true) : T; // K1439: the build differs from home: true only there (K1482 s20: its corners too); K1375: K is used only when it was built for Th itself, else built here (the home variant and the in-thread path)
+    this.packed = packTables(Th, this.packed ?? undefined, K && Th === T ? K : buildKeys(Th));
     const t1 = performance.now();
     this.T = Th;
     let kc = false; for (let i = 0; i < Th.cellKN.length && !kc; i++) kc = Th.cellKN[i] > 0;

@@ -3,7 +3,8 @@
 // two texels per arm, twice. This splits each chain's s range into bins and gives each bin
 //   - pin search bounds (lo, hi) for depth()'s binary search, and
 //   - the arms that can pass member()'s tests anywhere in the bin, in the chain's arm order.
-// A pure function of GfTables (gf_pack.ts packs it; gf_pass.ts builds it at upload).
+// A pure function of GfTables (gf_pack.ts packs it; the build worker builds it, gf_build.ts, and gf_pass.ts
+// packs with the keys it received, building them itself only where no worker built the tables).
 //
 // Exact by construction: the program still runs the same tests on the same texel values, over a superset of the
 // arms that pass them (kept in the original order, so loop 1's tie rule picks the same arm; loop 2 takes a min), and
@@ -29,6 +30,13 @@ export interface GfKeys {
   /** Candidate arms (global arm indices), each bin's run in arm order. */
   ka: Int32Array;
   nKA: number;
+}
+
+/** K1375: the distinct buffers under a key set (a transfer list): each key buffer once. */
+export function keysTransfer(K: GfKeys): ArrayBuffer[] {
+  const out = new Set<ArrayBuffer>();
+  for (const v of [K.kc, K.kb, K.ka]) if (v.buffer instanceof ArrayBuffer) out.add(v.buffer);
+  return [...out];
 }
 
 const f = Math.fround;

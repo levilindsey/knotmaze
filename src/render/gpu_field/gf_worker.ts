@@ -37,7 +37,7 @@ import { sampleClosedSpline, sampleOpenSpline, splineBend, type SplineSamples } 
 import { MirrorSystem } from "../../physics/mirror_system";
 import { readSnapshot } from "../../physics/snapshot";
 import type { TangleGraph } from "../../core/types";
-import { CTRL_ARC, gfBuild, tablesTransfer } from "./gf_build";
+import { builtTransfer, CTRL_ARC, gfBuild, gfKeysFor } from "./gf_build";
 import {
   assembleGfTables,
   buildGfPrefix,
@@ -58,6 +58,8 @@ interface Req {
   pool?: boolean;
   /** K1482 s23: the corner retry (`gfh=1` without `gfk=0`); absent = off. */
   kr?: boolean;
+  /** K1375: build the home variant's keys here (`gfh=1`); absent = off. */
+  home?: boolean;
   // K1369 s4: a channel build's extra reply fields and their transfers.
   extra?: { msg: Record<string, unknown>; transfer: Transferable[] };
 }
@@ -75,6 +77,7 @@ interface ChanOpen {
   pool: boolean;
   depth: number;
   kr?: boolean; // K1482 s23
+  home?: boolean; // K1375
 }
 type ChanMsg =
   | ChanOpen
@@ -221,6 +224,7 @@ interface Chan {
   pool: boolean;
   depth: number;
   kr?: boolean; // K1482 s23
+  home: boolean; // K1375
   posted: number;
   done: number;
   fresh: boolean;
@@ -254,7 +258,7 @@ function openChan(m: ChanOpen): void {
   }
   const c: Chan = {
     cid: m.cid, port: m.port, gen: m.gen, mirror, skel: m.skel, passCounts: m.passCounts,
-    tw: m.threadWidth, aa: m.aa, pool: m.pool, depth: Math.max(1, m.depth), ...(m.kr ? { kr: true } : {}),
+    tw: m.threadWidth, aa: m.aa, pool: m.pool, depth: Math.max(1, m.depth), ...(m.kr ? { kr: true } : {}), home: m.home === true,
     posted: 0, done: 0, fresh: false, snaps: 0, snapSeq: -1, snapAbs: 0,
   };
   ch = c;
@@ -342,6 +346,7 @@ function chanReq(): Req | null {
     aa: c.aa,
     pool: c.pool,
     ...(c.kr ? { kr: true } : {}),
+    ...(c.home ? { home: true } : {}),
     extra: { msg: { chan: c.cid, samples: out, snapSeq: c.snapSeq, snapAbs: c.snapAbs, gatherMs: now() - t0 }, transfer },
   };
 }
@@ -379,16 +384,17 @@ function reply(req: Req, msg: Record<string, unknown>, transfer?: Transferable[]
 async function run(req: Req): Promise<void> {
   const { id, input, aa } = req;
   const kr = req.kr === true ? true : undefined; // K1482 s23: off = the build's default (GF_KRETRY)
+  const home = req.home === true; // K1375
   const t0 = now();
   try {
     const ready = sliceReady.filter(Boolean).length;
     const usePool = req.pool !== false && !poolBroken && ready >= 2;
     if (!usePool) {
-      const r = gfBuild(input, aa, kr);
+      const r = gfBuild(input, aa, kr, home);
       reply(
         req,
-        { id, T: r.T, exportMs: r.exportMs, tablesMs: r.tablesMs, workMs: now() - t0, pool: 0 },
-        tablesTransfer(r.T)
+        { id, T: r.T, K: r.K, exportMs: r.exportMs, tablesMs: r.tablesMs, keysMs: r.keysMs, workMs: now() - t0, pool: 0 },
+        builtTransfer(r.T, r.K)
       );
       return;
     }
@@ -408,23 +414,29 @@ async function run(req: Req): Promise<void> {
     // the single build, where the pool's round trip cannot pay.
     if (totalPts < 6000) {
       const tt0 = now();
-      const T = buildTables(scene, { aa, kRetry: kr });
-      reply(req, { id, T, exportMs, tablesMs: now() - tt0, workMs: now() - t0, pool: 0 }, tablesTransfer(T));
+      const T0 = buildTables(scene, { aa, kRetry: kr });
+      const tablesMs = now() - tt0;
+      const tk0 = now();
+      const { T, K } = gfKeysFor(T0, home);
+      reply(req, { id, T, K, exportMs, tablesMs, keysMs: now() - tk0, workMs: now() - t0, pool: 0 }, builtTransfer(T, K));
       return;
     }
     const n = Math.min(ready, POOL_MAX);
-    const { T } = await pooledBuild(id, scene, aa, n, kr);
+    const { T: T0 } = await pooledBuild(id, scene, aa, n, kr);
+    const tk0 = now();
+    const { T, K } = gfKeysFor(T0, home);
+    const keysMs = now() - tk0;
     const workMs = now() - t0;
-    reply(req, { id, T, exportMs, tablesMs: Math.max(0, workMs - exportMs), workMs, pool: n }, tablesTransfer(T));
+    reply(req, { id, T, K, exportMs, tablesMs: Math.max(0, workMs - exportMs - keysMs), keysMs, workMs, pool: n }, builtTransfer(T, K));
   } catch (err) {
     if (poolBroken || err instanceof Error) {
       // Pool failed mid-build: the same build, whole, here.
       try {
-        const r = gfBuild(input, aa, kr);
+        const r = gfBuild(input, aa, kr, home);
         reply(
           req,
-          { id, T: r.T, exportMs: r.exportMs, tablesMs: r.tablesMs, workMs: now() - t0, pool: 0 },
-          tablesTransfer(r.T)
+          { id, T: r.T, K: r.K, exportMs: r.exportMs, tablesMs: r.tablesMs, keysMs: r.keysMs, workMs: now() - t0, pool: 0 },
+          builtTransfer(r.T, r.K)
         );
         return;
       } catch { /* fall through to the error reply */ }

@@ -29,6 +29,7 @@ import { splineBend, type SplineSamples } from "../../geometry/spline_generator"
 import { buildTables, withHome, type GfTables } from "./tables";
 import { GfEval } from "./eval";
 import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build";
+import type { GfKeys } from "./gf_keys";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
 import { GfExploreTable, gfExploring } from "./gf_explore";
 import { knotUniformValues } from "../paint_model";
@@ -41,6 +42,8 @@ interface GfReply {
   hello?: boolean;
   id?: number;
   T?: GfTables;
+  K?: GfKeys;
+  keysMs?: number;
   exportMs?: number;
   tablesMs?: number;
   workMs?: number;
@@ -149,7 +152,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let rimKeyV = -1;
   const stats = {
     rebuilds: 0, passes: 0, composites: 0, fallback: "",
-    exportMs: [] as number[], tablesMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
+    exportMs: [] as number[], tablesMs: [] as number[], keysMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
     px: [] as number[], cpuPassMs: [] as number[],
     // K1383 s1: the reveal table's CPU build per drawn reveal frame, its knots and active chains, the reveal
     // frames drawn and the frame the reveal form was last drawn on (performance.now()).
@@ -198,7 +201,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const flights = new Map<number, { gen: number; t0: number; main: number; lk: Float32Array | null; pt: Float32Array | null; dyn: Float32Array | null; rt: { data: Float32Array; rows: number } | null }>();
   let flightId = 0;
   let gen = 0;
-  let pending: { T: GfTables; main: number; t0: number; samples?: SplineSamples[]; lk?: Float32Array | null; pt?: Float32Array | null; dyn?: Float32Array | null; rt?: { data: Float32Array; rows: number } | null } | null = null;
+  let pending: { T: GfTables; K?: GfKeys; main: number; t0: number; samples?: SplineSamples[]; lk?: Float32Array | null; pt?: Float32Array | null; dyn?: Float32Array | null; rt?: { data: Float32Array; rows: number } | null } | null = null;
+  // K1375: the installed tables' worker-built keys (the probe pass packs with them).
+  let TK: GfKeys | null = null;
   // K1369 s4: THE SNAPSHOT CHANNEL (`__knotGfOpts.chan`, off by default).
   // Once the first tables exist, gf_app asks the physics host for a port to
   // the physics worker (worker_host.ts gfPort) and hands it to the gf
@@ -371,6 +376,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
         }
         stats.exportMs.push(d.exportMs ?? 0);
         stats.tablesMs.push(d.tablesMs ?? 0);
+        stats.keysMs.push(d.keysMs ?? 0);
         stats.workMs.push(d.workMs ?? 0);
         stats.chanGatherMs.push(d.gatherMs ?? 0);
         stats.workerBuilds++;
@@ -383,7 +389,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
         // t0: the snapshot's arrival at the gf worker, on main's clock.
         const t0 = d.snapAbs !== undefined ? d.snapAbs - performance.timeOrigin : performance.now();
         stats.latencyMs.push(performance.now() - t0);
-        pending = { T: d.T, main: 0, t0, samples: d.samples };
+        pending = { T: d.T, K: d.K, main: 0, t0, samples: d.samples };
         requestFrame();
         return;
       }
@@ -403,6 +409,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
       }
       stats.exportMs.push(d.exportMs ?? 0);
       stats.tablesMs.push(d.tablesMs ?? 0);
+      stats.keysMs.push(d.keysMs ?? 0);
       stats.workMs.push(d.workMs ?? 0);
       stats.latencyMs.push(performance.now() - fl.t0);
       stats.workerBuilds++;
@@ -410,7 +417,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
       if (ref) check(d.T, ref);
       // Replies come in post order: a newer one replaces a pending older one.
       if (pending) stats.superseded++;
-      pending = { T: d.T, main: fl.main, t0: fl.t0, lk: fl.lk, pt: fl.pt, dyn: fl.dyn, rt: fl.rt };
+      pending = { T: d.T, K: d.K, main: fl.main, t0: fl.t0, lk: fl.lk, pt: fl.pt, dyn: fl.dyn, rt: fl.rt };
       requestFrame();
     };
   };
@@ -817,7 +824,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
     rtVer++;
   };
 
-  const install = (next: GfTables, mainSoFar: number, lkNext?: Float32Array | null, ptNext?: Float32Array | null, dynNext?: Float32Array | null, rtNext?: { data: Float32Array; rows: number } | null): void => {
+  const install = (next: GfTables, mainSoFar: number, lkNext?: Float32Array | null, ptNext?: Float32Array | null, dynNext?: Float32Array | null, rtNext?: { data: Float32Array; rows: number } | null, keysNext?: GfKeys | null): void => {
     const t0 = performance.now();
     T = next;
     // K1389 s2: the positions gathered with this build (else this frame's: an in-thread or channel build)
@@ -827,7 +834,8 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
     mkU = mkSnap();
     dynShow(dynNext ?? dynSnap());
     rtShow(rtNext ?? rtSnap());
-    pass!.upload(T);
+    TK = keysNext ?? null;
+    pass!.upload(T, keysNext ?? undefined);
     stats.packMs.push(pass!.packMs);
     stats.uploadMs.push(pass!.uploadMs);
     stats.mainMs.push(mainSoFar + performance.now() - t0);
@@ -848,7 +856,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
     const { input, transfer }: { input: SceneExportInput; transfer: ArrayBuffer[] } = gatherSceneInputLean(ctx, "field");
     if (useWorker) {
       flightId++;
-      worker!.postMessage({ id: flightId, input, aa, pool: opts().pool !== false, ...(gfKRetry() ? { kr: true } : {}) }, transfer);
+      worker!.postMessage({ id: flightId, input, aa, pool: opts().pool !== false, ...(gfKRetry() ? { kr: true } : {}), ...(gfHome() ? { home: true } : {}) }, transfer);
       const main = performance.now() - t0;
       flights.set(flightId, { gen, t0, main, lk: lkSnap(), pt: ptSnap(), dyn: dynSnap(), rt: rtSnap() });
       stats.gatherMs.push(main);
@@ -857,14 +865,15 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
       return true;
     }
     const tg = performance.now() - t0;
-    const r = gfBuild(input, aa, gfKRetry());
+    const r = gfBuild(input, aa, gfKRetry(), gfHome());
     stats.gatherMs.push(tg);
     stats.exportMs.push(r.exportMs);
     stats.tablesMs.push(r.tablesMs);
+    stats.keysMs.push(r.keysMs);
     stats.threadBuilds++;
     const mainSoFar = performance.now() - t0;
     if (verifying()) check(r.T, reference(aa));
-    install(r.T, mainSoFar);
+    install(r.T, mainSoFar, undefined, undefined, undefined, undefined, r.K);
     return true;
   };
 
@@ -916,7 +925,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
         skel: gatherLeanSkeleton(ctx, "field"),
         passCounts: (r as unknown as { passCounts: number[] }).passCounts.slice(),
         threadWidth: r.style.threadWidth, aa: 0.5 / scale, pool: opts().pool !== false, depth: depth(),
-        ...(gfKRetry() ? { kr: true } : {}),
+        ...(gfKRetry() ? { kr: true } : {}), ...(gfHome() ? { home: true } : {}),
       }, [h.port]);
     } catch (e) {
       chanRefused = r;
@@ -1009,7 +1018,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
           stats.chanBuilds++;
           worker?.postMessage({ chan: "ack", done: chanDone, depth: depth() });
         }
-        install(p.T, p.main, p.lk, p.pt, p.dyn, p.rt);
+        install(p.T, p.main, p.lk, p.pt, p.dyn, p.rt, p.K);
         const now = performance.now();
         stats.showMs.push(now - p.t0);
         stats.showAt.push(p.t0, now);
@@ -1245,7 +1254,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
     pp.homeFade = pass?.homeFade ?? 0;
     const tg = new GfTarget(g, 3, true);
     try {
-      pp.upload(T);
+      pp.upload(T, TK ?? undefined);
       tg.resize(target.w, target.h);
       pp.draw(tg, map, rect, false);
       const w = tg.w; const h = tg.h;
