@@ -266,27 +266,9 @@ function homeBurial(src: string): string {
   const HB = "      if (bur < 1.0 && S < -MAXP) { int B = (-1 - j - S) / MAXP - 1; for (int m = 0; m < np && bur < 1.0; m++) { if (PSURF(m) != B || PC(m) == PC(j)) continue;" +
     " float wb2 = 1.0 - ss(h - W - aa, h - W + aa, pd[m]); if (!(wb2 > bur)) continue;" +
     " wb2 *= 1.0 - ss(1e-4, 1e-3, abs(pkey[m] + pd[m] * (uZt / h))); if (wb2 > bur) bur = wb2; } } // K1482 s28: home burial\n";
-  rep(VAL[0], HB + VAL[0] + RT_FACE, 1);
-  rep("#ifdef PKQ\n#define VFOOT(j)", RUNT + "#ifdef PKQ\n#define VFOOT(j)", 1);
-  rep("      float val = (1.0 - vb) * fV;\n      if (val > best) {", "      float val = (1.0 - vb) * fV;\n" + RT_VTX + "      if (val > best) {", 1);
+  rep(VAL[0], HB + VAL[0], 1);
   return src;
 }
-
-/** K1482 s33 (part of retryForm, via homeBurial): eval.ts runT, line for line, and its two uses (a group's side face,
- * the vertex cap). Only pieces of the over chain the tables name for the band's chain count (tables.ts sideRuns,
- * packed + 1 in the chain's third texel .y by gf_pack.ts; 0 = none, and then nothing changes). */
-const RUNT = "// K1482 s33: eval.ts runT: the band's width factor where its side-run partner's lone piece over it faces q across a gap under 5 aa\n" +
-  "float runT(int S, int C, float zj, vec2 q, vec2 n) {\n  int M = int(F(uOCh + 3 * C + 2).y + 0.5) - 1; if (M < 0) return 1.0;\n" +
-  "  float h = uH; float aa = uAA; float t = 1.0;\n  for (int m = 0; m < np; m++) {\n" +
-  "    if (PSURF(m) >= 0 || PSURF(m) == S || PC(m) != M) continue;\n" +
-  "    float over = ss(0.05, 0.2, pkey[m] + pd[m] * (uZt / h) - zj); if (!(over > 0.0)) continue;\n" +
-  "    vec2 g; float dm = sqrt(pieceF(m, q, g)); float gp = dm - h; if (!(gp < 5.0 * aa)) continue;\n" +
-  "    float face = dm > 1e-12 && (n.x != 0.0 || n.y != 0.0) ? ss(0.9, 0.97, -dot(n, q - g) / dm) : 1.0;\n" +
-  "    float tm = 1.0 - over * face * (1.0 - ss(aa, 5.0 * aa, gp));\n    if (tm < t) t = tm;\n  }\n  return t;\n}\n";
-const RT_FACE = "      if (S >= 0 && val > v) { float tr = runT(S, PC(j), pkey[j] + X * (uZt / h), q, (q - f) / h); if (tr < 1.0) { float w = W * tr;" +
-  " val = (1.0 - bur) * (1.0 - ss(w - aa, w + aa, h - X)) * ss(-aa, aa, h - X) * ss(0.0, 2.0 * aa, w); } } // K1482 s33: the run's taper\n";
-const RT_VTX = "      if (S >= 0 && val > best) { float tr = runT(S, PC(j), pkey[j] + Xj * (uZt / vh), V, vec2(0.0)); if (tr < 1.0) { float w = vW * tr;" +
-  " val = (1.0 - vb) * (1.0 - ss(w - va, w + va, dV)) * ss(0.0, 2.0 * va, w); } } // K1482 s33\n";
 
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);

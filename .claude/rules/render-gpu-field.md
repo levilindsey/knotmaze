@@ -79,7 +79,8 @@ strokes toward today's, and do not use today's border strokes as a bar.
   step and a pinhole. Unfaded, a deep fold (j58, 0.14) drew a stray line in a fill: fo fades out over 2-4 aa of depth.
 - t81s (K1482 s27): its tick pixels are unfolded (own distance h): chain 45's +1 corner sits 2-3 px below
   chain 9's outline, and the flagged short cut keeps 45's out-leg from that corner up to 9's band (all slots k348-370
-  of 9:45 carry bits 3, so no flag switch separates it). Removing that leg opens the corner: it needs the in-leg run on.
+  of 9:45 carry bits 3, so no flag switch separates it). Levi, 2026-11-20: "we want the step". It is NOT a fault and no
+  stage removes it; a rounder step corner would be nicer (an idea in LEDGER.md).
 - IN-LEG RUN-ON, REMOVED (K1482 s30, d98f62544: `gapRunOn` + `lkRun` in gf_look.ts; reverted 2026-11-20 on Levi's word,
   K1545): where an under pass's side offset folded just outside the over outline, it drew that side's outline as the
   in-leg's straight line into the over outline and dropped the out-leg's. It cleared t81s's nub and turned six round
@@ -87,8 +88,13 @@ strokes toward today's, and do not use today's border strokes as a bar.
 - THE UNDER PASS KEEPS ITS WIDTH AND ITS HEADING (Levi, 2026-11-20, binding): where a thread goes under another, its
   two outlines must read as one thread of constant width travelling in the direction that lines it up with itself on
   the far side of the over thread. A round hook does that; a point or a straight run-on narrows the thread and turns
-  it. Never trade a hook for a point. t81s's nub is open again and its fix must keep this. s30's design (tags in V1's
-  fraction, the anchor-reach rule that t56s needed) is in d98f62544 and `docs/design/K1482_s30_t81s_inleg.md`.
+  it. Never trade a hook for a point. s30's design (tags in V1's fraction, the anchor-reach rule that t56s needed) is
+  in d98f62544 and `docs/design/K1482_s30_t81s_inleg.md`.
+- NEVER REMOVE A THREAD'S BORDER (Levi, 2026-11-20, j59, binding): "It's completely removing a border and consequently
+  widening the thread and destroying the visual indication of where that thread is and how it aligns with others". Two
+  borders lying close together (j59's "doubled band") are two threads' edges, and both stay. A rule that thins, merges
+  or drops one fails the look whatever its pixel counts say: before offering an outline change, check that every
+  thread at the place still shows both borders, its width and its heading.
 - BAND END ALONG A LONE OVER PASS, REJECTED (K1482 s31, runT in 031a266a8/75e1a7949, backed out after them): narrowing a
   group's side band and cap to W*t where a lone over piece faces its outline point within 5 aa cleared j59's step (t23e,
   153 px) but also tapered every other band tail it reached (t81s, t76e, t53e, t36s...): those are short wedges running
@@ -96,11 +102,11 @@ strokes toward today's, and do not use today's border strokes as a bar.
   apart (gap 1 h up the band's chain: median 1.3 px at j59, 3.4-11 px at the wedges, but per-pixel spreads overlap and a
   per-piece gate leaves islands): gate on a per-(chain, over pass) run length baked in the tables. Probes: copy
   `GfEval.eval()`'s result, which is one reused object.
-- SIDE-RUN GATE (K1482 s33, tables.ts `sideRuns` -> `rtM`, chain texel 3 .y = rtM + 1, eval.ts runT / gf_glsl.ts RUNT in
-  retry programs): s31's runT now narrows chain C's band only along the one chain M its tube lies BESIDE (never nearer
-  than 1.945 h, within 2.03 h over >= 0.6 h). The run length alone did not separate j59 (wedges and a cap reach 0.94-0.98
-  h); the never-dives test did (j59 1.98 h, wedges <= 1.78, a cap 1.91: thin). Link A: t23e 153 px, nothing else; ~+9 ms
-  of table build in the browser pool.
+- SIDE-RUN GATE, REMOVED (K1482 s33, merge f7b965265: tables.ts `sideRuns` -> `rtM`, chain texel 3 .y, eval.ts runT /
+  gf_glsl.ts RUNT in retry programs; reverted 2026-11-20 on Levi's word, see NEVER REMOVE A THREAD'S BORDER): it
+  narrowed chain C's band along the one chain M its tube lies BESIDE (never nearer than 1.945 h, within 2.03 h over
+  >= 0.6 h), which at j59 (t23e, 153 px) took one of two close borders away, and cost ~9 ms of table build. j59 as it
+  was before is the look Levi called fine. Design and numbers: `docs/design/K1482_s33_j59_run_gate.md`.
 - LONE FOLD (K1482 s32, eval.ts foldD past `!inOther` behind env GF_S32=1, gf_glsl.ts `loneFold`, NOT applied: in the browser the redraw stalled): t84e's dark patch was a
   hairpin folded into ONE piece away from any junction, so no tube burial and no s7 fold applied and both inner bands
   inked past the cusp. The fold's other run now buries q there only on evidence of a step: cos > 0.62 and q in its tube,

@@ -161,3 +161,11 @@ per-(band chain, over chain) switch baked in `tables.ts`: local to j59 by constr
 - 07:45-09:35. Lands in order: 45bac3ad1 (WIP 1), 9935885b0 (WIP 2, the src), 094df7ef9 (WIP 3, tools), 71eb4ae09 (WIP 4, lore), and this commit. Step 1: the run length does not separate j59 from the wedges; the never-dives test (`tables.ts` sideRuns -> `rtM`) does, by a thin margin (j59 1.98 h; a cap 1.91 h, wedges 1.78 h or less), and marks only C23/M7 and C7/M23 on the five mazes.
 - Link A as it loads: 153 px lost at ONE place (1034,1515, t23e; box 1024,1505-1044,1528). Stage 31's ungated runT drew the same pixels there (its c1 against this c1: 0 px in 1000-1070,1490-1545). Fill 0 px; `&gfk=0` border and fill 0 px; repeat loads hash-equal (floor 0). t81s, t76e, t53e, t36s, j58 unchanged. A 1-2 px shoulder stays on chain 7's lower edge at 1043,1504-1505. Sheets: `out/s33/sh/s33_places.png`, `out/s33/d/on_b2_top.png`.
 - Guards on 094df7ef9 (`out/s33/guards/summary.txt`): bar PASS new 0 grown 0 gone 0; hold 60/60 and gfk=0 60/60; panelopen 1; dragcheck_b max 12; dragcheck max 88 (earlier builds 0-67); npm test 3198 passed, 18 skipped. Residual: sideRuns costs about 9 ms per table build in the browser pool as it loads (tms 21.8-28.5 against 12.2-17.3 ms; gfk=0 unchanged). Next: the cost (cache it per topology or make it cheaper), and validate the margin on more mazes.
+
+### Outcome (2026-11-20): reverted
+
+- Levi, on the live look at j59: "the new render is very bad. It's completely removing a border and consequently
+  widening the thread and destroying the visual indication of where that thread is and how it aligns with others".
+- The gate's src changes (merge f7b965265) are reverted on master; the probe tools in `.claude/probes/K1482/s33/` stay.
+  j59's two close borders are two threads' edges and both stay (lore: NEVER REMOVE A THREAD'S BORDER in
+  `.claude/rules/render-gpu-field.md`). No further stage narrows that band.
