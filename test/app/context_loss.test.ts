@@ -11,6 +11,8 @@ import {
   createLossCover,
   installContextLoss,
   type LossCover,
+  lossDuringLoadOf,
+  shouldReloadAfterRestore,
 } from "../../src/app/context_loss";
 
 describe("context loss (K456): the model", () => {
@@ -294,6 +296,23 @@ describe("context loss (K456): the cover", () => {
     expect(body.children[0].children[0].children[1].textContent).toBe(
       "The browser lost the graphics context."
     );
+  });
+});
+
+describe("K1550: a load-time loss reloads once, a settled one never", () => {
+  it("calls a loss in the first GF_EARLY_MS of the page load-time", () => {
+    expect(lossDuringLoadOf(0)).toBe(true);
+    expect(lossDuringLoadOf(GF_EARLY_MS - 1)).toBe(true);
+    expect(lossDuringLoadOf(GF_EARLY_MS)).toBe(false);
+    expect(lossDuringLoadOf(60000)).toBe(false);
+  });
+  it("reloads a load-time loss once per tab session", () => {
+    expect(shouldReloadAfterRestore(true, 0)).toBe(true);
+    expect(shouldReloadAfterRestore(true, 1)).toBe(false);
+    expect(shouldReloadAfterRestore(true, 2)).toBe(false);
+  });
+  it("never reloads a settled page's loss", () => {
+    expect(shouldReloadAfterRestore(false, 0)).toBe(false);
   });
 });
 

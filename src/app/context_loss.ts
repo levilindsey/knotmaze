@@ -12,11 +12,42 @@
 //   canvas never shows and no tap reaches the blind game), with a message
 //   and a Reload button once the loss has lasted MESSAGE_DELAY_MS.
 // With no loss nothing here runs and no element exists, so every pixel
-// stays as it is. No automatic reload: a GPU that keeps failing must not
-// loop the page.
+// stays as it is. No automatic reload for a settled page's loss: a GPU
+// that keeps failing must not loop the page (K1550's one load-time
+// reload below is the single exception, budgeted per tab session).
 
 // Visible lost time before the cover says what happened.
 export const MESSAGE_DELAY_MS = 3000;
+// K1550: Pixi revives every object that was bound before an early loss,
+// but an object whose first compile or upload races the loss stays dead
+// for the page's life (27G: the whole fabric overlay, 3 of 41 early
+// loads). Only a loss that began while the page was still loading or
+// settling can race a first bind, so only that loss is treated as
+// load-time (lossDuringLoadOf, the pure part of main.ts's call); a loss
+// on a settled page bound everything long ago and Pixi's own restore
+// revives it, with no reload and no rebuild.
+export function lossDuringLoadOf(elapsedMs: number): boolean {
+  return elapsedMs < GF_EARLY_MS;
+}
+
+// The reload budget's session key (a tab-session count, like gf's guard:
+// the cover's manual Reload must not reset it either).
+export const EARLY_RESTORE_RELOAD_KEY = "knotmaze.earlyRestoreReloads";
+
+// K1550's cure, decided in main.ts: after a load-time loss the page
+// reloads once, because the poisoned Pixi pipeline cannot be revived in
+// place (27K's diags: programs, VAOs, buffers, textures and GL state all
+// healthy after the restore, the scene rebuilt twice over, and Pixi
+// still draws nothing). The attempt was saved at the loss, so a daily
+// resumes where it left off. One reload per tab session: a GPU that
+// keeps failing must not loop the page (the cover's Reload stays as the
+// manual way out), and a settled page never reloads at all.
+export function shouldReloadAfterRestore(
+  lossDuringLoad: boolean,
+  priorReloads: number
+): boolean {
+  return lossDuringLoad && priorReloads < 1;
+}
 // How often a lost page checks whether the message is due.
 export const LOSS_POLL_MS = 250;
 

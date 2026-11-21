@@ -171,7 +171,7 @@ import { BACKGROUND, createScene } from "./app/scene";
 import { createAudioMap } from "./app/audio_map";
 import { createPointerInput } from "./app/input_pointer";
 import { createKeyInput } from "./app/input_keys";
-import { createLossCover, installContextLoss } from "./app/context_loss";
+import { createLossCover, installContextLoss, lossDuringLoadOf, shouldReloadAfterRestore, EARLY_RESTORE_RELOAD_KEY, sessionLossStore } from "./app/context_loss";
 import { createAutoAudio } from "./app/auto_audio";
 import { SNAP_OCTAVE, SNAP_STRENGTH, createRuleLoss, ruleFields, ruleShareTags } from "./app/rule_loss";
 import {
@@ -1774,6 +1774,9 @@ async function main(): Promise<void> {
   // K456: true while the WebGL context is lost (src/app/context_loss.ts,
   // installed after the frame loop): the clock stays hidden through it.
   let glContextLost = false;
+  // K1550: the current loss began during the load (set in the
+  // context-loss onLost below); its restore reloads the page once.
+  let lossDuringLoad = false;
   document.addEventListener("visibilitychange", () => {
     clock.setHidden(document.hidden || glContextLost, performance.now());
     if (document.hidden) {
@@ -4446,6 +4449,9 @@ async function main(): Promise<void> {
     ),
     onLost: () => {
       glContextLost = true;
+      // K1550: a loss that begins while the page is still loading or
+      // settling can poison Pixi objects whose first bind races it.
+      lossDuringLoad = lossDuringLoadOf(Date.now() - performance.timeOrigin);
       saveAttempt();
       savePrefsNow();
       clock.setHidden(true, performance.now());
@@ -4454,6 +4460,31 @@ async function main(): Promise<void> {
     },
     onRestored: () => {
       glContextLost = false;
+      // K1550: a load-time loss reloads once (see onLost); Pixi's own
+      // restore revives everything bound before a settled page's loss.
+      if (lossDuringLoad) {
+        lossDuringLoad = false;
+        // K1550: the poisoned Pixi pipeline cannot be revived in place
+        // (27K), so a load-time loss reloads the page once per tab
+        // session; the attempt saved at the loss resumes a daily, and
+        // the cover's Reload remains for any later failure.
+        const store = sessionLossStore(EARLY_RESTORE_RELOAD_KEY);
+        let prior = 0;
+        try {
+          prior = Number(store?.read() ?? 0) || 0;
+        } catch {
+          prior = 0;
+        }
+        if (shouldReloadAfterRestore(true, prior)) {
+          try {
+            store?.write(String(prior + 1));
+          } catch {
+            // No storage: the reload still happens once this session.
+          }
+          location.reload();
+          return;
+        }
+      }
       clock.setHidden(document.hidden, performance.now());
       loop.resume();
     },
