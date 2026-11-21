@@ -53,10 +53,13 @@ two named corners and breaks one other place is not a candidate as built (stage 
 
 **Setup and rules.** `Get-Date` first. Your worktree starts from master: name its commit in the handoff
 (Muse runs land fixes on master while you work: your start commit is the base of every comparison). The
-stages' tools live on stage 40's branch; take the tools only, never its `src/`: `git checkout worktree-agent-ac98db1b4872d612b --
-.claude/probes/K1482/s37 .claude/probes/K1482/s39 .claude/probes/K1482/s40`, then commit them. Stage 38's
-candidate at t81s (the under thread's width; not landed) is not your start. Never push, never rebase, never
-merge another stage's branch. Ports 6360-6379. Outputs under `.claude/probes/K1482/out/s41/` (untracked;
+earlier stages' tools are on master under `.claude/probes/K1482/` (`s39/`: one capture session per maze,
+`capseq39.ps1`, `diffseq39.ps1`, and `place39.py` for a place's sheet; `s40/`: the same pointed at stage 40,
+and `census40.ts`, the mirror's per-place census, the model for yours); stage 40's handoff in
+`docs/design/K1482_s40_ball_narrow.md` shows them in use. The D mazes have no scene file, so the mirror
+cannot list their places: only a capture can. Stage 38's candidate at t81s (the under thread's width) and
+stage 40's ball candidate are not landed and are not your start. Never push, never rebase, never merge
+another stage's branch. Ports 6360-6379. Outputs under `.claude/probes/K1482/out/s41/` (untracked;
 never `git add -f` them), tools under `.claude/probes/K1482/s41/` (tracked). A build of a commit:
 `scripts/preview.ps1 -Port <p> -Ref <commit>`. One capture at a time, machine-wide: every capture and guard
 through `scripts/perf_lock.ps1` (Muse runs share the lock; wait inside ONE blocking command; leave no lock
