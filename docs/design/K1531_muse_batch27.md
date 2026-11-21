@@ -1288,3 +1288,49 @@ Done 2+3 (the table and the bar: it holds, so no source change). A window's long
 Control worst: link A task 361, gap 361; plain task 368, gap 362. In none of the six gf loads does the longest task or the longest frame gap exceed its own link's worst control by more than 250 ms, in either window: the largest excess anywhere is (a)'s, at A-gf2 (+222 task, +216 gap); every (b) longest sits at or under its control worst. Where the longest sits: in all twelve loads, gf and control alike, it is one task at 6.7-7.4 s after the navigation with a matching frame gap - the scene's first-build phase both renderers share, which gf's side runs 192-222 ms longer - and at the takeover itself nothing blocks: no long task starts within its window on link A (72-79 ms on the plain link), no frame gap there exceeds 110 ms, `switchedMs` lands within 4-36 ms of the first composite, and the app's first program reads ready 141-177 ms after its gated issue (the compile worker had warmed that program to the disk cache; it was still compiling the rest at the record's end, `compileWarmed` 1). Done 4 and 5 are therefore not owed: no blocking call to name, no fix in `gf_app.ts` / `gf_pass.ts` / `gf_compile_worker.ts`, no warm-picture or takeover-jump check.
 
 Done 6: `npm test` green (259 files passed, 2 skipped; 3,241 tests passed, 9 skipped; tsc clean). K1384 is closed with this commit; K1531 and K1482 left open. Tried and left: the first perf-lock call form (an inner `pwsh` in the lock's command) silently ran nothing and was replaced by the `&`-form the lock's own header uses; one diagnostic A-gf1 load taken outside the lock while diagnosing that was deleted uncounted and re-run under the lock (it read the same shape, 562/559); a page-stamp smoke found no stamp in the page text, so the build was proved by the listener and serving line above instead.
+
+## Run Z4 (27Z4): the ball candidate, narrowed to Levi's answer (K1572)
+
+Levi answered the ball question on 2026-11-21 (his words, about the page's pictures in order: A_4 t32s, A_8 t31s,
+A_5 t30e, then the eight clean places): "in the first and third pictured examples, it seems like there should be
+some amount of border rounding that will look like a ball, since the thread is making such a tight turn around.
+In the second, we can't have that cut out. In most of the later pictured examples, those balls definitely
+shouldn't be rendered." The coordinator's reading, which this run builds: the stage-40 candidate `4925aa786`
+(local branch `worktree-agent-ac98db1b4872d612b`; K1572 lists its 17 real places) is right at the eight clean
+places and must not change the three that are not clean (A_4 t32s at 937,1627; A_8 t31s at 1149,1576; A_5 t30e at
+1233,254): those three keep today's picture. This is a fix run with pixel equalities, not a look run: do not judge
+shapes, and do not land anything the equalities do not prove.
+
+The candidate's branch may hold the old history (`git merge-base --is-ancestor d39e363fe 4925aa786`): bring over
+only the src and test changes of its own commits as a patch onto master (`git diff <its base> 4925aa786 -- src
+test | git apply --3way`; its base is `d1c25f5fe` if that is its ancestor, else its merge-base with master). Never
+merge, rebase or push that branch. Master moved since (Run Z changed gf_keys.ts, gf_build.ts, gf_worker.ts,
+gf_app.ts, gf_pass.ts with 0 px): resolve by keeping both.
+
+Done when all of these hold (numbers in the handoff, per maze):
+
+1. Three builds exist: M (master at the run's start), C (master plus the candidate's patch, nothing else), N (C plus
+   this run's narrowing). K1578's all-maze tool (Run V and Run Y sections; `.claude/probes/K1578/`) on all 21 test
+   mazes, both floors 0 px on every maze, lists C against M: the same 17 real places K1572 lists (if not, stop and
+   report the list; change nothing).
+2. N against C differs at exactly the three places above and nowhere else on the 21 mazes.
+3. N against M is 0 px inside each of those three places' boxes, and N against M lists exactly the other 14 places.
+4. The narrowing is a rule on the scene's geometry at the place (for the two tight-turn ends, a measure of how
+   tightly the thread turns there; for A_8 t31s whatever geometric fact separates it), never a place name, a maze
+   name or a coordinate. The handoff gives the rule, its threshold, the measure's value at all 17 places and the
+   margin between the kept three and the nearest of the other 14. If no such rule separates all three from the
+   eight clean places, stop: commit nothing to src, write the handoff with the values, report. A partial narrowing
+   (one or two of the three) does not land.
+5. On N: `npm test` green (name every pin re-frozen and why); hold and hold_gfk0 60 of 60; dragcheck, dragcheck_b
+   and panelopen PASS; the K1436 bar; the fill look and `&gfk=0` on link A and the plain link show no place outside
+   the 14 (K1573 names these checks; Run S's section shows how each is run). Link A cold shader compile time
+   before and after, reported (no bar).
+6. One sheet per place for the coordinator, 17 in all (M left, N right, wide view brightened plus close-up), under
+   `.claude/probes/K1572/out/27Z4/` (untracked; never `git add -f` outputs; tools may be added).
+7. Only if 1 to 5 hold: one commit of N on master, pushed, deploy green. Leave K1572 where it is in the ledger (the
+   coordinator files it after showing Levi the sheets); add no ledger item except for a defect you find and do not
+   fix. Append `### Handoff 27Z4` below this section.
+
+Owned: the files the candidate's patch touches under `src/render/gpu_field/` and `test/render/`, plus new probe
+tools under `.claude/probes/K1572/`. Hands off: everything else in `src/`, today's border strokes, the K1566 nub
+fix (`dcd8e81e6`) and its pins except where the candidate's patch already moves them.
