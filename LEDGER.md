@@ -1258,6 +1258,11 @@ Every other item below waits on the trigger it names.
   cold compile and link seconds, the redraw time with the second corner try on and off, and what each rule
   reads, toward corner decisions baked into the tables at maze build. A measuring run, no src change: Muse run
   27M, queued 2026-11-20 (docs/design/K1531_muse_batch27.md, Run M).
+  the second, or the rule is mended until it does (Muse run 27H, docs/design/K1531_muse_batch27.md) (27H,
+  2026-11-20: run on fade's seed-3 link, the two builds count the same dots under both rules and 1de's top
+  counted sides are edge steps, not the line - no gate separates them there; K1460's line was on link A,
+  which fade.mjs cannot measure (654/700 sides skip on uu). Left: a link-A-capable coverage read, then the
+  dual count there. Numbers in Handoff 27H and fade.mjs's dot comment.)
 
 ## Residuals (known, not fixed)
 

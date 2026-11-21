@@ -32,7 +32,8 @@ const browser = await puppeteer.launch({
   args: ["--use-angle=d3d11", "--no-first-run", "--no-default-browser-check", "--window-position=2200,50", "--window-size=1720,1000",
     "--disable-features=CalculateNativeWinOcclusion", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding"],
 });
-const linkOf = (mode, fl) => `${base}/?3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&fl=${fl}` +
+const Q = process.env.Q ?? "3"; // K1548: Q = the link's seed token (K1460's dotted line lives on link A, Q=3.FGH1HtvQeDjm6e4BII)
+const linkOf = (mode, fl) => `${base}/?${Q}&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&fl=${fl}` +
   (mode === "gf" ? "&rp=gf" : mode === "gfh" ? "&rp=gf&gfh=1" : "");
 async function load(mode, fl) {
   const page = await browser.newPage();
@@ -147,18 +148,19 @@ async function measure(geo, ref, shots) {
     let bk = 0, bn = 0; for (const [k, n] of hist) if (n > bn) { bn = n; bk = k; }
     const BG = [bk >> 16, (bk >> 8) & 255, bk & 255];
     const sides = [];
+    const skips = { iu: 0, uu: 0, first: 0, far: 0 };
     for (const g of d.geo.sides) {
       // the gap's outer end in the reference (today fl=0): the first point past hOver + margin + 0.08 of the over thread
       const reach = g.hOver + (g.slot?.margin ?? 0.1) + 0.08;
       const iu = g.prof.findIndex((p) => p.dO > reach);
-      if (iu < 0 || iu > g.prof.length - 5) continue;
+      if (iu < 0 || iu > g.prof.length - 5) { skips.iu++; continue; }
       const Uat = (i) => px(R, g.prof[Math.max(i, iu)].x, g.prof[Math.max(i, iu)].y).map((v, k) => v - BG[k]);
       const U0 = Uat(iu); const uu0 = U0[0] ** 2 + U0[1] ** 2 + U0[2] ** 2;
-      if (uu0 < 1200) continue; // the under colour too close to the backdrop to read
+      if (uu0 < 1200) { skips.uu++; continue; } // the under colour too close to the backdrop to read
       const cov = (D, i) => { const U = Uat(i), uu = U[0] ** 2 + U[1] ** 2 + U[2] ** 2; if (uu < 600) return NaN; const P = px(D, g.prof[i].x, g.prof[i].y); return ((P[0] - BG[0]) * U[0] + (P[1] - BG[1]) * U[1] + (P[2] - BG[2]) * U[2]) / uu; };
       // walk inward from the far end; the first crossing of each level (outside the over thread's own body)
       const first = g.prof.findIndex((p) => p.dO > g.hOver + 0.5 / d.scale);
-      if (first < 0) continue;
+      if (first < 0) { skips.first++; continue; }
       const levels = (D) => {
         const c0 = g.prof.map((_, i) => cov(D, i));
         // each renderer's levels against its OWN full thread (the walk's far end): gf's under colour differs from
@@ -180,7 +182,7 @@ async function measure(geo, ref, shots) {
       };
       const row = { ci: g.ci, side: g.side, at: g.at, self: g.sel };
       const T = levels(S.today);
-      if (T.lv[0.9] === "far") continue; // today's under thread is not full at the walk's end: overlapping ramps
+      if (T.lv[0.9] === "far") { skips.far++; continue; } // today's under thread is not full at the walk's end: overlapping ramps
       row.today = T.lv;
       row.c = { today: T.c };
       for (const k of Object.keys(S)) if (k !== "today") { const L = levels(S[k]); row[k] = L.lv; row.c[k] = L.c; }
@@ -194,6 +196,15 @@ async function measure(geo, ref, shots) {
       // where no fade ramp exists. A fringe speck in a faded span stands above all four neighbours.)
       // ramp placed differently). c12feaf6..854ac158's gf drew a dotted line on the over thread's edge contour there.
       // K1494: dotFeat records [x, y, cv, ct, cv-maxGfNeighbour, maxGfNeighbour, todayLocalRange] per counted dot (27C).
+      // K1548 (27H) control, this link (seed 3, hash f9d72040; dots over sides, sides with >2; gf = gfh): OLD rule
+      // 1de01c120 fl0 1918/259, fl0.5 862/146, fl1.2 620/105, fl0.14 961/162 - a8d36be33 1998/264, 862/144, 622/105,
+      // 960/162 - master 620/84, 627/96, 437/67, 675/105. NEW rule: 0 sides >2 on all three (1 dot at fl0.14 on the
+      // two old builds). So on this link the parent build's counted dots are the same edge steps as the fixed
+      // build's (supporters 3-6 of 8, brightest-neighbour excess <0.02 on both; crops crops_1de_fl*.png): no
+      // dotted line lives here, and no gate of this family can fail one build and pass the other. K1460's line
+      // was on link A (Q=3.FGH1HtvQeDjm6e4BII), which this measure cannot read: 654 of 700 sides skip on uu
+      // (today's under colour within ~35 levels of the flat backdrop), 46 on iu. dotsOld/dotFeatOld stay counted
+      // beside the verdict so a future link-A-capable measure has the old rule to compare against.
       const seen = new Set(), pix = [];
       const hd = g.hOver * d.scale * 0.85;
       for (let i = first; i < g.prof.length - 1; i++) {
@@ -206,21 +217,22 @@ async function measure(geo, ref, shots) {
         }
       }
       const covAt = (D, x, y, i) => { const U = Uat(i), uu = U[0] ** 2 + U[1] ** 2 + U[2] ** 2; const P = px(D, x, y); return ((P[0] - BG[0]) * U[0] + (P[1] - BG[1]) * U[1] + (P[2] - BG[2]) * U[2]) / uu; };
-      row.dots = {}; row.dotAt = {}; row.dotFeat = {};
+      row.dots = {}; row.dotAt = {}; row.dotFeat = {}; row.dotsOld = {}; row.dotAtOld = {}; row.dotOldXY = {}; row.dotFeatOld = {};
       for (const k of Object.keys(S)) if (k !== "today") {
-        let n = 0; const at = []; const feat = [];
+        let n = 0, nOld = 0; const at = [], atOld = [], xyOld = [], featOld = []; const feat = [];
         for (const [x, y, i] of pix) {
           const cv = covAt(S[k], x, y, i), ct = covAt(S.today, x, y, i);
           if (!(cv - ct > 0.2)) continue;
           const gNb = [covAt(S[k], x + 1, y, i), covAt(S[k], x - 1, y, i), covAt(S[k], x, y + 1, i), covAt(S[k], x, y - 1, i)]; const nb = (gNb[0] + gNb[1] + gNb[2] + gNb[3]) / 4;
+          if (cv - nb > 0.12) { nOld++; xyOld.push([x, y]); if (atOld.length < 6) atOld.push([x, y]); const dg = [covAt(S[k], x + 1, y + 1, i), covAt(S[k], x - 1, y + 1, i), covAt(S[k], x + 1, y - 1, i), covAt(S[k], x - 1, y - 1, i)]; const sup = [...gNb, ...dg].filter((v) => v >= cv - 0.05).length; featOld.push([x, y, +cv.toFixed(3), +ct.toFixed(3), +(cv - Math.max(...gNb)).toFixed(3), +(cv - Math.max(...dg)).toFixed(3), sup]); } // K1548: the pre-27C rule, counted beside the new one; featOld = [x,y,cv,ct,cv-maxNb4,cv-maxDiag,supporters>=cv-0.05 of 8]
           if (cv - nb > 0.12 && cv - Math.max(...gNb) > 0.08) { n++; if (at.length < 6) at.push([x, y]); const tNb = [covAt(S.today, x + 1, y, i), covAt(S.today, x - 1, y, i), covAt(S.today, x, y + 1, i), covAt(S.today, x, y - 1, i)]; feat.push([x, y, +cv.toFixed(3), +ct.toFixed(3), +(cv - Math.max(...gNb)).toFixed(3), +Math.max(...gNb).toFixed(3), +(Math.max(...tNb, ct) - Math.min(...tNb, ct)).toFixed(3)]); }
         }
-        row.dots[k] = n; row.dotAt[k] = at; row.dotFeat[k] = feat;
+        row.dots[k] = n; row.dotAt[k] = at; row.dotFeat[k] = feat; row.dotsOld[k] = nOld; row.dotAtOld[k] = atOld; row.dotOldXY[k] = xyOld; row.dotFeatOld[k] = featOld;
       }
       row.dotPix = pix.length;
       sides.push(row);
     }
-    return { BG, sides };
+    return { BG, sides, skips };
   }, { ref: Buffer.from(ref).toString("base64"), shots: Object.fromEntries(Object.entries(shots).map(([k, v]) => [k, Buffer.from(v).toString("base64")])), geo, scale: geo.view.s * DSF });
   await page.close();
   return res;
@@ -241,6 +253,7 @@ try {
     for (const v of VARS) { const P = await same(v); shots[v] = P.png; hashes[v] = P.hash; await P.page.close(); }
     const sameState = Object.values(hashes).every((h) => h === R.hash);
     const m = await measure(geo, refPng, shots);
+    console.log(`[measure fl=${fl}] skips ${JSON.stringify(m.skips)} kept ${m.sides.length}`);
     const px1 = 1 / (geo.view.s * DSF);
     writeFileSync(join(outDir, `fade_fl${fl}.json`), JSON.stringify({ fl, hashes, BG: m.BG, px1, sides: m.sides }, null, 1));
     for (const v of VARS) {
@@ -264,6 +277,9 @@ try {
       if (!good || !sameState) failed = true;
       const ld = `fl=${fl} ${v}: dots ${dotsAll} over ${m.sides.length} sides (${m.sides.reduce((p, s) => p + s.dotPix, 0)} px scanned), sides with more than ${DOTS}: ${dotSides.length}` + (dotSides.length ? ` [${dotSides.slice(0, 8).map((s) => `x${s.ci}${s.side > 0 ? "+" : "-"}@${s.at}:${s.dots[v]}`).join(" ")}]` : "");
       console.log(ld); summary.push(ld);
+      const dotSidesOld = m.sides.filter((s) => s.dotsOld[v] > DOTS), dotsOldAll = m.sides.reduce((p, s) => p + s.dotsOld[v], 0);
+      const lo = `fl=${fl} ${v}: OLD rule dots ${dotsOldAll}, sides with more than ${DOTS}: ${dotSidesOld.length}` + (dotSidesOld.length ? ` [${dotSidesOld.slice(0, 8).map((s) => `x${s.ci}${s.side > 0 ? "+" : "-"}@${s.at}:${s.dotsOld[v]}`).join(" ")}]` : "");
+      console.log(lo); summary.push(lo);
       const line = `fl=${fl} ${v}: sides ${m.sides.length} (crossings ${xs.size}), pass ${pass} (crossings with every side passing ${xs.size - xsFail.size}), |d-today| median ${med.toFixed(4)} p90 ${p90.toFixed(4)} world, sameState ${sameState} -> ${good && sameState ? "PASS" : "FAIL"}`;
       console.log(line); summary.push(line);
       // today's three distances, averaged, against this variant's
