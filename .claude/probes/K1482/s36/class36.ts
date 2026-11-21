@@ -20,12 +20,12 @@ const T: any = withHome(buildTables(scene, { aa: 0.5 / a, kRetry: true }), true)
 const E: any = new GfEval(T); const h = T.h;
 const BJ = JSON.parse(readFileSync(blobsP, "utf8"));
 const rows: string[] = ["site\twedge\tblobs\tn\tstrokes\tlen\twid\tdisc\tmirInk\tchains\tjuncs\tnSide\tnArc\tnCap\tnTan\tnThru\tends\tterms\tnear"];
-const wkName = ["none", "side", "arc", "cap", "tan", "thru"];
+const wkName = ["none", "side", "arc", "cap", "tan", "thru", "vtx"];
 for (const s of BJ.sites) {
   if (!s.flag) continue;
   const b = s.blobs[0]; const r = Math.ceil(b.dt); const r2 = b.dt * b.dt + 0.01;
   const terms = new Map<string, number>(); const chains = new Set<number>(); const juncs = new Set<number>();
-  let disc = 0, inked = 0; const cnt = [0, 0, 0, 0, 0, 0]; let ends = 0;
+  let disc = 0, inked = 0; const cnt = [0, 0, 0, 0, 0, 0, 0]; let ends = 0;
   for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
     if (dx * dx + dy * dy > r2) continue; disc++;
     const wx = (b.mx + dx + 0.5 - e) / a; const wy = (b.my + dy + 0.5 - f) / d; const o = E.eval(wx, wy);
@@ -33,7 +33,7 @@ for (const s of BJ.sites) {
     const wk = o.winKind; cnt[wk]++;
     let key = wkName[wk];
     if (wk === 1 || wk === 3) { key += ` c${o.winA}${o.winB > 0 ? "+" : "-"}`; chains.add(o.winA); }
-    else if (wk === 2 || wk === 4 || wk === 5) { key += ` k${o.winA}`; juncs.add(T.kJ[o.winA]); chains.add(T.kCa[o.winA]); if (T.kCb) chains.add(T.kCb[o.winA]); }
+    else if (wk === 6) { key += ` a${o.winA}/${o.winB}`; } else if (wk === 2 || wk === 4 || wk === 5) { key += ` k${o.winA}`; juncs.add(T.kJ[o.winA]); chains.add(T.kCa[o.winA]); if (T.kCb) chains.add(T.kCb[o.winA]); }
     terms.set(key, (terms.get(key) ?? 0) + 1);
     for (let j = 0; j < E.np; j++) if (E.pend[j] && E.pd[j] < h * 1.5) { ends++; break; }
   }
