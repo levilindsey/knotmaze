@@ -2528,14 +2528,6 @@ Every other item below waits on the trigger it names.
 - **K1538** · rp=gf: while a pluck lives, the plucked thread's outline strokes turn dull red (42, 29, 32) against gf's
   near black (18, 20, 26); the pale pink blur matches today's render. Seen in music mode's auto plucks on link A. Cause
   not looked for. Record and crop names: `.claude/probes/K1524/flip/notes.md`, last section
-- **K1544** · Captures of the plain knot link `?3&xp=off&am=instant` have no 0 px floor: two loads of ONE
-  build, asleep, at one physics hash (0cbb8f07) differ by 193,124 px (today's renderer) and 101,249 px (rp=gf
-  fill) over 24 levels in the thread area, so K1223's 0 px re-shoot could not be read on it (Muse run 26Z;
-  link A and the pulse states gave 0-3 px). Muse's reading, a rest state that depends on the path under static
-  friction with a hash too coarse to tell, is not checked: dumps of two loads' particle positions would say
-  whether the state or the draw differs. Until then take 0 px checks on link A or the bar's scenes (`###
-  Handoff 26Z` in docs/design/K1464_muse_batch26.md; captures .claude/probes/K1223/out/26Z, main checkout,
-  untracked)
 - **K1550** · K1537's fault reproduced by WEBGL_lose_context in the sighting's own shape (27G,
   docs/design/K1531_muse_batch27.md): a loss within ~1-2 s of load under rp=gf&gfh=1, restore 5 s later, kills
   the whole Pixi-drawn fabric overlay for the page's life in about 1 of 5-8 loads (3 of 41 early loads; late
@@ -2948,6 +2940,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1544** · Captures of the plain knot link `?3&xp=off&am=instant` have no 0 px floor: two loads of ONE build, asleep, at one physics hash (0cbb8f07) differ by 193,124 px (today's renderer) and 101,249 px (rp=gf fill) over 24 levels in the thread area, so K1223's 0 px re-shoot could not be read on it (Muse run 26Z; link A and the pulse states gave 0-3 px). Done in efed15e56a4a190fa99acc0e7625b26a6adeeb81 (2026-11-20).
 - **K1470** · rp=gf gfh=1, junction j71 (g41_user_tw64 4.981:7.472): since K1451 stage 4 the colour seam inside the web is a small trapezoid bump where it was a thin spike (21 px at 4x; pin 278 L's over window 0.658 -> 0.770). Dropped: Levi 2026-11-20: 'only the today versions of the outlines look right': today's outlines stay. The nub of gap he saw in the fill versions is K1561 (2026-11-20).
 - **K1485** · rp=gf border look, a dead-end tail under the thread it meets: since 0a84d3d1 (K1482 s2) the tail stops just short of that thread, like an under pass, where it used to fuse into it (and drew a sliver across it). Dropped: Levi 2026-11-20: 'The today versions are the only ones that resemble something possibly that's possibly correct': today's join stays. The item's 'dead-end tail' was wrong wording: none of its places is a maze dead end (the scene record has no deadEnds entry there); each is a thread's end at a T junction (j3 chain 1 on chain 52, j61 chain 25 on chain 44, t18e chain 18 on chain 71, j76 chain 41 on chain 33, t50s chain 50 on chain 11) (2026-11-20).
 - **K1554** · rp=gf, t81s on link A (929,1153 on the 3200x1800 frame; one of the 14 places Levi named, K1490, a wedge): its nub is back since the in-leg run-on was removed (K1545, 6e432bbeb). Dropped: not a fault: Levi 2026-11-20 'we want the step' (lore: .claude/rules/render-gpu-field.md, 9c3e7698e); its rounder corner is K1559, the under pass's width below the crossing K1560 (2026-11-20).
