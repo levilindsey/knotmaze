@@ -9,6 +9,11 @@
 //
 //   node .claude/probes/K1458/fade.mjs <base> <outDir> <profileDir> [fl=0,1.2] [variants=gf,gfh]
 //     env SIMT=20 (frozen sim time), DSF=2, MINX=12, PASS=.85, SHOTS=1 (save every page's full png for sheets)
+//     env LINKA=1 (K1548, 27U): link-A ink-coverage read. On link A the thread body IS the flat backdrop
+//     in both renderers, so the (pixel-BG) on (U-BG) projection has no U to read (654 of 700 sides skip
+//     on uu). LINKA takes each side's U from its own renderer's fl=0 outline ink (see sideU in measure),
+//     scans the faded zone geometrically (da within fl of the gap's outer end), and does not read
+//     distances; its verdict is dot sides + sameState. The default read is unchanged.
 //
 // The link is the brief's `?3&xp=off&am=instant&prp=off&fl=<v>` plus, for one comparable state: `phw=0` (in-thread
 // physics: every load sleeps the same, frozen at SIMT, hashes printed), `fw=0` (no flow undulation), `bg=none` (a
@@ -24,6 +29,7 @@ const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), MINX = +(
 // TRIES below stays as a net that should never fire; DOTS = the most dots (gf-only one-pixel
 // spikes inside the under thread's faded span) a side may have
 const TRIES = +(process.env.TRIES ?? 8), DOTS = +(process.env.DOTS ?? 2);
+const LINKA = process.env.LINKA === "1"; // K1548 (27U): link-A ink-coverage read (see measure)
 const FLS = flArg.split(",").map(Number), VARS = varArg.split(",").filter(Boolean);
 mkdirSync(outDir, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -132,13 +138,14 @@ async function geometry(page) {
   }, DSF);
 }
 // decode PNGs in a blank page and read coverage profiles
-async function measure(geo, ref, shots) {
+async function measure(geo, ref, shots, refGf, fl) {
   const page = await browser.newPage();
   await page.goto("about:blank");
   const res = await page.evaluate(async (d) => {
     const load = (b64) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = "data:image/png;base64," + b64; });
     const img = async (b64) => { const im = await load(b64); const cv = document.createElement("canvas"); cv.width = im.width; cv.height = im.height; const cx = cv.getContext("2d", { willReadFrequently: true }); cx.drawImage(im, 0, 0); return cx.getImageData(0, 0, im.width, im.height); };
     const R = await img(d.ref);
+    const G0 = d.refGf ? await img(d.refGf) : null;
     const S = {};
     for (const k of Object.keys(d.shots)) S[k] = await img(d.shots[k]);
     const px = (D, x, y) => { const xx = Math.max(0, Math.min(D.width - 1, Math.round(x))), yy = Math.max(0, Math.min(D.height - 1, Math.round(y))); const o = (yy * D.width + xx) * 4; return [D.data[o], D.data[o + 1], D.data[o + 2]]; };
@@ -149,6 +156,15 @@ async function measure(geo, ref, shots) {
     const BG = [bk >> 16, (bk >> 8) & 255, bk & 255];
     const sides = [];
     const skips = { iu: 0, uu: 0, first: 0, far: 0 };
+    // K1548 (27U) LINKA: a side's reference U is its outline ink in a renderer's own fl=0
+    // frame: the lateral sample of largest |P-BG| within 1.3 half-widths at the walk's far end.
+    const sideU = (D, g) => {
+      const p = g.prof[g.prof.length - 1], q = g.prof[g.prof.length - 2];
+      const tx = p.x - q.x, ty = p.y - q.y, tl = Math.hypot(tx, ty) || 1, nx = -ty / tl, ny = tx / tl;
+      const hd = g.hOver * d.scale * 1.3; let best = -1, bu = [0, 0, 0];
+      for (let o = -hd; o <= hd; o += 1) { const P = px(D, p.x + nx * o, p.y + ny * o); const v = [P[0] - BG[0], P[1] - BG[1], P[2] - BG[2]]; const nn = v[0] ** 2 + v[1] ** 2 + v[2] ** 2; if (nn > best) { best = nn; bu = v; } }
+      return { U: bu, uu: best };
+    };
     for (const g of d.geo.sides) {
       // the gap's outer end in the reference (today fl=0): the first point past hOver + margin + 0.08 of the over thread
       const reach = g.hOver + (g.slot?.margin ?? 0.1) + 0.08;
@@ -156,7 +172,9 @@ async function measure(geo, ref, shots) {
       if (iu < 0 || iu > g.prof.length - 5) { skips.iu++; continue; }
       const Uat = (i) => px(R, g.prof[Math.max(i, iu)].x, g.prof[Math.max(i, iu)].y).map((v, k) => v - BG[k]);
       const U0 = Uat(iu); const uu0 = U0[0] ** 2 + U0[1] ** 2 + U0[2] ** 2;
-      if (uu0 < 1200) { skips.uu++; continue; } // the under colour too close to the backdrop to read
+      let UT = null, UG = null;
+      if (d.linkA) { const a = sideU(R, g), b = sideU(G0, g); UT = a.U; UG = b.U; if (b.uu < 100 || a.uu < 40) { skips.uu++; continue; } } // LINKA: outline ink too faint in one renderer to read
+      else if (uu0 < 1200) { skips.uu++; continue; } // the under colour too close to the backdrop to read
       const cov = (D, i) => { const U = Uat(i), uu = U[0] ** 2 + U[1] ** 2 + U[2] ** 2; if (uu < 600) return NaN; const P = px(D, g.prof[i].x, g.prof[i].y); return ((P[0] - BG[0]) * U[0] + (P[1] - BG[1]) * U[1] + (P[2] - BG[2]) * U[2]) / uu; };
       // walk inward from the far end; the first crossing of each level (outside the over thread's own body)
       const first = g.prof.findIndex((p) => p.dO > g.hOver + 0.5 / d.scale);
@@ -181,11 +199,18 @@ async function measure(geo, ref, shots) {
         return { lv: outv, c };
       };
       const row = { ci: g.ci, side: g.side, at: g.at, self: g.sel };
-      const T = levels(S.today);
-      if (T.lv[0.9] === "far") { skips.far++; continue; } // today's under thread is not full at the walk's end: overlapping ramps
-      row.today = T.lv;
-      row.c = { today: T.c };
-      for (const k of Object.keys(S)) if (k !== "today") { const L = levels(S[k]); row[k] = L.lv; row.c[k] = L.c; }
+      let T;
+      if (d.linkA) { // LINKA: distances are not read (the centreline carries no ink); levels zeroed, the dot scan below is the read
+        T = { lv: { 0.9: 0, 0.5: 0, 0.1: 0 }, c: g.prof.map(() => 0) };
+        row.today = T.lv; row.c = { today: T.c };
+        for (const k of Object.keys(S)) if (k !== "today") { row[k] = T.lv; row.c[k] = T.c; }
+      } else {
+        T = levels(S.today);
+        if (T.lv[0.9] === "far") { skips.far++; continue; } // today's under thread is not full at the walk's end: overlapping ramps
+        row.today = T.lv;
+        row.c = { today: T.c };
+        for (const k of Object.keys(S)) if (k !== "today") { const L = levels(S[k]); row[k] = L.lv; row.c[k] = L.c; }
+      }
       row.da = g.prof.map((p) => p.da);
       // K1460: dots. The under thread's footprint (lateral offsets within 0.85 of its half width) where today's
       // centreline coverage is under 0.5 and outside the over thread's body; a pixel is a dot in a renderer when its
@@ -205,10 +230,20 @@ async function measure(geo, ref, shots) {
       // was on link A (Q=3.FGH1HtvQeDjm6e4BII), which this measure cannot read: 654 of 700 sides skip on uu
       // (today's under colour within ~35 levels of the flat backdrop), 46 on iu. dotsOld/dotFeatOld stay counted
       // beside the verdict so a future link-A-capable measure has the old rule to compare against.
+      // K1548 (27U): that measure now exists (LINKA=1, the ink read above). On link A (hash fff8c9e5,
+      // kept 554 of 700 sides on every build) OLD reads 7,272-7,288 / 10,887-10,899 / 13,705-13,723 /
+      // 9,383-9,401 dots over 489-552 sides and NEW reads 4-8 dots over 0 sides at fl 0 / 0.5 / 1.2 /
+      // 0.14, on 1de01c120, a8d36be33 and master alike (two loads per build, sides>2 agree 0/0; the
+      // mend candidates tried offline - today's ink max over 5x5 under 0.35, and that plus an
+      // interior-only footprint - also agree within 1 side: C gives 85 sides on 1de, 86 on master at
+      // fl 1.2). The parent build draws no dotted line on link A for any gate: there the fringe
+      // pixel's neighbour colour is the backdrop-dark thread body, and the two builds' gf frames
+      // differ by ~10 px over 24 levels in the whole knot. A rule that fails 1de and passes the
+      // fixed builds still has no control to read on either link (27H on ?3, this on link A).
       const seen = new Set(), pix = [];
       const hd = g.hOver * d.scale * 0.85;
       for (let i = first; i < g.prof.length - 1; i++) {
-        if (!(T.c[i] < 0.5) || !(g.prof[i].dO > g.hOver + 1.5 / d.scale)) continue;
+        if ((d.linkA ? !(g.prof[i].da <= g.prof[iu].da + d.fl + 0.05) : !(T.c[i] < 0.5)) || !(g.prof[i].dO > g.hOver + 1.5 / d.scale)) continue; // LINKA: the faded zone is geometric, within fl of the gap's outer end
         const tx = g.prof[i + 1].x - g.prof[i].x, ty = g.prof[i + 1].y - g.prof[i].y, tl = Math.hypot(tx, ty) || 1;
         const nx = -ty / tl, ny = tx / tl;
         for (let o = -hd; o <= hd; o += 0.5) {
@@ -216,7 +251,7 @@ async function measure(geo, ref, shots) {
           if (!seen.has(k)) { seen.add(k); pix.push([x, y, i]); }
         }
       }
-      const covAt = (D, x, y, i) => { const U = Uat(i), uu = U[0] ** 2 + U[1] ** 2 + U[2] ** 2; const P = px(D, x, y); return ((P[0] - BG[0]) * U[0] + (P[1] - BG[1]) * U[1] + (P[2] - BG[2]) * U[2]) / uu; };
+      const covAt = (D, x, y, i) => { const U = d.linkA ? (D === S.today ? UT : UG) : Uat(i), uu = U[0] ** 2 + U[1] ** 2 + U[2] ** 2; const P = px(D, x, y); return ((P[0] - BG[0]) * U[0] + (P[1] - BG[1]) * U[1] + (P[2] - BG[2]) * U[2]) / uu; }; // LINKA: each renderer read against its own outline ink
       row.dots = {}; row.dotAt = {}; row.dotFeat = {}; row.dotsOld = {}; row.dotAtOld = {}; row.dotOldXY = {}; row.dotFeatOld = {};
       for (const k of Object.keys(S)) if (k !== "today") {
         let n = 0, nOld = 0; const at = [], atOld = [], xyOld = [], featOld = []; const feat = [];
@@ -233,7 +268,7 @@ async function measure(geo, ref, shots) {
       sides.push(row);
     }
     return { BG, sides, skips };
-  }, { ref: Buffer.from(ref).toString("base64"), shots: Object.fromEntries(Object.entries(shots).map(([k, v]) => [k, Buffer.from(v).toString("base64")])), geo, scale: geo.view.s * DSF });
+  }, { ref: Buffer.from(ref).toString("base64"), shots: Object.fromEntries(Object.entries(shots).map(([k, v]) => [k, Buffer.from(v).toString("base64")])), geo, scale: geo.view.s * DSF, refGf: refGf ? Buffer.from(refGf).toString("base64") : null, linkA: LINKA, fl });
   await page.close();
   return res;
 }
@@ -241,6 +276,8 @@ let failed = false;
 try {
   const R = await load("today", 0);
   const geo = await geometry(R.page);
+  let refGfPng = null;
+  if (LINKA) { for (let t = 0; t < TRIES && !refGfPng; t++) { const P = await load("gf", 0); if (P.hash === R.hash) refGfPng = P.png; await P.page.close(); } console.log(`[LINKA] ink read: gf fl=0 reference ${refGfPng ? "kept" : "MISSING"}`); }
   console.log(`view s ${geo.view.s.toFixed(2)} css px/world (1 device px = ${(1 / (geo.view.s * DSF)).toFixed(4)} world), crossings ${geo.crossings}, sides on screen ${geo.sides.length}`);
   const refPng = R.png;
   const summary = [];
@@ -252,7 +289,7 @@ try {
     if (fl === 0) { shots.today = refPng; hashes.today = R.hash; } else { const T = await same("today"); shots.today = T.png; hashes.today = T.hash; await T.page.close(); }
     for (const v of VARS) { const P = await same(v); shots[v] = P.png; hashes[v] = P.hash; await P.page.close(); }
     const sameState = Object.values(hashes).every((h) => h === R.hash);
-    const m = await measure(geo, refPng, shots);
+    const m = await measure(geo, refPng, shots, refGfPng, fl);
     console.log(`[measure fl=${fl}] skips ${JSON.stringify(m.skips)} kept ${m.sides.length}`);
     const px1 = 1 / (geo.view.s * DSF);
     writeFileSync(join(outDir, `fade_fl${fl}.json`), JSON.stringify({ fl, hashes, BG: m.BG, px1, sides: m.sides }, null, 1));
