@@ -1076,9 +1076,6 @@ Every other item below waits on the trigger it names.
   doing)
 - **K1360** · Measure the outline worker pool on the Pixel at K = 2 and 3 (K1247 s35 projects 15-22 Hz from
   the pool alone); rides the next phone round (K156), after K1247 s36 lands
-- **K1375** · rp=gf: move `buildKeys` (gf_keys.ts, 0.6 ms p50 on the Pixel main at upload, 0.2 desktop) out of
-  gf_pass.ts upload into the gf build worker (gf_build.ts / gf_worker.ts), its arrays transferred with the
-  tables (K1362 s6 handoff, next 4).
 - **K1384** · rp=gf's shader compiles synchronously: a cold desktop profile freezes the loader about 6.7 s
   (K1369 s1). Compile in parallel (KHR_parallel_shader_compile) or warm it up (render-shaders.md, K307);
   measure the Pixel's cold compile too
@@ -2984,6 +2981,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1375** · rp=gf: move `buildKeys` (gf_keys.ts, 0.6 ms p50 on the Pixel main at upload, 0.2 desktop) out of gf_pass.ts upload into the gf build worker (gf_build.ts / gf_worker.ts), its arrays transferred with the tables (K1362 s6 handoff, next 4). Done in a3a4831ef (2026-11-21).
 - **K1581** · rp=gf, the all-maze tool's leftovers (from K1578, run ball40): (1) check the mirror's list (`.claude/probes/K1482/s40/census40.ts`) against the tool's 64 captured places, so that the mirror can stand as a first pass; (2) A_b came out a VIEW-DIFF maze: both candidate loads fit at scale 21.74032186, both base loads at 21.74026042 (each pair 0 px apart), and 46 places of 1 to 7 px on stroke edges plus a marker's ring edges (22 px) are listed there; a change to eval.ts and gf_glsl.ts should not move the fit camera, the cause is not verified (27V's handoff gives an inference): find it or pin the view in `cap_maze.ps1`; (3) the listing step is not one number (2 levels on A_4 t22s by the coordinator's count, a 1-level pixel listed on A_c j69, a step-3 listing on VIEW-DIFF mazes by the handoff): state it in `analyze_maze.py`'s header. Done in 90c8502c5 (2026-11-21).
 - **K1473** · rp=gf: check pulses and the turn telegraph on screen. Done in bc615b6ae (2026-11-21).
 - **K1558** · Corner census again on today's build: K1551's counted the build before the hook revert (its preview was of 6f645f3ce; link A's frame equals the run-on build at all eight reverted places), 146 of its 264 wedge flags sit on the first step over the threshold (t84e's level, which Levi called fine), no usable kind sees j15, and its R 18 sheets cannot be judged. Done in 5d6dfe240 (2026-11-21).
