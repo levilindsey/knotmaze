@@ -780,10 +780,6 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1561** · rp=gf fill look: a nub of gap cuts into a thread that comes out from under one thread and at
-  once ends on another (g41_user_tw64 j71, 4.981:7.472; Levi 2026-11-20): `lkGap`'s coverage cut (gf_look.ts)
-  takes every higher piece in a crossing window, a joint's host too (stage 8 fixed the outline only). Fix and
-  test: docs/ledger_notes.md `## K1561`; Muse run 27Q (docs/design/K1531_muse_batch27.md)
 - **K1560** · rp=gf, t81s on link A: for 30 px below the over thread the under thread shows only its step-side
   border, so it reads narrower (a 20-26 px gap, 34 px above) and off its heading (Levi 2026-11-20; look rule
   1): its right edge is junction j103's mouth. Candidate: a step on the branch side, shown to Levi before /
@@ -2936,6 +2932,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1561** · rp=gf fill look: a nub of gap cuts into a thread that comes out from under one thread and at once ends on another (g41_user_tw64 j71, 4.981:7.472; Levi 2026-11-20): `lkGap`'s coverage cut (gf_look.ts) takes every higher piece in a crossing window, a joint's host too (stage 8 fixed the outline only). Done in dcd8e81e6 (2026-11-20).
 - **K1528** · j15's spur is gone: stage 34b's end-arm burial (link A changes at j15 only, 39 px, only lighter; fill and gfk=0 shots 0 px; bar, guards, npm test pass; live 14:01). Done in ac4387f28 (2026-11-20).
 - **K1493** · the 1292 probe output files (362 MB) are out of every commit: history rewritten with git filter-repo and force-pushed on Levi's yes (master 7c96f6a37 -> 2c5e2ace2, muse-26p-wip too; trees equal, 5057 commits, 319 renamed; docs/K1493_commit_map.txt). Done in 2c5e2ace2 (2026-11-20).
 - **K1544** · Captures of the plain knot link `?3&xp=off&am=instant` have no 0 px floor: two loads of ONE build, asleep, at one physics hash (0cbb8f07) differ by 193,124 px (today's renderer) and 101,249 px (rp=gf fill) over 24 levels in the thread area, so K1223's 0 px re-shoot could not be read on it (Muse run 26Z; link A and the pulse states gave 0-3 px). Done in ec4dccd820714eceb1acfd976bc3721cabfe1b16 (2026-11-20).

@@ -23,7 +23,9 @@
 // window (marched here on the scene polylines as gf_look.ts gapWindow marches: the window
 // ends where the centreline distance clears 2h + margin + fade, or fade / max(sin, 0.2) of
 // arc past clearing 2h + margin) and a fused cutter that is NOT that window's named over
-// chain cuts it. --fixed models the fixed lkGap (coverage from the named over chain only):
+// chain cuts it. The march here omits the real bake's neighbour-pass and joint-room caps, so
+// some counted windows run longer than the baked one (27Q: 199 of 255 counted places had a
+// changed capture place within 0.35 world). --fixed models the fixed lkGap (coverage from the named over chain only):
 // the same pixels then count only when the fused cutter IS the named over chain.
 // Places: 8-connected components of counted pixels sharing (labelChain, cutterChain, g),
 // reported by world centroid and bbox. Pixels are raster samples at --ppu (default 60).
