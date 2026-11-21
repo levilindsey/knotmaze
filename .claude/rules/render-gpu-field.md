@@ -97,6 +97,11 @@ strokes toward today's, and do not use today's border strokes as a bar.
   apart (gap 1 h up the band's chain: median 1.3 px at j59, 3.4-11 px at the wedges, but per-pixel spreads overlap and a
   per-piece gate leaves islands): gate on a per-(chain, over pass) run length baked in the tables. Probes: copy
   `GfEval.eval()`'s result, which is one reused object.
+- SIDE-RUN GATE (K1482 s33, tables.ts `sideRuns` -> `rtM`, chain texel 3 .y = rtM + 1, eval.ts runT / gf_glsl.ts RUNT in
+  retry programs): s31's runT now narrows chain C's band only along the one chain M its tube lies BESIDE (never nearer
+  than 1.945 h, within 2.03 h over >= 0.6 h). The run length alone did not separate j59 (wedges and a cap reach 0.94-0.98
+  h); the never-dives test did (j59 1.98 h, wedges <= 1.78, a cap 1.91: thin). Link A: t23e 153 px, nothing else; ~+9 ms
+  of table build in the browser pool.
 - LONE FOLD (K1482 s32, eval.ts foldD past `!inOther` behind env GF_S32=1, gf_glsl.ts `loneFold`, NOT applied: in the browser the redraw stalled): t84e's dark patch was a
   hairpin folded into ONE piece away from any junction, so no tube burial and no s7 fold applied and both inner bands
   inked past the cusp. The fold's other run now buries q there only on evidence of a step: cos > 0.62 and q in its tube,
