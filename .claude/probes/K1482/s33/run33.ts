@@ -29,16 +29,17 @@ if (mode === "A") {
 }
 const h = T.h; const pxh = h * a; // px per h
 // every chain gets a gate entry so "all" mode fires on every pair
+const ON = process.env.ON ?? "all"; // "" = the tables' own switch (rtM)
 const E: any = new GfEval(T); const orig = E.runT; let tMin = 1, pc = -1, pm = -1;
 E.runT = function (...args: number[]): number { const t = orig.apply(this, args); if (t < tMin) { tMin = t; pc = this.rtC; pm = this.rtM; } return t; };
 const ev = (x: number, y: number, on: string): number => { GfEval.S33 = on; tMin = 1; pc = -1; pm = -1; return E.eval((x + 0.5 - e) / a, (y + 0.5 - f) / d).ink; };
 const Wf = X1 - X0, Hf = Y1 - Y0; const hit = new Uint8Array(Wf * Hf); const S = 3; const t0 = Date.now();
-for (let y = Y0; y < Y1; y += S) for (let x = X0; x < X1; x += S) { ev(x, y, "all"); if (tMin < 1) hit[(y - Y0) * Wf + (x - X0)] = 1; }
+for (let y = Y0; y < Y1; y += S) for (let x = X0; x < X1; x += S) { ev(x, y, ON); if (tMin < 1) hit[(y - Y0) * Wf + (x - X0)] = 1; }
 const R = 9; const want = new Uint8Array(Wf * Hf);
 for (let i = 0; i < hit.length; i++) if (hit[i]) { const y = Math.floor(i / Wf), x = i % Wf; for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const yy = y + dy, xx = x + dx; if (yy >= 0 && yy < Hf && xx >= 0 && xx < Wf) want[yy * Wf + xx] = 1; } }
 const pairs = new Map<string, { C: number; M: number; px: [number, number, number][] }>();
 for (let i = 0; i < want.length; i++) if (want[i]) {
-  const y = Math.floor(i / Wf) + Y0, x = (i % Wf) + X0; const i1 = ev(x, y, "all"); if (!(tMin < 1)) continue; const C = pc, M = pm; const i0 = ev(x, y, "0");
+  const y = Math.floor(i / Wf) + Y0, x = (i % Wf) + X0; const i1 = ev(x, y, ON); if (!(tMin < 1)) continue; const C = pc, M = pm; const i0 = ev(x, y, "0");
   if (Math.abs(i1 - i0) > 0.02) { const k = `${C}:${M}`; if (!pairs.has(k)) pairs.set(k, { C, M, px: [] }); pairs.get(k)!.px.push([x, y, i1 - i0]); }
 }
 // a pair's pixels may sit at several places: split into 8-connected clusters of 12 px cells
