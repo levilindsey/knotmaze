@@ -2619,9 +2619,10 @@ Every other item below waits on the trigger it names.
 ## Ideas (not scheduled)
 
 - **K1569** · K1551's census is no fault finder (Muse run 27P, `5d6dfe240`: on 20 mazes its 24 highest wedge
-  sites are tail-end balls, K1572, and the wanted side-by-side borders; no kind sees j15). Census-picked
-  stages stay stopped (K1577). Only if a census is wanted again: recalibrate `.claude/probes/K1551/census.py`
-  on Levi's verdicts or drop the wedge kind
+  sites are tail-end balls, K1572, and the wanted side-by-side borders; on link A it flags the kept hooks at
+  j59 and t23e, the wanted step at t81s and the fine t84e). Census-picked stages stay stopped (K1577). Only if
+  a census is wanted again: recalibrate `.claude/probes/K1551/census.py` on Levi's verdicts or drop the wedge
+  kind
 - **K259** · With explore mode on, a chain with any visible piece draws its whole mesh, so hidden
   fragments still run the shader; drawing only the visible index range is cheaper. Not needed yet
   (`docs/design/K76.md`, "Stage 2a handoff").
