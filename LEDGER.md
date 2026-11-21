@@ -1101,9 +1101,6 @@ Every other item below waits on the trigger it names.
   layers() where the label is set (gf_glsl.ts ~1324), carry it out with the best configuration as gf_look.ts
   ~2417 carries lkJ/lkS, blend the two composed colours by the distance difference (Handoff K1525 s1,
   docs/design/K1525_s1_fill_dives.md). Touches gf_glsl.ts and gf_look.ts: after K1482's stage stops
-- **K1426** · rp=gf vertex cap (K1407 c3, d547dab6) costs GPU: net p50 +14-15% over 13365909 on def and fat
-  drag (11.0 -> 12.6 ms; work p50 level); c5 after c4: cut it to within 10% (the cap is the only shader
-  change; inferred, not profiled) (docs/design/K1407_c3_bar.md Handoff c3)
 - **K1430** · Phone pass for rp=gf after K1407 c3: the vertex cap's shader compiles and its cost on the Pixel
   (scripts/phone.ps1; d547dab6 onward)
 - **K1431** · rp=gf reveal bars (K1395 leftovers; 24I partial): rainbow stripes fixed in 83de5130 (see
@@ -2981,6 +2978,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1426** · rp=gf vertex cap (K1407 c3, d547dab6) costs GPU: net p50 +14-15% over 13365909 on def and fat drag (11.0 -> 12.6 ms; work p50 level); c5 after c4: cut it to within 10% (the cap is the only shader change; inferred, not profiled) (docs/design/K1407_c3_bar.md Handoff c3). Done in 5e79cb1c2 (2026-11-21).
 - **K1375** · rp=gf: move `buildKeys` (gf_keys.ts, 0.6 ms p50 on the Pixel main at upload, 0.2 desktop) out of gf_pass.ts upload into the gf build worker (gf_build.ts / gf_worker.ts), its arrays transferred with the tables (K1362 s6 handoff, next 4). Done in a3a4831ef (2026-11-21).
 - **K1581** · rp=gf, the all-maze tool's leftovers (from K1578, run ball40): (1) check the mirror's list (`.claude/probes/K1482/s40/census40.ts`) against the tool's 64 captured places, so that the mirror can stand as a first pass; (2) A_b came out a VIEW-DIFF maze: both candidate loads fit at scale 21.74032186, both base loads at 21.74026042 (each pair 0 px apart), and 46 places of 1 to 7 px on stroke edges plus a marker's ring edges (22 px) are listed there; a change to eval.ts and gf_glsl.ts should not move the fit camera, the cause is not verified (27V's handoff gives an inference): find it or pin the view in `cap_maze.ps1`; (3) the listing step is not one number (2 levels on A_4 t22s by the coordinator's count, a 1-level pixel listed on A_c j69, a step-3 listing on VIEW-DIFF mazes by the handoff): state it in `analyze_maze.py`'s header. Done in 90c8502c5 (2026-11-21).
 - **K1473** · rp=gf: check pulses and the turn telegraph on screen. Done in bc615b6ae (2026-11-21).
