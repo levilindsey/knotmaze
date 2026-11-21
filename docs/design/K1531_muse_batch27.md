@@ -1335,6 +1335,36 @@ Owned: the files the candidate's patch touches under `src/render/gpu_field/` and
 tools under `.claude/probes/K1572/`. Hands off: everything else in `src/`, today's border strokes, the K1566 nub
 fix (`dcd8e81e6`) and its pins except where the candidate's patch already moves them.
 
+### Handoff 27Z4 (Muse, 2026-11-21, stopped under Done 4: no rule separates all three keeps; nothing under `src/` landed, K1572 left open)
+
+Started 13:44 PST, stopped 14:17 PST. Starting master ab35e9ce8 (M). The candidate patch (`git diff d1c25f5fe 4925aa786 -- src test`, applied `--3way`, clean on all four files) was committed locally as C = 5f4fa7380 (never pushed; dropped by `git reset --hard ab35e9ce8` at the stop line, so master carries no `src/` or `test/` change from this run). This commit is probes + this handoff only (`.claude/probes/K1572/measure27z4.ts`, `factor27z4.ts`; outputs untracked under `.claude/probes/K1572/out/27Z4/` and `.claude/probes/K1578/out/27Z4_CM/`), so no deploy and no ordinary-load guards. Preview of M on :5485 (listener's command line and bundle verified as ab35e9ce8) stopped at the stop line; every capture sequence through `scripts/perf_lock.ps1 -Owner "muse-27Z4"`.
+
+Done 1 (partial: the tool is slower than the window). `allmaze.ps1 -Base ab35e9ce8 -Cand 5f4fa7380 -Name 27Z4_CM` finished 4 of 21 mazes in 65 minutes (about 16 min per maze: four cold gf compiles each), both floors 0 px on every finished maze: A_3 80 px in 2 places, A_4 122 in 2, A_5 142 in 4, A_6 0 in 0 — ball40's counts and places on those mazes, as K1572 lists. The remaining 17 mazes, and with them the full 17-place confirmation, did not finish before the stop line; the run was terminated there. No narrowing was built on an unconfirmed list: the geometry below was measured on ball40's 17 real places directly.
+
+Done 4's measure (the run's substance; scenes from stage 40's `sc/` captures plus this run's `raw27z4` captures of A_3, A_5, A_7, A_8 on M; `measure27z4.ts`, GF_KRETRY=1). Per place: the fillet corner nearest its tangent point (census40's rule), R/h, the angle its arms subtend at the corner centre, the end arm's heading turn within ±2h of its tangent point (winNear), and that arm's tangent-point distance to its chain end. KEEP = the three that must keep today's picture; clean = K1572's eight; other = the remaining six of the 17.
+
+| place | R/h | ang | winNear | end |
+|---|---|---|---|---|
+| A_4 t32s KEEP | 0.145 | 147.7 | 70 | 0.64h |
+| A_5 t30e KEEP | 0.132 | 79.2 | 72 | 0.90h |
+| A_8 t31s KEEP | 1.139 | 62.2 | 28 | 1.34h |
+| A_b t25e clean | 2.324 | 66.2 | 5 | 0.79h |
+| A_3 t22e clean | 2.688 | 63.3 | 24 | 1.03h |
+| A_3 t26s clean | 2.999 | 69.7 | 10 | 0.57h |
+| A_5 t65s clean | 1.665 | 60.3 | 36 | 1.13h |
+| A_9 t28e clean | 0.994 | 76.4 | 66 | 1.42h |
+| A_9 t47e clean | 0.540 | 117.5 | 32 | 0.68h |
+| A_7 t83e clean | 0.880 | 103.9 | 54 | 0.71h |
+| A_d t88s clean | 1.062 | 75.9 | 13 | 0.66h |
+| A_4 t22s other | 0.296 | 66.3 | 96 | 0.78h |
+| A_5 t34e other | 0.420 | 106.1 | 34 | 1.02h |
+| A_5 t14s other | 0.091 | 59.7 | 34 | 0.72h |
+| A_a t16s other | 0.131 | 160.1 | 17 | 0.58h |
+| A_c j69 other | 0.271 | 57.8 | 44 | 0.90h |
+| A_d j40 other | 0.524 | 41.9 | 10 | 0.74h |
+
+A tight-turn gate separates the first two keeps from all 14 others: R/h ≤ 0.20 AND winNear ≥ 65° fires at A_4 t32s and A_5 t30e only (margins: R/h threshold 0.20 sits 0.055h above the keeps' max 0.145 and 0.071h below the nearest other, j69's 0.271; the turn threshold 65° sits 5° below the keeps' min 70° and 31° above the nearest sub-0.20 other, t14s's 34°). A_8 t31s (R/h 1.139, winNear 28°) is on the clean places' side of every measure tried: subtended angle, end-arm length and end distance, burying arm's centreline distance at the disc (0.63h; clean t83e 0.61h, t88s 0.66h), tangent-point distances to the other arm, junction headings at the fused end (89-101° everywhere), and `factor27z4.ts`'s outlineBur factor at every changed face (1.000 at all 12 places measured, keeps and cleans alike — the candidate's own-arm burial saturates, so no partial-burial rule exists either). why40 at A_8: the end disc and arc are buried in full by the long arm (d 0.628h, bur 1.00), the same signature as clean t28e (0.848h) and t88s (0.658h). No rule on this geometry separates A_8 from the eight clean places, so under Done 4 the run stops: no partial narrowing lands, nothing under `src/` was committed, and Dones 2, 3, 5 and 6 (which all stand on a landed N) were not run. K1572 stays where it is in the ledger, as briefed; the tight-turn gate above is the measured starting point if a later run takes the two separable keeps up with Levi, and A_8 needs a fact outside this list (its sheet: candidate removes the ball and leaves the two border tips mismatched, where clean places' ends stay joined).
+
 ## Run Z5 (27Z5): which commit closed the tail ends at K1444's two spots, and how they draw today (K1582)
 
 Levi looked at `.claude/probes/K1485/out/o_spots.png` (outlines only; columns: master on Nov 18, the same with the
