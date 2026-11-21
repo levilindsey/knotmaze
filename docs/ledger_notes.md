@@ -4287,6 +4287,26 @@ side, so the right edge reads as leaving at x 939. It is a look: Levi sees befor
 
 Pictures: the decision page's t81s card (t81s_w_labels.png, t81s_w_drawn.png).
 
+Stage 38 (2026-11-20 17:57 to 19:35, Levi's "t81s more", the second and last try; candidate src e569ccb47 on
+branch worktree-agent-a796b4f93cdebf0b2, not landed; brief and handoff docs/design/K1482_s38_t81s_more.md on
+that branch, sheets .claude/probes/K1482/out/s38/ in its worktree, untracked). The room: 5.14 px along chain
+45's right edge, from chain 9's tube edge (939.4, 1140.3) to chain 81's band inner line (937.8, 1145.2); the
+joint's corner sits 1.39 px under chain 9. The rule: stage 35's src with its 2 px clip of the edge cut
+removed, and the arm flag also requires the joint's corner to lie at least 0.03 h (0.5 px) under the over
+thread (`cornerDepth` in tables.ts); retry programs only (+2,556 characters, 404,210 to 406,766), gfk=0
+programs byte-identical. Result on link A: 32 px at t81s, lose-only, box 930-938 x 1138-1144, a 5-row upright
+face on the true edge (x 939, 939, 938, 938, 938 on rows 1140 to 1144), the two faces 34.07 px apart; every
+other place, the fill look and gfk=0: 0 px. Sisters on the GPU (one session, no same-build repeat): A_5 70 px
+at 4 places, A_7 124 px at 6, A_8 47 px at 3, all lose-only; the stage classes 9 as worse (a notch with a
+tooth, tick or squared stub cut into a solid merge of two borders: A_5 g29, g72; A_7 g69, g72, g137, g88, g61;
+A_8 g81, g33) and 4 as not worse (A_5 g138, g66; A_7 g51; A_8 g59); no border vanished, no thread lost width.
+Claude's own look: at the 600 px view before and candidate cannot be told apart; A_7's sheet shows a tooth
+notch at t29s, a notch at t31e, a tick at j137, a step at t41e, a speck at j61, nothing visible at j50.
+Variants in the mirror: no clip with stage 35's flag fires at 6 places on link A (five lose a wedge); every
+end arm on a cut arm 525 px at 13 places; a cut at chain 45's inner band line leaves no face. Guards with
+GF_KRETRY=1: hold 60/60, hold_gfk0 60/60, panelopen 1, dragcheck_b max 10 px, dragcheck max 67 px; npm test
+3198 passed. Not run: the bar, sisters A_4, A_6, A_9 to A_d, the ten D mazes.
+
 ## K1561 (2026-11-20, Levi on K1470's fill pictures: "have a bug with a nub of gap sticking into one thread
 from the intersection")
 
