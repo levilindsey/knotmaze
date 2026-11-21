@@ -4211,3 +4211,101 @@ rebuilding every point of the outline every frame, not the outline's structure:
 - Data uses (hit tests, edge rules in play, export, particles on the edge) run the same tables on the CPU on
   demand, locally or at a lower rate, not the whole scene each frame.
 K1362 s1 keeps piece identity per pixel and reports whether u follows; building u is stage 2.
+
+## K1493 (2026-11-20, Levi: "remove from history")
+
+The facts. d39e363f (2026-11-18, the coordinator's mistake: `git add -f .claude/probes` on the whole directory)
+pushed 1292 untracked probe output files (362 MB: K1444 660, K1407 546, K1362 62, K1436 24) to master; b88a4108
+removed them from the tree, so checkouts are clean, but the blobs stay in history and every full clone downloads
+them. The repo is public; GitHub reported 713 MB on 2026-11-19, about half of it this. Deploys check out shallow
+and worktrees share the object store, so only a full clone pays. The 89 text files among them hold nothing
+private (searched). A rewrite re-IDs every commit after 82405bf9 (164 on 2026-11-19, more since) and strands 21
+local branches, about 100 worktrees, Muse's checkout and the laptop's clone. Levi's yes covers this scope only:
+K1467's files, which left the index with `git rm --cached` in 33f755fc1, are not part of it.
+
+The steps.
+1. Only at a quiet point: no stage branch waiting to land (or its work is landed afterwards by squash-merge or
+   cherry-pick), Muse's chain held between runs (`hold.txt` in `.claude/probes/K1053/`, main checkout), no Paseo
+   agent running, the main checkout clean and level with origin.
+2. The path list: every path added in d39e363f and deleted in b88a4108 that no other commit touches and HEAD
+   does not hold (tracked probe tools such as `.claude/probes/K1482/s33/*` stay). Check the count (1292) and the
+   bytes (362 MB) before rewriting anything.
+3. In a fresh mirror clone: `git filter-repo --invert-paths --paths-from-file <list>` (check it is installed; it
+   writes `.git/filter-repo/commit-map`). Then check: the new master's tree equals the old one's
+   (`git rev-parse <sha>^{tree}`), the commit count is the same, no commit holds a listed path.
+4. `git push --force-with-lease=master:<old sha> origin master`, then watch the deploy (the tree is the same, so
+   the build is).
+5. Reset the main checkout and the coordinator's worktree to the new master (both clean first). Keep the
+   commit-map in the repo and, in a follow-up commit, remap the SHAs that LEDGER.md, `docs/` and `.claude/rules/`
+   name.
+6. Lore: a branch or worktree made before the rewrite lands only by squash-merge or cherry-pick, never by merge
+   (a merge brings the old history and the blobs back). Tell Levi: the laptop's clone needs `git fetch` and a
+   reset to origin/master on a clean tree; GitHub's reported size shrinks only after its own GC.
+
+Until the rewrite: merge, never rebase.
+
+## K1560 (2026-11-20, Levi on t81s: "the under thread bottom side borders don't weem wide enough apart to
+properly indicate the thread width and alignment with the upper side of the under crossing?")
+
+Where. rp=gf border look, link A, t81s (929.1, 1152.7 on the 3200x1800 frame: 42.594 device px per world unit,
+a thread 34.1 px wide, the outline band 6.47 px). The over thread is chain 9. The under thread is chain 45; it
+passes under at about (929.9, 1119.8). The branch is chain 81, which starts at junction j103 (921.4, 1149.0),
+30 px (0.70 world, less than a thread's width) below the crossing.
+
+Observed (`.claude/probes/K1482/t81s_answer.py <gf.png> <gf_fill.png> <scene_gf.json> <out prefix>` on master
+cee854367's frames, `.claude/probes/K1482/out/rev33/raw/c1_on`, coordinator worktree, untracked). Along the over
+thread's lower edge the under thread's true edges (centre line plus and minus the half width) come out at x
+907.2 and x 939.3: 34 px apart. Ink 2-4 px below that edge: a 6 px mark at x 907-912 (the step, at the true left
+edge), no ink from x 913 to 936, then a 23 px smear x 933-959 hugging the over outline (the branch's upper border
+fusing into the over outline), exactly where the true right edge leaves at x 939. Across chain 45: both borders
+at every station above the crossing; 24 and 30 px below it only the step-side border; both again from 36-48 px
+on. No edge is off its place by more than 1-2 px.
+
+Reading (inferred). Below the over thread the under thread opens straight into the junction. Its right border
+never shows as its own stroke: it is the junction's mouth, where the branch's border meets the over outline as
+a thickening with a small kink at about (931-935, 1139) and no step. The thread also bends about 45 degrees
+left right after the crossing. The eye gets a 20-26 px open gap with one border against the 34 px thread above:
+look rule 1 (the under pass keeps its width and its heading) fails here.
+
+Candidate. Where the branch's upper border meets the over thread's outline, a step like t81s's own on the other
+side, so the right edge reads as leaving at x 939. It is a look: Levi sees before and after.
+
+Pictures: the decision page's t81s card (t81s_w_labels.png, t81s_w_drawn.png).
+
+## K1561 (2026-11-20, Levi on K1470's fill pictures: "have a bug with a nub of gap sticking into one thread
+from the intersection")
+
+Where. rp=gf, fill look (`tlk=fill`), bar scene g41_user_tw64, junction j71 (group 71) at world 4.981:7.472.
+Chain 32 comes out from under chain 22 (the over thread) and 0.3-0.5 world on ends on chain 30 (a T). The notch:
+about (4.52, 7.41), (4.775, 7.35), (4.78, 7.49), (4.64, 7.56): 0.25 world wide, 0.12-0.15 tall (26 x 14 device px
+at dpr 3), with a sharp vertical edge at x 4.78. Inside it the pixels are the ground colour (21, 27, 40) where
+chain 32's body (91, 159, 174) belongs. The border look draws a clean chevron at the same place.
+
+Observed. Today's master (the capture `base-cee85436` of stage 34b's bar run) and stage 19's build are equal to
+the pixel there: 0 px differ within 120 device px, both looks, hash 0d51331b
+(`.claude/probes/K1470/nub_pic.py <cap scene dir> <out.png> [older cap scene dir]`). The CPU mirror's coverage
+(GfEval) has no notch, so the cut is the look shader's.
+
+Cause. `lkGap` (`src/render/gpu_field/gf_look.ts`, line 2247 on cee854367). Inside a crossing window its loop
+cuts by every piece whose key is above the label's by more than `uZt`. K1482 stage 8 limited the OUTLINE's cut
+(x) to the window's named over chain (`cS`), because a fused joint's host cut a tucked tail's outline in a
+neighbour crossing's window, and left the COVERAGE's cut (y, `gA`) taking every higher piece "so the fill look
+does not move". At j71 chain 30 (the joint's host; its key is above chain 32's by 0.17, zt is 0.074) cuts chain
+32's coverage within h + margin (0.32 + 0.15) of chain 30's centre line, inside chain 32's crossing window under
+chain 22. Right of x 4.78 chain 32's piece is in the junction's group and the keys meet: the sharp edge.
+
+Confirmed in numbers. `.claude/probes/K1470/nub_probe.ts g41_user_tw64 <wx> <wy> [half] [ppu]` with `CUT=0.13`
+(the margin is (casing 0.88 - thread 0.64) / 2 + CUT_BIAS 0.03 = 0.15; fade 0) marks chain 32's body as cut by
+chain 30 over x 4.53..4.77, y 7.36..7.52, the capture's footprint; the only other cutter in the box is chain 22
+(the real crossing). Inferred, not read back: that the shader's window is live across the whole notch.
+
+Fix candidate. Where the window's slot names its over chain (`cS >= 0`), take the coverage cut from that chain
+only too (and in the K1458 far-reach term), or skip pieces that are a fused joint with the label's chain
+(crossing_gaps.ts `isJointPair`, eval.ts `member()`).
+
+Checks. The fill look moves wherever stage 8's case occurs (link A t1s, t24s, t46e, t39s and their kind): look
+at each one, fill and border; the border look stays at 0 px. A numeric test: generalise the probe's `!` count
+(it hard-codes chain 30) to "a filled pixel cut by a piece that is a fused joint with its label", 0 on the bar's
+scenes. The K1436 bar and `guards.ps1` pass with `GF_KRETRY=1`; `npm test` is green.
+
+Pictures: the decision page's K1470 card (k1470_nub.png).

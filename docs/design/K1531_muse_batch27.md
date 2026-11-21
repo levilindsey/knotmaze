@@ -36,6 +36,10 @@ opt-in (`rp=gf` in a link). **Today's look** is the default renderer. Link A is
   capture sequence of at most 25 minutes per call. Never write or `Remove-Item` `$env:TEMP\claude-perf.lock`
   yourself: 27A's "remove it, write my line, run" removed whatever lock was there and re-took its own with no
   gap, so the Claude agent's guards waited 80 minutes and never ran.
+- **Never end your turn while a `scripts/perf_lock.ps1` call or a capture is queued or running** (added
+  2026-11-20): wait inside the blocking call and start the next step from the same turn. The chain reads an
+  ended turn with no commit as a failed run and stops: 27I's did at 12:53, its capture still waiting for the
+  lock.
 - **Same-state captures:** freeze through `.claude/probes/freeze_parity.mjs`'s `alignFreezeParity`
   (Handoffs 26V and 26X in `docs/design/K1464_muse_batch26.md`: only those two handoffs, by Select-String).
   Compare two captures only when their physics hashes agree, and say which hash.
@@ -557,7 +561,7 @@ Done 4 (draw cost, warm, master preview, one kept profile, link A at rest after 
 
 Done 7: `npm test` green (258 files passed, 2 skipped; 3,207 tests passed, 9 skipped; tsc clean). K1552 closed with the closing commit; K1531 and K1482 left open. Tried and left: `loneFold` on the dumped tier text, above (reported, not timed there, and timed instead on the `gfFs` form); nothing else failed - every other neutralised variant compiles and links, and no rule's variant needed a build.
 
-## Run N (27N): the side-run gate's table cost back to where it was (K1553)
+## Run N (27N): withdrawn 2026-11-20 (stage 33's gate was reverted in 9c3e7698e; K1553 dropped)
 
 Added 2026-11-20 10:52. A fix run with ONE exception to the hands-off list: you may rewrite the BODY of
 `sideRuns` in `src/render/gpu_field/tables.ts` (K1482 stage 33, f7b965265) and nothing else in the six
