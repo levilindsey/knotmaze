@@ -1142,9 +1142,6 @@ Every other item below waits on the trigger it names.
   untracked .claude/probes/K1530/out/27A/k1463_sheet.png. Seen at 16x by the coordinator: where the pink
   tail fades under the blue thread, gf ends it at a harder lower-right corner and leaves about five single
   faint pink pixels along the blue thread's upper edge; today's has neither. Waits for the gpu_field slot
-- **K1473** · rp=gf: check pulses and the turn telegraph on screen. Their table (unit 9) uploaded as R32F from
-  9b48e44f until K1472's fix (998be573), so the shader read zeros; nobody has looked since (gf_pass.ts
-  setLook; test/render/gf_look_upload.test.ts counts mismatched uploads)
 - **K1478** · rp=gf: the rest of K1436 s3's work list of screen faults (each tile viewed;
   .claude/probes/K1436/out/s3/worklist_named.tsv, sheets/worklist_h1_*.png and worklist_h0_*.png): muse_hash
   j81 wedge and stray arc (25.2, 23.5); g41_def_tw64 j148 smear plus three specks (13.0, 10.3; gfh=0 only, no
@@ -2997,6 +2994,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1473** · rp=gf: check pulses and the turn telegraph on screen. Done in 5e08dae1e (2026-11-21).
 - **K1558** · Corner census again on today's build: K1551's counted the build before the hook revert (its preview was of 6f645f3ce; link A's frame equals the run-on build at all eight reverted places), 146 of its 264 wedge flags sit on the first step over the threshold (t84e's level, which Levi called fine), no usable kind sees j15, and its R 18 sheets cannot be judged. Done in 5d6dfe240 (2026-11-21).
 - **K1575** · `npm test` with `GF_KRETRY=1` set fails `test/render/gf_home.test.ts` (packs aHome into the arm record's free .y only with the switch on), on master too (stages 37 and 38 saw it on d1c25f5fe); green with the variable unset. Done in 9205e1952 (2026-11-21).
 - **K1578** · rp=gf look candidates, the all-maze look: `.claude/probes/K1578/allmaze.ps1` (any two commits, every test maze twice in one session, a sheet per changed place, places.txt) built by Muse run 27V with a null and a known-break control (tools `13e6b8475`), and run on the ball candidate on all 21 mazes (K1572); leftovers are K1581. Done in 8e7219f3b (2026-11-21).
