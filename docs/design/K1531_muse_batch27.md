@@ -28,7 +28,11 @@ opt-in (`rp=gf` in a link). **Today's look** is the default renderer. Link A is
   `pwsh scripts/preview.ps1 -Port <p> [-Ref <commit>]`, at most three alive; stop them and remove their
   directories and Chrome profiles when you finish (the disk is short); a tool with a `-Port` (the bar) takes
   one of yours. Never `--virtual-time-budget`; headed real-GPU Chrome off-screen (`probes.md`). Never touch
-  the phone. At most 4 parallel Chrome or Node workers.
+  the phone. At most 4 parallel Chrome or Node workers. PROVE THE SERVER BEFORE THE FIRST CAPTURE: `strictPort`
+  fails when a port is taken, and an older run's leftover server then answers on it. Check that the listener
+  on your port is the process you started (its command line names your directory) and that the served bundle
+  carries the commit you built; never capture from a server you did not start (run 27P lost two capture rounds
+  to leftovers on 5480 and 5481).
 - **The perf lock** for every pixel-exact capture and every timing, **taken only through
   `scripts/perf_lock.ps1`** (changed 2026-11-19, K1533): `pwsh scripts/perf_lock.ps1 -Owner "muse-27<X>" -What
   "<what>" -Cmd "<the capture command>"`. It waits while another owner holds the lock (one blocking command, up
