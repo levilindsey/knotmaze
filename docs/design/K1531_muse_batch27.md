@@ -1,6 +1,6 @@
 # K1531: Muse batch 27, captures and guards that can be trusted (2026-11-19)
 
-Run tags 27A-27K (27E and 27F were added 2026-11-19 23:55; 27E was withdrawn and 27G added 2026-11-20 01:25; 27H and 27I were added 2026-11-20 06:00; 27J, held, 07:45; 27K 08:35), started by Claude through Paseo with the K1053 chain, one after another in the main
+Run tags 27A-27M (27E and 27F were added 2026-11-19 23:55; 27E was withdrawn and 27G added 2026-11-20 01:25; 27H and 27I were added 2026-11-20 06:00; 27J, held, 07:45; 27K 08:35; 27L and 27M, the two measuring runs Levi approved, 08:41), started by Claude through Paseo with the K1053 chain, one after another in the main
 checkout. **This brief is the authority and is self-contained: do not read the older batch briefs' rule
 lists.** Levi (2026-11-11): junctions and outlines are the priority; a Claude agent is on rp=gf's corner
 faults (K1482) and judges them with captures, the K1436 bar and the fade and drag guards. Three stages this
@@ -400,3 +400,93 @@ Leave K1537 open: say in the handoff whether any load showed its smaller shape, 
 the coordinator decides. 6. **Crops, no verdict:** under `.claude/probes/K1537/out/27K/` (untracked), clean |
 master after the loss | your tip after the loss, 4x, at the ring box and at one place outside it, for gf and
 for today's renderer. Write what you see at each, including what is worse.
+
+## Run L (27L): how often each corner fault kind occurs on 20 other mazes (K1551)
+
+Added 2026-11-20 08:41. A MEASURING run, approved by Levi (his "Sgtm" to K1549 c): no `src/` change, and
+nothing here closes on a look. Why: 14 Claude stages chased single places on link A and 8 of Levi's 14 are
+still open; the next corner rule is to be picked by how often its fault kind occurs across mazes, not by one
+link. Faults are flaws in rp=gf's outline strokes where threads meet or end: **wedge** (the angle between
+two strokes filled solid), **notch** (a bite out of a stroke's edge), **sliver** (a thin eye of page between
+two strokes, often with a dot in it), **dot / tick / dash** (stray ink thinner than a stroke), **break /
+stub** (a stroke that stops short, or a short spur). Tools, tracked in `.claude/probes/K1482/` (usage in
+each header): `cap.mjs <base> <outDir> <profileDir> [query]` (one frozen rest state of any link: `gf.png` at
+3200x1800 and `sites.json`, every junction `j<n>` and fused tail end `t<n>s|e` with its device px),
+`specks.py` (stroke px a 2x2 or 3x3 opening removes, per site), `tiles.py` (4x tile sheets per site),
+`sweep_table.py`.
+
+The labelled sets, both on link A (`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&gfh=1`, hash fff8c9e5, 327
+sites): (i) master 0007c8df, every tile judged by eye: `.claude/probes/K1482/classes_master.txt`, 85 faulted
+(sliver 33, wedge 19, notch 11, dot 7, tick 5, dash 4, break 3, stub 3), the other 242 clean; (ii) today's
+master: a wedge or notch still at t84e, j59, t23e, j47, j15, t59s, t58e, j41; fixed, so they must read
+clean: j14, j50, t45s, t81s; slivers Levi accepted: j71, j95, j147, t43s, t56s; j4 and t4s are being asked
+of Levi: either reading is right.
+
+Done: 1. **A detector that reads a frame, not a person.** `census.py <sites.json> <gf.png>` under
+`.claude/probes/K1551/` (tracked; its outputs untracked): per site, a number per kind and a flag. The
+measures are yours; a start: the stroke's width from the frame itself (the mode of the ink's local
+thickness), then solid = ink whose inscribed disc is over about 1.5 strokes wide (wedge), thin =
+`specks.py`'s residue (dot, tick, dash), eye = an enclosed page hole narrower than a stroke (sliver), bite =
+a stroke edge that steps in by 2 px or more over a short run (notch). Python has numpy and PIL, no scipy.
+2. **Checked against (i).** A build of 0007c8df (`scripts/preview.ps1 -Ref 0007c8df`); if today's `cap.mjs`
+cannot drive it, `git show e063ee091:.claude/probes/K1482/cap.mjs` is the one written for it. Set each
+threshold on the odd-numbered sites and report the even-numbered ones: per kind, of the labelled sites how
+many it flags, and of the clean ones how many it flags. A measure that flags under half of its kind, or
+more clean sites than faulted ones, is NOT usable: say so and leave that kind out of the census rather than
+tune it further. 45 minutes for 1 and 2 together; if the old build cannot be captured in 20 of them, check
+against (ii) alone and say the sample is 8. 3. **Checked against (ii)** on a build of master: the 8 open,
+the 4 fixed, the 5 slivers, and how many of the other 308 it flags. 4. **The census**, on a build of master,
+one kept profile, `&snd=none`, all in the border look (`&tlk=border`; first confirm on link A that the frame
+with it equals the frame without: if they differ, say so and capture the first ten in link A's own look):
+link A's settings on ten other seeds (`?<s>.FGH1HtvQeDjm6e4BII&xp=off&am=instant&gfh=1`, s = 4 5 6 7 8 9 a
+b c d) and the default design on ten seeds (`?<s>&xp=off&am=instant&gfh=1`, s = 1 to 9 and a). A link whose
+capture fails twice is replaced by the next seed and named. Captures under the perf lock, at most 25 minutes
+a call, so in batches. 5. **The table**, in the handoff: one row per maze (sites, flagged per usable kind,
+per 100 sites), link A's row, the totals, and two sentences of fact: which kind is the most frequent per
+100 sites, and whether link A's rate of each kind lies inside the range of the twenty. 6. **Sheets, no
+verdict:** per usable kind, the 12 highest-scoring flagged sites of the twenty as 4x tiles with their
+surroundings (`tiles.py`), under `.claude/probes/K1551/out/27L/` (untracked). Write what you see at each;
+the coordinator and Levi judge them. Close K1551 with the commit that tracks the tools and this handoff.
+
+## Run M (27M): what each corner rule costs to compile and to draw (K1552)
+
+Added 2026-11-20 08:41. A MEASURING run, approved by Levi (his "Sgtm" to K1549 d): no `src/` change at all
+(the hands-off list stands; you only read and call those files). Why: K1482's stages added corner rules to
+gf's fragment program one place at a time; `gf_glsl.ts` grew from 99,181 to 118,448 bytes between 2026-11-17
+and 11-20 (`eval.ts` +30%, `tables.ts` +29%), and K1456 found that the wait on a first visit is that one
+program's compile (40-96 s in the worker; 143 s whole against 18 s with `layers()` stubbed). The question
+behind this run: would deciding corners once at maze build, baked into the tables, buy back compile time and
+frame time, and which rules are worth moving first. You measure; the design is a later Claude stage. Read
+K1456 and `### Handoff K1456 s2` in `docs/design/K1456_s2_first_visit.md` first. Tools, tracked, usage in
+each header: `.claude/probes/K1456/s2/dumpsrc.mjs <url> <profileDir> <outDir>` (the vertex source and every
+fragment source the app posts to its compile worker), `ctime.mjs <vs.glsl> <out.json> <a.frag> [b.frag ...]`
+(compile + link seconds per source, each with a nonce so no cache answers; env `SERIAL=1` one at a time),
+`.claude/probes/K1482/s32/glsl32.ts` (every tier's shader text), `diag32.mjs` (composites after the switch
+to gf), `.claude/probes/K1482/cap.mjs` (lines 57-58 force one redraw). `gfFs` in `gf_glsl.ts` builds the
+text for a given form, so a Node script can call it for the program with and without `retryForm`.
+
+Done: 1. **The rule list**, at most 12 rows, drawn up from `gf_glsl.ts` and the dated stage entries of
+`.claude/rules/render-gpu-field.md`: every block a K1482 stage added or grew (the second corner try
+`retryForm`, the home burial `homeBurial`, the run-on rule, the rounding at joints, the lone fold
+`loneFold`, which is exported and not applied, and the rest), each with its function names, its commit and
+its size in characters in the dumped source. 2. **The floor.** Dump link A's sources from a build of master
+(`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&snd=none`). Three batches of two identical copies of
+the largest fragment source: the spread between twins is the floor every later difference is read against.
+3. **Compile cost per rule**, with no build: for each rule a copy of the fragment text with that rule
+neutralised (its function body replaced by the value it returns when it does not fire, or its call removed;
+the technique is yours; the copy must still compile and link: a variant that fails is reported, not timed).
+Time each variant against a control copy in its own batch, three batches, the median: characters removed,
+seconds saved, and whether that is over the floor. Then one variant with every listed rule neutralised at
+once, and, if `dumpsrc.mjs` can drive it, the full program of a build of 0007c8df (2026-11-17, before most
+of them). All timings under the perf lock, at most 25 minutes a call. 4. **Draw cost**, warm, on a build of
+master, one kept profile, link A at rest after its switch to gf: the wall time from a forced redraw to its
+composite (`stats.composites` moves), 100 times, three repeats, the floor from the repeats; the same with
+`&gfk=0` (the second corner try off: the one rule a link can switch). Report ms per redraw for both and say
+whether the difference is over the floor. Per-rule draw cost needs builds and is NOT this run. 5. **What
+each rule reads**, from the GLSL, one row per rule: table texels only, or also the pixel's own position or
+distance; and whether its outcome is one answer per corner (the same for every pixel of that corner: a
+candidate for a table flag) or varies across the corner's pixels. Fact, no proposal. 6. **The table**, in
+the handoff: rule | chars | compile seconds saved (over the floor or not) | reads | per corner or per pixel,
+then the all-rules row, the 0007c8df row and the two draw numbers. Scripts under `.claude/probes/K1552/`
+(tracked), outputs under its `out/27M/` (untracked). Close K1552 with the commit that tracks the tools and
+this handoff.
