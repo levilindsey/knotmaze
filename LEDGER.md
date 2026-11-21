@@ -2606,10 +2606,6 @@ Every other item below waits on the trigger it names.
   unchecked on it; `cornerDepth` adds 2.2 ms to link A's table build (15.5 to 17.7 ms); one soft partial pixel
   at (937, 1144); on its branch the END-ARM BURIAL lore line and a `gf_pack.ts` comment carry stage 35's old
   `a34` formula (handoff: `docs/design/K1482_s38_t81s_more.md` on its branch)
-- **K1575** · `npm test` with `GF_KRETRY=1` set fails `test/render/gf_home.test.ts` (packs aHome into the arm
-  record's free .y only with the switch on), on master too (stages 37 and 38 saw it on d1c25f5fe); green with
-  the variable unset. The test should set the switch itself instead of reading the shell's. Muse run 27T (Run
-  T in docs/design/K1531_muse_batch27.md)
 - **K1576** · Stage 38's probe leftovers in `$env:TEMP` (stage 37's are gone: stage 39 removed them, checked
   2026-11-20 20:58): `k1482s38p` (builds, registered worktrees `src-d1c25f5fe` and `src-67f8756f2`),
   `k1482s38p_631*.log`, `k1482s38_*.py`, Chrome profiles `k1482s34b-s38m`, `k1482s34b-s38c`, `k1482s36-s38m`,
@@ -3011,6 +3007,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1575** · `npm test` with `GF_KRETRY=1` set fails `test/render/gf_home.test.ts` (packs aHome into the arm record's free .y only with the switch on), on master too (stages 37 and 38 saw it on d1c25f5fe); green with the variable unset. Done in 9205e1952 (2026-11-21).
 - **K1578** · rp=gf look candidates, the all-maze look: `.claude/probes/K1578/allmaze.ps1` (any two commits, every test maze twice in one session, a sheet per changed place, places.txt) built by Muse run 27V with a null and a known-break control (tools `13e6b8475`), and run on the ball candidate on all 21 mazes (K1572); leftovers are K1581. Done in 8e7219f3b (2026-11-21).
 - **K1559** · rp=gf, a thread's tight inside bend drawn round: t81s's step corner on link A (907,1137; Levi 2026-11-20: 'we want the step', ideally its corner rounder; 'Do it', K1577) and t4s's inside corner (2174,632; K1555: 'nice to round out', not critical if too costly). Dropped: the second and last try (stage 43, 2026-11-21 00:32 to 01:15, mirror only) showed no visibly rounder step within the bar. Outer edge alone: 1.3 px deep at a 17 px radius, reads as before; from 25 px the step gets lower. Both edges: the corner rounds, but dots and a notch show where chain 81's start lies under chain 45 (about 910,1138). The coordinator viewed both on the stage's sheets. t81s's step corner stays as it is; no third try unless Levi names one. t4s's part is K1580. Handoff: docs/design/K1482_s43_bend_pictures.md (master 4a3311383). Page: https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#bends (2026-11-21).
 - **K1555** · rp=gf, t4s on link A (2172,615 on the 3200x1800 frame): its square inside corner, round. Dropped: stage 42 (2026-11-21 00:07 to 00:23) stopped at Levi's own cost line: the corner is c66's own tight bend (turn 56 at 2174,632), one of 87 to 123 a maze, with no corner record, so no rule rounds t4s alone. The corner stays as it is unless Levi takes the round look for every tight bend (K1559, stage 43's pictures). Handoff: docs/design/K1482_s42_t4s_corner.md (2026-11-21).
