@@ -3647,3 +3647,163 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1246 (Done 2026-11-06)
 
 - **K1246** · Corner radius now follows the frame: V feet are the builder's global footArm (estD ± 4h) search and r is the 32-node gate integral recomputed per frame (margin/steep/slack/root). Moved def: 386 corners, 0 with |Δr|/|Δq| > 0.005 vs fresh (was 132); frame integral matches builder r bit-for-bit on the diagnosed corner. Residual moved over2 is exposure partition, filed separately. Done in 4db4a713 (2026-11-06).
+
+## K1236 (Done 2026-11-09)
+
+- **K1236** · Cursive J3m's looks (card K1236). Levi, 2026-11-09: b, v and w's exits a little more downward; f's word-end tail shorter, flatter and smooth, p's shorter and flatter; o, q and a fine. Goes to K863 J3n (brief 42d4c9f7). Done in 42d4c9f7 (2026-11-09).
+
+## K1244 (Done 2026-11-09)
+
+- **K1244** · A pulse crosses a junction as one soft glow (K1211 S6). Levi, 2026-11-09: kept, 'I guess it's ok, but it still isn't perfectly smooth'; the smoothness is K1250's. Done in 13aab452 (2026-11-09).
+
+## K1211 (Done 2026-11-09)
+
+- **K1211** · One seamless light inside each junction for pulses and the gold path (S6), kept on K1244; fire and collapse are K1210, the remaining smoothness K1250. Done in 13aab452 (2026-11-09).
+
+## K1253 (Done 2026-11-09)
+
+- **K1253** · WASM vs JS on the outline's kernels: 1.6-1.8x on footNearM and marginOfC replayed alone, bit-exact, but no measurable gain swapped into def's frame; no port now (docs/design/K1247_wasm_kernel.md handoff). Done in e60dff3a (2026-11-09).
+
+## K1251 (Done 2026-11-09)
+
+- **K1251** · J3n's looks (K863, card K1251). Levi, 2026-11-09: the variant everywhere (b, v and w at a word's end and into high-entry letters, f, p); the kit's build is work38/cand/J3NV. Done in 15cb9922 (2026-11-09).
+
+## K1040 (Done 2026-11-09)
+
+- **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's float64 reference. Dropped: superseded by K1240 (Levi, 2026-11-09: keep the redesign, no fallback to K1040's GPU field); its open checks (the pop census, the fades in motion, check #13) fold into K1240 when the outline reaches the app (2026-11-09).
+
+## K1257 (Done 2026-11-09)
+
+- **K1257** · form B grows corners with the outline's closed-form pieces (src/render/field/corner_cf.ts): 71 corners over 0.5 device px from the outline's -> 0 (max 0.026 px); outside corners bit-identical (k1257_same.ts, 27 scenes); form_b.test.ts's acute pair re-frozen (r 0.170935 -> 0.170801 h); Claude re-ran sliver, same and the field tests and viewed the crops and the fbb shot. Verify's 48 are the stale base tables, not form B. Done in 0656cf58 (2026-11-09).
+
+## K1097 (Done 2026-11-09)
+
+- **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the Pixel's 2 ms. Dropped: superseded by K1240 with K1040 (Levi, 2026-11-09: keep the redesign, no fallback to K1040's GPU field); its owed Pixel batch picked levers for that field's label pass (2026-11-09).
+
+## K252 (Done 2026-11-09)
+
+- **K252** · the head's 0.45 s show delay checked on the Pixel (round 2026-11-09b): 222 taps, 11 off-screen episodes, every blip 103-378 ms hidden, every excursion 638-1039 ms shown (pending 424-480 ms), none between; agrees with the desktop, no change. Done in aca6b86a (2026-11-09).
+
+## K1263 (Done 2026-11-10)
+
+- **K1263** · k1247c_final.ps1 exits nonzero when a step fails; k1247s10_base.ps1 re-makes the baselines from master's outline. Done in 0de40350 (2026-11-10).
+
+## K1271 (Done 2026-11-10)
+
+- **K1271** · Redesign outline (K1247 s11): the shallow-crossing under-thread edge keeps its new end (Levi, 2026-11-10); the look there is still wrong in both versions, see K1279. Done in 3e50c773 (2026-11-10).
+
+## K1279 (Done 2026-11-10)
+
+- **K1279** · Redesign crossings match form B away from junctions: census 2916 crossings, differing 1584 -> 458, 0 worse, 0 off-junction (ghost pieces, form B's burial fade on edge lines, longer pass spans); junctions left to K1283. Done in f2231a19 (2026-11-10).
+
+## K1277 (Done 2026-11-10)
+
+- **K1277** · the fill is plain triangles fixed at structure (fill_tri.ts: strips, cap fans, tail strips, junction ring fans; draw order = item index; over/under by form B's per-pixel depth key; no stencil). At rest every scene beats master (def fill/paper 200/406 -> 44/60, muse_hash 422/2021 -> 241/267); def motion topology constant, fill 32069 -> 548 px, paper 78508 -> 66; cut 273 pink as form B; K1273 speck 2 -> 0 px. Claude viewed the crops. Left: K1283 end-arm sliver, K1285, K1286. Done in 4d168bb4 (2026-11-10).
+
+## K1273 (Done 2026-11-10)
+
+- **K1273** · K1247 s14 leftover, the 2 px speck at muse_hash (26.86, 22.32): closed by K1277's triangle fill (a fold overdraws instead of dropping out), 2 -> 0 px, loop eyes stay paper. Done in 4d168bb4 (2026-11-10).
+
+## K1282 (Done 2026-11-10)
+
+- **K1282** · the outline's draw order from positions: nothing draws by regionsPhaseC's depthAtC sort since K1277 (fill order = structural item index, over/under per pixel); the sort is dead weight in outline.ts, remove it when stage 16 frees the file. Done in 4d168bb4 (2026-11-10).
+
+## K1280 (Done 2026-11-10)
+
+- **K1280** · K1240 outline jumps where a station's s crosses a centreline vertex: the tie spread gives each tie run a continuous s; def j47 1.243, j146 1.007, j158 0.264 px -> no jump (K1247 s16). The jitter-check crossings (muse_hash x61, x182, ...) now 0 jump px in k1279_motion. Done in 541d22fb (2026-11-10).
+
+## K1290 (Done 2026-11-10)
+
+- **K1290** · answered, not adopted: forward corner-arc ends cut def jump pairs 66 -> 4 (muse_hash 33 -> 14) but census vs form B +1.8%, frame() +6%, concentric corners (j55, j156) still switch roots, and the corner-foot bites stay; follow-up in K1281. Done in 97f4f2e2 (2026-11-10).
+
+## K1293 (Done 2026-11-10)
+
+- **K1293** · outline_port.test.ts's second frame (a rigid 0.3 rad turn) leaves every corner degenerate, so its pins there exercise no arc; give it a frame with real corners (K1283 handoff, docs/design/K1283_junctions.md). Done in fe4dd895 (2026-11-10).
+
+## K1321 (Done 2026-11-12)
+
+- **K1321** · the census reference draws the approved rounded look at classes (a)/(c) and the fillet yield (census_k1321c: stray_ink 25 -> 12, nothing new). Done in a8bab56a (2026-11-12).
+
+## K1322 (Done 2026-11-12)
+
+- **K1322** · The record fill keys every strip as fillFrame does (K1247 s26), tied by test/render/rec_tie.test.ts. Done in caceed3a (2026-11-12).
+
+## K1332 (Done 2026-11-12)
+
+- **K1332** · c8's quad and stair edge cleared in both fills (fan mid-mouth key + FLOOR_EDGE, K1247 s27, with 5b345bd9). Done in 809d8421 (2026-11-12).
+
+## K1327 (Done 2026-11-12)
+
+- **K1327** · the GPU record fill within 0.0016 px of its CPU twin on every census scene (span-end ties, exact column rule; brought in by 49afe511). Done in 45257b7e (2026-11-12).
+
+## K1328 (Done 2026-11-12)
+
+- **K1328** · a tracked mirrored fixture in rec_tie (g41_user_tw64, c32's strip). Done in 7d4018a9 (2026-11-12).
+
+## K1331 (Done 2026-11-12)
+
+- **K1331** · muse_hash x22's twist-eye smear cleared by a self-pass burial rule in draw.ts tieAlpha and its BAND_FS twin (self_bury.test.ts); the census now counts form B's own smear there (K1324 s2). Done in 943ae592 (2026-11-12).
+
+## K1333 (Done 2026-11-12)
+
+- **K1333** · one shared form B cache for every checkout in the main checkout's .claude/probes/K1314/out/fb, fbf (tmp + rename writes, length-checked reads, rename-aside pruning; two concurrent runs matched one run) (K1325 s1). Done in 21dad33d (2026-11-12).
+
+## K1334 (Done 2026-11-12)
+
+- **K1334** · Census reference smears where a chain crosses itself: muse_hash x22 (414 px), x345 (19.996, 3.944) 225 px, j116 (25.518, 13.825) 696 px, x58 (0.113, 15.187) 527 px. rp=outline draws them whole since 943ae592, so census_k1324s2a counts form B's flaw (stray_ink 7 -> 10). Dropped: folded into K1325 s2 (docs/design/K1325_s2_self_crossing_reference.md) with x304 (2026-11-12).
+
+## K1325 (Done 2026-11-12)
+
+- **K1325** · the census reference draws x304, j30 and muse_hash's five self-crossings (x304, x22, x345, j116, x58) whole; census m1 -> k1325s2: stray_ink 9 -> 4, total 22 -> 17, nothing else moved. Done in 3026bfc3 (2026-11-12).
+
+## K1324 (Done 2026-11-12)
+
+- **K1324** · no contact pass inside one junction group (s1), muse_hash x22's self pass buried whole (s2, selfBury + BAND_FS), and the census band's lower-join seam at x22 (s3, draw.ts bandData splits edges where the tie bends); c8's hard edge is K1315's end, c8's dotted seam is K1346. Done in 0a9119cd (2026-11-12).
+
+## K1338 (Done 2026-11-12)
+
+- **K1338** · frame/band speed (s29: tailFoot boxes, fill reuses band feet; s30: what changes per frame, the 1.75x was machine load (quiet master def worker 72 ms, frame 38.2), KF_INC prototype off by default, the six-stage plan to ~7-9 ms in docs/design/K1247_s30_path_to_gate.md). Done in 8c31261b (2026-11-12).
+
+## K1344 (Done 2026-11-12)
+
+- **K1344** · j116's crease: cutTailHooks cuts a tail walk's hook at a swallowtail narrower than its step (6 of 187 tail_look finds were this fold, 0 after; bar kinds unchanged). Done in d49c248d (2026-11-12).
+
+## K1346 (Done 2026-11-12)
+
+- **K1346** · outline folds cut to 0 in all 12 census scenes (c8 fan seam, fill walk K1350, sub-pixel turn-backs); fold checks cost 0.5-0.7 ms per def frame. Done in 48add3d8 (2026-11-12).
+
+## K1350 (Done 2026-11-12)
+
+- **K1350** · fill walk and sub-pixel turn-backs cut with K1346 (turn-backs 0, fill folds 0 in all 12 census scenes). Done in 48add3d8 (2026-11-12).
+
+## K1341 (Done 2026-11-12)
+
+- **K1341** · K1247 s28's exact cuts: zChains 23% faster on def, 20% on muse_hash, 43% on fat, bit-identical (s2, 1da71a35); def fill's apparent +1-2.7% was a slot bias in the A/B harness (Muse s3: null test, swap-averaged k1341s3_ab.ts), no src change; muse_hash fill/band residual K1358. Done in 96edc35e (2026-11-12).
+
+## K1352 (Done 2026-11-12)
+
+- **K1352** · Span-local L/Lcut addressing (s30 plan stage 4, first half): an arm's reach samples its crossing partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff, `docs/design/K1247_s31_snap_phase_caches.md`). Dropped: superseded by K1247 s35 (docs/design/K1247_s35_route_review.md): the incremental frame stops (its ceiling misses the bar, and under a pool each model sees only every Kth frame), so span-local addressing for its caches is not needed (2026-11-12).
+
+## K1356 (Done 2026-11-12)
+
+- **K1356** · K1247 s33's jlocal fixpoint costs 18.8 ms p50 / 88.6 ms p95 on def whenever the snap is on (inert while KF_INC.snap is off; s34 step 4 targets ~1 ms). Dropped: superseded by K1359: the snap (KF_INC.snap) stays off and is being removed with the incremental route (K1247 s35) (2026-11-12).
+
+## K1319 (Done 2026-11-12)
+
+- **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip, where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds it). Dropped: Levi, 2026-11-12: 'the round version of course'. rp=outline already draws it round; no change. The census's j73 stray_ink spike (262 px) is form B's flaw, not a bar find (2026-11-12).
+
+## K1357 (Done 2026-11-12)
+
+- **K1357** · rp=outline's drag feel: Levi, 2026-11-12, 'unacceptable' at 9-10 Hz; the pool (s36) lags more (250-340 ms), so no clip re-ask; the route changes (K1362). Done in b3ea2ad4 (2026-11-12).
+
+## K1366 (Done 2026-11-13)
+
+- **K1366** · K1362 tables lane: buildTables (tables.ts) at or under 2 ms on def, output unchanged (digest vs master), beside K1362 s4's shader work (brief docs/design/K1362_t1_muse_tables.md). Done in e216acb0 (2026-11-13).
+
+## K1370 (Done 2026-11-13)
+
+- **K1370** · Muse t2: exact corner reuse is impossible (0.000 of vertices bit-identical between consecutive drag frames); a bit-identical slice-worker pool shipped, gated to junction-free builds because its serial prefix (6-8 ms) made muse_hash slower, so def/muse_hash/fat still run the single build (def 10.5 ms). Follow-up K1374. Done in 682a1afa (2026-11-13).
+
+## K1372 (Done 2026-11-13)
+
+- **K1372** · rp=gf: stage 5 tile routes removed by s6 (keys per bin made per-tile bounds moot). Done in c55d015b (2026-11-13).
