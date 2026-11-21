@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1579.
+Next free ID: K1580.
 
 ## Waiting on Levi
 
@@ -1176,6 +1176,15 @@ Every other item below waits on the trigger it names.
   strokes, the line is 1.85). Stage 36: 96 of 127 flags on A_5, A_7, A_8 are not faults, so run 27L's wedge
   counts are not fault counts. Recalibrate `.claude/probes/K1551/census.py` on stage 36's 127 verdicts, or
   drop the kind, before the census picks another stage
+- **K1579** · K1550's gate, finished by hand (Run 27K landed the reload-once fix at 5564d2665 and its smoke;
+  close K1550 only when these hold) - VERIFY: on a tip build, gf hook gate 0/45 off the floor with at least 3
+  of 45 console-error rows, today 0/20, late 5/5 at floor with no reload, 0 pageerrors overall, plus
+  probe:guards, probe:lace 3/3, the Done-6 crops and the deploy-green watch (breach: how the load-time reload
+  fires wrongly) - the exact probe commands and where the numbers land are in
+  .claude/probes/K1537/handoff27k.md. WHAT REMAINS: the run stopped at its 2 h line after the smoke (gf hook
+  4/4 clean on the fix, full npm test green); K1537 stays open regardless, and no load showed its smaller
+  shape. READY WHEN: master tips past 5564d2665. ODDS: 80-90% the gate holds (the cure is a fresh page; the
+  risk is tooling time and the late shape's no-reload edge).
 
 ## Residuals (known, not fixed)
 
