@@ -141,9 +141,6 @@ export interface GfTables {
    * K1482 s23: only a build with the retry on (GfOpts.kRetry / GF_KRETRY) carries these fields.
    */
   kExt?: Uint8Array; nKAlt?: number; cellK0Alt?: Int32Array; cellKNAlt?: Int32Array; cellKListAlt?: Int32Array; cellKPListAlt?: Int32Array;
-  /** K1482 s33: per chain, the over chain along whose lone pass its band ends in a long tangent run (eval.ts runT,
-   * retry programs only), or -1. Absent: none. */
-  rtM?: Int32Array;
   /** K1482 s34: per arm, the chain whose crossing set its cap aLcut (the pin ahead with the smallest cut), or -1
    * (no cap, or the behind-pin cap lowered it). Retry builds only (eval.ts cutArm). */
   aCutC?: Int32Array;
@@ -1349,7 +1346,7 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
     nK: nB, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
     // K1482 s23: with the retry off (the default) the tables are master's, field for field
-    ...(P.kRetry ? { kExt, rtM: sideRuns(nC, cV0, cNV, vx, vy, h), ...arms34(P.arms, pinPC, pinPS, cClosed, cV0, cNV, vs, cArm0, cArmN), nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
+    ...(P.kRetry ? { kExt, ...arms34(P.arms, pinPC, pinPS, cClosed, cV0, cNV, vs, cArm0, cArmN), nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
     ms: { vtx: ms.vtx, pins: ms.pins + walkMs, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
   };
 }
@@ -1390,73 +1387,6 @@ export function arms34(arms: GfArm[], pinPC: Int32Array, pinPS: Float64Array, cC
     a34[i] = (C + 1) * 2 + (endRoot(i) ? 1 : 0);
   }
   return { aCutC, aCutS, a34 };
-}
-
-/**
- * K1482 s33: GfTables.rtM. Per chain C, the chain M whose tube C's lies BESIDE over a long run without ever
- * dipping under it: no vertex of C comes nearer M's centerline than RT_DMIN h (the tubes touch at 2 h), and C's
- * vertices stay within (2 + RT_TOL) h of it over a contiguous arc of at least RT_RUN h; the longest such M, or -1.
- * eval.ts runT (gf_glsl.ts RUNT) narrows C's band only along that M: j59's step (chain 23 along chain 7, 1.98 h,
- * stage 33's brief, step 1). The run-on wedges dive under their over chain (1.78 h or less on five mazes) and
- * keep their ink; the nearest miss is a cap at 1.91 h, so the margin is thin.
- */
-export const RT_DMIN = 1.945; export const RT_TOL = 0.03; export const RT_RUN = 0.6;
-export function sideRuns(nC: number, cV0: Int32Array, cNV: Int32Array, vx: Float64Array, vy: Float64Array, h: number): Int32Array {
-  const out = new Int32Array(nC).fill(-1);
-  let nV = 0; for (let c = 0; c < nC; c++) nV = Math.max(nV, cV0[c] + cNV[c]);
-  const vc = new Int32Array(nV).fill(-1); let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (let c = 0; c < nC; c++) for (let i = cV0[c]; i < cV0[c] + cNV[c]; i++) {
-    vc[i] = c; if (vx[i] < x0) x0 = vx[i]; if (vx[i] > x1) x1 = vx[i]; if (vy[i] < y0) y0 = vy[i]; if (vy[i] > y1) y1 = vy[i];
-  }
-  if (!(x1 >= x0 && y1 >= y0) || !(h > 0)) return out;
-  const R = 2.1 * h; const gw = Math.floor((x1 - x0) / R) + 1; const gh = Math.floor((y1 - y0) / R) + 1;
-  // segments (start vertex i, i + 1 on one chain) by the cells their boxes touch, counting sort
-  const cnt = new Int32Array(gw * gh + 1);
-  const each = (fn: (cell: number, i: number) => void): void => {
-    for (let c = 0; c < nC; c++) for (let i = cV0[c]; i + 1 < cV0[c] + cNV[c]; i++) {
-      const ax = Math.floor((Math.min(vx[i], vx[i + 1]) - x0) / R), bx = Math.floor((Math.max(vx[i], vx[i + 1]) - x0) / R);
-      const ay = Math.floor((Math.min(vy[i], vy[i + 1]) - y0) / R), by = Math.floor((Math.max(vy[i], vy[i + 1]) - y0) / R);
-      for (let gy = ay; gy <= by; gy++) for (let gx = ax; gx <= bx; gx++) fn(gy * gw + gx, i);
-    }
-  };
-  each((cell) => { cnt[cell + 1]++; });
-  for (let k = 0; k < gw * gh; k++) cnt[k + 1] += cnt[k];
-  const list = new Int32Array(cnt[gw * gh]); const fill = cnt.slice(0, gw * gh);
-  each((cell, i) => { list[fill[cell]++] = i; });
-  const dmin = new Float64Array(nC); const cur = new Float64Array(nC); const best = new Float64Array(nC); const last = new Int32Array(nC);
-  const near = new Float64Array(nC).fill(Infinity); const seen: number[] = []; const tc = (2 + RT_TOL) * h;
-  for (let C = 0; C < nC; C++) {
-    const v0 = cV0[C]; const n = cNV[C]; const ms: number[] = []; let prev = -2;
-    for (let i = v0; i < v0 + n; i = i + 2 < v0 + n ? i + 2 : i + 1) { // every other vertex, and the last
-      const px = vx[i], py = vy[i]; const gx = Math.floor((px - x0) / R), gy = Math.floor((py - y0) / R);
-      for (let yy = Math.max(0, gy - 1); yy <= Math.min(gh - 1, gy + 1); yy++) for (let xx = Math.max(0, gx - 1); xx <= Math.min(gw - 1, gx + 1); xx++) {
-        const cell = yy * gw + xx;
-        for (let q = cnt[cell]; q < cnt[cell + 1]; q++) {
-          const s = list[q]; const M = vc[s]; if (M === C) continue;
-          const ex = vx[s + 1] - vx[s], ey = vy[s + 1] - vy[s]; const L2 = ex * ex + ey * ey;
-          let u = L2 > 0 ? ((px - vx[s]) * ex + (py - vy[s]) * ey) / L2 : 0; u = u < 0 ? 0 : u > 1 ? 1 : u;
-          const dx = px - vx[s] - u * ex, dy = py - vy[s] - u * ey; const d = Math.sqrt(dx * dx + dy * dy);
-          if (d > R) continue;
-          if (near[M] === Infinity) seen.push(M);
-          if (d < near[M]) near[M] = d;
-        }
-      }
-      for (const M of seen) {
-        const d = near[M]; near[M] = Infinity;
-        if (!ms.includes(M)) { ms.push(M); dmin[M] = Infinity; cur[M] = 0; best[M] = 0; last[M] = -2; }
-        if (d < dmin[M]) dmin[M] = d;
-        if (d <= tc) {
-          if (last[M] === prev) { const sx = vx[i] - vx[prev], sy = vy[i] - vy[prev]; cur[M] += Math.sqrt(sx * sx + sy * sy); } else cur[M] = 0;
-          last[M] = i; if (cur[M] > best[M]) best[M] = cur[M];
-        }
-      }
-      seen.length = 0; prev = i;
-    }
-    let bM = -1; let bR = RT_RUN * h;
-    for (const M of ms) if (dmin[M] >= RT_DMIN * h && best[M] >= bR) { bR = best[M]; bM = M; }
-    out[C] = bM;
-  }
-  return out;
 }
 
 /**
