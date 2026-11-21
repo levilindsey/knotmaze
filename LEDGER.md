@@ -1171,16 +1171,6 @@ Every other item below waits on the trigger it names.
   place of three, or per-corner terms moved to the table build; 0 px on the bar's scenes, compile seconds
   saved over the floor. A Muse fix run, once the ball's candidate (K1572)
   is decided (the bend look, K1559, closed 2026-11-21 with the look kept): all three work in the same loops
-- **K1581** · rp=gf, the all-maze tool's leftovers (from K1578, run ball40): (1) check the mirror's list
-  (`.claude/probes/K1482/s40/census40.ts`) against the tool's 64 captured places, so that the mirror can stand
-  as a first pass; (2) A_b came out a VIEW-DIFF maze: both candidate loads fit at scale 21.74032186, both base
-  loads at 21.74026042 (each pair 0 px apart), and 46 places of 1 to 7 px on stroke edges plus a marker's ring
-  edges (22 px) are listed there; a change to eval.ts and gf_glsl.ts should not move the fit camera, the cause
-  is not verified (27V's handoff gives an inference): find it or pin the view in `cap_maze.ps1`; (3) the
-  listing step is not one number (2 levels on A_4 t22s by the coordinator's count, a 1-level pixel listed on
-  A_c j69, a step-3 listing on VIEW-DIFF mazes by the handoff): state it in `analyze_maze.py`'s header. The
-  coordinator's contact sheets for an all-maze look: `.claude/probes/K1578/look_sheets.py` (every place of a
-  run, start, candidate and the changed pixels) and `zoom_pairs.py`
 
 ## Residuals (known, not fixed)
 
@@ -2994,6 +2984,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1581** · rp=gf, the all-maze tool's leftovers (from K1578, run ball40): (1) check the mirror's list (`.claude/probes/K1482/s40/census40.ts`) against the tool's 64 captured places, so that the mirror can stand as a first pass; (2) A_b came out a VIEW-DIFF maze: both candidate loads fit at scale 21.74032186, both base loads at 21.74026042 (each pair 0 px apart), and 46 places of 1 to 7 px on stroke edges plus a marker's ring edges (22 px) are listed there; a change to eval.ts and gf_glsl.ts should not move the fit camera, the cause is not verified (27V's handoff gives an inference): find it or pin the view in `cap_maze.ps1`; (3) the listing step is not one number (2 levels on A_4 t22s by the coordinator's count, a 1-level pixel listed on A_c j69, a step-3 listing on VIEW-DIFF mazes by the handoff): state it in `analyze_maze.py`'s header. Done in 90c8502c5 (2026-11-21).
 - **K1473** · rp=gf: check pulses and the turn telegraph on screen. Done in bc615b6ae (2026-11-21).
 - **K1558** · Corner census again on today's build: K1551's counted the build before the hook revert (its preview was of 6f645f3ce; link A's frame equals the run-on build at all eight reverted places), 146 of its 264 wedge flags sit on the first step over the threshold (t84e's level, which Levi called fine), no usable kind sees j15, and its R 18 sheets cannot be judged. Done in 5d6dfe240 (2026-11-21).
 - **K1575** · `npm test` with `GF_KRETRY=1` set fails `test/render/gf_home.test.ts` (packs aHome into the arm record's free .y only with the switch on), on master too (stages 37 and 38 saw it on d1c25f5fe); green with the variable unset. Done in 9205e1952 (2026-11-21).
