@@ -85,3 +85,92 @@ Stop when the Done list is complete, or 2 hours after your start (`Get-Date` at 
 milestone), whichever comes first. Then commit WIP, append `### Handoff K1482 s43` to this brief on your
 branch, and report. Neither a compaction nor context size is a stop: after a compaction re-read this brief
 and `git log`.
+
+### Handoff K1482 s43
+
+2026-11-21, started 00:32, stopped about 01:15 by the brief's own stop line: **no rule gives t81s's step a
+visibly rounder corner that passes the bar.** By this brief, the step's corner stays as it is. Nothing lands.
+Branch `worktree-agent-aaaeec79b5cca150f`, commits 23604b938 and 28c8cc71c (WIP, mirror only, never pushed).
+
+**The rule (mirror only, off by default).**
+- `tables.ts` `buildBends(T, rfH)` finds each tight inside bend of a thread. A bend's record holds a disc
+  centre F at R = h + rf from both legs, with feet fa and fb on the legs.
+- `eval.ts` `bendFillets()` runs before the depth keys. Inside a bend's sector (between F's rays to the
+  feet), the bend chain's pieces on the inside take distance min(pd, max(R - r, floor)).
+- Switch: env `GF_BEND=<rf in h>` (`GfEval.BEND`); 0 or unset is off. No GPU program has it.
+- Variants, all env and off by default:
+  - `GF_BENDIN=1`: the inner (fill) edge rounds too, floor h - W - 2aa, radius rf + W. Without it, floor is
+    h - W + aa: only the outer (ground) edge rounds, and ink is only added.
+  - `GF_BENDKEY=1`: the depth key reads the distance from before the fillet.
+  - `GF_BENDOTH=1|2`: the inner rounding is dropped where another chain's tube (1) or band (2) lies.
+  - `GF_BENDPD=1`: the distance only; the foot and tangent are kept.
+  - `GfBendsOpt.otherPass` (env `OTHER` in pic43): drops a bend only when another pass is nearer F than
+    OTHER * R (default 1).
+
+**Checks.**
+- Switch off: 0 px of 5,760,000 on link A (A_3), against the stage start's mirror (77ac869d6's eval.ts and
+  tables.ts, copied beside the live ones for the run and deleted after). The check compares ink, cov and
+  chain (`s43/off43.ts`).
+- `npm test`, with GF_KRETRY and every GF_BEND* unset, is green: 258 files, 3201 tests passed, 2 files and
+  18 tests skipped (`out/s43/test/npm_test.txt`).
+- Method: the mirror is coloured like the render (`colour43.py`) and set against the true capture
+  (`out/s42/start/gf_b2.png`). Mean |diff| is 0.77 levels in t81s's 220 px window and 1.24 in t4s's. The
+  sheets `*_0_capture_before.png` show capture | mirror, switch off.
+
+**t81s (907,1137): fails.**
+- The step corner is obtuse, about 136 degrees on the ground side, and the step's outer face is about 7 px
+  long. A round of radius rf there is 0.0785 rf deep and runs 0.404 rf along each leg.
+- Outer edge only (the clean form):
+  - At rf 17 px (1.0 h) the round is 1.3 px deep and changes 17 px. At the sheet's close scale it reads the
+    same as before (`sheets/view_t81s_1_outer_rf17_step.png`).
+  - From rf 25 px (1.5 h) the round eats the 7 px face, and the step gets lower. That fails "as high as it
+    is".
+- Both edges (`GF_BENDIN` + `GF_BENDKEY`): the fill-side corner rounds visibly at rf 8.5-17. But t81s is
+  chain 81's start, and chain 81's start cap lies under chain 45's band on the fill side. Where 45's inner
+  edge pulls back, that cap's outline shows as dots at about (910,1138) and (907,1140) and a notch at
+  (912,1135). That fails "no dot ... notch" (`sheets/t81s_2_both_rf8.5.png`, `pic/t81s_v9.png`).
+- Gating the inner rounding off where another chain's tube lies (`GF_BENDOTH=1`) takes all of it away at
+  t81s. Gating on another chain's band only (`=2`) leaves 9-17 px, outer only again (`pic/t81s_v10.png`).
+- So the visible part of a round at t81s needs the inner edge, and the inner edge at t81s is where chain
+  81's start sits. A larger outer radius only lowers the step.
+
+**t4s (2177,641).** The outer rule rounds the pale wedge's square end: a little at rf 8.5 px and visibly at
+rf 17 px. At rf 17, OTHER=0.6 is needed, or the record is dropped for chain 4's pass
+(`sheets/t4s_1_outer_rf8.5.png`, `t4s_2_outer_rf17.png`). I looked only at the close brightened rows of
+these two sheets. I did not judge their wide rows or the rest of the bar at t4s.
+
+**Counts (outer rule, OTHER 1, whole frame, mirror; places = changed px within 6 px of each other;
+`s43/cnt43.ts`, lists in `out/s43/cnt/<scene>_outer_<rf>.txt`).**
+- rf 0.5 h: 67-109 places a scene on A_3..A_d (A_3: 99 places, 1925 px).
+- rf 1.0 h: 40-84 places a scene (A_3: 71 places, 2913 px).
+- Per scene: `out/s43/cnt/counts.txt`. The largest places on A_3 at rf 0.5 are (1062,772) 157 px,
+  (1541,1612) 98 px and (1032,1134) 72 px. None of them was viewed.
+- Some pixels lose ink (for example, 17 px on A_3 at rf 0.5): the depth key reads the lowered distance.
+  `GF_BENDKEY` is the fix; it was not counted.
+
+**Not done (the stop line came first).**
+- Sheets for (2133,163), t84e and t2s.
+- Contact sheets of the changed places.
+- A measured build estimate. The guess, unmeasured: the term needs a bend table (F, rf, feet, chain: 2
+  texels a bend) and a sector test per bend near the pixel, before the keys, in every program variant that
+  computes membership: the tier, full, the corner-free variant, and the retry and reveal forms. It would
+  add about 1.5-3k characters per variant.
+- At 70-100 places per maze, any form of this rule would need every place listed and looked at before a
+  card (NAMED PLACES ONLY, render-gpu-field.md).
+
+**Pictures** (`.claude/probes/K1482/out/s43/`, untracked):
+- `sheets/`: stage 39's layout, 1616x3320, with rows wide as drawn, wide brightened, close as drawn and
+  close brightened.
+  - The mirror's 220 px window is pasted into the capture frame (`s43/frame43.py`), so only the window is
+    the mirror; every tile lies inside it.
+  - Sheets: `t81s_0_capture_before`, `t81s_1_outer_rf17`, `t81s_2_both_rf8.5`, `t4s_0_capture_before`,
+    `t4s_1_outer_rf8.5`, `t4s_2_outer_rf17`.
+  - `view_*.png` are 808 px cuts of the close brightened rows.
+- `pic/`: the windows as PGM/PNG (`<name>_off|b<rf>_<x0>_<y0>`), change maps, zoom strips (`t81s_v1..v10`,
+  `t4s_v1..v3`), and fillet geometry overlays (`*_geo*`).
+
+**Tools** (`.claude/probes/K1482/s43/`):
+- `place43.ps1`: one place, mirror off and on, coloured, with its change map.
+- `pic43.ts`, `colour43.py`, `diff43.py`, `strip43.py`, `geo43.py`.
+- `px43.ts`: one pixel's pieces, off and on.
+- `frame43.py`, `off43.ts`, `cnt43.ts`.
