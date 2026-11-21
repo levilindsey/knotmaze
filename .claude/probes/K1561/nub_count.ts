@@ -27,6 +27,10 @@
 // some counted windows run longer than the baked one (27Q: 199 of 255 counted places had a
 // changed capture place within 0.35 world). --fixed models the fixed lkGap (coverage from the named over chain only):
 // the same pixels then count only when the fused cutter IS the named over chain.
+// --narrow (K1566, 27R) models lkFusedJoint's rule: every piece cuts as on BASE except a fused
+// non-named cutter, which is skipped (the far-reach term cuts by the named chain alone, so it
+// never skips). The count then applies that skip to the cutter list first and counts fused
+// non-named removals among the survivors; 0 means the shader no longer removes through a nub.
 // Places: 8-connected components of counted pixels sharing (labelChain, cutterChain, g),
 // reported by world centroid and bbox. Pixels are raster samples at --ppu (default 60).
 // Only pixels within 0.55 world of a tables vertex are evaluated (a counted pixel lies
@@ -41,6 +45,7 @@ const opt = (k: string, d: number): number => { const a = args.find((x) => x.sta
 const PPU = opt("ppu", 60);
 const MARGIN = opt("margin", 0.15);
 const FIXED = args.includes("--fixed");
+const NARROW = args.includes("--narrow");
 const sceneArg = args.find((x) => !x.startsWith("--"));
 const scenes = !sceneArg || sceneArg === "all" ? ALL : sceneArg.split(",").filter(Boolean);
 
@@ -163,6 +168,7 @@ for (const nm of scenes) {
       if (lg.size === 0) continue;
       const named = namedWinner(o.chain, ls - ((T.cS0 && T.cS0[o.chain]) || 0)); // tables arcs carry the chain's start offset (cS0); scene arcs start at 0
       if (named < 0) continue; // lkGap's coverage cut is 0 outside a window
+      if (NARROW) continue; // lkFusedJoint skips every cutter this census counts, so none survives
       for (let j = 0; j < E.np; j++) {
         if (E.pc[j] === o.chain) continue;
         if (!(E.pkey[j] > lk + zt) || !(E.pd[j] < h + MARGIN)) continue;
