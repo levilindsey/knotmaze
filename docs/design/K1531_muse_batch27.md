@@ -1044,3 +1044,73 @@ Done 5 (every changed place of Done 4, 64 places; gained = candidate darker, los
 | A_d | 1057,770 | 0 | 1 | j40 | A_d_1057x770_j40.png |
 
 Done 6: tools 13e6b8475, the `&fw=0` mend and this handoff are committed and pushed; `npm test` green on the final tree (258 files passed, 2 skipped; 3,210 tests passed, 9 skipped; tsc clean). K1578 and K1572 stay open (Claude closes them; no place above is called fixed, better or worse by this run — Claude looks at every sheet). Tried and left: a step-1 listing on VIEW-DIFF mazes (the 7,027 px reading in Done 1 (ii), replaced by the step-3 listing in the same tool, not captured again — the re-listing ran on the session's own PNGs); nothing else failed. Preview servers and the run's Chrome profiles (`k1482s40-m/c/m2/c2` under `$env:TEMP`) stopped and removed at the stop line.
+
+## Run X (27X): pulses and the turn telegraph still draw under rp=gf (K1473)
+Added 2026-11-21. A check first; a fix only where a number is short. This is Run Z2 of
+`docs/design/K1464_muse_batch26.md`, written 2026-11-19 and never run: read that one section (`Select-String
+'^## Run Z2'`, then its lines; nothing else of that brief) and the handoffs it names. Its Done list, 1 to 9, is
+this run's, word for word, with these changes:
+- This document's How to work replaces batch 26's rule lists (the perf lock only through
+  `scripts/perf_lock.ps1`; never end the turn while a capture waits).
+- Outputs go under `.claude/probes/K1473/out/27X/`.
+- For this run `gf_look.ts` and `gf_pass.ts` are yours: no Claude agent works in them now. `tables.ts`, `eval.ts`,
+  `gf_keys.ts` and `gf_glsl.ts` stay hands-off; a fix that needs one of them is filed with its evidence and that
+  part stops.
+- One more Done for a run that changes `src/`: the fix moves only the pulses and the telegraph. On a frame where
+  today's render draws neither (say which frame, and show that today's pulse and telegraph masks are empty
+  there), same physics hash, master's gf frame and yours differ by no more than the floor of two loads of one
+  build, on the fill look and on the border look; give both numbers beside their floors.
+- If every number of Done 2 holds on master there is no source change: close K1473 with the table and the crops.
+
+## Run Y (27Y): the all-maze tool's leftovers (K1581)
+Added 2026-11-21. Probe tools only (`.claude/probes/K1578/`, `.claude/probes/K1482/s40/`); nothing under `src/` or
+`test/`, so no deploy and no load guards. The tool is the gate every look candidate passes before Levi sees it
+(`render-gpu-field.md`, the all-maze look), so its list has to be complete and its view steady. Read Handoff 27V
+(the tool, its two controls, run ball40's table) and K1581. Measure on ball40's pair: base `d1c25f5fe`, candidate
+`4925aa786` (a local commit on branch `worktree-agent-ac98db1b4872d612b`: `scripts/preview.ps1 -Ref 4925aa786`
+builds it; never check that branch out in the main checkout, merge it or push it). Ball40's records are under
+`.claude/probes/K1578/out/ball40/` (untracked): reuse them wherever a Done needs no new capture.
+Done: 1. **A_b's view.** In ball40 both candidate loads of A_b fit at scale 21.74032186 and both base loads at
+21.74026042 (each pair 0 px apart), and 46 places of 1 to 7 px on stroke edges plus a marker's ring edges (22 px)
+were listed there. Find why two builds that differ only in `eval.ts` and `gf_glsl.ts` fit one maze at two scales:
+the first value that differs on the way to the fit camera (the bounds, the physics hash, the frame it is read on),
+shown for both builds. Then mend the tool so that a view shift cannot be listed as a change: one state and one
+view per session by the cause you found, or, if the cause lies outside the tool, the session's first camera
+pinned for its other loads in `cap_maze.ps1`, the two scales still printed. If the two builds' physics hashes
+differ on A_b, the cause is the state and a pinned view is not the mend. Test: a new session of A_b for the pair
+reports one scale on all four loads, and A_b's list holds no place that is only a view shift: each place that
+stays is shown as a real change in a 4x pair. The null control and the known-break control (Handoff 27V, Done 2
+and 3) still give their numbers.
+2. **The mirror as a first pass.** Run `census40.ts` for the pair on the ten mazes with changes and match its
+places to ball40's 64 (same maze, the nearest within a radius you state). A table per maze: captured places,
+mirror places, matched, captured only, mirror only. The mirror may stand as a first pass only if captured-only is
+0: say which it is in `allmaze.ps1`'s header, and for each captured-only place say what the mirror cannot see
+there. Do not change `census40.ts`'s rule to make the count come out.
+3. **The listing step.** `analyze_maze.py` lists a pixel at a step that is not one number (2 levels on A_4 t22s by
+Claude's count, a 1-level pixel listed on A_c j69, step 3 on VIEW-DIFF mazes by the handoff). State the rule as
+the code has it at the top of `analyze_maze.py`, and prove the statement on ball40's records: the pixel values at
+A_4 t22s and at A_c j69, base and candidate, and the rule's verdict on each.
+4. The tools committed (`git add -f` the named tool files, never outputs) and pushed; K1581 closed with the
+numbers, or its text cut down to the part not finished.
+
+## Run Z (27Z): the key build moves into the build worker (K1375)
+Added 2026-11-21. A performance fix; nothing changes on screen. Today `GfPass.upload` (`gf_pass.ts`) calls
+`buildKeys(Th)` on the main thread before `packTables` at every upload (K1362 s6's handoff, next 4: 0.6 ms p50 on
+the Pixel's main thread, 0.2 ms on the desktop). The build worker (`gf_build.ts`, `gf_worker.ts`) already holds
+the tables: build the keys there and transfer their buffers with the tables'. Main packs with the keys it
+received and calls `buildKeys` itself only where no worker built the tables it packs (the in-thread path; and the
+home variant `withHome` makes on main, unless that moves too: say which you did and why). For this run
+`gf_pass.ts`, `gf_keys.ts`, `gf_pack.ts`, `gf_build.ts` and `gf_worker.ts` are yours; `tables.ts`, `eval.ts`,
+`gf_glsl.ts` and `gf_look.ts` stay hands-off.
+Done: 1. A test under `test/render/`: for the scenes `gf_keys.test.ts` uses, the keys that come back through the
+worker's own build function equal `buildKeys` of the same tables on main, every array, bit for bit, and the
+transfer list holds each key buffer once. 2. No pin moves (`gf_home_glsl.test.ts`'s master bytes, the golden
+snapshots): a moved pin means the change altered what is drawn, so stop. 3. The same picture: on link A and on
+`?3&xp=off&am=instant&rp=gf`, same-state captures of master and of your build differ by no more than the floor of
+two loads of one build (both numbers, the hash). 4. Timing on the desktop under the perf lock, master and yours
+interleaved (A B B A), default-maze drag, with the drag timing probe the K1362 stages used for these numbers
+(`docs/design/K1362_s6_footprint.md`'s handoff, `probes.md`), unchanged: the upload's main-thread p50 and p95 with
+their spread, and the worker's build p50. The upload is not slower than master beyond the spread, and the
+worker's build grows by no more than the keys' own cost. Report the numbers as they are: a gain inside the spread
+is called inside the spread. 5. `npm test` green, the guards (How to work), the deploy green. 6. K1375 closed
+with the numbers. The Pixel is not measured in this run (never touch the phone): say so in the handoff.
