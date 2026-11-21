@@ -1334,3 +1334,33 @@ Done when all of these hold (numbers in the handoff, per maze):
 Owned: the files the candidate's patch touches under `src/render/gpu_field/` and `test/render/`, plus new probe
 tools under `.claude/probes/K1572/`. Hands off: everything else in `src/`, today's border strokes, the K1566 nub
 fix (`dcd8e81e6`) and its pins except where the candidate's patch already moves them.
+
+## Run Z5 (27Z5): which commit closed the tail ends at K1444's two spots, and how they draw today (K1582)
+
+Levi looked at `.claude/probes/K1485/out/o_spots.png` (outlines only; columns: master on Nov 18, the same with the
+parked home build, master on Nov 19; rows: muse_hash at 5.88,8.50 and g41_user_tw64 at 17.80,9.55) and said on
+2026-11-21: "the first two columns seem probably better than the third. In the third, we've lost the gap for the
+under thread of a crossing. For the first two though, we seem to have some other wedge and notch artifacts". In the
+third column the outline ends that stood open in the first two are joined by a cap, so a thread that passes under a
+crossing there no longer shows its gap. This run measures; it changes no source and judges no look.
+
+Done when all of these hold (numbers and commit IDs in the handoff):
+
+1. The tool that made o_spots.png is found under `.claude/probes/K1485/` (or its commit) and re-run on today's
+   master at both spots with the same view and look: one sheet per spot under `.claude/probes/K1582/out/27Z5/`
+   with the columns Nov 18 master, Nov 19 master, today's master (wide view and the red box closer, as in
+   o_spots.png). A repeat capture of today's master differs by 0 px in both red boxes (else report the floor).
+2. For each spot, the first commit after the Nov 18 column's commit at which the red box differs from the Nov 18
+   picture by more than the floor is named (bisect over master's history; IDs as they are now, see
+   `docs/K1493_commit_map.txt` for IDs older than the rewrite), with its subject, the pixels changed in the box,
+   and a three-column crop (before, at, today). Every later commit up to master that changes either box again is
+   listed the same way.
+3. For each named commit: the function and the rule it changed, in two sentences from its diff, and whether a
+   switch or constant in today's source still selects the earlier behaviour.
+4. How many places the earlier and today's pictures differ at in the same way on link A and on g41_user_tw64
+   (K1578's all-maze tool or the K1485 tool, whichever compares two builds on one scene): a count and the three
+   largest, with coordinates. If building the Nov 18 commit fails, report why and give items 1 to 3 only.
+5. `### Handoff 27Z5` appended below this section. No change under `src/` or `test/`; no ledger change; outputs
+   untracked (never `git add -f`); tools may be committed under `.claude/probes/K1582/`.
+
+Owned: `.claude/probes/K1582/`. Hands off: everything under `src/` and `test/`.

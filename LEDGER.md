@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1582.
+Next free ID: K1583.
 
 ## Waiting on Levi
 
@@ -779,7 +779,7 @@ Next free ID: K1582.
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
   - branch: mainline; last commit: `3285f10e4`
   - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: RUNNING: 27Z4 (K1572: the ball candidate 4925aa786 narrowed to Levi's answer of 2026-11-21, brief Run Z4 at the end of the brief doc; it lands only if its pixel equalities hold: the eight clean places as the candidate, A_4 t32s, A_8 t31s and A_5 t30e as master) since 2026-11-21 13:43 under a new chain (start.ps1). At its end: its handoff against the records, its 17 sheets in .claude/probes/K1572/out/27Z4/ viewed, the sheets shown to Levi, K1572 filed, its idle agent archived. Before it: the chain started 03:39 ended by itself at 2026-11-21 12:51 with its queue empty (no chain process). Its last three runs passed their gates and closed their items: 27Z (K1375, `a3a4831ef`: buildKeys in the gf build worker, same picture, the upload's main-thread pack p95 1.4/1.3 to 0.8/0.8 ms on the desktop; deploy of a3a4831ef green, seen by the coordinator), 27Z2 (K1426, `5e79cb1c2`, probes only: the vertex cap costs 2.5 to 2.7% of GPU net p50 on today's shader, under the 5% bar, no cut), 27Z3 (K1384, `3285f10e4`, probes only: a cold rp=gf visit's longest task or frame gap exceeds its control's by at most 222 ms, under the 250 ms bar, no source change). The coordinator read the three handoffs and the deploy list; it did not re-run their measurements. Their Paseo agents are archived. NEXT: brief more bounded numeric fix runs (candidates: K1359, K611, K890, K579 with K1088; fresh tags, a section each at the end of the brief doc in Run Z's form, a queue line each), then `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` in the main checkout; `claude -p /usage` first (the week stood at 95% at 12:59, line 100% until Nov 23 10:59). Tag 27W stays unused (Levi answered gaps keep on 2026-11-21: K1566 closed, the live fix stays). K1565 (the corner loops' cold compile) stays unqueued until the ball's candidate is decided (K1572): both edit the same loops. The page: https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw
+  - next: RUNNING: 27Z4 (K1572: the ball candidate 4925aa786 narrowed to Levi's answer of 2026-11-21, brief Run Z4 at the end of the brief doc; it lands only if its pixel equalities hold: the eight clean places as the candidate, A_4 t32s, A_8 t31s and A_5 t30e as master) since 2026-11-21 13:43 under a new chain (start.ps1). QUEUED behind it: 27Z5 (K1582, probes only: K1444's two spots recaptured on today's master and the commit that closed the tail ends named; at its end its sheets in .claude/probes/K1582/out/27Z5/ viewed and shown to Levi). At 27Z4's end: its handoff against the records, its 17 sheets in .claude/probes/K1572/out/27Z4/ viewed, the sheets shown to Levi, K1572 filed, its idle agent archived. Before it: the chain started 03:39 ended by itself at 2026-11-21 12:51 with its queue empty (no chain process). Its last three runs passed their gates and closed their items: 27Z (K1375, `a3a4831ef`: buildKeys in the gf build worker, same picture, the upload's main-thread pack p95 1.4/1.3 to 0.8/0.8 ms on the desktop; deploy of a3a4831ef green, seen by the coordinator), 27Z2 (K1426, `5e79cb1c2`, probes only: the vertex cap costs 2.5 to 2.7% of GPU net p50 on today's shader, under the 5% bar, no cut), 27Z3 (K1384, `3285f10e4`, probes only: a cold rp=gf visit's longest task or frame gap exceeds its control's by at most 222 ms, under the 250 ms bar, no source change). The coordinator read the three handoffs and the deploy list; it did not re-run their measurements. Their Paseo agents are archived. NEXT: brief more bounded numeric fix runs (candidates: K1359, K611, K890, K579 with K1088; fresh tags, a section each at the end of the brief doc in Run Z's form, a queue line each), then `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` in the main checkout; `claude -p /usage` first (the week stood at 95% at 12:59, line 100% until Nov 23 10:59). Tag 27W stays unused (Levi answered gaps keep on 2026-11-21: K1566 closed, the live fix stays). K1565 (the corner loops' cold compile) stays unqueued until the ball's candidate is decided (K1572): both edit the same loops. The page: https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw
   - brief: `docs/design/K1531_muse_batch27.md`
 
 ## Next, in order
@@ -800,6 +800,13 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1582** · rp=gf outlines, K1444's two spots (muse_hash 5.88,8.50; g41_user_tw64 17.80,9.55; picture
+  .claude/probes/K1485/out/o_spots.png): Levi 2026-11-21: the first two columns (Nov 18 master, the parked
+  home build) read better than the third (Nov 19 master), where the gap for the under thread of a crossing is
+  lost (the open outline ends are joined by a cap); the first two have wedge and notch artifacts. Named by
+  Levi. Muse run 27Z5 (brief Run Z5 in docs/design/K1531_muse_batch27.md) recaptures both spots on today's
+  master and names the commit that closed the ends; then fresh pictures to Levi and a fix try at these two
+  spots only (a look: a Claude stage, the two-stage stop applies). K1444 stays open until then
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
