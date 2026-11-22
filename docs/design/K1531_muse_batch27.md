@@ -1394,3 +1394,28 @@ Done when all of these hold (numbers and commit IDs in the handoff):
    untracked (never `git add -f`); tools may be committed under `.claude/probes/K1582/`.
 
 Owned: `.claude/probes/K1582/`. Hands off: everything under `src/` and `test/`.
+
+## Run Z6 (27Z6): build N of K1572 stage 41 against master on all 21 test mazes (K1572)
+
+Stage 41 (a Claude agent, 2026-11-21) made build N: local commit `1f44d1509` on branch
+`worktree-agent-a03ebfecb13c1df55` (never pushed; its source is `git diff 4875495a3 1f44d1509 -- src test`, its
+record `### Handoff K1572 s41` in `git show 1f44d1509:docs/design/K1572_s41_ball_a8.md`). It captured ten A mazes
+only. This run measures N against master on all 21 (A_3..A_d, D_1..D_a); it changes no source, lands nothing of N
+and judges no look.
+
+Done when all of these hold (numbers in the handoff):
+
+1. Master and N are built by `scripts/preview.ps1 -Ref <commit>` (master = today's origin/master, N = `1f44d1509`)
+   and captured with the `.claude/probes/K1578/` tools (rp=gf, gfh=1, the K1578 recipe) on all 21 mazes. Each
+   capture is valid: no lost context, no fallback, equal views; a second N load of three mazes gives the floor.
+2. A table of every changed place on every maze (whole frame, K1578's cell merge): maze, device x,y, pixels
+   changed, and whether it is one of the 17 places of stage 41's handoff. Mazes with 0 changed places are listed
+   as 0.
+3. A_4 t32s (937,1627) and A_5 t30e (1233,254) read 0 px against master within 100 px.
+4. For every changed place that is not one of the 17: a sheet master | N | diff under
+   `.claude/probes/K1572/out/27Z6/` (untracked), named maze_x_y. Do not say which looks better.
+5. `### Handoff 27Z6` appended to THIS file (not under .claude/probes), tools committed under
+   `.claude/probes/K1572/`, pushed to master. Servers stopped, preview folders removed.
+
+Rules: the perf lock (`scripts/perf_lock.ps1`) around captures; never Chrome's --virtual-time-budget; never touch
+`$env:TEMP\k1482s27live-profile-20548`; probe outputs stay untracked; no ledger edits; stop after this run.
