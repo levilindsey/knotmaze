@@ -124,3 +124,6 @@ K1485 tool compares; no Nov 18 build failed.
 - Ledger untouched (Close K1582 by hand, quoting this file).
 - Servers stopped, preview folders and profile removed; captures,
   sheets and crops stay untracked under `.claude/probes/K1582/out/27Z5/`.
+
+Committed, not pushed - 205ecfee5afdaa382f2bb3681a5b5740faebddde
+(the tools-and-handoff commit; this trailer rides in its follow-up).
