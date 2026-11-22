@@ -3807,3 +3807,11 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1372 (Done 2026-11-13)
 
 - **K1372** · rp=gf: stage 5 tile routes removed by s6 (keys per bin made per-tile bounds moot). Done in c55d015b (2026-11-13).
+
+## K1382 (Done 2026-11-14)
+
+- **K1382** · K1362 course check answered: Levi (2026-11-14) - 30 fps in motion acceptable, 60 better, the intro physics first; next is K1369 s1 (intro settle + drag on the Pixel, CPU clocks). Done in 1b69ce1b (2026-11-14).
+
+## K1383 (Done 2026-11-14)
+
+- **K1383** · rp=gf reveals the intro (gf_reveal.ts mask table + reveal program variants; channel closed until the reveal ends). Done in 03102199 (2026-11-14).
