@@ -3815,3 +3815,27 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1383 (Done 2026-11-14)
 
 - **K1383** · rp=gf reveals the intro (gf_reveal.ts mask table + reveal program variants; channel closed until the reveal ends). Done in 03102199 (2026-11-14).
+
+## K1388 (Done 2026-11-15)
+
+- **K1388** · the site tester refreshes lean first (pluckSiteTester), footprintsWrong 0 in k1387_exact (K1387 s1). Done in 119249c0 (2026-11-15).
+
+## K1399 (Done 2026-11-15)
+
+- **K1399** · rp=gf's colour table is static (rebuilt only when colour inputs change): 27,081 colours (41% of the cap), no lag, look 0.19-0.21 ms/frame in the drag (K1389 s2). Done in 38b73e87 (2026-11-15).
+
+## K1404 (Done 2026-11-15)
+
+- **K1404** · rp=gf's default intro draws the reveal sparks but no ribbons, while today's look draws them (at rest both show the fog, so the empty end is parity); K1383's 11-14 sheet drew ribbons through it, so a later stage regressed it, also on s1 119249c0 (`.claude/probes/K1387/out/s2h_def_sheet.png`, `k1387_sheet.mjs`). Done in f1e70048 (2026-11-15).
+
+## K1405 (Done 2026-11-15)
+
+- **K1405** · rp=gf in play draws no gold traveled path (today's look does), also on s1 (`.claude/probes/K1387/out/play7_gf_head.png` against `play7_today_head.png`). Done in 58f8a9ca (2026-11-15).
+
+## K1398 (Done 2026-11-15)
+
+- **K1398** · rp=gf crossing gaps clear to the background where today's paint a flat dark casing colour: in the border look gf's outline reads redder and fainter (today 11k-21k pixels darker than the background, gf about 1.4k), and in fill today shades the under-thread softly where gf draws a crisp line (K1389 s1 handoff, .claude/probes/K1389/out/z_pair.png). Done in 2830d103 (2026-11-15).
+
+## K1374 (Done 2026-11-15)
+
+- **K1374** · rp=gf build worker: make the slice pool (gf_slice_worker.ts, Muse t2) win on junction builds, or remove it: partition pins by chain and the chunk merge by cell range, or transfer the scene to the slices as typed arrays, so the coordinator's 6-8 ms serial prefix goes. Done in 84863c99 (2026-11-15).
