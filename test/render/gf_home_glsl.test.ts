@@ -72,9 +72,14 @@ describe("K1439 flag off: master's programs and tables", () => {
     // K1456: the app pass issues its full program first (the old constructor's plan order is gone);
     // the source SET is master's, pinned over the distinct sources, sorted (master's distinct
     // sources are the same four strings).
-    expect(sha(...[...new Set(app.srcs)].sort())).toBe("c6f48c753a8aa5c1ac413238b19d9217eaba06ba8c52f06a82c91afe1ab82861");
+    // K1482 s37 re-froze both pins: the base text's corner burial changed (a tangent point's own arm, not both arms)
+    // K1482 s40 re-froze both pins: an own arm buries a corner face only as far as its own outline is buried
+    // there (outlineBur, armBur: six face loops and the zb route's two regexes)
+    // K1572 s41 re-froze both pins: a tight turn's own arms bury nothing (armBur reads texel 5's w), and the cut
+    // joint (cutJoin, winKind 7) rides before the vertex cap in layers() and fj
+    expect(sha(...[...new Set(app.srcs)].sort())).toBe("de4be6fce4f147984676772be88ffa9ceca90abb1e00f90a4b76f3a58fe9d4da");
     expect(probe.srcs.length).toBe(4);
-    expect(sha(...probe.srcs)).toBe("9a4dfffdf30a0a4e703c690c7c5986f14e64bde8973093bdb679b0411b80c539");
+    expect(sha(...probe.srcs)).toBe("152855f6a9879d4af55312c9bbb479f9941aaf8cc041fd50926ae5cfc2065909");
     // { home: false } is the default
     expect(sha(...sources(false, false).srcs)).toBe(sha(...app.srcs));
     expect(app.pass.home).toBe(false);

@@ -8,7 +8,7 @@
 //   ARM  2 per arm:    (aSR, aDir, aL, aLcut) (aG, aHome, a34, 0)  aHome only with T.homeOn (K1438), else 0;
 //                      a34 (K1482 s34, tables.ts arms34) only with T.homeOn and a retry build, else 0
 //   K    6 per corner: (kCx, kCy, kR, kRmax) (kThru, kRV, kG, kJ) (kEax, kEay, kEbx, kEby)
-//                      (kCa, kCb, kSa, kSb) (kZa, kZb, kTax, kTay) (kTbx, kTby, ext, 0)
+//                      (kCa, kCb, kSa, kSb) (kZa, kZb, kTax, kTay) (kTbx, kTby, ext, tight)
 //   CHK  2 per chunk:  (chV0, chN, chC, 0) (box x0, y0, x1, y1)
 //   CELL 1 per cell:   (cellCh0, cellChN, cellK0, cellKN)
 //   CHL  cellChList, 4 per texel;  KL  cellKList, 4 per texel
@@ -76,7 +76,8 @@ export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKe
     put(b + 2, T.kEax[k], T.kEay[k], T.kEbx[k], T.kEby[k]);
     put(b + 3, T.kCa[k], T.kCb[k], T.kSa[k], T.kSb[k]);
     put(b + 4, T.kZa[k], T.kZb[k], T.kTax[k], T.kTay[k]);
-    put(b + 5, T.kTbx[k], T.kTby[k], T.kExt?.[k] === 1 ? 1 : 0, 0); // K1482 s20: z = a retry corner (home membership only)
+    // K1482 s20: z = a retry corner (home membership only); K1572 s41: w = a tight turn (tables.ts tightTurns)
+    put(b + 5, T.kTbx[k], T.kTby[k], T.kExt?.[k] === 1 ? 1 : 0, T.kTight?.[k] === 1 ? 1 : 0);
   }
   for (let q = 0; q < T.nCh; q++) {
     put(o.chk + 2 * q, T.chV0[q], T.chN[q], T.chC[q], 0);

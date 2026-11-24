@@ -53,6 +53,17 @@ export class GfEval {
   /** K1482 s34 (probes): "0" turns the end-arm burial off (the retry programs keep it: gf_glsl.ts T34); a probe may
    * set it between evals. Env GF_S34 at load. */
   static S34 = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S34 ?? "";
+  /** K1482 s37/s40 (probes): "0" restores K1407 c1's burial of a corner's arc and tangent points (its own two arms
+   * bury neither), "37" stage 37's (its own arms bury both faces in full; the tangent point's own arm cT never); ""
+   * is stage 40's (an own arm buries a face only as far as outlineBur). The shader has no such switch. A probe may set
+   * it between evals. Env GF_S37 at load. */
+  static S37 = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S37 ?? "";
+  /** K1572 s41 (probes): "0" turns stage 41 off (stage 40's candidate: no tight-turn gate, no cut joint), "g" keeps
+   * the gate only, "j" the joint only; "" is stage 41. Only with S37 "" (stage 40's burial). The shader has no such
+   * switch. Env GF_S41 at load. */
+  static S41 = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S41 ?? "";
+  /** K1572 s41 (probes, `.claude/probes/K1572/s41/dbg41.ts`): true records the winning cut joint's geometry in cjDbg. */
+  static CJDBG = false;
   /** K1482 s34 (probes): pixels where the end-arm burial took ink. */
   s34n = 0;
   /** K1482 s34 (probes): the last burial's [chain, s] of the inked piece and of the burying partner, ... */
@@ -310,6 +321,39 @@ export class GfEval {
     return d2;
   }
 
+  /** K1482 s40: how far piece j's own outline is buried at the point of it nearest (x, y) (that point's foot on j
+   * pushed out along j's normal to h): by every other chain's tube of surface S, and by every corner sector of S in
+   * the pixel's cell list whose arms leave the point outside (as a side face's point is buried). 0 = j's outline is
+   * drawn there, so a corner face at (x, y) is the joint of the corner's arc and a visible outline. gf_glsl.ts
+   * outlineBur, statement for statement. */
+  private cellI = 0;
+  private outlineBur(j: number, x: number, y: number, S: number): number {
+    const T = this.T; const h = T.h; const aa = T.aa; const c = this.pc[j]; const v0 = T.cV0[c]; const nseg = T.cNV[c] - 1; const closed = T.cClosed[c] === 1;
+    let d2 = Infinity; let fx = x; let fy = y;
+    for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
+      let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
+      const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
+      const l2 = dx * dx + dy * dy; const u = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+      const ex = x - ax - dx * u; const ey = y - ay - dy * u; const e2 = ex * ex + ey * ey;
+      if (e2 < d2) { d2 = e2; fx = ax + dx * u; fy = ay + dy * u; }
+    }
+    const dd = Math.sqrt(d2); if (!(dd > 1e-12)) return 1;
+    const qx = fx + (h * (x - fx)) / dd; const qy = fy + (h * (y - fy)) / dd;
+    let bur = 0;
+    for (let m = 0; m < this.np && bur < 1; m++) {
+      if (this.psurf[m] !== S || this.pc[m] === c) continue;
+      const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
+      if (wb2 > bur) bur = wb2;
+    }
+    const q0 = T.cellK0[this.cellI]; const qn = T.cellKN[this.cellI];
+    for (let q = q0; q < q0 + qn && bur < 1; q++) {
+      const k = T.cellKList[q]; if (T.kG[k] !== S) continue;
+      const rq = Math.hypot(qx - T.kCx[k], qy - T.kCy[k]);
+      if (rq > T.kR[k] && rq < T.kRmax[k] && this.inSector(k, qx, qy) && this.outsideArms(k, c, qx, qy)) bur = 1;
+    }
+    return bur;
+  }
+
   /** Is (x, y) inside corner k's sector (between its rays, the short way)? */
   private inSector(k: number, x: number, y: number): boolean {
     const T = this.T; const rx = x - T.kCx[k]; const ry = y - T.kCy[k];
@@ -381,6 +425,72 @@ export class GfEval {
     return d2;
   }
 
+  /** K1572 s41: tables.ts tightTurns' flag (27Z4's gate), under the probe switch. */
+  private tight(k: number): boolean { return GfEval.S41 !== "0" && GfEval.S41 !== "j" && this.T.kTight?.[k] === 1; }
+
+  private cjC = -1; cjDbg: unknown = null;
+  /** K1572 s41: the joint where stage 40's own-arm burial cuts corner k's arc. Where the arc runs into the tube of a
+   * piece m of one of its own arms (that chain's other pass: A_8 t31s), the arc's band stops at a cut through P, the
+   * arc's crossing with m's outline, and m's side band stops at a cut through P too (its foot there lies in k's fill),
+   * so the pixels whose nearest outline point is P inked nothing: two square ends, one above the other. P is a vertex
+   * of the trimmed outline, so band(|p - P|) bounds the true band from above (as vtx and the tangent points do) and
+   * joins the two ends round. P is the circle's crossing with the outline line at p's foot on m, once more from P's own
+   * foot (vtx's refinement); kept only at a crossing (14.5 degrees or more: a tangency is the tangent point's term),
+   * on the arc (k's sector) and on m's outline (within aa), a border width or more from both tangent points (nearer,
+   * the arc is ending into its own arm's band, which its tangent face draws), only where the arc is cut there (stage 40's burial a step
+   * 2 aa deep into m's tube, along the arc), and only where nothing else of S covers P (another tube; another corner's
+   * fill: vtx's tests). Returns the value, max over m; cjC is m's chain. gf_glsl.ts's cutJoin, line for line. */
+  private cutJoin(k: number, S: number, x: number, y: number): number {
+    const T = this.T; const h = T.h; const aa = T.aa; const W = T.W;
+    const R = T.kR[k]; const cx = T.kCx[k]; const cy = T.kCy[k]; const cA = T.kCa[k]; const cB = T.kCb[k];
+    let best = 0; this.cjC = -1;
+    for (let m = 0; m < this.np; m++) {
+      if (this.psurf[m] !== S || (this.pc[m] !== cA && this.pc[m] !== cB)) continue;
+      const X = this.pd[m]; if (!(X < h + W + aa && X > 1e-12)) continue;
+      // the outline line through p's foot f: n . (P - C) = h + n . (f - C), crossed with the circle |P - C| = R
+      let nx = (x - this.pfx[m]) / X; let ny = (y - this.pfy[m]) / X; let fx = this.pfx[m]; let fy = this.pfy[m];
+      let Px = x; let Py = y; let s = 0; let ok = true;
+      for (let it = 0; it < 2; it++) {
+        const c = h + nx * (fx - cx) + ny * (fy - cy); const s2 = R * R - c * c;
+        if (!(s2 > 0.0625 * R * R)) { ok = false; break; }
+        s = Math.sqrt(s2);
+        const ax = cx + c * nx - s * ny; const ay = cy + c * ny + s * nx; const bx = cx + c * nx + s * ny; const by = cy + c * ny - s * nx;
+        if ((ax - Px) * (ax - Px) + (ay - Py) * (ay - Py) <= (bx - Px) * (bx - Px) + (by - Py) * (by - Py)) { Px = ax; Py = ay; } else { Px = bx; Py = by; }
+        if (it === 1) break;
+        const e2 = this.pieceF(m, Px, Py); if (!(e2 > 1e-24)) { ok = false; break; }
+        const r = Math.sqrt(e2); fx = this.fX; fy = this.fY; nx = (Px - fx) / r; ny = (Py - fy) / r;
+      }
+      if (!ok) continue;
+      const dP = Math.sqrt((x - Px) * (x - Px) + (y - Py) * (y - Py)); if (!(dP < W + aa)) continue;
+      // a border width or more from both tangent points: nearer, the arc is ending into its own arm's band there
+      const dTa = (Px - T.kTax[k]) * (Px - T.kTax[k]) + (Py - T.kTay[k]) * (Py - T.kTay[k]);
+      const dTb = (Px - T.kTbx[k]) * (Px - T.kTbx[k]) + (Py - T.kTby[k]) * (Py - T.kTby[k]);
+      const fP = (1 - ss(W - aa, W + aa, dP)) * ss(W - aa, W + aa, Math.sqrt(Math.min(dTa, dTb))); if (!(fP > best)) continue;
+      const e2 = this.pieceF(m, Px, Py); const gx = this.fX; const gy = this.fY;
+      if (!(Math.abs(Math.sqrt(e2) - h) < aa) || !this.inSector(k, Px, Py)) continue;
+      // the arc a step 2 aa deep into m's tube: along the tangent toward m's spine, by 2 aa over the crossing's sine
+      let tx = -(Py - cy) / R; let ty = (Px - cx) / R; if (tx * (gx - Px) + ty * (gy - Py) < 0) { tx = -tx; ty = -ty; }
+      const L = Math.min(W, (2 * aa * R) / s); const ux = Px + L * tx - cx; const uy = Py + L * ty - cy; const ur = Math.sqrt(ux * ux + uy * uy);
+      const Qx = cx + (R * ux) / ur; const Qy = cy + (R * uy) / ur;
+      const cut = (1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, Qx, Qy)))) * this.outlineBur(m, Qx, Qy, S);
+      if (!(cut * fP > best)) continue;
+      let vb = 0;
+      for (let n = 0; n < this.np && vb < 1; n++) {
+        if (n === m || this.psurf[n] !== S) continue;
+        const b2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(n, Px, Py)));
+        if (b2 > vb) vb = b2;
+      }
+      for (let i = 0; i < this.nk && vb < 1; i++) {
+        const k2 = this.kk[i]; if (k2 === k || T.kG[k2] !== S) continue;
+        const rV = Math.sqrt((Px - T.kCx[k2]) * (Px - T.kCx[k2]) + (Py - T.kCy[k2]) * (Py - T.kCy[k2]));
+        if (rV > T.kR[k2] && rV < T.kRmax[k2] && this.inSector(k2, Px, Py) && this.outsideArms(k2, -1, Px, Py)) vb = 1;
+      }
+      const val = (1 - vb) * cut * fP;
+      if (val > best) { best = val; this.cjC = this.pc[m]; if (GfEval.CJDBG) this.cjDbg = { m, Px, Py, sR: s / R, cut, vb, L }; }
+    }
+    return best;
+  }
+
   private vtxA = -1; private vtxB = -1;
   /** K1407 c3: the vertices of surface S's outline where two of its members' tubes cross. Each side band stops
    * where its foot is buried by the other tube, so in the normal cone at the vertex V (the pixels whose feet on
@@ -440,7 +550,7 @@ export class GfEval {
     o.ink = 0; o.cov = 0; o.chain = -1; o.s = 0; o.winKind = 0; o.winA = -1; o.winB = 0; o.nSeg = 0; o.nK = 0;
     const gx = Math.floor((x - T.gx0) / T.G); const gy = Math.floor((y - T.gy0) / T.G);
     if (gx < 0 || gy < 0 || gx >= T.gW || gy >= T.gH) return o;
-    const cell = gy * T.gW + gx; const rc = T.rc; const rc2 = rc * rc;
+    const cell = gy * T.gW + gx; const rc = T.rc; const rc2 = rc * rc; this.cellI = cell;
     // 1. pieces
     let np = 0;
     const c0 = T.cellCh0[cell]; const cn = T.cellChN[cell];
@@ -676,15 +786,23 @@ export class GfEval {
         if (this.kIn[i] === 2 && Dk > D && T.kExt?.[k] !== 1) D = Dk; // K1482 s20: a retry corner inks only
         if (!(rho > 1e-12)) continue;
         const qx = T.kCx[k] + (T.kR[k] * (x - T.kCx[k])) / rho; const qy = T.kCy[k] + (T.kR[k] * (y - T.kCy[k])) / rho;
-        const cA = T.kCa[k]; const cB = T.kCb[k]; // K1407 c1: the corner's own arms never bury its faces
+        // K1482 s37: every tube of the surface buries the arc, the corner's own two arms included (K1407 c1 exempted
+        // them). A true fillet's arc is h or more from both arms, so nothing changes there; an arc that runs into an
+        // own arm's tube (a hook's fillet) no longer inks inside it.
+        // K1482 s40: an own arm buries the arc only as far as its own outline is buried at q (outlineBur): where that
+        // outline is drawn, the arc's end is its joint with the outline, and burying it cut a notch (A_a t29s). The
+        // product only matters where the plain burial would raise bur, so it is taken only there (exact)
+        // K1572 s41: a tight turn (tables.ts tightTurns) keeps K1407 c1's burial: its own arms bury neither face
+        const s37off = GfEval.S37 === "0" || this.tight(k); const s40 = GfEval.S37 !== "37"; const cA = T.kCa[k]; const cB = T.kCb[k];
         let bur = 0;
         for (let m = 0; m < this.np && bur < 1; m++) {
-          if (this.psurf[m] !== S || this.pc[m] === cA || this.pc[m] === cB) continue;
-          const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
+          if (this.psurf[m] !== S || (s37off && (this.pc[m] === cA || this.pc[m] === cB))) continue;
+          let wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
+          if (wb2 > bur && s40 && (this.pc[m] === cA || this.pc[m] === cB)) wb2 *= this.outlineBur(m, qx, qy, S);
           if (wb2 > bur) bur = wb2;
         }
         if (bur < 1) bur = Math.max(bur, this.fillBur(k, qx, qy, x, y, S));
-        const val = (1 - bur) * band2(Dk); // K1407 c1: buried by other arms' tubes and other corners' fills
+        const val = (1 - bur) * band2(Dk); // K1407 c1: buried by the surface's tubes and other corners' fills
         if (val > v) { v = val; wk = 2; wa = k; wb = 0; }
       }
       // form B's T_TA / T_TB: a fillet's tangent points are points of the trimmed outline, so their distance
@@ -692,20 +810,33 @@ export class GfEval {
       // cut at the fillet and the arc's sector, which neither covers (the hairline seams of K1362 s1's census)
       if (TANGENT_TERMS) for (let i = 0; i < this.nk; i++) {
         const k = this.kk[i]; if (T.kG[k] !== S || T.kThru[k]) continue;
-        const cA = T.kCa[k]; const cB = T.kCb[k]; // K1407 c1: as the arc
+        const s37off = GfEval.S37 === "0" || this.tight(k); const s40 = GfEval.S37 !== "37"; const cA = T.kCa[k]; const cB = T.kCb[k];
         for (let t = 0; t < 2; t++) {
           const tx = t ? T.kTbx[k] : T.kTax[k]; const ty = t ? T.kTby[k] : T.kTay[k];
           const dT = Math.sqrt((x - tx) * (x - tx) + (y - ty) * (y - ty)); if (!(dT < W + aa)) continue;
+          // K1482 s37: the point lies on the edge of its own arm (cT), whose chain therefore never buries it; the
+          // corner's OTHER arm does, like any tube (K1407 c1 exempted both): a tangent point inside the other arm's
+          // tube inked a ball at the line's end.
+          // K1482 s40: only as far as that arm's own outline is buried at T (outlineBur): where the other arm's
+          // outline is drawn, T is its joint with the arc, and burying the disc cut a slit through a border (A_b t22s)
+          const cT = t ? cB : cA;
           let bur = 0;
           for (let m = 0; m < this.np && bur < 1; m++) {
-            if (this.psurf[m] !== S || this.pc[m] === cA || this.pc[m] === cB) continue;
-            const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, tx, ty)));
+            if (this.psurf[m] !== S || this.pc[m] === cT || (s37off && (this.pc[m] === cA || this.pc[m] === cB))) continue;
+            let wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, tx, ty)));
+            if (wb2 > bur && s40 && (this.pc[m] === cA || this.pc[m] === cB)) wb2 *= this.outlineBur(m, tx, ty, S);
             if (wb2 > bur) bur = wb2;
           }
           if (bur < 1) bur = Math.max(bur, this.fillBur(k, tx, ty, x, y, S));
           const val = (1 - bur) * band(dT) * ss(-aa, aa, D); // K1407 c1: form B's tangent term, buried as the arc
           if (val > v) { v = val; wk = 4; wa = k; wb = t; }
         }
+      }
+      // K1572 s41: the cut joint (cutJoin), where stage 40's own-arm burial cuts a corner's arc
+      if (v < 1 && D > -aa && GfEval.S37 === "" && GfEval.S41 !== "0" && GfEval.S41 !== "g") for (let i = 0; i < this.nk; i++) {
+        const k = this.kk[i]; if (T.kG[k] !== S || T.kThru[k] || !(T.kR[k] > 0) || this.tight(k)) continue;
+        const val = this.cutJoin(k, S, x, y) * ss(-aa, aa, D);
+        if (val > v) { v = val; wk = 7; wa = k; wb = this.cjC; }
       }
       if (v < 1 && D > -aa) { // K1407 c3: the vertex cap (vtx); it cannot raise v elsewhere
         const vxv = this.vtx(S, x, y) * ss(-aa, aa, D);

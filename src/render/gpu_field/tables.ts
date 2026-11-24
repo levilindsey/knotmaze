@@ -121,6 +121,8 @@ export interface GfTables {
   kJ: Int32Array; kA: Int32Array; kB: Int32Array; kTheta: Float64Array;
   /** Per corner, each side's tangent point: chain, s and depth (the fill's key and label read the nearer side). */
   kCa: Int32Array; kCb: Int32Array; kSa: Float64Array; kSb: Float64Array; kZa: Float64Array; kZb: Float64Array; kTax: Float64Array; kTay: Float64Array; kTbx: Float64Array; kTby: Float64Array;
+  /** K1572 s41: 1 at a tight turn (tightTurns: 27Z4's gate), where the corner's own arms bury neither face. */
+  kTight?: Uint8Array;
   nCh: number; chV0: Int32Array; chN: Int32Array; chC: Int32Array; chBox: Float64Array;
   gx0: number; gy0: number; G: number; gW: number; gH: number;
   cellCh0: Int32Array; cellChN: Int32Array; cellChList: Int32Array;
@@ -1344,11 +1346,61 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
     h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
     nV, vx, vy, vs, pinS, pinZ, pinWL: wL2, pinWR: wR2, nA, aSR, aDir, aL, aLcut, aG, aHome, homeOn,
     nK: nB, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
+    kTight: tightTurns(h, kR, kThru, kCa, kCb, kTax, kTay, kTbx, kTby, cV0, cNV, cClosed, vx, vy),
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
     // K1482 s23: with the retry off (the default) the tables are master's, field for field
     ...(P.kRetry ? { kExt, ...arms34(P.arms, pinPC, pinPS, cClosed, cV0, cNV, vs, cArm0, cArmN), nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
     ms: { vtx: ms.vtx, pins: ms.pins + walkMs, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
   };
+}
+
+/** K1572 s41: the tight-turn gate's bounds (GfTables.kTight): fillet radius in h, end-arm turn in degrees. */
+export const GF_TIGHT_R = 0.2;
+export const GF_TIGHT_TURN = 65;
+/**
+ * K1572 s41: GfTables.kTight, Muse run 27Z4's measured gate (docs/design/K1531_muse_batch27.md, Handoff 27Z4). Per
+ * corner, 1 when its fillet's radius is GF_TIGHT_R h or less and its end arm turns GF_TIGHT_TURN degrees or more within
+ * 2 h of arc either side of its tangent point. The end arm is the one whose tangent point lies nearer its chain's open
+ * end (A on a tie; a closed chain has no end, and a corner of two closed arms none); its turn is the absolute heading
+ * change between its centre-line segments whose midpoints lie in that window. There the corner keeps K1407 c1's
+ * burial, its own arms burying neither face (eval.ts tight, gf_glsl.ts armBur): the tight turns at A_4 t32s and A_5
+ * t30e, which stage 40's own-arm burial changed. Only corners within the radius walk their chains.
+ */
+function tightTurns(h: number, kR: Float64Array, kThru: Uint8Array, kCa: Int32Array, kCb: Int32Array, kTax: Float64Array, kTay: Float64Array, kTbx: Float64Array, kTby: Float64Array, cV0: Int32Array, cNV: Int32Array, cClosed: Uint8Array, vx: Float64Array, vy: Float64Array): Uint8Array {
+  const nK = kR.length; const out = new Uint8Array(nK);
+  // the arc of (x, y)'s nearest point on chain c, and the chain's length
+  const foot = (c: number, x: number, y: number): [number, number] => {
+    const v0 = cV0[c]; const nv = cNV[c]; let cum = 0; let best = Infinity; let bs = 0;
+    for (let v = v0; v < v0 + nv - 1; v++) {
+      const ax = vx[v]; const ay = vy[v]; const dx = vx[v + 1] - ax; const dy = vy[v + 1] - ay; const l2 = dx * dx + dy * dy; const l = Math.sqrt(l2);
+      const u = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+      const ex = x - ax - dx * u; const ey = y - ay - dy * u; const e2 = ex * ex + ey * ey;
+      if (e2 < best) { best = e2; bs = cum + u * l; }
+      cum += l;
+    }
+    return [bs, cum];
+  };
+  // the absolute heading change (degrees) between chain c's segments whose midpoints lie in s0..s1
+  const turn = (c: number, s0: number, s1: number): number => {
+    const v0 = cV0[c]; const nv = cNV[c]; let cum = 0; let sum = 0; let prev = NaN;
+    for (let v = v0; v < v0 + nv - 1; v++) {
+      const dx = vx[v + 1] - vx[v]; const dy = vy[v + 1] - vy[v]; const l = Math.sqrt(dx * dx + dy * dy); const mid = cum + l / 2; cum += l;
+      if (mid < s0 || mid > s1) continue;
+      const hd = Math.atan2(dy, dx);
+      if (prev === prev) { let dd = hd - prev; while (dd > Math.PI) dd -= 2 * Math.PI; while (dd < -Math.PI) dd += 2 * Math.PI; sum += Math.abs(dd); }
+      prev = hd;
+    }
+    return (sum * 180) / Math.PI;
+  };
+  for (let k = 0; k < nK; k++) {
+    if (kThru[k] || !(kR[k] <= GF_TIGHT_R * h) || !Number.isFinite(kTax[k]) || !Number.isFinite(kTbx[k])) continue;
+    const [sA, tA] = foot(kCa[k], kTax[k], kTay[k]); const [sB, tB] = foot(kCb[k], kTbx[k], kTby[k]);
+    const eA = cClosed[kCa[k]] === 1 ? Infinity : Math.min(sA, tA - sA); const eB = cClosed[kCb[k]] === 1 ? Infinity : Math.min(sB, tB - sB);
+    if (eA === Infinity && eB === Infinity) continue;
+    const [c, s, t] = eA <= eB ? [kCa[k], sA, tA] : [kCb[k], sB, tB];
+    if (turn(c, Math.max(0, s - 2 * h), Math.min(t, s + 2 * h)) >= GF_TIGHT_TURN) out[k] = 1;
+  }
+  return out;
 }
 
 /**

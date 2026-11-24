@@ -405,8 +405,12 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
  * strict running maxima (a NaN never enters), so the order cannot change them. `fj: "s"` reads sv[e] once per face
  * into a scalar v and writes it back where it rises (v and sv[e] stay equal), in place of sv[e] at every comparison.
  */
-/** K1407 c3: layers()'s vertex-cap line, last before the per-surface write (fj and km move it). */
-const VTX_LINE = "    if (v < 1.0 && D > -aa) { vec3 VX = vtx(S, p); float vxv = VX.x * ss(-aa, aa, D); if (vxv > v) { v = vxv; PR(wk = 6; wa = int(VX.y); wb = int(VX.z);) } } // K1407 c3: the vertex cap\n";
+/** K1572 s41: the cut joints of the surface's non-through, non-tight corners (cutJoin), before the vertex cap. */
+const CJ_LOOP = (vOk: string, S: string, D: string) => `for (int i = 0; i < nk; i++) { int k = kk[i]; vec4 J0 = F(uOK + 6 * k); vec4 J1 = F(uOK + 6 * k + 1); if (int(J1.z) != ${S} || J1.x > 0.5 || !(J0.z > 0.0) || F(uOK + 6 * k + 5).w > 0.5) continue; vec2 CJ = cutJoin(k, ${S}, p); float cjv = CJ.x * ss(-aa, aa, ${D}); if (cjv > ${vOk}) { ${vOk} = cjv;`;
+/** K1407 c3: layers()'s vertex-cap line, last before the per-surface write (fj and km move it); K1572 s41: the cut
+ * joints' loop rides on it, just before the cap (eval.ts's order). */
+const VTX_LINE = `    if (v < 1.0 && D > -aa) ${CJ_LOOP("v", "S", "D")} PR(wk = 7; wa = k; wb = int(CJ.y);) } } // K1572 s41: the cut joint\n`
+  + "    if (v < 1.0 && D > -aa) { vec3 VX = vtx(S, p); float vxv = VX.x * ss(-aa, aa, D); if (vxv > v) { v = vxv; PR(wk = 6; wa = int(VX.y); wb = int(VX.z);) } } // K1407 c3: the vertex cap\n";
 function faceJoin(src: string, scalar: boolean): string {
   const START = "  for (int e = 0; e < ns; e++) {\n    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n";
   const END = "    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n";
@@ -428,6 +432,7 @@ function faceJoin(src: string, scalar: boolean): string {
   // K1407 c3: the vertex cap reads its surface's final v and D, so it runs per slot after every face
   b = swap(b, VTX_LINE, "", 1);
   src = src.slice(0, i0) + "  for (int e = 0; e < ns; e++) { sv[e] = 0.0; sa[e] = -BIG; } // K1362 s12 fj: v and D per surface slot\n" + b
+    + `  for (int e = 0; e < ns; e++) if (sv[e] < 1.0 && sa[e] > -aa) ${CJ_LOOP("sv[e]", "sid[e]", "sa[e]")} } } // K1572 s41 fj\n`
     + "  for (int e = 0; e < ns; e++) if (sv[e] < 1.0 && sa[e] > -aa) { vec3 VX = vtx(sid[e], p); float vxv = VX.x * ss(-aa, aa, sa[e]); if (vxv > sv[e]) sv[e] = vxv; } // K1407 c3 fj\n"
     + "  for (int e = 0; e < ns; e++) sa[e] = ss(-aa, aa, sa[e]);\n" + src.slice(i1 + END.length);
   return swap(src, "void layers(vec2 p) {\n", "int slotOf(int id) { for (int i = 0; i < ns; i++) if (sid[i] == id) return i; return -1; }\nvoid layers(vec2 p) {\n", 1);
@@ -530,11 +535,12 @@ const ZB_LOOPS: [RegExp, (m: string) => string][] = [
     () => `for (int m = 0; m < np; m++) { if (m == j || PSURF(m) != S) continue; if (!(pd[m] - (abs(h - X) + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
   [/for \(int i = 0; i < nk && bur < 1\.0; i\+\+\) \{\s*(int k = kk\[i\]; vec4 K0 = F\(uOK \+ 6 \* k\); vec4 K1 = F\(uOK \+ 6 \* k \+ 1\); if \(int\(K1\.z\) != S\) continue;)\s*float rq = length\(q - K0\.xy\);\s*if \(rq > K0\.z && rq < K0\.w && inSector\(k, q\) && outsideArms\(k, PC\(j\), q\)\) bur = 1\.0;\s*\}/,
     (m) => `for (int i = 0; i < nk; i++) { ${/\{\s*(int k[^\n]*continue;)/.exec(m)![1]} float rp = length(p - K0.xy); float zr = abs(h - X) + ${ZB_MARGIN}; if (rp + zr > K0.z && rp - zr < K0.w) { zbR = true; break; } } // K1362 s15 zb`],
-  // K1407 c1: the corner faces' loops skip the corner's own arms; P0 still routes on every piece of the surface (a
-  // superset, so exact), and the other corners' fills (fillBur) are computed in P0 as in full
-  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S(?: \|\| PC\(m\) == cA \|\| PC\(m\) == cB)?\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, q\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
+  // K1407 c1, K1482 s37: a tangent face's loop skips the arm its point lies on (cT); P0 still routes on every piece
+  // of the surface (a superset, so exact), and the other corners' fills (fillBur) are computed in P0 as in full.
+  // K1482 s40: armBur only lowers a burial, so the route on the plain burial's reach stays a superset (exact)
+  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S(?: \|\| PC\(m\) == cT)?\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, q\)\)\);\s*(?:if \(wb2 > bur\) wb2 \*= armBur\(k, m, q, p, S\);\s*)?if \(wb2 > bur\) bur = wb2;\s*\}/,
     () => `for (int m = 0; m < np; m++) { if (PSURF(m) != S) continue; if (!(pd[m] - (abs(Dk) + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
-  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S(?: \|\| PC\(m\) == cA \|\| PC\(m\) == cB)?\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, T\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
+  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S(?: \|\| PC\(m\) == cT)?\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, T\)\)\);\s*(?:if \(wb2 > bur\) wb2 \*= armBur\(k, m, T, p, S\);\s*)?if \(wb2 > bur\) bur = wb2;\s*\}/,
     () => `for (int m = 0; m < np; m++) { if (PSURF(m) != S) continue; if (!(pd[m] - (dT + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
 ];
 const ZB_OVF = "if (sOvf) { gl_FragDepth = 1.0; return; }";
@@ -588,9 +594,8 @@ function burialExit(src: string): string {
     `      vec2 q = f + (h * (p - f)) / X;\n      float bx2 = band2(h - X); if (!(bx2 > v)) continue;\n      float bur = 0.0;\n      ${LOOP_M}        ${BX_CHECK}\n`);
   rep("      for (int i = 0; i < nk && bur < 1.0; i++) {\n",
     `      for (int i = 0; i < nk && bur < 1.0; i++) {\n        ${BX_CHECK}\n`);
-  const C3A = "      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces\n";
-  rep(`      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n${C3A}      float bur = 0.0;\n      ${LOOP_M}`,
-    `      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n      float bx2 = band2(Dk); if (!(bx2 > v)) continue;\n${C3A}      float bur = 0.0;\n      ${LOOP_M}        ${BX_CHECK}\n`);
+  rep(`      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n      float bur = 0.0;\n      ${LOOP_M}`, // K1482 s37: the arc no longer reads the corner's arms
+    `      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n      float bx2 = band2(Dk); if (!(bx2 > v)) continue;\n      float bur = 0.0;\n      ${LOOP_M}        ${BX_CHECK}\n`);
   if (src.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {")) {
     rep(`        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bur = 0.0;\n        ${LOOP_M}`,
       `        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bx2 = band(dT); if (!(bx2 > v)) continue; // K1407 23A: band\n        float bur = 0.0;\n        ${LOOP_M}          ${BX_CHECK}\n`);
@@ -799,7 +804,7 @@ function cornerMerge(src: string): string {
 #else
       int nf = 1;
 #endif
-      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces
+      vec4 C3 = F(uOK + 6 * k + 3); // K1482 s37: (kCa, kCb), the arms the two tangent points lie on
       for (int f = 0; f < nf; f++) {
         vec2 q; float fb;
         if (f == 0) {
@@ -811,10 +816,12 @@ function cornerMerge(src: string): string {
           float dT = length(p - q); if (!(dT < W + aa)) continue;
           fb = band(dT); if (!(fb > max(v, tv))) continue; // K1407 23A: band
         }
+        int cT = f == 0 ? -1 : int(f == 2 ? C3.y : C3.x); // K1482 s37: as the two loops
         float bur = 0.0;
         for (int m = 0; m < np && bur < 1.0; m++) {
-          if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
+          if (PSURF(m) != S || PC(m) == cT) continue;
           float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
+          if (wb2 > bur) wb2 *= armBur(k, m, q, p, S);
           if (wb2 > bur) bur = wb2;
         }
         if (bur < 1.0) bur = max(bur, fillBur(k, q, p, S));
@@ -880,11 +887,11 @@ const ONE_FACE_OLD = `    for (int i = 0; i < nk; i++) {
 #endif
       if (!(rho > 1e-12)) continue;
       vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;
-      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces
       float bur = 0.0;
       for (int m = 0; m < np && bur < 1.0; m++) {
-        if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
+        if (PSURF(m) != S) continue;
         float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
+        if (wb2 > bur) wb2 *= armBur(k, m, q, p, S);
         if (wb2 > bur) bur = wb2;
       }
       if (bur < 1.0) bur = max(bur, fillBur(k, q, p, S));
@@ -895,14 +902,15 @@ const ONE_FACE_OLD = `    for (int i = 0; i < nk; i++) {
     for (int i = 0; i < nk; i++) {
       int k = kk[i]; vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;
       vec4 K4 = F(uOK + 6 * k + 4); vec4 K5 = F(uOK + 6 * k + 5);
-      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: as the arc
+      vec4 C3 = F(uOK + 6 * k + 3); // K1482 s37: (kCa, kCb), the arms the two tangent points lie on
       for (int t = 0; t < 2; t++) {
-        vec2 T = t == 1 ? K5.xy : K4.zw;
+        vec2 T = t == 1 ? K5.xy : K4.zw; int cT = int(t == 1 ? C3.y : C3.x);
         float dT = length(p - T); if (!(dT < W + aa)) continue;
         float bur = 0.0;
         for (int m = 0; m < np && bur < 1.0; m++) {
-          if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
+          if (PSURF(m) != S || PC(m) == cT) continue;
           float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, T)));
+          if (wb2 > bur) wb2 *= armBur(k, m, T, p, S);
           if (wb2 > bur) bur = wb2;
         }
         if (bur < 1.0) bur = max(bur, fillBur(k, T, p, S));
@@ -937,11 +945,12 @@ const ONE_FACE_NEW = `    for (int fi = 0; fi < 3 * nk; fi++) { // K1456 26J: on
       float dT = length(p - T);
       if (!isArc && (K1.x > 0.5 || !(dT < W + aa))) continue;
       vec2 pt = isArc ? K0.xy + (K0.z * (p - K0.xy)) / rho : T;
-      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces
+      vec4 C3 = F(uOK + 6 * k + 3); int cT = isArc ? -1 : int(t == 1 ? C3.y : C3.x); // K1482 s37: as the two loops
       float bur = 0.0;
       for (int m = 0; m < np && bur < 1.0; m++) {
-        if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
+        if (PSURF(m) != S || PC(m) == cT) continue;
         float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, pt)));
+        if (wb2 > bur) wb2 *= armBur(k, m, pt, p, S);
         if (wb2 > bur) bur = wb2;
       }
       if (bur < 1.0) bur = max(bur, fillBur(k, pt, p, S));
@@ -1342,6 +1351,53 @@ bool outsideArms(int k, int own, vec2 p) {
   for (int m = 0; m < np; m++) { int c = PC(m); if ((c == cA || c == cB) && c != own && pieceD(m, p) < lim2) return false; }
   return true;
 }
+// K1482 s40: how far piece j's own outline is buried at the point of it nearest q (q's foot on j pushed out along
+// j's normal to h): by every other chain's tube of surface S, and by every corner sector of S in the pixel p's cell
+// list whose arms leave the point outside (as a side face's point is buried). 0 = j's outline is drawn there, so a
+// corner face at q is the joint of the corner's arc and a visible outline. eval.ts's outlineBur, line for line.
+float outlineBur(int j, vec2 q, vec2 p, int S) {
+  int c = PC(j); vec4 C0 = F(uOCh + 3 * c); int v0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
+  float d2 = BIG; vec2 fo = q;
+#ifdef PLH
+  int qlo = PLO(j); int qhi = PHI(j);
+  for (int s = qlo; s <= qhi; s++) {
+#else
+  for (int s = plo[j]; s <= phi[j]; s++) {
+#endif
+    int k = s; if (closed) k = pmod(k, nseg); else if (k < 0 || k >= nseg) continue;
+    vec4 A = F(uOV + v0 + k); vec4 B = F(uOV + v0 + k + 1);
+    vec2 a = A.xy; vec2 dd = B.xy - a;
+    float l2 = dot(dd, dd); float u = l2 > 0.0 ? clamp(dot(q - a, dd) / l2, 0.0, 1.0) : 0.0;
+    vec2 e = q - a - dd * u; float e2 = dot(e, e);
+    if (e2 < d2) { d2 = e2; fo = a + dd * u; }
+  }
+  float dn = sqrt(d2); if (!(dn > 1e-12)) return 1.0;
+  vec2 qO = fo + (uH * (q - fo)) / dn;
+  float bur = 0.0;
+  for (int m = 0; m < np && bur < 1.0; m++) {
+    if (PSURF(m) != S || PC(m) == c) continue;
+    float wb2 = 1.0 - ss(uH - 2.0 * uAA, uH, sqrt(pieceD(m, qO)));
+    if (wb2 > bur) bur = wb2;
+  }
+  float x = p.x; float y = p.y; // the cell main() binned p in: main's expression on main's p
+  int gx = int(floor((x - uGrid.x) / uGrid.z)); int gy = int(floor((y - uGrid.y) / uGrid.z));
+  if (gx < 0 || gy < 0 || gx >= uGDim.x || gy >= uGDim.y) return bur;
+  vec4 CE = F(uOCell + gy * uGDim.x + gx); int k0 = int(CE.z); int kn = int(CE.w);
+  for (int s = k0; s < k0 + kn && bur < 1.0; s++) {
+    int k = int(L4(uOKL, s)); vec4 L0 = F(uOK + 6 * k); vec4 L1 = F(uOK + 6 * k + 1); if (int(L1.z) != S) continue;
+    float rq = length(qO - L0.xy);
+    if (rq > L0.z && rq < L0.w && inSector(k, qO) && outsideArms(k, c, qO)) bur = 1.0;
+  }
+  return bur;
+}
+// K1482 s40: piece m's burial of a face at q of corner k stands in full unless m is one of k's own arms; then only
+// as far as m's own outline is buried at q (outlineBur). Taken only where the burial would raise bur (exact: the
+// factor is in [0, 1]). eval.ts, the arc's and the tangent points' loops. K1572 s41: at a tight turn (texel 5's w,
+// tables.ts tightTurns) the own arms bury nothing (factor 0), master's picture there (eval.ts tight).
+float armBur(int k, int m, vec2 q, vec2 p, int S) {
+  vec4 K3 = F(uOK + 6 * k + 3); int c = PC(m);
+  return c == int(K3.x) || c == int(K3.y) ? (F(uOK + 6 * k + 5).w > 0.5 ? 0.0 : outlineBur(m, q, p, S)) : 1.0;
+}
 
 #ifdef SCAP
 bool sOvf; // K1362 s9: a tier with fewer surface slots than pieces + corners: a pixel that needs one more goes to full
@@ -1462,6 +1518,61 @@ vec3 vtx(int S, vec2 p) {
   }
   return vec3(best, bA, bB);
 }
+// K1572 s41: the joint where stage 40's own-arm burial cuts corner k's arc: band(|p - P|) at P, the arc's crossing
+// with the outline of a piece m of one of k's own arms, so the arc's cut end and m's cut side band join round.
+// eval.ts's cutJoin, line for line (its comment is the why). Returns (the term, m's chain).
+vec2 cutJoin(int k, int S, vec2 p) {
+  float ch = uH; float ca = uAA; float cW = uW;
+  vec4 Z0 = F(uOK + 6 * k); vec4 Z3 = F(uOK + 6 * k + 3); vec4 Z4 = F(uOK + 6 * k + 4); vec4 Z5 = F(uOK + 6 * k + 5);
+  float R = Z0.z; vec2 C = Z0.xy; int cA = int(Z3.x); int cB = int(Z3.y);
+  float best = 0.0; float bC = -1.0;
+  for (int m = 0; m < np; m++) {
+    int c = PC(m); if (PSURF(m) != S || (c != cA && c != cB)) continue;
+    float X = pd[m]; if (!(X < ch + cW + ca && X > 1e-12)) continue;
+    // the outline line through p's foot f: n . (P - C) = h + n . (f - C), crossed with the circle |P - C| = R
+    vec2 f = VFOOT(m); vec2 n = (p - f) / X;
+    vec2 P = p; float s = 0.0; bool ok = true;
+    for (int it = 0; it < 2; it++) {
+      float cc = ch + dot(n, f - C); float s2 = R * R - cc * cc;
+      if (!(s2 > 0.0625 * R * R)) { ok = false; break; }
+      s = sqrt(s2);
+      vec2 A = C + cc * n + s * vec2(-n.y, n.x); vec2 B = C + cc * n - s * vec2(-n.y, n.x);
+      if (dot(A - P, A - P) <= dot(B - P, B - P)) P = A; else P = B;
+      if (it == 1) break;
+      vec2 g0; float e0 = pieceF(m, P, g0); if (!(e0 > 1e-24)) { ok = false; break; }
+      f = g0; n = (P - g0) / sqrt(e0);
+    }
+    if (!ok) continue;
+    float dP = length(p - P); if (!(dP < cW + ca)) continue;
+    // a border width or more from both tangent points: nearer, the arc is ending into its own arm's band there
+    vec2 dA = P - Z4.zw; vec2 dB = P - Z5.xy;
+    float fP = (1.0 - ss(cW - ca, cW + ca, dP)) * ss(cW - ca, cW + ca, sqrt(min(dot(dA, dA), dot(dB, dB)))); if (!(fP > best)) continue;
+    vec2 g; float e2 = pieceF(m, P, g);
+    if (!(abs(sqrt(e2) - ch) < ca) || !inSector(k, P)) continue;
+    // the arc a step 2 aa deep into m's tube: along the tangent toward m's spine, by 2 aa over the crossing's sine
+    vec2 t = vec2(-(P.y - C.y), P.x - C.x) / R; if (dot(t, g - P) < 0.0) t = -t;
+    float L = min(cW, (2.0 * ca * R) / s); vec2 u = P + L * t - C;
+    vec2 Q = C + (R * u) / length(u);
+    float cut = (1.0 - ss(ch - 2.0 * ca, ch, sqrt(pieceD(m, Q)))) * outlineBur(m, Q, p, S);
+    if (!(cut * fP > best)) continue;
+    float vb = 0.0;
+    for (int n2 = 0; n2 < np; n2++) {
+      if (n2 == m || PSURF(n2) != S) continue;
+      float b2 = 1.0 - ss(ch - 2.0 * ca, ch, sqrt(pieceD(n2, P)));
+      if (b2 > vb) vb = b2;
+      if (vb >= 1.0) break;
+    }
+    for (int i3 = 0; i3 < nk; i3++) {
+      if (vb >= 1.0) break;
+      int k3 = kk[i3]; if (k3 == k) continue; vec4 G0 = F(uOK + 6 * k3); vec4 G1 = F(uOK + 6 * k3 + 1); if (int(G1.z) != S) continue;
+      float rV = length(P - G0.xy);
+      if (rV > G0.z && rV < G0.w && inSector(k3, P) && outsideArms(k3, -1, P)) vb = 1.0;
+    }
+    float val = (1.0 - vb) * cut * fP;
+    if (val > best) { best = val; bC = float(c); }
+  }
+  return vec2(best, bC);
+}
 
 void layers(vec2 p) {
   float h = uH; float aa = uAA; float W = uW;
@@ -1562,11 +1673,11 @@ void layers(vec2 p) {
 #endif
       if (!(rho > 1e-12)) continue;
       vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;
-      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces
       float bur = 0.0;
       for (int m = 0; m < np && bur < 1.0; m++) {
-        if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
+        if (PSURF(m) != S) continue;
         float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
+        if (wb2 > bur) wb2 *= armBur(k, m, q, p, S);
         if (wb2 > bur) bur = wb2;
       }
       if (bur < 1.0) bur = max(bur, fillBur(k, q, p, S));
@@ -1577,14 +1688,15 @@ void layers(vec2 p) {
     for (int i = 0; i < nk; i++) {
       int k = kk[i]; vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;
       vec4 K4 = F(uOK + 6 * k + 4); vec4 K5 = F(uOK + 6 * k + 5);
-      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: as the arc
+      vec4 C3 = F(uOK + 6 * k + 3); // K1482 s37: (kCa, kCb), the arms the two tangent points lie on
       for (int t = 0; t < 2; t++) {
-        vec2 T = t == 1 ? K5.xy : K4.zw;
+        vec2 T = t == 1 ? K5.xy : K4.zw; int cT = int(t == 1 ? C3.y : C3.x);
         float dT = length(p - T); if (!(dT < W + aa)) continue;
         float bur = 0.0;
         for (int m = 0; m < np && bur < 1.0; m++) {
-          if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
+          if (PSURF(m) != S || PC(m) == cT) continue;
           float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, T)));
+          if (wb2 > bur) wb2 *= armBur(k, m, T, p, S);
           if (wb2 > bur) bur = wb2;
         }
         if (bur < 1.0) bur = max(bur, fillBur(k, T, p, S));
@@ -1593,8 +1705,7 @@ void layers(vec2 p) {
       }
     }
 #endif
-    if (v < 1.0 && D > -aa) { vec3 VX = vtx(S, p); float vxv = VX.x * ss(-aa, aa, D); if (vxv > v) { v = vxv; PR(wk = 6; wa = int(VX.y); wb = int(VX.z);) } } // K1407 c3: the vertex cap
-    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)
+${VTX_LINE}    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)
   }
 #ifndef LABRUN
   int top = -1;
