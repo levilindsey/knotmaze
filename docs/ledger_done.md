@@ -3839,3 +3839,47 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1374 (Done 2026-11-15)
 
 - **K1374** · rp=gf build worker: make the slice pool (gf_slice_worker.ts, Muse t2) win on junction builds, or remove it: partition pins by chain and the chunk merge by cell range, or transfer the scene to the slices as typed arrays, so the coordinator's 6-8 ms serial prefix goes. Done in 84863c99 (2026-11-15).
+
+## K1408 (Done 2026-11-16)
+
+- **K1408** · Muse batch 23: six runs landed, all deploys green: K1407 census 239 -> 61 (bb4a74f1, 45f0e838; regressions vs Levi's bar K1416), K1404 (f1e70048), K1405 (58f8a9ca), K1398 (2830d103; dashes K1417), K1374 pool -41%/-37% on junction builds (84863c99). Done in 9f23f7d1 (2026-11-16).
+
+## K1417 (Done 2026-11-16)
+
+- **K1417** · rp=gf border look: the gap-band casing dashes removed; the border draws the faint outline (24A). Done in 24ae5489 (2026-11-16).
+
+## K1415 (Done 2026-11-16)
+
+- **K1415** · rp=gf crossing-gap fade scaled by the crossing angle, today's max(sin, 0.2) (24A). Done in 24ae5489 (2026-11-16).
+
+## K1416 (Done 2026-11-16)
+
+- **K1416** · rp=gf against Levi's bar at K1315 ends: c1's six stubs (rows 5-10) and spots 2, 12, 13 now end at the over thread's outline (K1407 c2's fillBur); the eye continues under K1407 c3. Done in 46c4f05b (2026-11-16).
+
+## K1396 (Done 2026-11-16)
+
+- **K1396** · rp=gf: the K76 thread reveal (explore view) is not handled; only the appearance reveal is (docs/design/K1383_s1_gf_reveal.md handoff). Done in 0a5e2d1c (2026-11-16).
+
+## K1433 (Done 2026-11-16)
+
+- **K1433** · rp=gf step back trial: the union field is not the fix (every variant draws stray ink or turns the corner into a deep V; no spot better by eye); step 4 stays; the open spots and about 2,030 smudges come from per-pixel grouping and tie order, which the graph knows at table time (K1435; test v2 K1436). Done in eee0b835 (2026-11-16).
+
+## K1435 (Done 2026-11-16)
+
+- **K1435** · rp=gf table-time grouping probe: membership from each junction arm's home interval with a depth ramp (mode tgr) removes the ghost threads and smudges (tie+ramp finds 2030 to 547 over 12 scenes; spot 16 and smudge 1 clean, 25 spots unchanged; Claude checked sheet_spots_1 and sheet_variants_worst_1); order stays per pixel (crisp graph order leaves stubs); src stages K1438, K1439. Done in 02c2e598 (2026-11-16).
+
+## K1440 (Done 2026-11-16)
+
+- **K1440** · rp=gf look: where a thread dives under a junction, K1435's membership ramp fades it in softly; rp=outline cuts it crisply, and the crisp variants (tgm) leave stubs elsewhere. Dropped: answered by Levi 2026-11-16: not a fixed look; the fade where a thread dives under a junction follows the crossing fade parameter (fadeLength), adjustable live, 0 = crisp. A Done of K1438's brief (2026-11-16).
+
+## K1427 (Done 2026-11-16)
+
+- **K1427** · rp=gf spot 16 and spot 6 (form B's demoted-arm V): member()'s second loop skips an arm rooted with the first loop's arm (the other half of a through pass); both match rp=outline at 4x (Claude checked), census 16/0/11/14 with 32 new exceptions (form B's V), bench within 5%. Done in e3297511 (2026-11-16).
+
+## K1438 (Done 2026-11-16)
+
+- **K1438** · rp=gf junction membership from the arms' home intervals in tables.ts + eval.ts, behind a switch that is off (GF_HOME / buildTables home:true); the fade follows fadeLength live; CPU scan tie+ramp 1797 -> 435 finds, 28 of 29 spots clean; table size unchanged, off = master's digest. Done in ca42a4de (2026-11-16).
+
+## K1439 (Done 2026-11-16)
+
+- **K1439** · rp=gf home membership mirrored in the shader behind gfh=1 (off by default, acts only with rp=gf); fade follows fadeLength live with no rebuild; GPU = mirror on def, 3 px past 1e-2 on muse_hash (float ties); flag off pinned by shader/keys/pack digests; no measurable frame cost on the desktop. Done in c11be7ae (2026-11-16).
