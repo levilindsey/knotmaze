@@ -320,10 +320,10 @@ Next free ID: K1588.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: claude agent K1584-s1 (coordinating: claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: agent worktree branch, set at merge; last commit: `e5616094b`
-  - evidence: .claude/probes/K1584/ (27Z8 census tools; its 85 percent no-gap count is doubted: the rule may read the over threads own border), .claude/probes/K1584/s1/ sheets
-  - next: on the agents report: view its before and after sheets, run the guards, show Levi
+  - owner: claude agent K1584-s2 (coordinating: claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `b4c48f3a9`
+  - evidence: .claude/probes/K1584/s1/ sheets and gapcheck.ts (the renderers own count; the 27Z8 census overcounts), s2/ variant sheets; handoffs in docs/design/K1584_crossing_gaps.md on the branch
+  - next: stage 1 (b4c48f3a9, s18 joint flag narrowed) barely changes the look and opens one border at named joint sites: not landed. Cause: about a third of border exits are closed on purpose by the K1482 joint flag, and a full gap is only 0.07 world (3 px of 3200). Stage 2 makes gap size variant sheets; show them to Levi for his pick, then one fix stage to that pick
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
