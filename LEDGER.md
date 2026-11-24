@@ -313,14 +313,6 @@ Next free ID: K1588.
 - **K1562** · The laptop's knotmaze clone, after K1493's history rewrite (2026-11-20): on a clean tree run
   `git fetch`, then `git reset --hard origin/master` (or clone afresh). Do not `git pull` there first: a pull
   merges the old history, and a push after it brings the 362 MB back (docs/ledger_notes.md `## K1493`)
-- **K1584** · rp=gf: crossing gaps are missing at a very high rate all over the maze (Levi, Nov 23, review
-  tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
-  commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
-  fault). Then one Claude fix stage for the class, checked by the census
-  - owner: nobody since 2026-11-24 01:30: stage 3 done, waits on Levis look (guards run k1584s3 started by coordinator session 09c7a672)
-  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `2078ee391`
-  - evidence: .claude/probes/K1584/s3/ in that worktree (sheets, counts_s3.md); handoff at the end of docs/design/K1584_s3_brief.md on the branch; guards under .claude/probes/K1482/out/guards/k1584s3/ in the main checkout
-  - next: Levi answers gaps land or gaps keep todays on the Crossing Gap Pick page (v2). On land: guards green, then cherry-pick the branchs commits b4c48f3a9 and the stage 3 commits onto master and push. Residual: A_4 t84e one border went from full to tiny gap (room per side; per border would fix)
 
 ## In progress
 
@@ -780,6 +772,14 @@ Next free ID: K1588.
   - branch: mainline; last commit: `085085336`
   - evidence: .claude/probes/K1492/handoffs/27Z5_DONE.md (the run wrote its handoff there, not in the brief), .claude/probes/K1582/ (tools; out/27Z5/ sheets untracked)
   - next: Run 27Z5 found no single commit: the ends close in three steps (K1492 fade 3d7acffe4, stage 8 363b69487 at g41, stage 18 cf38cf6bb completes the Nov 19 picture; today equals d136ec526 on); todays sheets viewed by Claude 2026-11-21: both spots still show the joined ends, shown to Levi on the page (section parked). NEXT: after K1572 stage 41 reports (same files, one agent per area) and if the week allows, a Claude stage at these two spots only: the under thread keeps its gap, without Nov 18s wedges and notches; brief it under docs/design; two-stage stop applies.
+- **K1584** · rp=gf: crossing gaps are missing at a very high rate all over the maze (Levi, Nov 23, review
+  tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
+  commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
+  fault). Then one Claude fix stage for the class, checked by the census
+  - owner: claude agent K1584-s4 (coordinator: claude session 09c7a672), started 2026-11-24
+  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `2078ee391`
+  - evidence: .claude/probes/K1584/s1..s4/ in that worktree; handoffs in docs/design/K1584_s3_brief.md and K1584_s4_brief.md on the branch; stage 3 guards green under .claude/probes/K1482/out/guards/k1584s3/
+  - next: Levi 2026-11-24 on stage 3: still many closed sides; every under border at every crossing shows a gap, shortened only very close to a junction and then as much as fits. Stage 4 agent removes the closed sides (over and under rules) and fixes A_4 t84e; then the coordinator views the sheets, runs guards, shows Levi
 
 ## Next, in order
 
