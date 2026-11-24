@@ -1433,3 +1433,31 @@ Done 3 (the tight turns). Master against N at step 1 inside the 100 px square an
 Done 4 (sheets for places outside the 17). There are none: `table27z6.py --sheets` found 0 changed places outside the 17 and wrote no `maze_x_y` sheet, so no sheet is owed. The K1578 chain's own base | N sheets for the 15 places stay untracked under `out/27Z6/sheets/` for the coordinator.
 
 Done 5: `npm test` green (259 files passed, 2 skipped; 3,241 tests passed, 9 skipped; tsc clean). This commit is the two tools and this handoff only; `git diff --stat` of it names nothing under `src/` or `test/`. Previews :5480/:5481 stopped, `$env:TEMP\k1572-27Z6` removed, no perf lock left. K1572 is left where it is in the ledger (the coordinator files it after showing Levi the sheets); K1531 and K1482 left open. Tried and left: nothing failed - no maze needed its recapture, and no view needed the step-3 listing.
+
+## Run Z7 (27Z7): the review captures - all 21 test mazes, today's renderer beside rp=gf, as labelled tiles (K1583)
+
+Levi, 2026-11-23, asked for one page of all 21 test mazes with the new renderer beside today's, so they can mark
+every place that is still wrong in one pass. This run makes the pictures and their index; the coordinator builds
+the page. It changes no source and judges no look.
+
+Done when all of these hold (numbers in the handoff):
+
+1. Master (today's origin/master, at or after `eb8743a52`, which holds the ball of K1572) is built once by
+   `scripts/preview.ps1 -Ref <commit>` and captured on all 21 mazes (A_3..A_d, D_1..D_a) with the
+   `.claude/probes/K1578/` recipe, twice per maze on one pinned view: once with today's renderer (no rp flag) and
+   once with rp=gf gfh=1. Each capture is valid: no lost context, no fallback, the same table hash and the same
+   view in both loads of a maze.
+2. Each maze's two frames are cut on one grid of 4 columns (a..d) by 3 rows (1..3). For every grid cell that holds
+   thread ink in either frame, one PNG `<maze>_<col><row>.png` (for example `A_3_b2.png`): today on the left, rp=gf
+   on the right, at device pixels (no downscale), a 4 px divider, and a label strip on top reading
+   `<maze> <col><row>   today | new`. Cells with no ink in both frames are skipped and counted.
+3. `index.json` beside the tiles: per maze its link, table hash, frame size, and per tile its name, cell rectangle
+   and the count of pixels that differ between the two renderers by more than 24 (a sort key only, not a verdict).
+4. Everything under `.claude/probes/K1583/out/27Z7/` (untracked); the tools committed under `.claude/probes/K1583/`.
+   Total size of the tiles reported; if it passes 60 MB, also write the same set as quality-90 JPEGs in `jpg/`.
+5. `### Handoff 27Z7` appended to THIS file (not under .claude/probes), pushed to master. Servers stopped, preview
+   folders removed.
+
+Rules: the perf lock (`scripts/perf_lock.ps1`) around captures; never Chrome's --virtual-time-budget; never touch
+`$env:TEMP\k1482s27live-profile-20548`; probe outputs stay untracked; no ledger edits; do not say which renderer
+looks better anywhere; stop after this run.

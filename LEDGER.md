@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1583.
+Next free ID: K1584.
 
 ## Waiting on Levi
 
@@ -316,30 +316,13 @@ Next free ID: K1583.
 
 ## In progress
 
-- **K1572** · rp=gf: the round ball where a thread end meets a joint. WAITS ON LEVI since 2026-11-21 03:10
-  (page version 16, https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#ball-all): ball keep (the default and
-  Claude's pick; ball no means the same: close this with the look kept, then K1565 may be briefed), ball take
-  (land `4925aa786` as built by a squash onto master, after the checks not yet run on it: guards panelopen,
-  dragcheck_b and dragcheck, the K1436 bar, fill and `&gfk=0`, K1573), ball more (a third stage only as he
-  names it, aimed at the three places that are not clean). Stage 37's candidate (src `df2e1c8bb`) cut a slit
-  on A_b (1077,1509) and a notch on A_a (2257,991): not to land. Stage 40, the second and last try, built
-  `4925aa786` (local branch `worktree-agent-ac98db1b4872d612b`, not on master; `### Handoff K1482 s40` in
-  `docs/design/K1482_s40_ball_narrow.md`). The all-maze look (K1578's tool, Muse run 27V: all 21 mazes against
-  the start `d1c25f5fe`, both floors 0 px on every maze; outputs `.claude/probes/K1578/out/ball40/` in the
-  main checkout, untracked): 64 places on 10 mazes, each viewed by Claude against the start. Clean, the ball
-  or nub gone (8): A_b t25e (994,224), A_3 t22e (2290,919) and t26s (2099,1137), A_5 t65s (2042,893), A_9 t28e
-  (2154,126) and t47e (1894,1390), A_7 t83e (2269,507), A_d t88s (2102,995). Not clean (3, each a ball at the
-  start): A_4 t32s (937,1627) a smaller ball with a two-tooth bite on its right, a notch, so by the all-maze
-  rule not as built; A_8 t31s (1149,1576) the ball gone, the left border's tip standing about 4 px above the
-  right border's square end; A_5 t30e (1233,254) the ball only shrinks. No visible difference (53): A_4 t22s
-  (39 px), A_5 t34e (23 px), A_a t16s (3 px, the start's ball stays), A_b j142 (a marker's ring edges, 22 px),
-  46 places of 1 to 7 px on A_b (K1581), A_5 t14s, A_c j69, A_d j40. Stage 37's two broken places are not
-  among the 64; A_6 and D_1 to D_a differ by 0 px. Ran on the candidate: hold and hold_gfk0 60 of 60, npm test
-  3198 passed
-  - owner: nobody since 2026-11-21 19:28: waits on Levi (page card ball-land: ball land or ball keep)
-  - branch: worktree-agent-a03ebfecb13c1df55 at .claude/worktrees/agent-a03ebfecb13c1df55 (new history, never pushed; keep the worktree); last commit: `1f44d1509`
-  - evidence: .claude/probes/K1572/s41/ on the branch, untracked out/s41/look/ in its worktree (17 sheets), handoff in docs/design/K1572_s41_ball_a8.md on the branch
-  - next: Stage 41 built N (A_8 t31s one round elbow, tight turns 0 px, rest = stage 40s candidate; Claude viewed all 17 sheets). Muse run 27Z6 (4cc59acdf, Handoff 27Z6 in docs/design/K1531_muse_batch27.md) compared N with master on all 21 mazes: 15 changed places, 820 px, every one among the 17; none outside; 84 loads valid. ON ball land: git diff 4875495a3 1f44d1509 -- src test applied to master (git apply --3way), npm test, hold and hold_gfk0, push, see the deploy green, close K1572; then K1565 and the K1582 fix stage may start (same files). ON ball keep: close K1572 with todays look. A_a t16s keeps its ball under N: Levis call if it should go.
+- **K1583** · rp=gf review page: all 21 test mazes, todays renderer beside the new one as labelled tiles, for
+  Levi to mark every place still wrong in one pass (Levi, Nov 23: review page). Muse run 27Z7 captures; the
+  coordinator builds and publishes the page, then files one fix item per marked place
+  - owner: muse run 27Z7 (queued by claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `eb8743a52`
+  - evidence: .claude/probes/K1583/out/27Z7/ (untracked), handoff in docs/design/K1531_muse_batch27.md
+  - next: read Handoff 27Z7, view the tiles, build the review page from index.json and give Levi the link
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
@@ -2971,6 +2954,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1572** · The ball, third try, landed on Levis word (Ball land, Nov 23): tight turns keep todays ball, the cut joint at A_8 t31s turns as one round elbow; guards and npm test pass. Done in eb8743a52 (2026-11-23).
 - **K1560** · rp=gf, t81s on link A: below the over thread the under thread shows only its step-side border, so it reads narrower and off its heading (Levi 2026-11-20; look rule 1). Dropped: Levi 2026-11-21: fine to keep today's look, not the stronger try (e569ccb47 stays unlanded); two tries ran, no third (2026-11-21).
 - **K1566** · rp=gf fill look, the nub fix's width, WITH LEVI (decision page, anchor nub-width; replies gaps more / gaps keep / gaps narrow; pick: more). Done in dcd8e81e6 (2026-11-21).
 - **K1384** · rp=gf's shader compiles synchronously: a cold desktop profile freezes the loader about 6.7 s (K1369 s1). Done in 3285f10e4 (2026-11-21).
