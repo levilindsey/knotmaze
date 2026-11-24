@@ -313,17 +313,17 @@ Next free ID: K1588.
 - **K1562** · The laptop's knotmaze clone, after K1493's history rewrite (2026-11-20): on a clean tree run
   `git fetch`, then `git reset --hard origin/master` (or clone afresh). Do not `git pull` there first: a pull
   merges the old history, and a push after it brings the 362 MB back (docs/ledger_notes.md `## K1493`)
-
-## In progress
-
 - **K1584** · rp=gf: crossing gaps are missing at a very high rate all over the maze (Levi, Nov 23, review
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: claude agent K1584-s2 (coordinating: claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `b4c48f3a9`
-  - evidence: .claude/probes/K1584/s1/ sheets and gapcheck.ts (the renderers own count; the 27Z8 census overcounts), s2/ variant sheets; handoffs in docs/design/K1584_crossing_gaps.md on the branch
-  - next: stage 1 (b4c48f3a9, s18 joint flag narrowed) barely changes the look and opens one border at named joint sites: not landed. Cause: about a third of border exits are closed on purpose by the K1482 joint flag, and a full gap is only 0.07 world (3 px of 3200). Stage 2 makes gap size variant sheets; show them to Levi for his pick, then one fix stage to that pick
+  - owner: nobody since 2026-11-23 23:50: waits on Levis pick of the gap size
+  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `082bc9742`
+  - evidence: .claude/probes/K1584/s1/ and s2/ in that worktree (variant sheets, variants.patch, gapcheck.ts); handoffs in docs/design/K1584_crossing_gaps.md on the branch
+  - next: Levi picks gaps today, open, 2x or 3.5x on the pick page (claude.ai artifact Crossing Gap Pick). Then one fix stage in gf_look.ts to that pick: the joint flag off at crossings, a crossing-only margin (lookGap also feeds marker gaps, gfJointClear and pinReach), and the approved joint sites (j15 j22 t65s j88 t80s t81s) keep their outline; drop or fold in b4c48f3a9
+
+## In progress
+
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
