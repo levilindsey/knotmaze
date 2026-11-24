@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1587.
+Next free ID: K1588.
 
 ## Waiting on Levi
 
@@ -799,6 +799,10 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1587** · rp=gf: A_3 b1 near the top-right, a junction with a crossing just above it - before the crossing
+  only one threads border shows where two should (Levi, Nov 23: the two threads may also sit too close, but it
+  looks wrong). Not yet located for certain: crop the area and confirm the spot with Levi before a fix. After
+  K1584 (same files)
 - **K1586** · rp=gf: A_3 b1 near the top-left, an eye loop a little larger than the balls has a gap in its
   border on one side that should not be there (Levi, Nov 23). After K1584 (same files)
 - **K1585** · rp=gf: stubs at 3-way junctions - part of the fused threads border runs on too far and sticks
