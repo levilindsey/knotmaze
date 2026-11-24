@@ -1475,3 +1475,36 @@ Done 3 (index). `index.json` beside the tiles: per maze its link (new and today 
 Done 4 (sizes). PNG tiles total 101,241,037 bytes, over 60 MB, so the same set is also written as quality-90 JPEGs in `jpg/` (175 files, 21,207,527 bytes).
 
 Done 5: `npm test` green (259 files passed, 2 skipped; 3,241 tests passed, 9 skipped; tsc clean). This commit is the four tools and this handoff only; outputs stay untracked. K1583 is left open (the coordinator builds the review page from `index.json`); K1531 and K1482 left open; no ledger edit, as briefed. Tried and corrected: the first ink rule (distance from the frame's corner-median background) fired on the background texture itself (A_3 read 12 tiles, 0 skipped, background-only cells at 1,455-10,733 px) and was replaced by the cell-median rule above before any tile was kept (A_3 then 9/3, re-verified across the 21 ball40 frames: thread cells 43k-113k, true background cells under 200). Preview :5495, its `$env:TEMP\knotmaze-27Z7` root and the run's Chrome profile stopped and removed at the stop line.
+
+## Run Z8 (27Z8): crossing gap census on all 21 mazes and the commit that lost the gaps (K1584)
+
+Levi, 2026-11-23, on the review tile A_3 b1 (rp=gf gfh=1, build 272edd8c7): "All over the maze we are missing gaps
+at an extremely high frequency." A crossing's under thread must stop short of the over thread on both sides, leaving
+a gap in its two borders (the fade ramp of K1423/K1492 ends at no ink before the over thread's border). Run 27Z5
+(`.claude/probes/K1492/handoffs/27Z5_DONE.md`) found that at two spots the gap was lost in three steps on Nov 18 and
+19 (`3d7acffe4`, `363b69487`, `cf38cf6bb`). This run measures how many crossings lack the gap today and which
+commits took it away. Probes only: no source change, no look judged.
+
+Done when all of these hold (numbers in the handoff):
+
+1. A census tool under `.claude/probes/K1584/` that, for one build and one maze (rp=gf gfh=1, the K1578 recipe and
+   pinned view), lists every crossing with its device x,y and, for each of the under thread's two sides, whether
+   its borders reach the over thread's border with no gap. State the rule as coded (what ink level and what
+   distance count as a gap) and check it by hand-reading the numbers of five crossings that have a gap and five
+   that do not on A_3. Report the link's fade length and gap margin, since they set the gap's size.
+2. Today's master on all 21 mazes (A_3..A_d, D_1..D_a): per maze the number of crossings, the number of sides
+   with no gap, and the same split by kind (the under pass is a plain thread; an arm of a fused joint; within one
+   thread width of a junction or a tail end; a self crossing of a kink loop).
+3. The same census on A_3, A_8 and D_1 at these builds: `d136ec526`, the parent of `3d7acffe4`, `3d7acffe4`,
+   `363b69487`, `cf38cf6bb`, and the last commit of each day Nov 17 to Nov 22 that changed `src/render/gpu_field/`.
+   A table of sides with no gap per build; for each build where the count rises by more than 5 percent on any of
+   the three mazes, bisect to the single commit and name it, with its count before and after.
+4. For A_3: a list of the 20 no-gap sides nearest the frame's top-left quarter, with x,y, kind and the first build
+   of item 3 where each lost its gap (for the coordinator's sheets).
+5. `### Handoff 27Z8` appended to THIS file, tools committed under `.claude/probes/K1584/` (git add -f the tools
+   only), pushed to master. Servers stopped, preview folders removed.
+
+Rules: the perf lock (`scripts/perf_lock.ps1`) around captures; never Chrome's --virtual-time-budget; never touch
+`$env:TEMP\k1482s27live-profile-20548`; probe outputs stay untracked; no ledger edits; old commit IDs map through
+`docs/K1493_commit_map.txt`; stop after this run or 4 hours after your start, whichever comes first, with what you
+have in the handoff.

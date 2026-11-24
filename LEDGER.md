@@ -19,17 +19,10 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1584.
+Next free ID: K1587.
 
 ## Waiting on Levi
 
-- **K1583** · rp=gf review page: all 21 test mazes, todays renderer beside the new one as labelled tiles, for
-  Levi to mark every place still wrong in one pass (Levi, Nov 23: review page). Muse run 27Z7 captures; the
-  coordinator builds and publishes the page, then files one fix item per marked place
-  - owner: nobody since 2026-11-23 13:25: waits on Levi marking places
-  - branch: mainline; last commit: `ad4cf2d96`
-  - evidence: .claude/probes/K1583/ (review_tiles.py and review_page.py build the page from out/27Z7, untracked); page https://claude.ai/artifact/GX7vem1oaafgo3vsNQ9Yvk (175 tiles, new renderer only: todays renderer drew too faint in the capture recipe to serve as a reference)
-  - next: when Levi names tiles: file one fix item per named place, view each, brief Claude agents on different file areas, Muse measures each on all 21 mazes
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -323,6 +316,14 @@ Next free ID: K1584.
 
 ## In progress
 
+- **K1584** · rp=gf: crossing gaps are missing at a very high rate all over the maze (Levi, Nov 23, review
+  tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
+  commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
+  fault). Then one Claude fix stage for the class, checked by the census
+  - owner: muse run 27Z8 (queued by claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `d924fbaab`
+  - evidence: .claude/probes/K1584/ (untracked outputs), handoff in docs/design/K1531_muse_batch27.md
+  - next: read Handoff 27Z8, view the 20 listed A_3 sides, brief the fix stage from the named commits
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
@@ -798,6 +799,11 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1586** · rp=gf: A_3 b1 near the top-left, an eye loop a little larger than the balls has a gap in its
+  border on one side that should not be there (Levi, Nov 23). After K1584 (same files)
+- **K1585** · rp=gf: stubs at 3-way junctions - part of the fused threads border runs on too far and sticks
+  into the junction (Levi, Nov 23: at least 5 on review tile A_3 b1). A class fault Levi named: census of
+  junctions with a stub, then a Claude fix stage; after K1584 (same files)
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
@@ -1141,6 +1147,13 @@ Every other item below waits on the trigger it names.
   place of three, or per-corner terms moved to the table build; 0 px on the bar's scenes, compile seconds
   saved over the floor. A Muse fix run, once the ball's candidate (K1572)
   is decided (the bend look, K1559, closed 2026-11-21 with the look kept): all three work in the same loops
+- **K1583** · rp=gf review page: all 21 test mazes, todays renderer beside the new one as labelled tiles, for
+  Levi to mark every place still wrong in one pass (Levi, Nov 23: review page). Muse run 27Z7 captures; the
+  coordinator builds and publishes the page, then files one fix item per marked place
+  - owner: nobody since 2026-11-23: Levi stopped at A_3 b1 (not ready for a full review)
+  - branch: mainline; last commit: `ad4cf2d96`
+  - evidence: .claude/probes/K1583/ (review_tiles.py and review_page.py build the page from out/27Z7, untracked); page https://claude.ai/artifact/GX7vem1oaafgo3vsNQ9Yvk (175 tiles, new renderer only: todays renderer drew too faint in the capture recipe to serve as a reference)
+  - next: republish the review page after K1584, K1585 and K1586 land, and only once the coordinator has viewed every tile first
 
 ## Residuals (known, not fixed)
 
