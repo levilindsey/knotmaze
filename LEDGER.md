@@ -320,10 +320,10 @@ Next free ID: K1588.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: muse run 27Z8 (queued by claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `d924fbaab`
-  - evidence: .claude/probes/K1584/ (untracked outputs), handoff in docs/design/K1531_muse_batch27.md
-  - next: read Handoff 27Z8, view the 20 listed A_3 sides, brief the fix stage from the named commits
+  - owner: claude agent K1584-s1 (coordinating: claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: agent worktree branch, set at merge; last commit: `e5616094b`
+  - evidence: .claude/probes/K1584/ (27Z8 census tools; its 85 percent no-gap count is doubted: the rule may read the over threads own border), .claude/probes/K1584/s1/ sheets
+  - next: on the agents report: view its before and after sheets, run the guards, show Levi
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
