@@ -23,6 +23,13 @@ Next free ID: K1584.
 
 ## Waiting on Levi
 
+- **K1583** · rp=gf review page: all 21 test mazes, todays renderer beside the new one as labelled tiles, for
+  Levi to mark every place still wrong in one pass (Levi, Nov 23: review page). Muse run 27Z7 captures; the
+  coordinator builds and publishes the page, then files one fix item per marked place
+  - owner: nobody since 2026-11-23 13:25: waits on Levi marking places
+  - branch: mainline; last commit: `ad4cf2d96`
+  - evidence: .claude/probes/K1583/ (review_tiles.py and review_page.py build the page from out/27Z7, untracked); page https://claude.ai/artifact/GX7vem1oaafgo3vsNQ9Yvk (175 tiles, new renderer only: todays renderer drew too faint in the capture recipe to serve as a reference)
+  - next: when Levi names tiles: file one fix item per named place, view each, brief Claude agents on different file areas, Muse measures each on all 21 mazes
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -316,13 +323,6 @@ Next free ID: K1584.
 
 ## In progress
 
-- **K1583** · rp=gf review page: all 21 test mazes, todays renderer beside the new one as labelled tiles, for
-  Levi to mark every place still wrong in one pass (Levi, Nov 23: review page). Muse run 27Z7 captures; the
-  coordinator builds and publishes the page, then files one fix item per marked place
-  - owner: muse run 27Z7 (queued by claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `eb8743a52`
-  - evidence: .claude/probes/K1583/out/27Z7/ (untracked), handoff in docs/design/K1531_muse_batch27.md
-  - next: read Handoff 27Z7, view the tiles, build the review page from index.json and give Levi the link
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
