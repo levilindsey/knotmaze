@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1603.
+Next free ID: K1605.
 
 ## Waiting on Levi
 
@@ -325,6 +325,12 @@ Next free ID: K1603.
 - **K1562** · The laptop's knotmaze clone, after K1493's history rewrite (2026-11-20): on a clean tree run
   `git fetch`, then `git reset --hard origin/master` (or clone afresh). Do not `git pull` there first: a pull
   merges the old history, and a push after it brings the 362 MB back (docs/ledger_notes.md `## K1493`)
+- **K1603** · Wedge at balls (K1584, his call 1 answer): pick a column on the 8-ball sheet, sent 2026-11-24
+  18:30: today | stage 5 | V1 as built | V2 widens over 2x | V3 3x | V4 60/90 degree pie | V5 gap stops at the
+  ball (= today's whole ball). Loose pieces near a ball: today 3, stage 5 11, V1 6, V2/V3/V5 3, V4 27-33; V4
+  breaks balls A_3 k157, A_3 k275, A_6 k331. Switch gfwv= on branch k1584-wedge (3850d2b59,
+  .claude/worktrees/k1584-wedge, sheet .claude/probes/K1584/wedge/v/wedge_sheet.png, brief
+  docs/design/K1584_wedge_brief.md)
 
 ## In progress
 
@@ -793,27 +799,16 @@ Next free ID: K1603.
   - evidence: .claude/probes/K1584/s6/ (census_s6a_p0..p4.png, d1..d5.png, fade_sheet.png), s7/ and wedge/ in those worktrees
   - next: stage 6 result (17:05): wedge built, pixel-identical outside balls, but reads the same as stage 5 (gap as wide as the ball); new 14 px loose piece A_6 k331, 2 px spike A_d k198, six balls still loose. When the variants agent reports: view its sheet, put it on the gap page for Levi to pick. When stage 7 reports: view the 15 loops, 7 stems, every changed place; then page + combination with the junction rule
   - brief: docs/design/K1584_s7_brief.md (gap worktree), docs/design/K1584_wedge_brief.md (k1584-wedge)
-- **K1588** · rp=gf: a junction drops its own under thread when a crossing sits within about 1.5 thread widths
-  of it (membership is gated by depth), so the joining arm's border is drawn across the thread: the cause of
-  Levi's six named places on A_3 (x195 x338 x37 pinch, x303 x227 x132 sliver; audit 2026-11-24, page
-  https://claude.ai/artifact/FWGCtjSn8UGDvyKLoeGi7d). Stage 1: membership by position near the joint, in
-  tables.ts / eval.ts / gf_glsl.ts. Follow-ups: re-count closed gap sides, test whether s28 and s34 are dead,
-  then decide whether the gap cut reads the junction from the same table
-  - owner: agent K1588-s3 of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 16:35, 2 h cap)
-  - branch: k1588-land at .claude/worktrees/k1588-land (from master, new history; node_modules is a junction). Source: worktree-agent-af202ca51788156a0 at cc4af53f2 (stage 2 done 16:30: pinhole A_d x113 and bulb A_9 x355 fixed, viewed; old history, patch only); last commit: `51aa50f05`
-  - evidence: .claude/probes/K1588/s3/ in k1588-land; stage 2: .claude/probes/K1588/s2/ (zcap_j4_1.png, zcap_j4_2.png, post_j4.txt) in the source worktree
-  - next: when the agent reports: view its sheets (six named places, changed places); land k1588-land on master (plain ff or cherry-pick, new history) once K1600 is explained; open looks from stage 1 for Levi: A_a x332 taper cut, A_6 x326 blunt tip, about 23 ends 1 px short
-  - brief: docs/design/K1588_s3_land_brief.md on k1588-land
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
   counted 1,672 / 1,600 px are K1537's ring. A re-run on the same, already used profile restarted again (dump
   13:09:03, at the 0.5 stop). Not known: whether either change makes K1468's kill likelier. Nothing of K1584
   or K1588 lands until it is (docs/ledger_notes.md)
-  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (five drag-check runs, a detached pwsh started 15:42 PST Nov 24, about 85 min; the 13:06 chain died with the session at 13:12 after one stop)
+  - owner: nobody since 2026-11-24 17:55 (the four-build rerun ended)
   - branch: mainline (tools only); last commit: this commit
-  - evidence: .claude/probes/K1584/screen/{dc_run.ps1, dc_chain.ps1, dcdiff.py, dccrop.py}; main checkout .claude/probes/K1482/out/guards/{comb_6764cc1fa, dc_comb_warm, dc_comb_fresh, dc_s4_fresh, dc_s5_fresh, dc_s4j_fresh}/ and dc_chain_1545.log there (untracked); GPU dumps under %TEMP%\k1482-guards-6764cc1f\Crashpad\reports and %TEMP%\k1482-dc-<sha8>-<HHmmss>
-  - next: read dc_chain_1545.log (ends CHAIN DONE): each run's verdict, its waits per stop (picture times) and its profile's dumps. comb FAIL with stage 4 (e8aab8b50) PASS points at the build, then s5 (9894c1091) against s4j (7f07c10f2) names the change; all PASS means a rare event, so repeat. One run each is weak: repeat before concluding; a run with EXTRA=--disable-gpu-watchdog times the hang as K1468 did. Rerun: pwsh -NoProfile -File .claude/probes/K1584/screen/dc_chain.ps1 (takes the perf lock per run)
+  - evidence: .claude/probes/K1482/out/guards/dc_chain_1545.log and dc_comb_warm, dc_comb_fresh, dc_s4_fresh, dc_s5_fresh, dc_s4j_fresh under it (dragcheck_b_r1.txt, dragcheck_r1.txt)
+  - next: Result: on new Chrome profiles all four builds failed one of the two drag checks, the control (stage 4, e8aab8b50) included; no failure is a pixel verdict: dragcheck_b died in prep (pageerror reading 'stats' of undefined, then 180 s wait timeout; s4: Runtime.callFunctionOn timeout) on comb, s4, s4j; dragcheck lost the WebGL context once on s5; every stop compared with a live context was 0 px. Warm profile, combined build: PASS. So not caused by the gap or junction change (observed); cause of the context loss / dead page on new profiles unknown (inferred: cold shader cache plus GPU load from agents' captures). Next: run both drag checks on the landing build (k1588-land) with the guards' warm profile, nothing else on the GPU; land on PASS. Then find why a new profile loses the context (repeat s4 fresh alone on an idle machine)
   - brief: docs/ledger_notes.md ## K1600
 - **K1601** · rp=gf gap step: an extra gap in the middle of a sharply turning border that is not at a crossing
   (Levi, Nov 24, call 2 of the gap page: loops 2, 13, 14 = A_b x75, A_8 x65, A_5 x277 are wrong, the other
@@ -2651,6 +2646,11 @@ Every other item below waits on the trigger it names.
   leaves (a side-by-side contact, not a crossing); (b) gf_look.ts about lines 581-597 (K1476 tail): comment
   says a no-end border keeps its room, code gives the full window; (c) A_b x76 gains 25 px at stage 5 from the
   near-crossing term, unviewed
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -3055,6 +3055,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1588** · rp=gf junction rule (a junction keeps its own under thread beside a crossing) landed on master without the gap steps; Levi: 'junction land. SO MUCH BETTER'; leftovers in K1604. Done in 140abd573 (2026-11-24).
 - **K1592** · K1584 stage 5's four places where a running border breaks, viewed with the crossings numbered (region.py --num): A_9 x298, A_5 x127 and A_6 x144 are ordinary crossing gaps and read right; A_d x264 is a loose stroke, now K1595. A check by view, no src change; tools in 1880f71ce. Done in 1880f71ce (2026-11-24).
 - **K1572** · The ball, third try, landed on Levis word (Ball land, Nov 23): tight turns keep todays ball, the cut joint at A_8 t31s turns as one round elbow; guards and npm test pass. Done in eb8743a52 (2026-11-23).
 - **K1560** · rp=gf, t81s on link A: below the over thread the under thread shows only its step-side border, so it reads narrower and off its heading (Levi 2026-11-20; look rule 1). Dropped: Levi 2026-11-21: fine to keep today's look, not the stronger try (e569ccb47 stays unlanded); two tries ran, no third (2026-11-21).
