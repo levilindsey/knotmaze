@@ -4344,3 +4344,56 @@ at each one, fill and border; the border look stays at 0 px. A numeric test: gen
 scenes. The K1436 bar and `guards.ps1` pass with `GF_KRETRY=1`; `npm test` is green.
 
 Pictures: the decision page's K1470 card (k1470_nub.png).
+
+## K1590
+
+The place-by-place sweep of what K1584 stage 5 changed since stage 4 (853 places; two agents, one half each; gap
+worktree `.claude/probes/K1584/s5/sweep/sweep_A.jsonl` and `sweep_B.jsonl`). Both halves together: 530 ok, 323
+flagged (loop 124, ragged 80, spur 69, float 40, over 17, ink 4). The two agents use the classes differently:
+never compare a class count across the halves. `loop` is K1589's loops call, `float` is K1593. `ragged` + `spur`
+= about 149 rough cut ends. Of 40 of half A's flags the coordinator viewed at 5x: most `spur`, `over` and
+`ragged` are wanted gaps whose end keeps a 1 to 2 px point or tooth, and several `over` are wider clean gaps
+(half A's 17 `over` are not K1592's kind). Balls cut or notched among them (K1589 call 1): D_3 x100, A_b x9,
+D_5 x258, A_5 x258, A_5 x167. Four places read poorly: A_a x344 (a dark blob inside the opened eye), D_9 x239 (a
+speck at a hook tip), A_d x182 (a speck in the gap), A_b x84 (a speck in a notch where two threads merge);
+K1588's junction rule leaves all four unchanged. Half B's worst: carve 606 A_d x10, 607 A_d x184, 545 A_3 x348.
+
+## K1593
+
+Half B of the sweep flagged 35 `float` places (27 on D mazes), both halves 40: the dark blob beside a junction
+stub is cleared and the stub is left standing; the stub is on today's build too (K1585). On the scratch build
+of stage 5 + K1588 stage 1 (`k1588-comb` 6764cc1fa, capture set `comb` under the K1588 worktree's
+`.claude/probes/K1588/s1/out/`) all eight viewed stubs are gone with a round hook end left (D_9 x172, D_3 x130,
+D_9 x275, D_9 x330, D_7 x154, D_a x297, D_5 x71, D_6 x339), and 48 sides go from `gap` to `bare` (no border
+there to gap), which are barbs at hook ends beside a junction: A_3 x29, A_5 x32 x189, A_6 x273, A_8 x323 x338,
+A_b x146, A_d x58, D_1 x108 x115 x225 x227, D_2 x54 x73 x139 x141 x242, D_3 x73 x227 x338, D_4 x7 x48 x140 x150
+x217 x301 x334 x340, D_5 x71 x187, D_6 x74 x105 x226, D_7 x102 x357, D_8 x106 x219 x227 x285 x297 x326, D_9
+x104 x159 x193 x262 x275, D_a x172 x268. All 57 sides whose verdict changes were viewed; no lost border seen.
+
+## K1594
+
+The on-screen count (`.claude/probes/K1584/screen/screen.py`, 29,800 sides, one run per pair of captures):
+stage 4 closed 441 -> stage 4 + K1588 stage 1 439 (27 sides change verdict); stage 5 closed 132, part 241,
+bare 210 -> stage 5 + K1588 stage 1 closed 130, part 242, bare 259 (57 sides change: gap->bare 48, bare->part 3,
+closed->bare 2, part->bare 2, part->closed 1 (A_7 x62, mean ink 0.632 -> 0.765, at the threshold), closed->part
+1). The gap page had guessed that most of the 107 closed sides with a junction beside them wait on the junction
+rule; the count falsifies that. Of stage 5's closed sides 107 have the border ending within 0.2 of the crossing
+(a junction beside), 25 run on (K1591), 46 are a thread crossing itself. A_3's seven: x37, x73, x166, x195,
+x221, x292, x316. The junction rule changes 6,647 px on stage 4 and 6,363 px on stage 5 (514 places; 2 add 10
+px of ink or more); the two differ at 274 px in 177 places, none of 10 px or more (`inter.py`), so the stage
+agent's viewing on stage 4 carries over. Whole-picture check today -> combination: 60 places farther than 20
+px from a crossing side (58 without the rule); the 2 new ones are trimmed hook and V tips on A_3, and 5 small
+fills between two close borders gain ink (A_7 1745,1423 +32 px; A_8 1413,196 +16; A_8 1550,210 +13; A_9
+1892,551 +7; A_a 2110,1018 +30).
+
+## K1595
+
+The loose stems (gap page, call 4). Where the two threads of a junction cross right after leaving it, the short
+border between the crossing and the junction's rounded corner gets its gap at the crossing and is cut again at
+the corner. Stems 1, 2, 4 and 5 first appear with stage 5's carve commit (7ac955c1b), stem 6 with the longer
+gap (9b4ccfb53), and 3 and 7 were notches at stage 4 that stage 5 widens. Stem 6 has no crossing near it. The
+check that found them (`far.py`) only sees places farther than 20 px from a crossing side, so there may be more.
+Loose pieces of 9 to 120 px over all 21 mazes (`floats.py`): today 19, stage 4 48, stage 5 67, stage 5 + K1588
+stage 1 67. Of the 47 new since today: 29 at a tight turn (what is left of a ball or small loop: K1589 call 1),
+10 a stretch between a marker and the next gap (they read fine), 8 a dash or dot cut loose beside a junction or
+corner (two of them are stems 1 and 2).

@@ -19,15 +19,21 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1594.
+Next free ID: K1600.
 
 ## Waiting on Levi
 
-- **K1589** · rp=gf gap step (K1584 stage 5) is built and waits on four answers, page
+- **K1596** · rp=gf junction change (K1588) is built on a branch and shown on the gap page
+  https://claude.ai/artifact/M45ueV1LNNP9Rjmps6EuSt (section "The junction change"): it clears the wedges,
+  blobs and barbs beside junctions (Levi's six A_3 places; x132's sliver is shorter, a point is left), trims
+  ends beside a junction, one end goes blunt (A_6 x326). `junction land` (after stage 2 fixes a 2 px pinhole
+  and a bulb, on top of the gaps) or `junction keep` (drop it)
+- **K1589** · rp=gf gap step (K1584 stage 5) is built and waits on five answers, page
   https://claude.ai/artifact/M45ueV1LNNP9Rjmps6EuSt: `balls whole` (the gap stops at a tight turn's ball,
   K1572; one more gap step) or `balls as built` (222 solid spots lose ink, about 7 of 70 viewed are broken
   balls, 7 notched); `loops open` or `loops closed` (hook and loop tips under a thread); the crossing numbers
-  of K1586's eye and K1587's junction; `gaps land` or `gaps keep today's`
+  of K1586's eye and K1587's junction; `stems joined` or `stems as built` (K1595); `gaps land` or `gaps keep
+  today's`
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -781,20 +787,20 @@ Next free ID: K1594.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: nobody since 2026-11-24 11:10 PST: stage 5 is built (tests green, 3238 passed) and waits on Levi's answers (K1589)
+  - owner: nobody since 2026-11-24 11:10 PST: stage 5 is built (tests green, 3238 passed) and waits on Levi's five answers (K1589)
   - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `9894c1091`
-  - evidence: .claude/probes/K1584/s1..s5/ in that worktree (s5/screen: per-side on-screen verdicts and the ball results; s5/sweep: the 853 places stage 5 changed and the sweeps' verdicts); the count tools are tracked at .claude/probes/K1584/screen/; handoffs in docs/design/K1584_s4_brief.md and K1584_s5_brief.md on the branch; stage 4 guards green under .claude/probes/K1482/out/guards/k1584s4/
-  - next: Levi answers K1589 (page v4). On-screen no-gap sides of 29,800: today 9,589, stage 4 439, stage 5 133 (the stage's own model counts read better than the screen: never relay them). Still to do before a landing: sweep A's report (carve places 0-344, due 12:15 PST Nov 24) and a look at its flags, K1592's four places, guards on 9894c1091 (K1482 guards.ps1, after K1588's captures), the changes from today to stage 4 are counted but not swept place by place. After K1588: recount (107 of the 133 have a junction beside). No further gap stage unless Levi names one (two stages already). Stage 5 is two commits: 7ac955c1b (gaps cut into junctions) and 9b4ccfb53 (longer gap, droppable: 220 closed without it)
+  - evidence: .claude/probes/K1584/s1..s5/ in that worktree (s5/screen: per-side on-screen verdicts and the ball results; s5/sweep: sweep_A.jsonl and sweep_B.jsonl, the 853 places stage 5 changed and their verdicts); the count and check tools are tracked at .claude/probes/K1584/screen/ (comb_run.ps1, comb_an.ps1, guards_run.ps1 and inter.py rebuild the combined-build checks); handoffs in docs/design/K1584_s4_brief.md and K1584_s5_brief.md on the branch; guards: main checkout .claude/probes/K1482/out/guards/k1584s4/ (stage 4, green) and comb_6764cc1fa/ (stage 5 + K1588 stage 1)
+  - next: Levi answers K1589 (page v7). On-screen no-gap sides of 29,800: today 9,589, stage 4 439, stage 5 133 (the stage's own model counts read better than the screen: never relay them). Done since: both halves of the sweep (K1590), K1592's four places, the combination with K1588 (tests green; loose pieces 67 to 67; K1594, K1595). Before a landing: guards on the final build (K1482 guards.ps1 through guards_run.ps1; its npm test runs on the main checkout, so run the ref's own suite too), his answers applied (balls, loops, stems: one more gap step at most, a Claude agent, only on his word). The changes from today to stage 4 are counted but not swept place by place. Stage 5 is two commits: 7ac955c1b (gaps cut into junctions) and 9b4ccfb53 (longer gap, droppable: 220 closed without it). Lands by cherry-pick or merge --squash
 - **K1588** · rp=gf: a junction drops its own under thread when a crossing sits within about 1.5 thread widths
   of it (membership is gated by depth), so the joining arm's border is drawn across the thread: the cause of
   Levi's six named places on A_3 (x195 x338 x37 pinch, x303 x227 x132 sliver; audit 2026-11-24, page
   https://claude.ai/artifact/FWGCtjSn8UGDvyKLoeGi7d). Stage 1: membership by position near the joint, in
   tables.ts / eval.ts / gf_glsl.ts. Follow-ups: re-count closed gap sides, test whether s28 and s34 are dead,
   then decide whether the gap cut reads the junction from the same table
-  - owner: agent `K1588-s1` of claude session 09c7a672 (fable, started 2026-11-24 10:37, 2 h cap ~12:37)
-  - branch: `worktree-agent-af202ca51788156a0`, worktree `.claude/worktrees/agent-af202ca51788156a0`; last commit: `7f07c10f2`
-  - evidence: .claude/probes/K1588/audit/ (the audit probe: eval_probe.patch, mir.ts, why.mts, near.mts, place.py, clus.py, sheet2.py); the agent adds .claude/probes/K1588/ in its worktree
-  - next: the stage agent reports (cap about 12:50 PST Nov 24); the coordinator views its sheets of the six named places and every changed place, runs guards, shows Levi the real-render pictures. Levi can stop it with "junction keep". Lands only on his yes, on top of K1584 (the branch starts at e8aab8b50)
+  - owner: agent `K1588-s2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 12:41, 2 h cap ~14:41)
+  - branch: `worktree-agent-af202ca51788156a0`, worktree `.claude/worktrees/agent-af202ca51788156a0`; last commit: `d46a3769c`
+  - evidence: .claude/probes/K1588/s1/ in that worktree (stage 1's tools, capture sets j0c, j2, j3 and comb, diff lists; handoff in the brief) and .claude/probes/K1588/audit/ (why.mts needs env GF_SRC); stage 2 writes tag j4. Scratch build of stage 5 + stage 1: branch `k1588-comb` 6764cc1fa at .claude/worktrees/k1588-comb (its node_modules is a junction to the gap worktree's: remove the junction, not its target; never pushed), tests green 3,241 passed
+  - next: Stage 2 (brief section "Stage 2"): fix the 2 px pinhole at A_d x113 and the round bulb at A_9 x355, nothing else; the agent reports by about 14:40 PST Nov 24. Stage 1 (7f07c10f2) is viewed: the six named places are clean but x132 (sliver shorter, a point left); on stage 5 the rule changes 6,363 px in 514 places, takes 48 sides from gap to no border (barbs at hook ends beside a junction, mostly D mazes), leaves closed sides closed (132 to 130) and the 7 loose stems unchanged. Then: view stage 2's sheets, rebuild the combination, guards, and Levi's answer to K1596. Lands only on his yes, on top of K1584, by cherry-pick or merge --squash (the branch starts at e8aab8b50)
   - brief: `docs/design/K1588_junction_membership.md`
 
 ## Next, in order
@@ -823,7 +829,8 @@ Running agents are listed under In progress, each with its own next step.
   border on one side that should not be there (Levi, Nov 23). After K1584 (same files)
 - **K1585** · rp=gf: stubs at 3-way junctions - part of the fused threads border runs on too far and sticks
   into the junction (Levi, Nov 23: at least 5 on review tile A_3 b1). A class fault Levi named: census of
-  junctions with a stub, then a Claude fix stage; after K1584 (same files)
+  junctions with a stub, then a Claude fix stage; after K1584 (same files). K1588's junction rule removes many
+  (K1593): take the census on the build that holds it
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
@@ -1174,10 +1181,6 @@ Every other item below waits on the trigger it names.
   - branch: mainline; last commit: `ad4cf2d96`
   - evidence: .claude/probes/K1583/ (review_tiles.py and review_page.py build the page from out/27Z7, untracked); page https://claude.ai/artifact/GX7vem1oaafgo3vsNQ9Yvk (175 tiles, new renderer only: todays renderer drew too faint in the capture recipe to serve as a reference)
   - next: republish the review page after K1584, K1585 and K1586 land, and only once the coordinator has viewed every tile first
-- **K1592** · K1584 stage 5: four places where a running border line now breaks (sweep class `over`: long 50
-  A_9 x298, long 88 A_5 x127, carve 454 A_d x264, carve 533 A_6 x144) - a numbered wide view each
-  (`.claude/probes/K1584/screen/region.py --num`) to see whether a thread crosses under the break; x298 is a
-  twist eye and looks right. Before any landing of K1584
 
 ## Residuals (known, not fixed)
 
@@ -2590,17 +2593,33 @@ Every other item below waits on the trigger it names.
   `k1482s38p_631*.log`, `k1482s38_*.py`, Chrome profiles `k1482s34b-s38m`, `k1482s34b-s38c`, `k1482s36-s38m`,
   `k1482s36-s38c`. They go once K1560 is answered. Registered worktrees go by `git worktree remove`; never the
   kept profile `k1482s27live-profile-20548`
-- **K1590** · K1584 stage 5 cut ends, from the place-by-place sweep of what it changed since stage 4 (508 of
-  853 places viewed, second half pending): specks 22, slits 9, notches 6 (gap worktree
-  `.claude/probes/K1584/s5/sweep/sweep_B.jsonl`, class `ragged`; worst: carve 606 A_d x10, 607 A_d x184, 545
-  A_3 x348). Not a stage unless Levi names them
+- **K1590** · K1584 stage 5 cut ends, from the place-by-place sweep of what it changed since stage 4 (all 853
+  places viewed: 530 ok, 323 flagged, about 149 of them rough cut ends; gap worktree
+  `.claude/probes/K1584/s5/sweep/sweep_A.jsonl`, `sweep_B.jsonl`). Four read poorly: A_a x344, D_9 x239,
+  A_d x182, A_b x84. Not a stage unless Levi names them (`docs/ledger_notes.md`)
 - **K1591** · K1584: 25 under-border sides stay closed on screen through every gap stage with no junction
   beside them (the border runs on): A_3 x221; A_4 x121 x247 x295 x304; A_5 x135 x138 x303; A_6 x160; A_7 x84
   x280 x353; A_8 x4 x198 x277 x304; A_9 x116 x198; A_b x9 x145 x352; A_c x133 x270; A_d x24 x194. Cause not
   found (`.claude/probes/K1584/screen/screen.py` counts them)
-- **K1593** · K1584 stage 5 leaves K1585's junction stubs standing alone at 35 places of the half swept (27 on
-  D mazes): it clears the dark blob beside the stub, the stub itself is on today's build too (sweep class
-  `float`; e.g. carve 525 D_9 x159). Goes with K1585
+- **K1593** · K1584 stage 5 leaves K1585's junction stubs standing alone (sweep class `float`: 40 of the 853
+  places, most on D mazes; the stub is on today's build too). K1588's junction rule removes them: all 8 viewed
+  on the scratch build of both, and 48 sides go from gap to no border. Closes when K1588 lands (notes)
+- **K1594** · K1584: 107 of the sides still closed on screen have a junction right beside the crossing, and
+  K1588's junction rule does not open them (closed sides on stage 4: 441 to 439; on stage 5: 132 to 130;
+  scratch build `k1588-comb` 6764cc1fa). Cause not found; with K1591's 25 they are all that stays closed. No
+  stage unless Levi names places (`docs/ledger_notes.md`)
+- **K1595** · K1584 stage 5: a border cut twice beside a junction, at the crossing's gap (wanted) and again at
+  the junction's rounded corner, which leaves a loose stem. 7 found on the A mazes (device x,y: A_a 1600,1619;
+  A_c 1585,1359; A_6 1362,1615; A_5 1270,747; A_b 1370,554; A_6 1269,326; A_d 2199,952 = x264). Cause not
+  found; K1588's rule leaves all 7 unchanged. Waits on K1589's `stems joined` or `stems as built` (notes)
+- **K1597** · rp=gf, seen while viewing K1588 and already on K1584 stage 4: a stray dash at A_c x303 (device
+  1527,447); a 1 px light slit at A_3 x195; slivers between two close borders (A_8 x320 a 28 px island, A_6
+  x77, A_4 x45, A_6 x2). K1588's rule skips an arm that passes OVER its crossing, so those junction sides keep
+  stage 4's look (the A_b x130, A_a x195 kind)
+- **K1598** · Probe tools: K1584's `framediff.py` tests luminance and misses a border change on a dark fill
+  (use K1588's `fdiff.py`); `.claude/probes/K1584/screen/screen.py` aligns on its FIRST capture, so two runs
+  with a different first capture differ by a half pixel on one maze and by 1 to 4 sides in the totals (stage 5
+  closed: 133 or 132). Compare counts only within one run
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2999,9 +3018,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   he says 't4s round'. Then first a review page of every changed place on link A for him to mark, and the
   all-maze look (K1578) before any card. Handoff: `### Handoff K1482 s43` in
   `docs/design/K1482_s43_bend_pictures.md`. Page: https://claude.ai/artifact/Fo13KFD87NVDUKpuNc35cw#bends
+- **K1599** · Add a light-fill maze to the rp=gf test set: on the 21 dark-fill test mazes a 1 px border line
+  that stops short of a junction cannot be seen; on a light fill it may read as a slit (K1588 stage 1: about
+  23 trimmed ends, inferred, not shot)
 
 ## Done
 
+- **K1592** · K1584 stage 5's four places where a running border breaks, viewed with the crossings numbered (region.py --num): A_9 x298, A_5 x127 and A_6 x144 are ordinary crossing gaps and read right; A_d x264 is a loose stroke, now K1595. A check by view, no src change; tools in 1880f71ce. Done in 1880f71ce (2026-11-24).
 - **K1572** · The ball, third try, landed on Levis word (Ball land, Nov 23): tight turns keep todays ball, the cut joint at A_8 t31s turns as one round elbow; guards and npm test pass. Done in eb8743a52 (2026-11-23).
 - **K1560** · rp=gf, t81s on link A: below the over thread the under thread shows only its step-side border, so it reads narrower and off its heading (Levi 2026-11-20; look rule 1). Dropped: Levi 2026-11-21: fine to keep today's look, not the stronger try (e569ccb47 stays unlanded); two tries ran, no third (2026-11-21).
 - **K1566** · rp=gf fill look, the nub fix's width, WITH LEVI (decision page, anchor nub-width; replies gaps more / gaps keep / gaps narrow; pick: more). Done in dcd8e81e6 (2026-11-21).
