@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1602.
+Next free ID: K1603.
 
 ## Waiting on Levi
 
@@ -820,10 +820,10 @@ Next free ID: K1602.
   twelve open loops and hooks are right). The narrow teardrop's inner border is cut at its tip and left as a
   pointed wedge. Maybe K1586's eye. Diagnosis first (read-only agent, worktree .claude/worktrees/k1584-s7 at
   stage 5), then the fix as K1584 stage 7 after stage 6, same files
-  - owner: agent K1601-diag of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, read-only diagnosis, started 2026-11-24 16:15, 90 min cap)
-  - branch: k1584-s7 at .claude/worktrees/k1584-s7 (stage 5, 9894c1091; node_modules is a junction to the gap worktree's: remove the junction, not its target); last commit: `9894c1091`
-  - evidence: docs/design/K1601_findings.md and .claude/probes/K1601/ on that branch (written by the agent); the 15 loops: gap page call 2
-  - next: read the agent's findings and view its sheets; then the fix is K1584 stage 7 in the gap worktree after stage 6 (same files), judged on the three wrong loops and the twelve right ones
+  - owner: nobody since 2026-11-24 16:51: diagnosis done, the fix waits for K1584 stage 6 to finish (same file)
+  - branch: k1584-s7 at .claude/worktrees/k1584-s7 (stage 5, 9894c1091; node_modules is a junction to the gap worktree's: remove the junction, not its target); last commit: `046abce1f`
+  - evidence: docs/design/K1601_findings.md and .claude/probes/K1601/ on k1584-s7 (rulek.py list = the 44 crossings rule K changes)
+  - next: K1584 stage 7 in the gap worktree after stage 6: rule K (findings Q4) in gf_look.ts gapWindow - a border with no end of its own whose room is at least its cut + fade + 0.12 keeps stage 4's behaviour; expected: A_b x75 -37, A_8 x65 -26, A_5 x277 -7, A_3 x100 -29 px, the 12 right loops bit-identical, 44 of 7450 crossings change; view the three, x100 and all 44. Same stage: K1595's fix when its diagnosis reports
   - brief: docs/design/K1601_findings.md on the branch (the agent saves its prompt at the top)
 
 ## Next, in order
@@ -2636,7 +2636,7 @@ Every other item below waits on the trigger it names.
 - **K1595** · K1584 stage 5: a border cut twice beside a junction, at the crossing's gap (wanted) and again at
   the junction's rounded corner, which leaves a loose stem. 7 found on the A mazes (device x,y: A_a 1600,1619;
   A_c 1585,1359; A_6 1362,1615; A_5 1270,747; A_b 1370,554; A_6 1269,326; A_d 2199,952 = x264). Cause not
-  found; K1588's rule leaves all 7 unchanged. ANSWERED by Levi Nov 24 16:35: at all of them today's picture is correct and both later columns (stage 4 and stage 5) are broken, so the bar is today's look inside each ring: the stem stays joined to the cup, no cut there at all (my page text that a gap at the crossing is wanted there was wrong). Read-only diagnosis agent started 16:40 (worktree .claude/worktrees/k1595-diag, branch k1595-diag at 9894c1091, findings docs/design/K1595_findings.md there); the fix goes into the gap step after stage 6 with K1601's (notes)
+  found; K1588's rule leaves all 7 unchanged. ANSWERED by Levi Nov 24 16:35: at all of them today's picture is correct and both later columns (stage 4 and stage 5) are broken, so the bar is today's look inside each ring: the stem stays joined to the cup, no cut there at all (my page text that a gap at the crossing is wanted there was wrong). Read-only diagnosis agent started 16:40 (worktree .claude/worktrees/k1595-diag, branch k1595-diag at 9894c1091, findings docs/design/K1595_findings.md there); DIAGNOSED 16:55 (f4f616890 on k1595-diag, docs/design/K1595_findings.md): the cup is the rounded corner joining the crossing's own under and over threads at a junction, and the gap's far term runs on round it (not an under border at a crossing); 50 places of 5 px or more on 12 mazes at stage 5, 7 at stage 4, 0 today. Rule (findings Q4): a crossing's gap on a border stops at the junction corner its two threads share, tangent point minus one arc step; mirror: the seven go to 0 px, 942 px change in all. Goes into K1584 stage 7 with K1601's rule K. Open look for Levi with stage 7's pictures: stage 4 also opens a short gap at the stem's far end, a real crossing 0.8-0.9 arc from the junction, where today has none (stem reads detached at 4 of the 7): zero as today, or a short gap (notes)
 - **K1597** · rp=gf, seen while viewing K1588 and already on K1584 stage 4: a stray dash at A_c x303 (device
   1527,447); a 1 px light slit at A_3 x195; slivers between two close borders (A_8 x320 a 28 px island, A_6
   x77, A_4 x45, A_6 x2). K1588's rule skips an arm that passes OVER its crossing, so those junction sides keep
@@ -2645,6 +2645,12 @@ Every other item below waits on the trigger it names.
   (use K1588's `fdiff.py`); `.claude/probes/K1584/screen/screen.py` aligns on its FIRST capture, so two runs
   with a different first capture differ by a half pixel on one maze and by 1 to 4 sides in the totals (stage 5
   closed: 133 or 132). Compare counts only within one run
+- **K1602** · rp=gf, from K1601's diagnosis (docs/design/K1601_findings.md on k1584-s7): (a) K1586's eye A_3
+  x100 on today's build - the over thread's upper border ends 4-5 px short of the ring before any gap pass
+  (probably what Levi saw; own diagnosis needed), and gap stage 4 adds a 10 px slit in the ring that rule K
+  leaves (a side-by-side contact, not a crossing); (b) gf_look.ts about lines 581-597 (K1476 tail): comment
+  says a no-end border keeps its room, code gives the full window; (c) A_b x76 gains 25 px at stage 5 from the
+  near-crossing term, unviewed
 
 ## Approved, to schedule (2026-10-11)
 
