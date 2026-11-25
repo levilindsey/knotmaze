@@ -799,11 +799,11 @@ Next free ID: K1602.
   https://claude.ai/artifact/FWGCtjSn8UGDvyKLoeGi7d). Stage 1: membership by position near the joint, in
   tables.ts / eval.ts / gf_glsl.ts. Follow-ups: re-count closed gap sides, test whether s28 and s34 are dead,
   then decide whether the gap cut reads the junction from the same table
-  - owner: agent K1588-s2b of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 15:45, 2 h cap ~17:45; the first stage 2 agent died with the session at 13:12, no handoff)
-  - branch: `worktree-agent-af202ca51788156a0`, worktree `.claude/worktrees/agent-af202ca51788156a0`; last commit: `81604bd6c`
-  - evidence: .claude/probes/K1588/s1/ in that worktree (stage 1's tools, capture sets j0c, j2, j3 and comb, diff lists; handoff in the brief) and .claude/probes/K1588/audit/ (why.mts needs env GF_SRC); stage 2 writes tag j4. Scratch build of stage 5 + stage 1: branch `k1588-comb` 6764cc1fa at .claude/worktrees/k1588-comb (its node_modules is a junction to the gap worktree's: remove the junction, not its target; never pushed), tests green 3,241 passed
-  - next: Stage 2 (brief section "Stage 2"): fix the 2 px pinhole at A_d x113 and the round bulb at A_9 x355, nothing else; the agent reports by about 14:40 PST Nov 24. Stage 1 (7f07c10f2) is viewed: the six named places are clean but x132 (sliver shorter, a point left); on stage 5 the rule changes 6,363 px in 514 places, takes 48 sides from gap to no border (barbs at hook ends beside a junction, mostly D mazes), leaves closed sides closed (132 to 130) and the 7 loose stems unchanged. Then: view stage 2's sheets, rebuild the combination, guards, and Levi's answer to K1596. Lands only on his yes, on top of K1584, by cherry-pick or merge --squash (the branch starts at e8aab8b50)
-  - brief: `docs/design/K1588_junction_membership.md`
+  - owner: agent K1588-s3 of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 16:35, 2 h cap)
+  - branch: k1588-land at .claude/worktrees/k1588-land (from master, new history; node_modules is a junction). Source: worktree-agent-af202ca51788156a0 at cc4af53f2 (stage 2 done 16:30: pinhole A_d x113 and bulb A_9 x355 fixed, viewed; old history, patch only); last commit: `51aa50f05`
+  - evidence: .claude/probes/K1588/s3/ in k1588-land; stage 2: .claude/probes/K1588/s2/ (zcap_j4_1.png, zcap_j4_2.png, post_j4.txt) in the source worktree
+  - next: when the agent reports: view its sheets (six named places, changed places); land k1588-land on master (plain ff or cherry-pick, new history) once K1600 is explained; open looks from stage 1 for Levi: A_a x332 taper cut, A_6 x326 blunt tip, about 23 ends 1 px short
+  - brief: docs/design/K1588_s3_land_brief.md on k1588-land
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
