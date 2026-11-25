@@ -33,6 +33,13 @@ each crossing's `dev` point (+25 px in y) from `s4/out/s4g/A_3/gf.png`, inverted
    reads-closed sides on all 21 mazes; list any that remain, with a crop.
 2. x195, x338, x37 (and every place of the same kind): the under thread's border beside the crossing must not
    run into the thread and pinch the under thread's width. It curves more and tapers into the crossing.
+   **WITHDRAWN as a shape change (Levi, 2026-11-24, via the coordinator after stage 5 started):** do NOT make any
+   border "curve more" or "taper into the crossing", here or anywhere. "The under pass keeps its width and
+   heading" stays binding ("definitely not" relaxed); "'curve more and taper' is giving us problems". Item 2 is now
+   DIAGNOSIS ONLY, no shape change: for x195, x338 and x37, evaluate the CPU mirror at the pixels of the border that
+   runs into the under thread and report the winning outline term (winKind / winA / winB), its chain and piece,
+   whether it is the under thread's own side band, a corner arc, a tangent point, a vertex cap or another thread's
+   band, and why it is not buried or cut there; a crop per place, in the handoff.
 3. x303, x227, x132 (and the same kind): no sliver or notch of border left sticking into a junction.
 4. Keep what Levi called a very important fix in stage 4: a border's cut end angled to line up with the gap.
    Where stage 4 made a gap narrower than stage 3 (some of the 13 on `s4/sheet_s4f_darker.png`), bring the
