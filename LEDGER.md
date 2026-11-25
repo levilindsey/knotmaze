@@ -325,12 +325,6 @@ Next free ID: K1609.
 - **K1562** · The laptop's knotmaze clone, after K1493's history rewrite (2026-11-20): on a clean tree run
   `git fetch`, then `git reset --hard origin/master` (or clone afresh). Do not `git pull` there first: a pull
   merges the old history, and a push after it brings the 362 MB back (docs/ledger_notes.md `## K1493`)
-- **K1603** · Wedge at balls (K1584, his call 1 answer): pick a column on the 8-ball sheet, sent 2026-11-24
-  18:30: today | stage 5 | V1 as built | V2 widens over 2x | V3 3x | V4 60/90 degree pie | V5 gap stops at the
-  ball (= today's whole ball). Loose pieces near a ball: today 3, stage 5 11, V1 6, V2/V3/V5 3, V4 27-33; V4
-  breaks balls A_3 k157, A_3 k275, A_6 k331. Switch gfwv= on branch k1584-wedge (3850d2b59,
-  .claude/worktrees/k1584-wedge, sheet .claude/probes/K1584/wedge/v/wedge_sheet.png, brief
-  docs/design/K1584_wedge_brief.md)
 - **K1607** · K1584 looks from stage 8 (pictures sent 2026-11-24 20:50): (a) 18 places where today runs a
   border into its neighbour in a corner and the gap build ends it short (s8/out/levi18.png; same kind as
   K1605's stem far ends): joined or gap; (b) the three wrong loops' eye opens at the foot since stages 3-4 and
@@ -798,11 +792,11 @@ Next free ID: K1609.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: nobody since 2026-11-24 20:39: stage 8 done (all seven stem corners at today's look on capture s8a), waiting on Levi's looks (K1603, K1605, K1607)
-  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `e5d0a5106`
+  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (stage 9 agent, started 2026-11-25)
+  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `e841a4008`
   - evidence: .claude/probes/K1584/s8/, .claude/probes/K1584/s7/out/s8a/ (untracked, in that worktree)
-  - next: Levi's picks: joined or gap at corner places (s8/out/levi18.png, s7/out/farend7.png), the wrong loops' foot cut (s8/out/eyes8_k.png), A_a x148, the wedge (K1603); then one stage per pick
-  - brief: docs/design/K1584_s8_brief.md Handoff (stage 8), in that worktree
+  - next: stage 9 report: tightness table, ranked ball sheet for Levi to mark the line, s9a capture; then Levi: gaps land or hold, and confirm 'Beautiful' on K1607a = keep the gap
+  - brief: `docs/design/K1584_s9_brief.md`
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
@@ -3067,6 +3061,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1603** · Levi 2026-11-25: V1 is ok, but only the last row's ball (A_a k202) is tight enough to need the wedge; stage 9 brief docs/design/K1584_s9_brief.md. Done in e841a4008 (2026-11-25).
 - **K1605** · Levi 2026-11-25: A_a x148 closed (s7) is right; stem far ends fold into K1607a. Done in e5d0a5106 (2026-11-25).
 - **K1588** · rp=gf junction rule (a junction keeps its own under thread beside a crossing) landed on master without the gap steps; Levi: 'junction land. SO MUCH BETTER'; leftovers in K1604. Done in 140abd573 (2026-11-24).
 - **K1592** · K1584 stage 5's four places where a running border breaks, viewed with the crossings numbered (region.py --num): A_9 x298, A_5 x127 and A_6 x144 are ordinary crossing gaps and read right; A_d x264 is a loose stroke, now K1595. A check by view, no src change; tools in 1880f71ce. Done in 1880f71ce (2026-11-24).
