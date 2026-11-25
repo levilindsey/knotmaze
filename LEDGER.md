@@ -2636,7 +2636,7 @@ Every other item below waits on the trigger it names.
 - **K1595** · K1584 stage 5: a border cut twice beside a junction, at the crossing's gap (wanted) and again at
   the junction's rounded corner, which leaves a loose stem. 7 found on the A mazes (device x,y: A_a 1600,1619;
   A_c 1585,1359; A_6 1362,1615; A_5 1270,747; A_b 1370,554; A_6 1269,326; A_d 2199,952 = x264). Cause not
-  found; K1588's rule leaves all 7 unchanged. Waits on K1589's `stems joined` or `stems as built` (notes)
+  found; K1588's rule leaves all 7 unchanged. ANSWERED by Levi Nov 24 16:35: at all of them today's picture is correct and both later columns (stage 4 and stage 5) are broken, so the bar is today's look inside each ring: the stem stays joined to the cup, no cut there at all (my page text that a gap at the crossing is wanted there was wrong). Read-only diagnosis agent started 16:40 (worktree .claude/worktrees/k1595-diag, branch k1595-diag at 9894c1091, findings docs/design/K1595_findings.md there); the fix goes into the gap step after stage 6 with K1601's (notes)
 - **K1597** · rp=gf, seen while viewing K1588 and already on K1584 stage 4: a stray dash at A_c x303 (device
   1527,447); a 1 px light slit at A_3 x195; slivers between two close borders (A_8 x320 a 28 px island, A_6
   x77, A_4 x45, A_6 x2). K1588's rule skips an arm that passes OVER its crossing, so those junction sides keep
