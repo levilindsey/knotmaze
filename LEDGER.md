@@ -786,6 +786,11 @@ Next free ID: K1589.
   https://claude.ai/artifact/FWGCtjSn8UGDvyKLoeGi7d). Stage 1: membership by position near the joint, in
   tables.ts / eval.ts / gf_glsl.ts. Follow-ups: re-count closed gap sides, test whether s28 and s34 are dead,
   then decide whether the gap cut reads the junction from the same table
+  - owner: agent `K1588-s1` of claude session 09c7a672 (fable, started 2026-11-24 10:37, 2 h cap ~12:37)
+  - branch: `worktree-agent-af202ca51788156a0`, worktree `.claude/worktrees/agent-af202ca51788156a0`; last commit: `69aa45e1a`
+  - evidence: .claude/probes/K1588/audit/ (the audit probe: eval_probe.patch, mir.ts, why.mts, near.mts, place.py, clus.py, sheet2.py); the agent adds .claude/probes/K1588/ in its worktree
+  - next: the stage agent reports (cap about 12:50 PST Nov 24); the coordinator views its sheets of the six named places and every changed place, runs guards, shows Levi the real-render pictures. Levi can stop it with "junction keep". Lands only on his yes, on top of K1584 (the branch starts at e8aab8b50)
+  - brief: `docs/design/K1588_junction_membership.md`
 
 ## Next, in order
 
