@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1588.
+Next free ID: K1589.
 
 ## Waiting on Levi
 
@@ -777,9 +777,15 @@ Next free ID: K1588.
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
   - owner: claude agent K1584-s5 (coordinator: claude session 09c7a672), started 2026-11-24
-  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `e8aab8b50`
+  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `9b4ccfb53`
   - evidence: .claude/probes/K1584/s1..s5/ in that worktree; handoffs in docs/design/K1584_s4_brief.md and K1584_s5_brief.md on the branch; stage 4 guards green under .claude/probes/K1482/out/guards/k1584s4/
-  - next: Levi 2026-11-24 on stage 4: fix all 27 remaining sides on A_3 (gaps carve into junctions), taper instead of pinch at x195 x338 x37, no sliver into a junction at x303 x227 x132, keep the angled cut ends. Stage 5 agent does that; then the coordinator views the sheets, runs guards, shows Levi. After: K1586 and K1587 on A_3 b1 (Levi asked again)
+  - next: Stage 5 agent running (cap about 11:47 PST Nov 24): gaps carve into junctions; keep the angled cut ends. Levi withdrew "curve more and taper" (Nov 24): no gap or look rule for x195 x338 x37 or the slivers at x303 x227 x132, their cause is K1588. On its return the coordinator views the sheets, runs guards, publishes gap page v4 with a close crop of A_3 b1 top-right (K1587). After: K1586 and K1587
+- **K1588** · rp=gf: a junction drops its own under thread when a crossing sits within about 1.5 thread widths
+  of it (membership is gated by depth), so the joining arm's border is drawn across the thread: the cause of
+  Levi's six named places on A_3 (x195 x338 x37 pinch, x303 x227 x132 sliver; audit 2026-11-24, page
+  https://claude.ai/artifact/FWGCtjSn8UGDvyKLoeGi7d). Stage 1: membership by position near the joint, in
+  tables.ts / eval.ts / gf_glsl.ts. Follow-ups: re-count closed gap sides, test whether s28 and s34 are dead,
+  then decide whether the gap cut reads the junction from the same table
 
 ## Next, in order
 
