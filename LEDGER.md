@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1601.
+Next free ID: K1602.
 
 ## Waiting on Levi
 
@@ -31,7 +31,7 @@ Next free ID: K1601.
 - **K1589** · rp=gf gap step (K1584 stage 5) is built and waits on five answers, page
   https://claude.ai/artifact/M45ueV1LNNP9Rjmps6EuSt: `balls whole` (the gap stops at a tight turn's ball,
   K1572; one more gap step) or `balls as built` [ANSWERED 2026-11-24 16:00, neither: the gap at a ball is a wedge cut from the ball's centre, widening outward, and the fade narrows with it; K1584 stage 6 builds it, four answers left] (222 solid spots lose ink, about 7 of 70 viewed are broken
-  balls, 7 notched); `loops open` or `loops closed` (hook and loop tips under a thread); the crossing numbers
+  balls, 7 notched); `loops open` or `loops closed` (hook and loop tips under a thread) [ANSWERED 16:10: open is right, except loops 2, 13, 14, filed as K1601]; the crossing numbers
   of K1586's eye and K1587's junction; `stems joined` or `stems as built` (K1595); `gaps land` or `gaps keep
   today's`. Offered on the page (v8) and in chat, optional: `closed sides again` (one diagnosis-first step at
   the sides still closed, K1594 and K1591; no word keeps them). Nothing lands while K1600 is open
@@ -815,6 +815,16 @@ Next free ID: K1601.
   - evidence: .claude/probes/K1584/screen/{dc_run.ps1, dc_chain.ps1, dcdiff.py, dccrop.py}; main checkout .claude/probes/K1482/out/guards/{comb_6764cc1fa, dc_comb_warm, dc_comb_fresh, dc_s4_fresh, dc_s5_fresh, dc_s4j_fresh}/ and dc_chain_1545.log there (untracked); GPU dumps under %TEMP%\k1482-guards-6764cc1f\Crashpad\reports and %TEMP%\k1482-dc-<sha8>-<HHmmss>
   - next: read dc_chain_1545.log (ends CHAIN DONE): each run's verdict, its waits per stop (picture times) and its profile's dumps. comb FAIL with stage 4 (e8aab8b50) PASS points at the build, then s5 (9894c1091) against s4j (7f07c10f2) names the change; all PASS means a rare event, so repeat. One run each is weak: repeat before concluding; a run with EXTRA=--disable-gpu-watchdog times the hang as K1468 did. Rerun: pwsh -NoProfile -File .claude/probes/K1584/screen/dc_chain.ps1 (takes the perf lock per run)
   - brief: docs/ledger_notes.md ## K1600
+- **K1601** · rp=gf gap step: an extra gap in the middle of a sharply turning border that is not at a crossing
+  (Levi, Nov 24, call 2 of the gap page: loops 2, 13, 14 = A_b x75, A_8 x65, A_5 x277 are wrong, the other
+  twelve open loops and hooks are right). The narrow teardrop's inner border is cut at its tip and left as a
+  pointed wedge. Maybe K1586's eye. Diagnosis first (read-only agent, worktree .claude/worktrees/k1584-s7 at
+  stage 5), then the fix as K1584 stage 7 after stage 6, same files
+  - owner: agent K1601-diag of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, read-only diagnosis, started 2026-11-24 16:15, 90 min cap)
+  - branch: k1584-s7 at .claude/worktrees/k1584-s7 (stage 5, 9894c1091; node_modules is a junction to the gap worktree's: remove the junction, not its target); last commit: `9894c1091`
+  - evidence: docs/design/K1601_findings.md and .claude/probes/K1601/ on that branch (written by the agent); the 15 loops: gap page call 2
+  - next: read the agent's findings and view its sheets; then the fix is K1584 stage 7 in the gap worktree after stage 6 (same files), judged on the three wrong loops and the twelve right ones
+  - brief: docs/design/K1601_findings.md on the branch (the agent saves its prompt at the top)
 
 ## Next, in order
 
