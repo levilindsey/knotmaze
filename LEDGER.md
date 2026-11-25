@@ -32,7 +32,7 @@ Next free ID: K1602.
   https://claude.ai/artifact/M45ueV1LNNP9Rjmps6EuSt: `balls whole` (the gap stops at a tight turn's ball,
   K1572; one more gap step) or `balls as built` [ANSWERED 2026-11-24 16:00, neither: the gap at a ball is a wedge cut from the ball's centre, widening outward, and the fade narrows with it; K1584 stage 6 builds it, four answers left] (222 solid spots lose ink, about 7 of 70 viewed are broken
   balls, 7 notched); `loops open` or `loops closed` (hook and loop tips under a thread) [ANSWERED 16:10: open is right, except loops 2, 13, 14, filed as K1601]; the crossing numbers
-  of K1586's eye and K1587's junction; `stems joined` or `stems as built` (K1595); `gaps land` or `gaps keep
+  of K1586's eye and K1587's junction [ANSWERED 16:20: eye x100, junction x305]; `stems joined` or `stems as built` (K1595); `gaps land` or `gaps keep
   today's`. Offered on the page (v8) and in chat, optional: `closed sides again` (one diagnosis-first step at
   the sides still closed, K1594 and K1591; no word keeps them). Nothing lands while K1600 is open
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
@@ -846,10 +846,10 @@ Binding for every stage:
 Running agents are listed under In progress, each with its own next step.
 - **K1587** · rp=gf: A_3 b1 near the top-right, a junction with a crossing just above it - before the crossing
   only one threads border shows where two should (Levi, Nov 23: the two threads may also sit too close, but it
-  looks wrong). Not yet located for certain: crop the area and confirm the spot with Levi before a fix. After
+  looks wrong). Located by Levi Nov 24: the junction beside crossing x305. After
   K1584 (same files)
 - **K1586** · rp=gf: A_3 b1 near the top-left, an eye loop a little larger than the balls has a gap in its
-  border on one side that should not be there (Levi, Nov 23). After K1584 (same files)
+  border on one side that should not be there (Levi, Nov 23). Located by Levi Nov 24: beside crossing x100 (it is also ball 13 of the gap page; K1601's diagnosis covers it). After K1584 (same files)
 - **K1585** · rp=gf: stubs at 3-way junctions - part of the fused threads border runs on too far and sticks
   into the junction (Levi, Nov 23: at least 5 on review tile A_3 b1). A class fault Levi named: census of
   junctions with a stub, then a Claude fix stage; after K1584 (same files). K1588's junction rule removes many
