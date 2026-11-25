@@ -165,7 +165,69 @@ export function retryForm(src: string): string {
   src = src.split("if (kIn[i] == 3 && (key > labK").join("if (kIn[i] == 3 && KXT(k) && (key > labK");
   src = src.split("if (kIn[i] == 3) { scov[e] = true;").join("if (kIn[i] == 3 && KXT(k)) { scov[e] = true;");
   if (/Dk > (D|sa\[e\])\)|KRI > K0\.z\)|KRI > K0\.z && \(|kIn\[i\] == 3\)|kIn\[i\] == 3 && \(/.test(src)) throw new Error("gfFs home: a corner raise or cover without its retry test is left");
-  return homeBurial(src); // K1482 s32: loneFold (below) is OFF: with it the browser's redraw stalled (cap.mjs, 240 s)
+  return jointBur(homeBurial(homeJoint(src))); // K1482 s32: loneFold (below) is OFF: with it the browser's redraw stalled (cap.mjs, 240 s)
+}
+
+/**
+ * K1588 s2 (part of retryForm, after homeBurial): eval.ts's two joint-footprint burials, statement for statement.
+ * member() flags a piece that is a full member only inside its home arm's joint footprint (mjm = 1 + its depth ramp
+ * r0 in 126ths, eval.ts pjm), packed into p34's bits 24-30 (T34 masks them off). (1) The piece faces' loop: for a
+ * footprint-only piece j, a deep fold counts in full where q's burier m is in its band or beyond (pd[m] > h - W:
+ * A_d x113's pinhole). (2) A tangent disc (cT >= 0): where p lies in a footprint-only piece's fill (pd[m] < h - W)
+ * and in no other piece of S's tube, the disc keeps only r0 of its ink (stage 4's blend: A_9 x355's bulb). zb's P0
+ * needs no new route: (1) only lowers a burial, and (2) raises one only where a piece of S holds p (pd[m] < h), which
+ * P0's tangent route already sends to P1. A split's pass 2 without the keys never sets p34.
+ */
+function jointBur(src: string): string {
+  const rep = (a: string, b: string, n?: number): void => {
+    const parts = src.split(a);
+    if (n !== undefined && parts.length - 1 !== n) throw new Error(`gfFs K1588 s2: expected ${n} "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep("int m34; IQ int p34[MAXP];", "int m34; IQ int p34[MAXP]; int mjm; float jmJ; float jmN; float jmR; // K1588 s2: eval.ts mjm, pjm\n" +
+    "#if !defined(SPLIT2) || defined(SPLITK)\n#define JMP(m) ((p34[m] >> 24) != 0)\n#else\n#define JMP(m) false\n#endif\n", 1);
+  rep("int hg = -1; float hb = 1e30; float hj = 0.0;\n", "int hg = -1; float hb = 1e30; float hj = 0.0; mjm = 0;\n", 1);
+  rep("    float r = hb < hj ? 1.0 : (uHomeZ > uZt ? 1.0 - ss(uZt, uHomeZ, az) : (az > uZt ? 0.0 : 1.0));\n" +
+    "    if (r > 0.0 && !(g == hg && ramp >= r)) { g = hg; ramp = r; }\n",
+    "    float r0 = uHomeZ > uZt ? 1.0 - ss(uZt, uHomeZ, az) : (az > uZt ? 0.0 : 1.0); float r = hb < hj ? 1.0 : r0;\n" +
+    "    if (r > 0.0 && !(g == hg && ramp >= r)) { g = hg; ramp = r; if (hb < hj && r0 < 1.0) mjm = 1 + int(floor(max(0.0, r0) * 126.0 + 0.5)); }\n", 1);
+  rep("p34[j] = m34;", "p34[j] = m34 + (mjm << 24);");
+  rep("(p34[m] >> 1) - 1 != PC(j)", "((p34[m] >> 1) & 8388607) - 1 != PC(j)");
+  if (/p34\[j\] = m34;|\(p34\[m\] >> 1\) - 1/.test(src)) throw new Error("gfFs K1588 s2: an unmasked p34 is left");
+  // (1) the piece faces' loop (absent from zb's P0, which routes every face some m reaches)
+  const FO = "if (fo < 0.0) { float f0 = max(0.0, h - sqrt(pieceD(j, q))); fo = f0 * (1.0 - ss(2.0 * aa, 4.0 * aa, f0)); }";
+  const nf = src.split(FO).length - 1;
+  if (nf > 0) {
+    rep("float fo = -1.0;", "float fo = -1.0; float f0 = 0.0;", nf);
+    rep(FO, "if (fo < 0.0) { f0 = max(0.0, h - sqrt(pieceD(j, q))); fo = f0 * (1.0 - ss(2.0 * aa, 4.0 * aa, f0)); }", nf);
+    rep("float wb2 = 1.0 - ss(h - 2.0 * aa, h, dm + fo);", "float wb2 = 1.0 - ss(h - 2.0 * aa, h, dm + (JMP(j) ? fo + (f0 - fo) * ss(h - W - aa, h - W + aa, pd[m]) : fo));", nf);
+  }
+  // (2) every tangent disc's burial loop (none in zb's P0)
+  src = src.replace(/(\n[ \t]*)if \(PSURF\(m\) != S \|\| PC\(m\) == cT\) continue;/g, (_m, ind: string) =>
+    `${ind}if (m == 0) { jmJ = -1e30; jmN = -1e30; jmR = 0.0; }` +
+    `${ind}if (cT >= 0 && PSURF(m) == S) { float jd = h - pd[m]; if (JMP(m)) { jd -= W; if (jd > jmJ) { jmJ = jd; jmR = float((p34[m] >> 24) - 1) / 126.0; } } else jmN = max(jmN, jd); }` +
+    `${ind}if (m == np - 1) bur = max(bur, ss(0.0, 2.0 * aa, jmJ) * (1.0 - ss(-aa, aa, jmN)) * (1.0 - jmR)); // K1588 s2: the footprint's disc` +
+    `${ind}if (PSURF(m) != S || PC(m) == cT) continue;`);
+  return src;
+}
+
+/**
+ * K1588 (part of retryForm, so `gfk=0` and home-off programs are byte-identical): eval.ts member()'s joint footprint.
+ * The home arm's aJoint rides the arm record's second texel .w (gf_pack.ts, retry builds; tables.ts armJoints):
+ * nearer that arm's root than it (hb < hj), a home piece is a full member whatever its depth; elsewhere the depth
+ * ramp (uHomeZ, fed per frame) decides as before. No fetch is added: loop 1 already reads that texel.
+ */
+function homeJoint(src: string): string {
+  const rep = (a: string, b: string): void => {
+    const parts = src.split(a);
+    if (parts.length !== 2) throw new Error(`gfFs K1588: expected one "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep("int hg = -1; float hb = 1e30;\n", "int hg = -1; float hb = 1e30; float hj = 0.0;\n");
+  rep("if (d <= A1.y + 1e-12) { hb = d; hg = int(A1.x); } }\n", "if (d <= A1.y + 1e-12) { hb = d; hg = int(A1.x); hj = A1.w; } }\n");
+  rep("    float r = uHomeZ > uZt ? 1.0 - ss(uZt, uHomeZ, az) : (az > uZt ? 0.0 : 1.0);\n",
+    "    float r = hb < hj ? 1.0 : (uHomeZ > uZt ? 1.0 - ss(uZt, uHomeZ, az) : (az > uZt ? 0.0 : 1.0));\n");
+  return src;
 }
 
 /**

@@ -683,7 +683,10 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
   let gwEv: GfEval | null = null, gwEvT: GfTables | null = null;
   const gwMember = (fade: number): ((c: number, k: number) => boolean) | undefined => {
     if (!T || !pass) return undefined;
-    if (gwEvT !== T || !gwEv) { gwEvT = T; gwEv = new GfEval(withHome(T, pass.home)); }
+    // K1588 s3: without the junction rule's footprint (aJoint). Read here it flags 79 more gap exits on the 21 test
+    // mazes (a short cut, the gap closed); on the branch the rule came from (K1584's gap steps) the bake reads no
+    // membership, so the rule changes no gap there, nor here.
+    if (gwEvT !== T || !gwEv) { gwEvT = T; gwEv = new GfEval({ ...withHome(T, pass.home), aJoint: undefined }); }
     const ev = gwEv; ev.fadeLength = fade;
     const Tt = ev.T;
     return (c, k) => {

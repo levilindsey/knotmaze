@@ -76,6 +76,12 @@ export const GF_KXZ: boolean = ENV20?.GF_KXZ !== "0";
  * *Alt). `GfOpts.kRetry` overrides it per build, env GF_KRETRY=1 for Node probes.
  */
 export const GF_KRETRY: boolean = ENV20?.GF_KRETRY === "1";
+/**
+ * K1588: the joint footprint's length in h (armJoints, GfTables.aJoint): a home piece nearer its arm's root than
+ * this is a full member of the junction's group whatever its depth. Env GF_JOINT for Node probes (0 = off: the
+ * depth alone decides, as before K1588).
+ */
+export const GF_JOINT: number = ENV20?.GF_JOINT !== undefined ? +ENV20.GF_JOINT : 2;
 
 export interface GfOpts {
   /** Half the AA ramp, world units. */
@@ -151,6 +157,10 @@ export interface GfTables {
   /** K1482 s34: per arm, (C + 1) * 2 + e (arms34; the arm record's second texel .z, gf_pack.ts). Retry builds only
    * (eval.ts member's m34, gf_glsl.ts homeBurial's T34). */
   a34?: Int32Array;
+  /** K1588: per arm, the joint footprint (armJoints): a home piece nearer the arm's root than this (arc along the
+   * chain) is a full member of the arm's group whatever its depth; 0 = none (the depth decides, homeRamp). The arm
+   * record's second texel .w (gf_pack.ts). Retry builds only (eval.ts member(), gf_glsl.ts homeJoint). */
+  aJoint?: Float64Array;
   /** Build time per part, ms. */
   ms: { vtx: number; pins: number; arms: number; corners: number; bins: number; kp: number; total: number };
 }
@@ -1349,7 +1359,7 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
     kTight: tightTurns(h, kR, kThru, kCa, kCb, kTax, kTay, kTbx, kTby, cV0, cNV, cClosed, vx, vy),
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
     // K1482 s23: with the retry off (the default) the tables are master's, field for field
-    ...(P.kRetry ? { kExt, ...arms34(P.arms, pinPC, pinPS, cClosed, cV0, cNV, vs, cArm0, cArmN), nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
+    ...(P.kRetry ? { kExt, ...armJoints(arms34(P.arms, pinPC, pinPS, cClosed, cV0, cNV, vs, cArm0, cArmN), P.arms, aHome, cClosed, cLen, cArm0, cArmN, cPin0, cPinN, pinS, pinZ, pinPC, pinPS, h), nKAlt: nA2, cellK0Alt: vA.cellK0, cellKNAlt: vA.cellKN, cellKListAlt: vA.cellKList, cellKPListAlt: vAP } : {}),
     ms: { vtx: ms.vtx, pins: ms.pins + walkMs, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
   };
 }
@@ -1439,6 +1449,47 @@ export function arms34(arms: GfArm[], pinPC: Int32Array, pinPS: Float64Array, cC
     a34[i] = (C + 1) * 2 + (endRoot(i) ? 1 : 0);
   }
   return { aCutC, aCutS, a34 };
+}
+
+/**
+ * K1588: GfTables.aJoint beside arms34's fields. A crossing within about 1.5 thread widths of a junction leaves the
+ * arm's piece too deep at the joint for homeRamp, so it dropped out of its own junction and the joining arm's border
+ * was drawn across it (link A's x195, x338, x37; the notches at x303, x227, x132). Within GF_JOINT h of its root an
+ * arm's home piece is therefore a member by position: aJoint = GF_JOINT * h. It is 0 (the depth decides, as before)
+ * when a crossing on the arm (the one that cuts it, or any whose centre lies in its home interval) is
+ * - one the arm passes OVER (pinZ > 0): the rule is for the under thread. An over arm made a member loses its own
+ *   border up to the footprint's end, in the open, where it then starts with a flat cut (A_a junction 26, an open
+ *   apex); or
+ * - with an arm of its own group (its arc on the other chain lies within max(aL, aHome) of a root of the group
+ *   there): two arms of one junction crossing each other keep their over/under line (A_b junction 41).
+ * The footprint never passes the home interval (it ends at the nearest crossing ahead), and past it membership
+ * follows the depth and the live crossing fade as before.
+ */
+export function armJoints<A34 extends { aCutC: Int32Array; aCutS: Float64Array }>(R: A34, arms: GfArm[], aHome: Float64Array, cClosed: Uint8Array, cLen: Float64Array, cArm0: Int32Array, cArmN: Int32Array, cPin0: Int32Array, cPinN: Int32Array, pinS: Float64Array, pinZ: Float64Array, pinPC: Int32Array, pinPS: Float64Array, h: number): A34 & { aJoint: Float64Array } {
+  const n = arms.length; const aJoint = new Float64Array(n);
+  if (!(GF_JOINT > 0)) return { ...R, aJoint };
+  // pin q's other pass lies on an arm of group g
+  const own = (q: number, g: number): boolean => {
+    const oc = pinPC[q]; if (!(oc >= 0 && oc < cArm0.length)) return false;
+    const os = pinPS[q]; const closed = cClosed[oc] === 1; const len = cLen[oc];
+    for (let k = cArm0[oc]; k < cArm0[oc] + cArmN[oc]; k++) {
+      const B = arms[k]; if (B.g !== g) continue;
+      let d = (os - B.sR) * B.dir; if (closed) d = ((d % len) + len) % len;
+      if (d > -1e-6 && d < Math.max(B.L, aHome[k]) + 1e-6) return true;
+    }
+    return false;
+  };
+  for (let i = 0; i < n; i++) {
+    const A = arms[i]; const c = A.c; const closed = cClosed[c] === 1; const len = cLen[c];
+    let off = A.Lcut < Infinity && A.cutQ >= 0 && (pinZ[A.cutQ] > 0 || own(A.cutQ, A.g));
+    for (let q = cPin0[c]; !off && q < cPin0[c] + cPinN[c]; q++) {
+      let d = (pinS[q] - A.sR) * A.dir; if (closed) d = ((d % len) + len) % len;
+      if (d < -1e-6 || d > aHome[i] + 1e-6) continue;
+      off = pinZ[q] > 0 || own(q, A.g);
+    }
+    aJoint[i] = off ? 0 : GF_JOINT * h;
+  }
+  return { ...R, aJoint };
 }
 
 /**

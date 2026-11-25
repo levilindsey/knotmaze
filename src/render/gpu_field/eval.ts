@@ -28,6 +28,11 @@ export const MAXK = 6; // corners per pixel
 export const GF_FADE_LENGTH = 0.14;
 const TANGENT_TERMS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_TANG !== "0";
 const SELF_BURIAL =(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
+// K1588 s2, probe-only screening switches (the GLSL draws the defaults): GF_S2P / GF_S2B = 0 give stage 1's mirror.
+// S2P (the face loop's full fold): 2 = footprint-only pieces (the rule), 1 = every piece (specks in fills, rejected).
+// S2B (the tangent disc's burial): 2 = in a footprint-only piece's fill (the rule), 1 = in its whole tube (pinholes).
+const S2P = Number((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S2P ?? "2");
+const S2B = Number((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S2B ?? "2");
 const MAXS = MAXP + MAXK; // surfaces
 
 export function ss(e0: number, e1: number, x: number): number {
@@ -75,6 +80,8 @@ export class GfEval {
   private pz = new Float64Array(MAXP); private pkey = new Float64Array(MAXP); private pg = new Int32Array(MAXP); private pramp = new Float64Array(MAXP); private phb = new Int32Array(MAXP);
   /** K1482 s34: member()'s m34 per piece (the keys loop). */
   private p34 = new Int32Array(MAXP);
+  /** K1588 s2: member()'s mjm per piece (gf_glsl.ts packs it in p34's bit 24). */
+  private pjm = new Float64Array(MAXP);
   private ptx = new Float64Array(MAXP); private pty = new Float64Array(MAXP); private pend = new Uint8Array(MAXP);
   private psurf = new Int32Array(MAXP);
   private np = 0;
@@ -136,15 +143,17 @@ export class GfEval {
    * fill, or burying a corner fill's other arm (22.56,34.84). A pass behind loop 1's arm's root already bounds it
    * through tables' k uB. Roots compare within 1e-4 (the GLSL reads them as float32).
    * K1438 (T.homeOn): the same loop finds the home arm, the nearest root whose home interval (aHome) holds s; a
-   * piece that is not already a full member takes that arm's group at homeRamp(|z|) when that is more than it has. */
+   * piece that is not already a full member takes that arm's group at homeRamp(|z|) when that is more than it has.
+   * K1588 (T.aJoint): nearer the home arm's root than its joint footprint, that is full membership at any depth. */
   private member(c: number, s: number, z: number): void {
     const T = this.T; const a0 = T.cArm0[c]; const an = T.cArmN[c]; const lam = T.h;
     const closed = T.cClosed[c] === 1; const len = T.cLen[c];
     const home = T.homeOn; let hg = -1; let hb = Infinity;
+    const aJ = home ? T.aJoint : undefined; let hj = 0; let mjm = 0; // K1588: the home arm's joint footprint (tables.ts armJoints)
     let g = -1; let ramp = 0; let sRa = 0;
     for (let i = a0; i < a0 + an; i++) {
       let d = (s - T.aSR[i]) * T.aDir[i]; if (closed) d = ((d % len) + len) % len;
-      if (home && !(d < -1e-12 || d > T.aHome[i] + 1e-12 || d >= hb)) { hb = d; hg = T.aG[i]; }
+      if (home && !(d < -1e-12 || d > T.aHome[i] + 1e-12 || d >= hb)) { hb = d; hg = T.aG[i]; if (aJ) hj = aJ[i]; }
       if (d < -1e-12 || d > T.aL[i] + 1e-12) continue;
       const Lc = T.aLcut[i];
       const rp = Lc === Infinity ? 1 : ss(Lc, Lc - lam, d);
@@ -160,8 +169,10 @@ export class GfEval {
     }
     if (g < 0) ramp = 1;
     if (hg >= 0 && !(g >= 0 && ramp >= 1)) {
-      const r = this.homeRamp(Math.abs(z));
-      if (r > 0 && !(g === hg && ramp >= r)) { g = hg; ramp = r; }
+      // K1588: inside the home arm's joint footprint the piece is a member by position, whatever its depth
+      // K1588 s2: mjm marks a piece that is a full member only by the footprint (its depth alone ramps it below 1)
+      const r0 = this.homeRamp(Math.abs(z)); const r = hb < hj ? 1 : r0;
+      if (r > 0 && !(g === hg && ramp >= r)) { g = hg; ramp = r; if (hb < hj && r0 < 1) mjm = 1 + Math.round(Math.max(0, r0) * 126); }
     }
     // K1482 s34 (retry tables, T.a34; gf_glsl.ts homeBurial's member, line for line): m34 = (C + 1) * 2 + e over
     // the arms of the piece's group or home G (no wrap: e needs an open chain, and a cut root's home lies past it).
@@ -178,8 +189,10 @@ export class GfEval {
       }
       m34 = (C + 1) * 2 + e;
     }
-    this.mg = g; this.mramp = ramp; this.mhb = g < 0 ? hg : -1; this.m34 = m34;
+    this.mg = g; this.mramp = ramp; this.mhb = g < 0 ? hg : -1; this.m34 = m34; this.mjm = mjm;
   }
+  /** K1588 s2: member()'s footprint-only flag (1 = a full member only inside the joint footprint). */
+  private mjm = 0;
   /** K1482 s28: member()'s home group for a piece left out of every group (its arm's home, too deep in z), else -1. */
   private mhb = -1;
   /** K1482 s34: member()'s end-arm code (tables.ts arms34). */
@@ -592,7 +605,7 @@ export class GfEval {
     let nr = 0; const rIdx = [0, 0]; // the ramping pieces
     for (let j = 0; j < np; j++) {
       this.pz[j] = this.depth(this.pc[j], this.ps[j]); this.pkey[j] = this.pz[j] - this.pd[j] * zK;
-      this.member(this.pc[j], this.ps[j], this.mz); this.pg[j] = this.mg; this.pramp[j] = this.mramp; this.phb[j] = this.mhb; this.p34[j] = this.m34;
+      this.member(this.pc[j], this.ps[j], this.mz); this.pg[j] = this.mg; this.pramp[j] = this.mramp; this.phb[j] = this.mhb; this.p34[j] = this.m34; this.pjm[j] = this.mjm;
       if (this.mg >= 0) this.pkey[j] -= this.tipSink(this.pc[j], this.ps[j]);
       if (this.mg >= 0 && this.mramp > 0 && this.mramp < 1) {
         if (nr < MAXR) rIdx[nr++] = j;
@@ -711,12 +724,18 @@ export class GfEval {
         // A tube whose edge runs along the outline (an arm extension's end disc on this piece's spine) then no longer
         // nibbles the fold's points into a step and a pinhole. A deep fold (j58's) keeps the plain burial, and an
         // unfolded q (fo 0) is untouched. fo is taken only once some m reaches q (dm < h; else wb2 is exactly 0).
-        let fo = -1;
+        let fo = -1; let f0 = 0;
         for (let m = 0; m < this.np && bur < 1; m++) {
           if (m === j || this.psurf[m] !== S) continue;
           const dm = Math.sqrt(this.pieceD(m, qx, qy)); if (!(dm < h)) continue;
-          if (fo < 0) { const f0 = Math.max(0, h - Math.sqrt(this.pieceD(j, qx, qy))); fo = f0 * (1 - ss(2 * aa, 4 * aa, f0)); }
-          const wb2 = 1 - ss(h - 2 * aa, h, dm + fo);
+          if (fo < 0) { f0 = Math.max(0, h - Math.sqrt(this.pieceD(j, qx, qy))); fo = f0 * (1 - ss(2 * aa, 4 * aa, f0)); }
+          // K1588 s2 (retryForm's programs: gf_glsl.ts jointBur): for a piece that is a member only inside the joint
+          // footprint (pjm), a deep fold counts in full where p is outside m's fill (in m's band or beyond), so that
+          // piece's fold ridge is not buried by a tube that never reaches p's ink (A_d x113's pinhole); inside m's
+          // fill, and for every other piece, the s27 fade holds (j58). Applied to every piece it put specks in fills
+          // (A_3 x182, x62), so it stays with the pieces stage 1's footprint made members.
+          const fm = S2P && kxh && (S2P === 1 || this.pjm[j]) ? fo + (f0 - fo) * ss(h - W - aa, h - W + aa, this.pd[m]) : fo;
+          const wb2 = 1 - ss(h - 2 * aa, h, dm + fm);
           if (wb2 > bur) bur = wb2;
         }
         // the piece's own tube elsewhere along its fold (a tight bend folded into one piece): OFF, form B never
@@ -821,7 +840,15 @@ export class GfEval {
           // outline is drawn, T is its joint with the arc, and burying the disc cut a slit through a border (A_b t22s)
           const cT = t ? cB : cA;
           let bur = 0;
+          // K1588 s2 (retryForm's programs: gf_glsl.ts jointBur): a piece that is a member only inside the joint
+          // footprint (pjm) carries no disc. Where the pixel lies in such a piece's FILL and in no tube of another
+          // piece of S (jmJ against jmN), the disc is buried by that piece's membership 1 - r0, as stage 4 drew it
+          // when the piece lay (partly) outside S and its own surface hid the disc (A_9 x355's bulb). In its band
+          // the disc keeps its ink: burying it in the whole tube opened pinholes at about 20 places.
+          let jmJ = -1e30; let jmN = -1e30; let jmR = 0;
           for (let m = 0; m < this.np && bur < 1; m++) {
+            if (S2B && kxh && this.psurf[m] === S) { if (this.pjm[m]) { const jd = (S2B === 2 ? h - W : h) - this.pd[m]; if (jd > jmJ) { jmJ = jd; jmR = (this.pjm[m] - 1) / 126; } } else jmN = Math.max(jmN, h - this.pd[m]); }
+            if (m === this.np - 1) bur = Math.max(bur, ss(0, 2 * aa, jmJ) * (1 - ss(-aa, aa, jmN)) * (1 - jmR));
             if (this.psurf[m] !== S || this.pc[m] === cT || (s37off && (this.pc[m] === cA || this.pc[m] === cB))) continue;
             let wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, tx, ty)));
             if (wb2 > bur && s40 && (this.pc[m] === cA || this.pc[m] === cB)) wb2 *= this.outlineBur(m, tx, ty, S);
