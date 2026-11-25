@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1605.
+Next free ID: K1607.
 
 ## Waiting on Levi
 
@@ -331,6 +331,9 @@ Next free ID: K1605.
   breaks balls A_3 k157, A_3 k275, A_6 k331. Switch gfwv= on branch k1584-wedge (3850d2b59,
   .claude/worktrees/k1584-wedge, sheet .claude/probes/K1584/wedge/v/wedge_sheet.png, brief
   docs/design/K1584_wedge_brief.md)
+- **K1605** · K1584 looks from stage 7b (pictures sent 2026-11-24 20:00): (a) the gap stage 4 opens at a
+  stem's far end, today has none (s7/out/farend7.png); (b) A_a x148 goes from a gap (stages 4 to 6) to closed
+  (s7b/out/aax148_z6.png); (c) the 18 corner places the loop term still cuts, sheet owed by stage 8
 
 ## In progress
 
@@ -794,11 +797,11 @@ Next free ID: K1605.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: agent K1584-s7b of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 18:50, 2 h cap)
-  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (old history: lands by cherry-pick or squash only); last commit: 4fe668d84 (stage 7 rules 04eeb1b69)
-  - evidence: .claude/probes/K1584/s7/ (cap7.ps1, post7.ps1, out/farend_pre.png), s6/, wedge variants in .claude/worktrees/k1584-wedge
-  - next: Stage 7 (18:46): rule K and the corner rule are in gf_look.ts with mirror and tests (3 wrong loops and 7 stems change, 12 right loops unchanged, in the mirror) but the capture gave no frames (it overlapped the coordinator's npm test). When 7b reports: view the 15 loops, 7 stems, A_8 x304, the far-end sheet; then the gap page for Levi (K1603 wedge pick, far-end gap look)
-  - brief: `docs/design/K1584_s7b_brief.md`
+  - owner: claude session agent K1584 s8 (coordinator claude session 01SUPGULDxvE5gKXozfaFaFG), started 2026-11-24 20:00
+  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (old history: cherry-pick or squash only); last commit: `aaeb20197`
+  - evidence: .claude/probes/K1584/s7b/, .claude/probes/K1584/s7/ (untracked, in that worktree)
+  - next: stage 8: a border's gap ends at the corner's fillet start (stems A_6 k197, A_d k148 and four more flag misses), CPU copy first, capture s8a; stage 7b result: 3 wrong loops closed, 12 right loops identical to s6, 5 of 7 stems at today's look
+  - brief: docs/design/K1584_s8_brief.md (in that worktree)
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
@@ -2651,6 +2654,11 @@ Every other item below waits on the trigger it names.
   .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
   yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
   trims (A_c x12 and five others, invisible at normal scale)
+- **K1606** · K1584 stage 7/7b leftovers: A_3 x100, A_5 x258, A_8 x41, D_3 x100 went back to the stage 4 look;
+  A_8 x304 gains a gap (no border removed); K1595's corner count (50) was too high; probe faults: pxdiff's 14
+  px box misses outline pixels at 3x (use 40), the changed-places tool's 0 px miss at A_5 x277, cap7.ps1 has
+  no retry on a frame timeout and needs warm profiles (warm7.ps1), wcap.ps1 logs carry no build stamp; a stray
+  k1436s3-prev vite preview listens on port 5652 (look before stopping)
 
 ## Approved, to schedule (2026-10-11)
 
