@@ -23,7 +23,7 @@ Next free ID: K1602.
 
 ## Waiting on Levi
 
-- **K1596** · rp=gf junction change (K1588) is built on a branch and shown on the gap page
+- **K1596** · [ANSWERED Nov 24 16:45: `junction land`, Levi: SO MUCH BETTER. Landing waits on K1588 stage 2 (pinhole, bulb), K1600 (drag check) and on a port: the rule is built on gap stage 4, which does not land as is (K1595, K1601), so it must go to master without the gap steps or with fixed ones] rp=gf junction change (K1588) is built on a branch and shown on the gap page
   https://claude.ai/artifact/M45ueV1LNNP9Rjmps6EuSt (section "The junction change"): it clears the wedges,
   blobs and barbs beside junctions (Levi's six A_3 places; x132's sliver is shorter, a point is left), trims
   ends beside a junction, one end goes blunt (A_6 x326). `junction land` (after stage 2 fixes a 2 px pinhole
