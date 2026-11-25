@@ -1,0 +1,58 @@
+diff --git a/eval_s4.ts b/exp/src/render/gpu_field/eval.ts
+index 72d0779..48ad330 100644
+--- a/eval_s4.ts
++++ b/exp/src/render/gpu_field/eval.ts
+@@ -103,8 +103,33 @@ export class GfEval {
+ 
+   constructor(T: GfTables) { this.T = T; }
+ 
++  // AUDIT probe (scratchpad only): the home arm found by member(), and per arm whether the crossing that cut it is
++  // with a thread of the arm's own group (two arms of one junction crossing each other).
++  auditHi = -1; private auditS?: Uint8Array; auditN = [0, 0, 0];
++  auditSame(i: number): boolean {
++    const T: any = this.T;
++    if (!this.auditS) {
++      const S = new Uint8Array(T.nA);
++      for (let a = 0; a < T.nA; a++) {
++        if (!(T.aLcut[a] < Infinity)) continue;
++        const oc = T.aCutC ? T.aCutC[a] : -1; if (oc < 0) { this.auditN[2]++; continue; }
++        const os = T.aCutS[a]; const closed = T.cClosed[oc] === 1; const len = T.cLen[oc];
++        for (let k = T.cArm0[oc]; k < T.cArm0[oc] + T.cArmN[oc]; k++) {
++          if (T.aG[k] !== T.aG[a]) continue;
++          let d = (os - T.aSR[k]) * T.aDir[k]; if (closed) d = ((d % len) + len) % len;
++          if (d > -1e-9 && d < Math.max(T.aL[k], T.aHome[k]) + 1e-9) { S[a] = 1; break; }
++        }
++        this.auditN[S[a]]++;
++      }
++      this.auditS = S;
++      console.error("audit arms cut by a crossing: other-group " + this.auditN[0] + ", same-group " + this.auditN[1] + ", cut from behind only " + this.auditN[2] + ", arms " + T.nA);
++    }
++    return i >= 0 && this.auditS[i] === 1;
++  }
++
+   /** K1438/K1449: the home membership's ramp at depth |z| = az (1 = full member); gf_glsl.ts homeForm mirrors it. */
+   homeRamp(az: number): number {
++    if ((globalThis as any).process?.env?.AUDIT_HOME === "1") return 1;
+     const zt = this.T.zt;
+     const Z = (this.fadeLength * this.T.amp) / this.T.win;
+     if (!(Z > zt)) return az > zt ? 0 : 1;
+@@ -144,7 +169,7 @@ export class GfEval {
+     let g = -1; let ramp = 0; let sRa = 0;
+     for (let i = a0; i < a0 + an; i++) {
+       let d = (s - T.aSR[i]) * T.aDir[i]; if (closed) d = ((d % len) + len) % len;
+-      if (home && !(d < -1e-12 || d > T.aHome[i] + 1e-12 || d >= hb)) { hb = d; hg = T.aG[i]; }
++      if (home && !(d < -1e-12 || d > T.aHome[i] + 1e-12 || d >= hb)) { hb = d; hg = T.aG[i]; this.auditHi = i; }
+       if (d < -1e-12 || d > T.aL[i] + 1e-12) continue;
+       const Lc = T.aLcut[i];
+       const rp = Lc === Infinity ? 1 : ss(Lc, Lc - lam, d);
+@@ -160,7 +185,9 @@ export class GfEval {
+     }
+     if (g < 0) ramp = 1;
+     if (hg >= 0 && !(g >= 0 && ramp >= 1)) {
+-      const r = this.homeRamp(Math.abs(z));
++      let r = this.homeRamp(Math.abs(z));
++      const md = (globalThis as any).process?.env?.AUDIT_HOME;
++      if ((md === "2" || md === "3") && !this.auditSame(this.auditHi) && (md === "2" || hb <= 2 * T.h)) r = 1;
+       if (r > 0 && !(g === hg && ramp >= r)) { g = hg; ramp = r; }
+     }
+     // K1482 s34 (retry tables, T.a34; gf_glsl.ts homeBurial's member, line for line): m34 = (C + 1) * 2 + e over
