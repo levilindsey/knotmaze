@@ -30,7 +30,7 @@ Next free ID: K1601.
   and a bulb, on top of the gaps) or `junction keep` (drop it)
 - **K1589** · rp=gf gap step (K1584 stage 5) is built and waits on five answers, page
   https://claude.ai/artifact/M45ueV1LNNP9Rjmps6EuSt: `balls whole` (the gap stops at a tight turn's ball,
-  K1572; one more gap step) or `balls as built` (222 solid spots lose ink, about 7 of 70 viewed are broken
+  K1572; one more gap step) or `balls as built` [ANSWERED 2026-11-24 16:00, neither: the gap at a ball is a wedge cut from the ball's centre, widening outward, and the fade narrows with it; K1584 stage 6 builds it, four answers left] (222 solid spots lose ink, about 7 of 70 viewed are broken
   balls, 7 notched); `loops open` or `loops closed` (hook and loop tips under a thread); the crossing numbers
   of K1586's eye and K1587's junction; `stems joined` or `stems as built` (K1595); `gaps land` or `gaps keep
   today's`. Offered on the page (v8) and in chat, optional: `closed sides again` (one diagnosis-first step at
@@ -788,10 +788,11 @@ Next free ID: K1601.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: nobody since 2026-11-24 11:10 PST: stage 5 is built (tests green, 3238 passed) and waits on Levi's five answers (K1589)
-  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `9894c1091`
+  - owner: agent K1584-s6 of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 15:50, 2 h cap ~17:50): Levi's answer to call 1, the gap at a ball is a wedge cut from the ball's centre and the fade narrows with it
+  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `5187e6245`
   - evidence: .claude/probes/K1584/s1..s5/ in that worktree (s5/screen: per-side on-screen verdicts and the ball results; s5/sweep: sweep_A.jsonl and sweep_B.jsonl, the 853 places stage 5 changed and their verdicts); the count and check tools are tracked at .claude/probes/K1584/screen/ (comb_run.ps1, comb_an.ps1, guards_run.ps1 and inter.py rebuild the combined-build checks); handoffs in docs/design/K1584_s4_brief.md and K1584_s5_brief.md on the branch; guards: main checkout .claude/probes/K1482/out/guards/k1584s4/ (stage 4, green) and comb_6764cc1fa/ (stage 5 + K1588 stage 1)
   - next: Levi answers K1589 (page v8). K1600 (failed drag check on the combined build) explained before any landing. On-screen no-gap sides of 29,800: today 9,589, stage 4 439, stage 5 133 (the stage's own model counts read better than the screen: never relay them). Before a landing: guards on the final build (guards_run.ps1; its npm test runs on the main checkout, so run the ref's own suite too), his answers applied (balls, loops, stems: one more gap step at most, a Claude agent, only on his word). The changes from today to stage 4 are counted but not swept place by place. Stage 5 is two commits: 7ac955c1b (gaps cut into junctions) and 9b4ccfb53 (longer gap, droppable: 220 closed without it). Lands by cherry-pick or merge --squash
+  - brief: docs/design/K1584_s6_brief.md on the branch
 - **K1588** · rp=gf: a junction drops its own under thread when a crossing sits within about 1.5 thread widths
   of it (membership is gated by depth), so the joining arm's border is drawn across the thread: the cause of
   Levi's six named places on A_3 (x195 x338 x37 pinch, x303 x227 x132 sliver; audit 2026-11-24, page
