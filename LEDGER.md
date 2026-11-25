@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1607.
+Next free ID: K1609.
 
 ## Waiting on Levi
 
@@ -334,6 +334,10 @@ Next free ID: K1607.
 - **K1605** · K1584 looks from stage 7b (pictures sent 2026-11-24 20:00): (a) the gap stage 4 opens at a
   stem's far end, today has none (s7/out/farend7.png); (b) A_a x148 goes from a gap (stages 4 to 6) to closed
   (s7b/out/aax148_z6.png); (c) the 18 corner places the loop term still cuts, sheet owed by stage 8
+- **K1607** · K1584 looks from stage 8 (pictures sent 2026-11-24 20:50): (a) 18 places where today runs a
+  border into its neighbour in a corner and the gap build ends it short (s8/out/levi18.png; same kind as
+  K1605's stem far ends): joined or gap; (b) the three wrong loops' eye opens at the foot since stages 3-4 and
+  the arm reads as a wedge (s8/out/eyes8_k.png): close the foot like today or keep
 
 ## In progress
 
@@ -797,11 +801,11 @@ Next free ID: K1607.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: claude session agent K1584 s8 (coordinator claude session 01SUPGULDxvE5gKXozfaFaFG), started 2026-11-24 20:00
-  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (old history: cherry-pick or squash only); last commit: `aaeb20197`
-  - evidence: .claude/probes/K1584/s7b/, .claude/probes/K1584/s7/ (untracked, in that worktree)
-  - next: stage 8: a border's gap ends at the corner's fillet start (stems A_6 k197, A_d k148 and four more flag misses), CPU copy first, capture s8a; stage 7b result: 3 wrong loops closed, 12 right loops identical to s6, 5 of 7 stems at today's look
-  - brief: docs/design/K1584_s8_brief.md (in that worktree)
+  - owner: nobody since 2026-11-24 20:39: stage 8 done (all seven stem corners at today's look on capture s8a), waiting on Levi's looks (K1603, K1605, K1607)
+  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `e5d0a5106`
+  - evidence: .claude/probes/K1584/s8/, .claude/probes/K1584/s7/out/s8a/ (untracked, in that worktree)
+  - next: Levi's picks: joined or gap at corner places (s8/out/levi18.png, s7/out/farend7.png), the wrong loops' foot cut (s8/out/eyes8_k.png), A_a x148, the wedge (K1603); then one stage per pick
+  - brief: docs/design/K1584_s8_brief.md Handoff (stage 8), in that worktree
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
@@ -2659,6 +2663,9 @@ Every other item below waits on the trigger it names.
   px box misses outline pixels at 3x (use 40), the changed-places tool's 0 px miss at A_5 x277, cap7.ps1 has
   no retry on a frame timeout and needs warm profiles (warm7.ps1), wcap.ps1 logs carry no build stamp; a stray
   k1436s3-prev vite preview listens on port 5652 (look before stopping)
+- **K1608** · K1584 stage 8: corner places the flag still misses, outside the seven stems: A_c k310 (19 px;
+  needs a far bit per border, a shader and encoding change), A_9 k307 (cut inside the border's own gap), A_3
+  k148 (partial), A_a x344 (s8/out/stems8.png, lower rows)
 
 ## Approved, to schedule (2026-10-11)
 
