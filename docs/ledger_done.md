@@ -3883,3 +3883,39 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1439 (Done 2026-11-16)
 
 - **K1439** · rp=gf home membership mirrored in the shader behind gfh=1 (off by default, acts only with rp=gf); fade follows fadeLength live with no rebuild; GPU = mirror on def, 3 px past 1e-2 on muse_hash (float ties); flag off pinned by shader/keys/pack digests; no measurable frame cost on the desktop. Done in c11be7ae (2026-11-16).
+
+## K1423 (Done 2026-11-17)
+
+- **K1423** · K1415 residual (24A): rp=gf shallow-crossing fade still off at eye walls (seed3 ci346 err 0.110, seed5 ci248 0.481; ci77 0.033, ci345 0.063 pass): window-end and along-eye behaviour plus section-colour contamination of the scan, not fadeP width; needs a window-aware gap or a direct edge scan (.claude/probes/K1417/out/24A/fade_*.txt). Done in 72620196 (2026-11-17).
+
+## K1418 (Done 2026-11-17)
+
+- **K1418** · Muse batch 24 (rp=gf look matches today): 24C, 24E, 24G landed whole; 24D, 24F, 24H, 24I in part; leftovers K1424, K1431, K1434, K1446, K1447 go to batch 25 (K1448). Done in fc861dea (2026-11-17).
+
+## K1449 (Done 2026-11-17)
+
+- **K1449** · home leftovers (gfh=1 only): the home ramp is full to the tie depth; fadeLength 0 is a crisp cut (690 -> 203 finds); default 435 -> 368, short of 250 (rest in K1451); flag-off pixels equal (0 px). Done in 7657e03b (2026-11-17).
+
+## K1450 (Done 2026-11-17)
+
+- **K1450** · rp=gf's maze blinked: its render callback skipped any frame drawn into a filter texture, and a live pluck ripple (K279) filters the world, so music mode's auto plucks hid the maze most of the time (since adac76dd); it now draws to the screen and restores the filter's target; guard: .claude/probes/K1450/hold.mjs (ordinary load, 60 frames). Done in dcf4b082 (2026-11-17).
+
+## K1458 (Done 2026-11-17)
+
+- **K1458** · rp=gf fades the under thread before a crossing as today's does and follows the live slider (gf baked the gap only inside the pixel's candidate list; joint window cap, per-side clearance scales and a re-bake on a sleeping knot ported); panel rewrites keep rp/gfh. Live on c5fc87d1: hold.mjs 60/60 on both links, real slider drags change the fade at 0.14/0.28/0.62/1.2 in gf and gf+gfh. Done in c5fc87d1 (2026-11-17).
+
+## K1455 (Done 2026-11-17)
+
+- **K1455** · the border look (tlk=border) under rp=gf: gf's thick near-black strokes on both edges stay; today's thin section-tinted strokes are not the bar. Dropped: decided, no work: Levi 2026-11-17 "Keep gf as it is" (recorded in .claude/rules/render-gpu-field.md) (2026-11-17).
+
+## K1434 (Done 2026-11-17)
+
+- **K1434** · rp=gf: under a burn (K290) the explore shader's char/ember/smolder shading is not ported, and corner gates read the declared pieces rather than the burn gate pieces; gf draws the pieces' visibility (burnt-gone holes included) but no char darkening (K1396 24E handoff). Done in 44d54de8 (2026-11-17).
+
+## K1460 (Done 2026-11-17)
+
+- **K1460** · rp=gf crossing-fade leftovers: stages 1-4 fixed the dotted line, the kink-loop tick, the radial bands and the long-fade seams; stage 5 found today's protect term makes no visible difference at 4x at any fade (d23f3473 tried, e25d042f reverted) and junction B matches today once gf's thread colour is mapped to today's (sheets .claude/probes/K1460/out/s5/jb_*.png): the colour goes to K1474. Done in 7fe4b9c6 (2026-11-17).
+
+## K1454 (Done 2026-11-17)
+
+- **K1454** · rp=gf: a pluck ripple (K279) draws over the maze instead of bending the threads (K1450's fix draws the maze to the screen past the ripple's filter); the full fix composites into the filter texture through Pixi's projection, in gf_pass.ts / gf_look.ts composite shaders (Handoff K1450). Done in b01cc37b (2026-11-17).
