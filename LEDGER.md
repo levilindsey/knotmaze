@@ -331,9 +331,6 @@ Next free ID: K1609.
   breaks balls A_3 k157, A_3 k275, A_6 k331. Switch gfwv= on branch k1584-wedge (3850d2b59,
   .claude/worktrees/k1584-wedge, sheet .claude/probes/K1584/wedge/v/wedge_sheet.png, brief
   docs/design/K1584_wedge_brief.md)
-- **K1605** · K1584 looks from stage 7b (pictures sent 2026-11-24 20:00): (a) the gap stage 4 opens at a
-  stem's far end, today has none (s7/out/farend7.png); (b) A_a x148 goes from a gap (stages 4 to 6) to closed
-  (s7b/out/aax148_z6.png); (c) the 18 corner places the loop term still cuts, sheet owed by stage 8
 - **K1607** · K1584 looks from stage 8 (pictures sent 2026-11-24 20:50): (a) 18 places where today runs a
   border into its neighbour in a corner and the gap build ends it short (s8/out/levi18.png; same kind as
   K1605's stem far ends): joined or gap; (b) the three wrong loops' eye opens at the foot since stages 3-4 and
@@ -3070,6 +3067,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1605** · Levi 2026-11-25: A_a x148 closed (s7) is right; stem far ends fold into K1607a. Done in e5d0a5106 (2026-11-25).
 - **K1588** · rp=gf junction rule (a junction keeps its own under thread beside a crossing) landed on master without the gap steps; Levi: 'junction land. SO MUCH BETTER'; leftovers in K1604. Done in 140abd573 (2026-11-24).
 - **K1592** · K1584 stage 5's four places where a running border breaks, viewed with the crossings numbered (region.py --num): A_9 x298, A_5 x127 and A_6 x144 are ordinary crossing gaps and read right; A_d x264 is a loose stroke, now K1595. A check by view, no src change; tools in 1880f71ce. Done in 1880f71ce (2026-11-24).
 - **K1572** · The ball, third try, landed on Levis word (Ball land, Nov 23): tight turns keep todays ball, the cut joint at A_8 t31s turns as one round elbow; guards and npm test pass. Done in eb8743a52 (2026-11-23).
