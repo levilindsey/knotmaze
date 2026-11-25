@@ -4349,9 +4349,9 @@ Pictures: the decision page's K1470 card (k1470_nub.png).
 
 The place-by-place sweep of what K1584 stage 5 changed since stage 4 (853 places; two agents, one half each; gap
 worktree `.claude/probes/K1584/s5/sweep/sweep_A.jsonl` and `sweep_B.jsonl`). Both halves together: 530 ok, 323
-flagged (loop 124, ragged 80, spur 69, float 40, over 17, ink 4). The two agents use the classes differently:
+flagged (loop 124, ragged 69, spur 69, float 40, over 17, ink 4). The two agents use the classes differently:
 never compare a class count across the halves. `loop` is K1589's loops call, `float` is K1593. `ragged` + `spur`
-= about 149 rough cut ends. Of 40 of half A's flags the coordinator viewed at 5x: most `spur`, `over` and
+= 138 rough cut ends. Of 40 of half A's flags the coordinator viewed at 5x: most `spur`, `over` and
 `ragged` are wanted gaps whose end keeps a 1 to 2 px point or tooth, and several `over` are wider clean gaps
 (half A's 17 `over` are not K1592's kind). Balls cut or notched among them (K1589 call 1): D_3 x100, A_b x9,
 D_5 x258, A_5 x258, A_5 x167. Four places read poorly: A_a x344 (a dark blob inside the opened eye), D_9 x239 (a
@@ -4397,3 +4397,28 @@ Loose pieces of 9 to 120 px over all 21 mazes (`floats.py`): today 19, stage 4 4
 stage 1 67. Of the 47 new since today: 29 at a tight turn (what is left of a ball or small loop: K1589 call 1),
 10 a stretch between a marker and the next gap (they read fine), 8 a dash or dot cut loose beside a junction or
 corner (two of them are stems 1 and 2).
+
+## K1600
+
+The failed drag check on the combined build (2026-11-24). Observed:
+- Guards on 6764cc1fa (stage 5 + K1588 stage 1), 12:35 to 12:59, output main checkout
+  .claude/probes/K1482/out/guards/comb_6764cc1fa/: hold PASS 60/60, hold_gfk0 PASS 60/60, panelopen PASS,
+  dragcheck_b PASS 0/0/0/0 px, npm test PASS (3,241), dragcheck FAIL `0 / 0 / 1672 / 1600 px over TOL 24`.
+- dragcheck.txt: stops 0 and 0.5 differ by 0 of 4,357,572 px; `pageerror Cannot read properties of undefined
+  (reading 'stats')`; stops 1.2 and 0.14 carry "the WebGL context was lost 1x on the dragged page (K1468): not
+  a pixel verdict".
+- Picture times: drag_0 12:48:14, ref_0 12:48:45, drag_0.5 12:49:57, ref_0.5 12:50:34, drag_1.2 12:54:07 (a
+  213 s wait), ref_1.2 12:54:44, drag_0.14 12:55:58, ref_0.14 12:56:30. GPU-process dump
+  cb9aeb70-...dmp at 12:51:55 in %TEMP%\k1482-guards-6764cc1f\Crashpad\reports, 81 s into the 1.2 wait.
+- Every counted pixel is one ring around the start marker (x 700 to 860, y 40 to 220): the marker's glow is
+  missing after the context returns. Threads 0 px at all four stops. Same as K1537 (2026-11-19, build 650aac4fa,
+  none of these changes: same check, same 1,672 / 1,600 px, same error, a GPU dump).
+- Passing runs' 1.2 waits on never-used profiles: stage 3 81 s, stage 4 80 s. No display-driver reset in the
+  Windows logs 12:45 to 12:58.
+- Re-run of the same check alone on the same (now used) profile, 13:06: drag_0 13:06:59, ref_0 13:07:34,
+  drag_0.5 13:11:33; a second dump d5069135-...dmp at 13:09:03, so this time the restart came at the 0.5 stop.
+  The run died with the session at 13:12, no verdict. Machine load at 13:11:44: about 3.8 of 24 cores.
+Inferred, not tested: a never-used profile (first use of new drawing code) is not the whole cause, since the
+second restart was on a used profile; either the build makes K1468's hang likelier, or the first crash kept the
+profile's shader cache from being saved. Not known: which change, if either. The five-run chain (dc_chain.ps1)
+compares the combined build warm and fresh, stage 4, stage 5 and stage 4 + junction rule.

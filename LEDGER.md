@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1600.
+Next free ID: K1601.
 
 ## Waiting on Levi
 
@@ -33,7 +33,8 @@ Next free ID: K1600.
   K1572; one more gap step) or `balls as built` (222 solid spots lose ink, about 7 of 70 viewed are broken
   balls, 7 notched); `loops open` or `loops closed` (hook and loop tips under a thread); the crossing numbers
   of K1586's eye and K1587's junction; `stems joined` or `stems as built` (K1595); `gaps land` or `gaps keep
-  today's`
+  today's`. Offered on the page (v8) and in chat, optional: `closed sides again` (one diagnosis-first step at
+  the sides still closed, K1594 and K1591; no word keeps them). Nothing lands while K1600 is open
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -790,18 +791,29 @@ Next free ID: K1600.
   - owner: nobody since 2026-11-24 11:10 PST: stage 5 is built (tests green, 3238 passed) and waits on Levi's five answers (K1589)
   - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (new history, not landed); last commit: `9894c1091`
   - evidence: .claude/probes/K1584/s1..s5/ in that worktree (s5/screen: per-side on-screen verdicts and the ball results; s5/sweep: sweep_A.jsonl and sweep_B.jsonl, the 853 places stage 5 changed and their verdicts); the count and check tools are tracked at .claude/probes/K1584/screen/ (comb_run.ps1, comb_an.ps1, guards_run.ps1 and inter.py rebuild the combined-build checks); handoffs in docs/design/K1584_s4_brief.md and K1584_s5_brief.md on the branch; guards: main checkout .claude/probes/K1482/out/guards/k1584s4/ (stage 4, green) and comb_6764cc1fa/ (stage 5 + K1588 stage 1)
-  - next: Levi answers K1589 (page v7). On-screen no-gap sides of 29,800: today 9,589, stage 4 439, stage 5 133 (the stage's own model counts read better than the screen: never relay them). Done since: both halves of the sweep (K1590), K1592's four places, the combination with K1588 (tests green; loose pieces 67 to 67; K1594, K1595). Before a landing: guards on the final build (K1482 guards.ps1 through guards_run.ps1; its npm test runs on the main checkout, so run the ref's own suite too), his answers applied (balls, loops, stems: one more gap step at most, a Claude agent, only on his word). The changes from today to stage 4 are counted but not swept place by place. Stage 5 is two commits: 7ac955c1b (gaps cut into junctions) and 9b4ccfb53 (longer gap, droppable: 220 closed without it). Lands by cherry-pick or merge --squash
+  - next: Levi answers K1589 (page v8). K1600 (failed drag check on the combined build) explained before any landing. On-screen no-gap sides of 29,800: today 9,589, stage 4 439, stage 5 133 (the stage's own model counts read better than the screen: never relay them). Before a landing: guards on the final build (guards_run.ps1; its npm test runs on the main checkout, so run the ref's own suite too), his answers applied (balls, loops, stems: one more gap step at most, a Claude agent, only on his word). The changes from today to stage 4 are counted but not swept place by place. Stage 5 is two commits: 7ac955c1b (gaps cut into junctions) and 9b4ccfb53 (longer gap, droppable: 220 closed without it). Lands by cherry-pick or merge --squash
 - **K1588** · rp=gf: a junction drops its own under thread when a crossing sits within about 1.5 thread widths
   of it (membership is gated by depth), so the joining arm's border is drawn across the thread: the cause of
   Levi's six named places on A_3 (x195 x338 x37 pinch, x303 x227 x132 sliver; audit 2026-11-24, page
   https://claude.ai/artifact/FWGCtjSn8UGDvyKLoeGi7d). Stage 1: membership by position near the joint, in
   tables.ts / eval.ts / gf_glsl.ts. Follow-ups: re-count closed gap sides, test whether s28 and s34 are dead,
   then decide whether the gap cut reads the junction from the same table
-  - owner: agent `K1588-s2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 12:41, 2 h cap ~14:41)
-  - branch: `worktree-agent-af202ca51788156a0`, worktree `.claude/worktrees/agent-af202ca51788156a0`; last commit: `d46a3769c`
+  - owner: agent K1588-s2b of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 15:45, 2 h cap ~17:45; the first stage 2 agent died with the session at 13:12, no handoff)
+  - branch: `worktree-agent-af202ca51788156a0`, worktree `.claude/worktrees/agent-af202ca51788156a0`; last commit: `81604bd6c`
   - evidence: .claude/probes/K1588/s1/ in that worktree (stage 1's tools, capture sets j0c, j2, j3 and comb, diff lists; handoff in the brief) and .claude/probes/K1588/audit/ (why.mts needs env GF_SRC); stage 2 writes tag j4. Scratch build of stage 5 + stage 1: branch `k1588-comb` 6764cc1fa at .claude/worktrees/k1588-comb (its node_modules is a junction to the gap worktree's: remove the junction, not its target; never pushed), tests green 3,241 passed
   - next: Stage 2 (brief section "Stage 2"): fix the 2 px pinhole at A_d x113 and the round bulb at A_9 x355, nothing else; the agent reports by about 14:40 PST Nov 24. Stage 1 (7f07c10f2) is viewed: the six named places are clean but x132 (sliver shorter, a point left); on stage 5 the rule changes 6,363 px in 514 places, takes 48 sides from gap to no border (barbs at hook ends beside a junction, mostly D mazes), leaves closed sides closed (132 to 130) and the 7 loose stems unchanged. Then: view stage 2's sheets, rebuild the combination, guards, and Levi's answer to K1596. Lands only on his yes, on top of K1584, by cherry-pick or merge --squash (the branch starts at e8aab8b50)
   - brief: `docs/design/K1588_junction_membership.md`
+- **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
+  on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
+  restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
+  counted 1,672 / 1,600 px are K1537's ring. A re-run on the same, already used profile restarted again (dump
+  13:09:03, at the 0.5 stop). Not known: whether either change makes K1468's kill likelier. Nothing of K1584
+  or K1588 lands until it is (docs/ledger_notes.md)
+  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (five drag-check runs, a detached pwsh started 15:42 PST Nov 24, about 85 min; the 13:06 chain died with the session at 13:12 after one stop)
+  - branch: mainline (tools only); last commit: this commit
+  - evidence: .claude/probes/K1584/screen/{dc_run.ps1, dc_chain.ps1, dcdiff.py, dccrop.py}; main checkout .claude/probes/K1482/out/guards/{comb_6764cc1fa, dc_comb_warm, dc_comb_fresh, dc_s4_fresh, dc_s5_fresh, dc_s4j_fresh}/ and dc_chain_1545.log there (untracked); GPU dumps under %TEMP%\k1482-guards-6764cc1f\Crashpad\reports and %TEMP%\k1482-dc-<sha8>-<HHmmss>
+  - next: read dc_chain_1545.log (ends CHAIN DONE): each run's verdict, its waits per stop (picture times) and its profile's dumps. comb FAIL with stage 4 (e8aab8b50) PASS points at the build, then s5 (9894c1091) against s4j (7f07c10f2) names the change; all PASS means a rare event, so repeat. One run each is weak: repeat before concluding; a run with EXTRA=--disable-gpu-watchdog times the hang as K1468 did. Rerun: pwsh -NoProfile -File .claude/probes/K1584/screen/dc_chain.ps1 (takes the perf lock per run)
+  - brief: docs/ledger_notes.md ## K1600
 
 ## Next, in order
 
@@ -1209,6 +1221,8 @@ Every other item below waits on the trigger it names.
   thin ring, about 1,600 px, levels <= 28, the marker still there) and its `stats` error appeared in none of
   the 47, so it is not reproduced, and whether K1550's fix covers it is not known; run 27K reports any load
   that shows it.
+  Second sighting 2026-11-24 12:51 (K1600): the same check on scratch build 6764cc1fa, the same ring, the same
+  1,672 and 1,600 px, the same `stats` error, a GPU-process dump at 12:51:55.
 - **K1536** · rp=gf: a Node build still leaves the second corner try OFF (tables.ts `GF_KRETRY` reads env
   `GF_KRETRY=1`) while the page has it on since K1524 (650aac4fa, frame_loop.ts sets `__knotGfKRetry` unless
   `gfk=0`). So every Node probe and the K1436 bar's mirror scan need `$env:GF_KRETRY = '1'` to match the page,
