@@ -794,11 +794,11 @@ Next free ID: K1605.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: agents K1584-s7 (gap worktree) and K1584-wedge (variants) of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 17:10, 2 h cap each)
-  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (stage 7 from stage 6 7f8701166); variants: k1584-wedge at .claude/worktrees/k1584-wedge; last commit: eecd677e2 (stage 6 code 044e1d010; variants brief c8cc1ddbd)
-  - evidence: .claude/probes/K1584/s6/ (census_s6a_p0..p4.png, d1..d5.png, fade_sheet.png), s7/ and wedge/ in those worktrees
-  - next: stage 6 result (17:05): wedge built, pixel-identical outside balls, but reads the same as stage 5 (gap as wide as the ball); new 14 px loose piece A_6 k331, 2 px spike A_d k198, six balls still loose. When the variants agent reports: view its sheet, put it on the gap page for Levi to pick. When stage 7 reports: view the 15 loops, 7 stems, every changed place; then page + combination with the junction rule
-  - brief: docs/design/K1584_s7_brief.md (gap worktree), docs/design/K1584_wedge_brief.md (k1584-wedge)
+  - owner: agent K1584-s7b of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-24 18:50, 2 h cap)
+  - branch: worktree-agent-a2dfb242b056cf793 at .claude/worktrees/agent-a2dfb242b056cf793 (old history: lands by cherry-pick or squash only); last commit: 4fe668d84 (stage 7 rules 04eeb1b69)
+  - evidence: .claude/probes/K1584/s7/ (cap7.ps1, post7.ps1, out/farend_pre.png), s6/, wedge variants in .claude/worktrees/k1584-wedge
+  - next: Stage 7 (18:46): rule K and the corner rule are in gf_look.ts with mirror and tests (3 wrong loops and 7 stems change, 12 right loops unchanged, in the mirror) but the capture gave no frames (it overlapped the coordinator's npm test). When 7b reports: view the 15 loops, 7 stems, A_8 x304, the far-end sheet; then the gap page for Levi (K1603 wedge pick, far-end gap look)
+  - brief: `docs/design/K1584_s7b_brief.md`
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
