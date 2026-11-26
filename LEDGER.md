@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1621.
+Next free ID: K1626.
 
 ## Waiting on Levi
 
@@ -305,6 +305,11 @@ Next free ID: K1621.
   questions (how long a first-visit wait is acceptable, must gf carry the reveal colours before the flip,
   phone first or desktops first); the rp=outline recommendation (freeze now, delete after the flip). Closes
   K1310 when adopted
+- **K1621** · Kinks (K1619): turn K90's bend limit (splineBend, spline_generator.ts) back on at about 1.25 h
+  for both renderers? Levi stopped K90 on 2026-10-20. On seed 3 it takes bends tighter than half the width
+  from 190 places to 12; costs +0.6 to 1.1 ms an update and gf loses its snapshot channel with it on
+  (gf_app.ts chanWanted; cost unmeasured). Picture: .claude/probes/kink/out/bend/levi_gf_off_vs_on.png in
+  worktree kink-diag (docs/design/kink_diag.md)
 
 ## In progress
 
@@ -574,19 +579,6 @@ Next free ID: K1621.
   - owner: claude agent K1395 s1 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, started 2026-11-25 19:10
   - branch: k1395-s1, worktree .claude/worktrees/k1395-s1; last commit: none yet
   - next: view its per-mode sheets (today, gf before, gf now), send to Levi, land the finished modes by squash
-- **K1618** · Delete the rp=outline renderer (Levi 2026-11-25: 'Delete it now'): src/render/outline/, its
-  tests, flags oe/ob/obt, the frame_loop import; modules gf still reads move, not die; then close cull group c
-  (.claude/probes/gf-gate/cull.md)
-  - owner: claude agent outline-del of claude session 09c7a672-a414-402a-97da-b3176839a2e5, started 2026-11-25 20:35
-  - branch: outline-del, worktree .claude/worktrees/outline-del; last commit: none yet
-  - next: check its report (tests, build, three captures viewed), land by squash, close the outline ledger items
-- **K1619** · Kinks under rp=gf (Levi, 2026-11-25: sharp bends along the maze's bottom edge on seed 3, 'more
-  kinks than with the old renderer; is this physics?'): diagnose physics state against each renderer's centre
-  line on one frozen state, no fix yet (write-up docs/design/kink_diag.md on the branch)
-  - owner: claude session 09c7a672 (opus agent, coordinator same session)
-  - branch: kink-diag, .claude/worktrees/kink-diag; last commit: none yet
-  - evidence: .claude/probes/kink/ (branch)
-  - next: read the agent's report; answer Levi with the today | gf sheets; file the fix it recommends
 - **K1620** · Temporary panel checkbox 'New renderer' that reloads with or without rp=gf&gfh=1 (Levi,
   2026-11-25); remove it at the rp=gf flip
   - owner: nobody, since 2026-11-25: landed, waits for the flip
@@ -950,6 +942,14 @@ Every other item below waits on the trigger it names.
   - evidence: `.claude/probes/K370/`
   - next: stage 2 briefed (`docs/design/K370_s2.md`); desktop half done 2026-10-21: the worker substep premium does not reproduce (daily +4%, knot +4% per substep; no lever built; Handoff in the brief). Left: the phone half in the Wave 5 window (re-measure post-`4c7f4db`, cpu6 clock, paused-render drag)
   - brief: `docs/design/K370.md`
+- **K1622** · Kinks cluster on junction arms 1 to 1.5 world from a chain's end (36.5 sharp turns per 1000
+  samples against 3.5 elsewhere, K1619): test whether the junction cover causes it (change the cover grading
+  on the frozen state, re-measure with .claude/probes/kink/analyze.py); if so spread the arm's turn over
+  particles 2 to 4 in particle_system.ts; sleep tests and goldens move (docs/design/kink_diag.md)
+- **K1624** · Carry K1315's ends bar (no ink past the over thread's outline, no dot, no stub) over to gf as a
+  check: an under-tail-end class in .claude/probes/K1436/k1436_screen_scan.ts or the mirror probe
+  K1433/eval_u.ts (gf_default_gate.md:139). K1315, K1045, K1049 and K1250 still name rp=outline, deleted in
+  K1618: read them as gf
 
 ## Residuals (known, not fixed)
 
@@ -2289,6 +2289,11 @@ Every other item below waits on the trigger it names.
   today, 127 now). (docs/design/K1584_s11_brief.md handoff)
 - **K1617** · K1584 s12: at A_3 x254 and A_9 x320 the new crisp gap leaves only 1 to 2 light px at the cut's
   acute corner (screen.py reads part); widen only if Levi marks them (.claude/probes/K1584/s12/band12.py)
+- **K1623** · Today's renderer draws the border thread look with broken-up borders across the maze interior on
+  ?3.FGH1HtvQeDjm6e4BII (master 843e32370); gf draws the same state cleanly. Moot at the flip (K1619's side
+  finding, docs/design/kink_diag.md)
+- **K1625** · K1618 removed RevealFx.revealWidth; if branch k1395-s1 reads it, its merge fails type-check: fix
+  at that merge
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2661,6 +2666,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1619** · Kink diagnosis: same physics and same centre line under both renderers; gf's exact inner border turns bends tighter than half the thread width into corners; they cluster on junction arms (docs/design/kink_diag.md). Done in this commit (2026-11-25).
+- **K1618** · Delete the rp=outline renderer (Levi 2026-11-25: 'Delete it now'): src/render/outline/, its tests, flags oe/ob/obt, the frame_loop import; modules gf still reads move, not die; then close cull group c (.claude/probes/gf-gate/cull.md). Done in 6f10a910b (2026-11-25).
 - **K1616** · Ledger cull list (.claude/probes/gf-gate/cull.md): 7 waiting items answered or overtaken, 18 stale in-progress, 72 rp=outline items moot if it retires, 10 duplicates; nothing closed until Levi says which groups go. Dropped: done: Levi said 'Do it' 2026-11-25; closed the sure and likely rows, kept every 'ask' row (2026-11-25).
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads. Dropped: finished Muse batch tracker (2026-11-25).
 - **K1448** · Muse batch 25 (rp=gf look leftovers in gf_look.ts, one run after another in the main checkout): 25A K1447 pulse fan, 25B K1431 reveal counts and ghost, 25C K1424 route bands, 25D K1434 burn char in explore view; brief docs/design/K1448_muse_batch25.md. Dropped: finished Muse batch tracker (2026-11-25).
