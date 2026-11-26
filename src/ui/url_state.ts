@@ -1151,8 +1151,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   entranceClearance: 2.5,
   exitClearance: 12,
   junctionSpacing: 2,
-  // K21: the subtlest backdrop - static, keeps the page's ink on average.
-  background: "vellum",
+  // White paper (K797a), static like vellum (Levi, 2026-11-25: "Change the
+  // default background to paper"; vellum, K21's pick, before).
+  background: "paper",
   backgroundIntensity: 0.5,
   // K79: auto - every effect's pre-K79 pace.
   backgroundSpeed: BACKGROUND_SPEED_AUTO,

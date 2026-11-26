@@ -160,3 +160,8 @@ only with the files it is about; `render.md` lists the area's other files.
   k79b_smoke.mjs (links, programs, panel rows, custom base and fog; 70
   checks), k79b_k129.mjs (the scale max: links and the real slider; 17
   checks) and k79b_cases.json (the explicit-defaults A/B, 12 cases).
+
+- DEFAULT IS PAPER (2026-11-25; Levi: "Change the default background to paper"): `background` defaults to
+  `paper` (K797a), vellum before. Changed in place, no codec bump; a link that lists `bg` keeps its value, and one
+  that listed `bg=paper` now reads as the default. Pin moved: url_codec.test.ts's defaults table. The golden
+  snapshot, the golden dailies and the codec table pin held.
