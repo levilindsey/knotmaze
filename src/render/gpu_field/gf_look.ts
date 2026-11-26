@@ -459,6 +459,8 @@ const GAP_END_PAD = GAP_MARCH_STEP + GAP_EXIT_PAD;
  *  room); false restores stage 4's room-bounded border gaps (A/B probes only: env GF_S4ROOM=1 in Node). */
 const GAP_CARVE = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S4ROOM !== "1";
 const GAP_NOEND_ROOM = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_NOENDROOM === "1";
+// K1584 s12: a rule-K border that clears the over's margin keeps a clean gap (gapWindow); env GF_S12=0 turns it off for A/Bs
+const GAP_S12 = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S12 !== "0";
 /** K1584 s6: a ball (lkBall, ballScaleAt) scales the gap of its own chain's pixels whose foot lies within this much arc
  *  (world) of the corner's tangent point on that chain: past the ball's own reach, short of any other pass of the chain. */
 export const GAP_BALL_ARC = 1.0;
@@ -556,7 +558,7 @@ function gapPointAt(S: GapSamples, arc: number, o: { x: number; y: number }): vo
  * [winNeg, winPos] of arc from the under centre. capNeg/capPos bound the march (the caller's neighbour
  * caps); a side whose distance never clears runs to its cap, as the solve's does.
  */
-export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number, fillHalf: number, margin: number, fade: number, capNeg: number, capPos: number, roomNeg = 1e6, roomPos = 1e6, oNeg = GAP_OVER_RANGE, oPos = GAP_OVER_RANGE, selfEx = 0, bRooms?: readonly number[]): number[] {
+export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number, fillHalf: number, margin: number, fade: number, capNeg: number, capPos: number, roomNeg = 1e6, roomPos = 1e6, oNeg = GAP_OVER_RANGE, oPos = GAP_OVER_RANGE, selfEx = 0, bRooms?: readonly number[], bPairs?: readonly number[]): number[] {
   // the over polyline's reach around the crossing (the march's caps stay inside it). K1460 s3: a self
   // crossing's over range stops at the split (today's oCapNeg / oCapPos), and a point within selfEx of
   // the under point's own arc is no over pass (today's polyDist exclusion): without both, the polyline
@@ -612,6 +614,8 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
     let all = Number.NaN, allSin = 1, win = Number.NaN, prevS = 0, prevD = Number.NaN, sil = Number.NaN, cut = Number.NaN;
     // K1584 s4: per border (left, right) when either border's room is near: where it clears the over's fill and its margin
     const rB = bRooms ? (dir > 0 ? [bRooms[2], bRooms[3]] : [bRooms[0], bRooms[1]]) : null;
+    // K1584 s12: per border, the off of its pair corner (a joint corner with this crossing's over; the bake's pairB)
+    const pB = bPairs ? (dir > 0 ? [bPairs[2], bPairs[3]] : [bPairs[0], bPairs[1]]) : null;
     const wantB = rB !== null && Math.min(rB[0], rB[1]) < 1e5;
     const silB = [Number.NaN, Number.NaN], cutB = [Number.NaN, Number.NaN], prevB = [Number.NaN, Number.NaN];
     // K1584 s4: where each border first clears the over's fill, margin and fade: the end of its own gap. Past it the
@@ -655,6 +659,24 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
       if (!Number.isNaN(endB[b])) sc6[14 + (dir > 0 ? 2 : 0) + b] = endB[b];
       const g0 = Number.isNaN(cutB[b]) ? silB[b] : cutB[b];
       keepK[b] = GAP_CARVE && Number.isNaN(endB[b]) && rm < 1e5 && !Number.isNaN(g0) && rm >= g0 + fade + GAP_END_PAD;
+      // K1584 s12 (Levi on A_3's small hook, k148): a rule-K border whose room is its PAIR corner (pB <= rm: a joint
+      // corner with this crossing's over) and that clears the over's fill and margin (cutB) but never the fade's end
+      // all the way to that room runs on beside the over into a joint with it; the room's scales left its fade
+      // unfinished along the whole run (a gray smudge) and ended the cut square at the room (a dark triangle at the
+      // joint). It keeps a clean gap instead: the full margin, no fade (a crisp cut on the level line, an angled end on
+      // the over's outline), ending at its margin's edge. A border whose room is another corner (K1601's loop tips), or
+      // that clears the fade before its room, keeps rule K.
+      let clean = false;
+      if (GAP_S12 && keepK[b] && !Number.isNaN(cutB[b]) && pB !== null && pB[b] <= rm) {
+        clean = true;
+        for (let s = cutB[b]; s <= rm && clean; s += GAP_MARCH_STEP) { dAt(uC + dir * Math.min(s, cap), true); if (bD[b] >= fillHalf + margin + fade) clean = false; }
+      }
+      if (clean) {
+        const o = 6 + (dir > 0 ? 4 : 0) + 2 * b;
+        sc6[o] = 1; sc6[o + 1] = 0;
+        sc6[14 + (dir > 0 ? 2 : 0) + b] = cutB[b];
+        continue;
+      }
       // its end is the room (codeAt adds the pad back)
       if (keepK[b]) sc6[14 + (dir > 0 ? 2 : 0) + b] = Math.max(0, rm - GAP_END_PAD);
       if ((GAP_CARVE && !keepK[b]) || !(rm < 1e5)) continue;
@@ -986,7 +1008,7 @@ export class GfGapTable {
       // take splitBwd/Fwd; selfEx = both half-widths + margin + fade + the exit pad)
       const oRN = self ? Math.min(GAP_OVER_RANGE, splitP) : GAP_OVER_RANGE, oRP = self ? Math.min(GAP_OVER_RANGE, splitN) : GAP_OVER_RANGE;
       const selfEx = self ? 2 * r.fillHalf + r.margin + r.fade + GAP_EXIT_PAD : 0;
-      const gw = gapWindow(su, so, uC, oC, r.fillHalf, r.margin, r.fade, capN, capP, jRoomN, jRoomP, oRN, oRP, selfEx, perB ? bRoom : undefined);
+      const gw = gapWindow(su, so, uC, oC, r.fillHalf, r.margin, r.fade, capN, capP, jRoomN, jRoomP, oRN, oRP, selfEx, perB ? bRoom : undefined, pairB);
       // K1584 s7 corner rule (K1595 Q4 form b): from the nearest pair corner on, each side's slots carry the far-off flag
       // (the right code's 1024 bit): the shader's far term (lkNearOn) is off there, its loop term untouched. A slot
       // whose cell holds the tangent point is flagged too: the fillet's pixels carry the tangent point's s. Closing the

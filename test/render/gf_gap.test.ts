@@ -404,6 +404,27 @@ describe("K1584 s4: per-border joint rooms (a right-angle crossing: both borders
     // no room: no end
     expect(win(1e6)[16]).toBe(1e6);
   });
+  it("K1584 s12: a rule-K border that clears the over's margin, never its fade, into its pair corner keeps a clean gap", () => {
+    // A_3's small hook (k148, chain 59 under 84): the over crosses at x 10 and rides 0.40 to the left of the under into
+    // a joint with it. The left border (y 0.13) clears the over's fill and margin 0.20 past the crossing and then runs
+    // 0.27 from the over, inside its fade (0.34), all the way to its room: rule K. Stage 7 kept the room's scales (1, 1)
+    // and ended the cut at the room: an unfinished fade along the whole run (a gray smudge) and a square end at the
+    // room (a dark triangle). Where that room is the border's PAIR corner (a joint with this crossing's over), the
+    // border keeps a clean gap: the full margin, no fade, ending where it clears the margin.
+    const u = straight(0, 0, 20, 0), o = samples([[10, -5], [10, 0.4], [20, 0.4]]);
+    const win = (rm: number, pair?: number) => gapWindow(u, o, 10, 5, H, MARGIN, FADE, 2, 2, 1e6, 1e6, undefined, undefined, 0, [1e6, 1e6, rm, rm], pair === undefined ? undefined : [1e6, 1e6, pair, pair]);
+    const k = win(1.0), c = win(1.0, 1.0);
+    // rule K as before: the room's scales, the end at the room less the end pad
+    expect([k[10], k[11]]).toEqual([1, 1]);
+    expect(k[16]).toBeCloseTo(1.0 - 0.12, 5);
+    // the pair corner is the room: full margin, no fade, the end where the border clears the margin (0.20)
+    expect([c[10], c[11]]).toEqual([1, 0]);
+    expect(Math.abs(c[16] - (H + MARGIN))).toBeLessThan(0.02);
+    // the window and the right border (it clears the over at once) are untouched
+    expect([c[0], c[1], c[12], c[13], c[17]]).toEqual([k[0], k[1], k[12], k[13], k[17]]);
+    // a pair corner past the room (another corner sets it) leaves rule K's
+    expect(win(1.0, 1.5)).toEqual(k);
+  });
   it("K1584 s11: a wedge corner (jointWedges) sets no border's room: the window stays, the borders bake the ordinary gap", () => {
     // the over crosses at x 10 and rides 0.3 to the left of the under (rule K's ride) into a pair corner (partner the
     // over) RM past the crossing: a tight wedge's hairpin (A_5 k176, chain 59 under 76). A plain corner sets its
