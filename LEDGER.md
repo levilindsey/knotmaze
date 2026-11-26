@@ -310,6 +310,15 @@ Next free ID: K1626.
   from 190 places to 12; costs +0.6 to 1.1 ms an update and gf loses its snapshot channel with it on
   (gf_app.ts chanWanted; cost unmeasured). Picture: .claude/probes/kink/out/bend/levi_gf_off_vs_on.png in
   worktree kink-diag (docs/design/kink_diag.md)
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: nobody, since 2026-11-25 21:16: stage 2 not landed (A_3 x278 fixed, A_6 x326 leaves a sliver; stray pixels, smudges and holes at other places), second and last stage
+  - branch: k1604-s2, .claude/worktrees/k1604-s2; last commit: `75a8ce96a`
+  - evidence: .claude/probes/K1604/s2/ (branch)
+  - next: Levi's call on the picture named_k2_1.png: keep master's look at the two places, or name a third stage (ideas in the brief's handoff: cut by the under thread's own gap extent; carry the cut across the whole end)
 
 ## In progress
 
@@ -565,14 +574,6 @@ Next free ID: K1626.
   - evidence: .claude/probes/K1584/s11/ (tools tracked; outputs in worktree .claude/worktrees/k1584-s11)
   - next: none unless Levi names a place; open leftovers are K1614, K1613, K1604 and the part-gap residual
   - brief: docs/design/K1584_s12_brief.md, docs/design/K1604_s1_brief.md
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: claude agent K1604 s2 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, started 2026-11-25 19:10
-  - branch: k1604-s2, worktree .claude/worktrees/k1604-s2; last commit: none yet
-  - next: view its sheet of A_3 x278 and A_6 x326; land by squash if only those change; if it fails, back to Levi with pictures, no third stage
 - **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
   rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
   fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
