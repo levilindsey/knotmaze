@@ -5,6 +5,11 @@ default), `rp=outline` (K1240) and `rp=gf` (K1362, the GPU field). All look work
 gf. This page lists what must be true before gf replaces today's look, in the order to work on it, and what
 stops once you adopt it. Cull candidates for the ledger are in `.claude/probes/gf-gate/cull.md`.
 
+**Order changed by Levi, 2026-11-25:** "Let's not bother with any swaps until we have the actual new version
+fully done." So gf is finished first: gates 1, 4, 5, 6 and 7 (colours, overlays, reveal with its colours,
+highlights, named places). Gate 2 (first visit), gate 3 (phone drag), gate 8's fresh-profile half and gate 9
+(the flip) wait until those hold, and question 3 (phone or desktop first) waits with them.
+
 **How it relates to K1310 and `K1240_gate.md`.** That gate (approved 2026-11-11) was for rp=outline. Its
 speed line (3 ms a def frame in the worker) was never approached (183-193 ms, K1247), and the route moved to
 gf. This gate replaces it. It keeps three parts: the stage rules (end of this page), the Pixel render-sync

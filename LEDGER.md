@@ -821,6 +821,20 @@ Next free ID: K1618.
   - evidence: docs/design/K1601_findings.md and .claude/probes/K1601/ on k1584-s7 (rulek.py list = the 44 crossings rule K changes)
   - next: K1584 stage 7 in the gap worktree after stage 6: rule K (findings Q4) in gf_look.ts gapWindow - a border with no end of its own whose room is at least its cut + fade + 0.12 keeps stage 4's behaviour; expected: A_b x75 -37, A_8 x65 -26, A_5 x277 -7, A_3 x100 -29 px, the 12 right loops bit-identical, 44 of 7450 crossings change; view the three, x100 and all 44. Same stage: K1595's fix when its diagnosis reports
   - brief: docs/design/K1601_findings.md on the branch (the agent saves its prompt at the top)
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: claude agent K1604 s2 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, started 2026-11-25 19:10
+  - branch: k1604-s2, worktree .claude/worktrees/k1604-s2; last commit: none yet
+  - next: view its sheet of A_3 x278 and A_6 x326; land by squash if only those change; if it fails, back to Levi with pictures, no third stage
+- **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
+  rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
+  fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
+  - owner: claude agent K1395 s1 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, started 2026-11-25 19:10
+  - branch: k1395-s1, worktree .claude/worktrees/k1395-s1; last commit: none yet
+  - next: view its per-mode sheets (today, gf before, gf now), send to Levi, land the finished modes by squash
 
 ## Next, in order
 
@@ -1107,9 +1121,6 @@ Every other item below waits on the trigger it names.
   doing)
 - **K1360** · Measure the outline worker pool on the Pixel at K = 2 and 3 (K1247 s35 projects 15-22 Hz from
   the pool alone); rides the next phone round (K156), after K1247 s36 lands
-- **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
-  rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
-  fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
 - **K1409** · K1407 residual (from run 23A): rp=gf broken_ink at 90 - port form B's closed-form corner growth
   (corner_cf) into the gf tables or close the r gap, foot-term burial/selfW weights, through-eye (win=5)
   overwrites at r>=0.16h, plateau self-tie depth at self-crossings (14 finds), vround discs (6). Census reads:
@@ -2647,13 +2658,6 @@ Every other item below waits on the trigger it names.
   leaves (a side-by-side contact, not a crossing); (b) gf_look.ts about lines 581-597 (K1476 tail): comment
   says a no-end border keeps its room, code gives the full window; (c) A_b x76 gains 25 px at stage 5 from the
   near-crossing term, unviewed
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: nobody since 2026-11-25 18:13: stage 1 not landed (branch k1604-s1, 002e86b49)
-  - next: second and last try for A_3 x278 and A_6 x326: relabel the under pass only where the old label has no gap window (gf_look.ts); stage 1's plain relabel changed 359 places and smudged angled cut ends. Two-stage stop after that
 - **K1606** · K1584 stage 7/7b leftovers: A_3 x100, A_5 x258, A_8 x41, D_3 x100 went back to the stage 4 look;
   A_8 x304 gains a gap (no border removed); K1595's corner count (50) was too high; probe faults: pxdiff's 14
   px box misses outline pixels at 3x (use 40), the changed-places tool's 0 px miss at A_5 x277, cap7.ps1 has
