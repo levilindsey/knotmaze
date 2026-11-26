@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1626.
+Next free ID: K1627.
 
 ## Waiting on Levi
 
@@ -951,6 +951,12 @@ Every other item below waits on the trigger it names.
   check: an under-tail-end class in .claude/probes/K1436/k1436_screen_scan.ts or the mirror probe
   K1433/eval_u.ts (gf_default_gate.md:139). K1315, K1045, K1049 and K1250 still name rp=outline, deleted in
   K1618: read them as gf
+- **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
+  2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
+  of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
+  job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
+  keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
+  src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
 
 ## Residuals (known, not fixed)
 
