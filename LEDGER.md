@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1611.
+Next free ID: K1613.
 
 ## Waiting on Levi
 
@@ -329,6 +329,10 @@ Next free ID: K1611.
   border into its neighbour in a corner and the gap build ends it short (s8/out/levi18.png; same kind as
   K1605's stem far ends): joined or gap; (b) the three wrong loops' eye opens at the foot since stages 3-4 and
   the arm reads as a wedge (s8/out/eyes8_k.png): close the foot like today or keep
+- **K1611** · K1584 stage 10 look: the wider wedge at the three tight balls (A_3 k63 reads as an open mouth,
+  4.31 px at the ball's edge vs the ordinary 4.36; A_5 k176 a triangle closed by a foot; A_6 k265 unchanged
+  from stage 8). Keep, or back to stage 8's slit? Sheets .claude/probes/K1584/s10/out/sheet10.png,
+  sheet10_fade.png in worktree agent-a2dfb242b056cf793 (sent 2026-11-25)
 
 ## In progress
 
@@ -792,11 +796,11 @@ Next free ID: K1611.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (stage 10 agent, started 2026-11-25 09:00)
-  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `0bf40476c`
-  - evidence: .claude/probes/K1584/s9/ (captures s7/out/s9a, s9n) in worktree agent-a2dfb242b056cf793
-  - next: stage 10 report: wedge at balls #1-#3 (Levi 2026-11-25: #2 yes, #3 just barely), wider at its outer side; then Levi: loose balls' look, gaps land or hold, confirm K1607a = keep the gap
-  - brief: `docs/design/K1584_s10_brief.md`
+  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (coordinator; stage 10 agent ended 2026-11-25 10:28 at its stop rule; a landing-check agent of the same session runs next)
+  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `dd8074f47`
+  - evidence: .claude/probes/K1584/s10/ (tools; outputs in s10/out/, capture in s7/out/s10a/), s8/, s9/
+  - next: Levi said 2026-11-25 'Can land now': land stage 8's build (tree of e5d0a5106) on master by squash after a merged-build check with the junction rule (tests + 21-maze capture vs s8a); then Levi's look at s10/out/sheet10.png and sheet10_fade.png, then K1611
+  - brief: docs/design/K1584_s10_brief.md (Handoff, stage 10)
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
@@ -2661,6 +2665,12 @@ Every other item below waits on the trigger it names.
   are back at loose-side balls A_3 k103, A_5 k185, A_a k101, A_a k202, A_c k141 (29-77 px); A_9 k43 1 px
   unexplained vs stage 5; A_a x344 reads bare (docs/design/K1584_s9_brief.md handoff, branch
   worktree-agent-a2dfb242b056cf793)
+- **K1612** · K1584 stage 10 leftovers: (1) A_5 k176's wedge pinches shut 10 to 12 px from the ball's centre
+  (1.88 / 0 px vs the ordinary 3.05 to 3.14), where the corner list's reach ends (10.17 px, s10/kreach.ts);
+  fix candidates: ordinary code in the gap table's slots near tight corners, or a longer list reach
+  (gf_glsl.ts). (2) at fade 1.2 the tight wedge fades 19 to 27 more ball px than stage 8 (k63 58 vs 77 inked,
+  k176 57 vs 84): scale the fade by the wedge's local width. Handoff in docs/design/K1584_s10_brief.md (branch
+  worktree-agent-a2dfb242b056cf793, dd8074f47)
 
 ## Approved, to schedule (2026-10-11)
 
