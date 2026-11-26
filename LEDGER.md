@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1619.
+Next free ID: K1621.
 
 ## Waiting on Levi
 
@@ -580,6 +580,19 @@ Next free ID: K1619.
   - owner: claude agent outline-del of claude session 09c7a672-a414-402a-97da-b3176839a2e5, started 2026-11-25 20:35
   - branch: outline-del, worktree .claude/worktrees/outline-del; last commit: none yet
   - next: check its report (tests, build, three captures viewed), land by squash, close the outline ledger items
+- **K1619** · Kinks under rp=gf (Levi, 2026-11-25: sharp bends along the maze's bottom edge on seed 3, 'more
+  kinks than with the old renderer; is this physics?'): diagnose physics state against each renderer's centre
+  line on one frozen state, no fix yet (write-up docs/design/kink_diag.md on the branch)
+  - owner: claude session 09c7a672 (opus agent, coordinator same session)
+  - branch: kink-diag, .claude/worktrees/kink-diag; last commit: none yet
+  - evidence: .claude/probes/kink/ (branch)
+  - next: read the agent's report; answer Levi with the today | gf sheets; file the fix it recommends
+- **K1620** · Temporary panel checkbox 'New renderer' that reloads with or without rp=gf&gfh=1 (Levi,
+  2026-11-25); remove it at the rp=gf flip
+  - owner: claude session 09c7a672 (sonnet agent, coordinator same session)
+  - branch: rp-toggle, .claude/worktrees/rp-toggle; last commit: none yet
+  - evidence: test/ui/ (branch)
+  - next: on report: squash to master, check the deploy, tell Levi where the checkbox is
 
 ## Next, in order
 
