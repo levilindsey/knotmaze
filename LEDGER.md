@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1628.
+Next free ID: K1630.
 
 ## Waiting on Levi
 
@@ -314,6 +314,13 @@ Next free ID: K1628.
   - branch: k1604-s3, .claude/worktrees/k1604-s3 (not for landing); last commit: c1cb7eac3 (handoff); rule b1562c352 gated, 1f5d7acad ungated
   - evidence: .claude/probes/K1604/s3/ on k1604-s3 (out/named_k4_1.png, grid_k4_01..09.png untracked)
   - next: Levi picks: keep the two leftovers as they are and close (recommended; revisit after K1627, same gap code), or name another way. No fourth stage unless he names it
+- **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
+  rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
+  fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
+  - owner: nobody since 2026-11-25 23:41: stage 2 landed in e119402d5, two stages used
+  - branch: mainline (k1395-s2 merged; worktree kept); last commit: `e119402d5`
+  - evidence: .claude/probes/K1395/s2/ (sheets.ps1, counts.py, sheet.py, crop.py); sheets untracked in the k1395-s2 worktree out/sh/
+  - next: Levi looks at the reveals under rp=gf. Left: comet and burn colour 0.74 to 0.85x of today's at two frames near the front (untested causes: the composite's border fade thresholds alpha; the junction cuts at the front). A third stage only if he names it
 
 ## In progress
 
@@ -569,13 +576,6 @@ Next free ID: K1628.
   - evidence: .claude/probes/K1584/s11/ (tools tracked; outputs in worktree .claude/worktrees/k1584-s11)
   - next: none unless Levi names a place; open leftovers are K1614, K1613, K1604 and the part-gap residual
   - brief: docs/design/K1584_s12_brief.md, docs/design/K1604_s1_brief.md
-- **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
-  rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
-  fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
-  - owner: claude session 09c7a672 (opus agent K1395 s2, coordinator same session), started 2026-11-25 21:50
-  - branch: k1395-s2, .claude/worktrees/k1395-s2; last commit: this commit (stage 1's rainbow stripe order landed)
-  - evidence: `.claude/probes/K1395/s1/`
-  - next: stage 2: find why gf colours 35 to 60% more thread mid-reveal (suspect per-sample alpha), fix, per-mode sheets; on report view the sheets, send to Levi, land finished modes; second and last stage
 - **K1620** · Temporary panel checkbox 'New renderer' that reloads with or without rp=gf&gfh=1 (Levi,
   2026-11-25); remove it at the rp=gf flip
   - owner: nobody, since 2026-11-25: landed, waits for the flip
@@ -2311,6 +2311,10 @@ Every other item below waits on the trigger it names.
 - **K1623** · Today's renderer draws the border thread look with broken-up borders across the maze interior on
   ?3.FGH1HtvQeDjm6e4BII (master 843e32370); gf draws the same state cleanly. Moot at the flip (K1619's side
   finding, docs/design/kink_diag.md)
+- **K1628** · gf reveal: jnEntries rebuilds the junction cut list every revealing frame, about 7 ms of main on
+  the desktop, Pixel unmeasured; measure in gate 1's phone run, cache if it shows (K1395 s2, gf_app.ts)
+- **K1629** · gf reveal checks: rainbow's colour bar cannot be measured while the sparks differ per load (pin
+  or mask them); K1395 s2's sheet.py crashes on am=instant; dbg.py needs a reverted debug shader edit
 
 ## Approved, to schedule (2026-10-11)
 
