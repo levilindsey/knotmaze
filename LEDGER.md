@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1627.
+Next free ID: K1628.
 
 ## Waiting on Levi
 
@@ -600,6 +600,14 @@ Next free ID: K1627.
   - branch: k1626-s1, .claude/worktrees/k1626-s1; last commit: this commit (brief)
   - evidence: .claude/probes/K1626/ (Levi's phone picture, untracked)
   - next: stage 1 (docs/design/K1626_s1_brief.md; Levi: 'That physics issue should be a priority'): runs beside K1622 in src/physics/, lands first; on report view the crops, send to Levi, land on his yes
+- **K1627** · rp=gf: a notch (a wedge of paper, a pointed tab left) cut into a junction's rounded corner where
+  a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of
+  `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important').
+  Picture: .claude/probes/K1627/levi_phone.png (untracked)
+  - owner: claude session 09c7a672 (opus agent K1627 s1, coordinator same session), started 2026-11-25 22:55
+  - branch: k1627-s1, .claude/worktrees/k1627-s1; last commit: this commit (brief)
+  - evidence: .claude/probes/K1627/ (Levi's phone picture, untracked)
+  - next: stage 1 (docs/design/K1627_s1_brief.md): attribute the notch, fix in gpu_field/; runs beside K1604 s3 in the gap pass; on report view the sheet, send to Levi
 
 ## Next, in order
 
