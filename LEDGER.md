@@ -590,6 +590,16 @@ Next free ID: K1627.
   - branch: k1604-s3, .claude/worktrees/k1604-s3; last commit: this commit (brief)
   - evidence: branches k1604-s1, k1604-s2 (.claude/probes/K1604/)
   - next: stage 3, named by Levi ('Let's try that'): cut by the under thread's own gap across the whole end (docs/design/K1604_s3_brief.md); on report view the sheet, send to Levi; no fourth stage unless he names it
+- **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
+  2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
+  of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
+  job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
+  keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
+  src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
+  - owner: claude session 09c7a672 (opus agent K1626 s1, coordinator same session), started 2026-11-25 22:45
+  - branch: k1626-s1, .claude/worktrees/k1626-s1; last commit: this commit (brief)
+  - evidence: .claude/probes/K1626/ (Levi's phone picture, untracked)
+  - next: stage 1 (docs/design/K1626_s1_brief.md; Levi: 'That physics issue should be a priority'): runs beside K1622 in src/physics/, lands first; on report view the crops, send to Levi, land on his yes
 
 ## Next, in order
 
@@ -951,12 +961,6 @@ Every other item below waits on the trigger it names.
   check: an under-tail-end class in .claude/probes/K1436/k1436_screen_scan.ts or the mirror probe
   K1433/eval_u.ts (gf_default_gate.md:139). K1315, K1045, K1049 and K1250 still name rp=outline, deleted in
   K1618: read them as gf
-- **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
-  2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
-  of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
-  job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
-  keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
-  src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
 
 ## Residuals (known, not fixed)
 
