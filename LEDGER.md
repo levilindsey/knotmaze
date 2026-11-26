@@ -305,11 +305,6 @@ Next free ID: K1626.
   questions (how long a first-visit wait is acceptable, must gf carry the reveal colours before the flip,
   phone first or desktops first); the rp=outline recommendation (freeze now, delete after the flip). Closes
   K1310 when adopted
-- **K1621** · Kinks (K1619): turn K90's bend limit (splineBend, spline_generator.ts) back on at about 1.25 h
-  for both renderers? Levi stopped K90 on 2026-10-20. On seed 3 it takes bends tighter than half the width
-  from 190 places to 12; costs +0.6 to 1.1 ms an update and gf loses its snapshot channel with it on
-  (gf_app.ts chanWanted; cost unmeasured). Picture: .claude/probes/kink/out/bend/levi_gf_off_vs_on.png in
-  worktree kink-diag (docs/design/kink_diag.md)
 - **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
   (1 px neck, ragged top edge; the gap step clears it;
   .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
@@ -587,6 +582,14 @@ Next free ID: K1626.
   - branch: mainline; last commit: this commit
   - evidence: src/ui/renderer_toggle.ts, test/ui/renderer_toggle.test.ts
   - next: at the rp=gf flip (gate 9) delete renderer_toggle.ts, its test and the row in tweakpane_panel.ts (the row's key is a variable so param_tags.test.ts skips it)
+- **K1622** · Kinks cluster on junction arms 1 to 1.5 world from a chain's end (36.5 sharp turns per 1000
+  samples against 3.5 elsewhere, K1619): test whether the junction cover causes it (change the cover grading
+  on the frozen state, re-measure with .claude/probes/kink/analyze.py); if so spread the arm's turn over
+  particles 2 to 4 in particle_system.ts; sleep tests and goldens move (docs/design/kink_diag.md)
+  - owner: claude session 09c7a672 (opus agent K1622 s1, coordinator same session), started 2026-11-25 22:10
+  - branch: k1622-s1, .claude/worktrees/k1622-s1; last commit: this commit (brief)
+  - evidence: .claude/probes/kink/, docs/design/kink_diag.md
+  - next: stage 1 (docs/design/K1622_s1_brief.md): confirm the junction-arm cause by a change, fix in src/physics; on report view its master|new crops, send to Levi, land only on his yes to the look
 
 ## Next, in order
 
@@ -944,10 +947,6 @@ Every other item below waits on the trigger it names.
   - evidence: `.claude/probes/K370/`
   - next: stage 2 briefed (`docs/design/K370_s2.md`); desktop half done 2026-10-21: the worker substep premium does not reproduce (daily +4%, knot +4% per substep; no lever built; Handoff in the brief). Left: the phone half in the Wave 5 window (re-measure post-`4c7f4db`, cpu6 clock, paused-render drag)
   - brief: `docs/design/K370.md`
-- **K1622** · Kinks cluster on junction arms 1 to 1.5 world from a chain's end (36.5 sharp turns per 1000
-  samples against 3.5 elsewhere, K1619): test whether the junction cover causes it (change the cover grading
-  on the frozen state, re-measure with .claude/probes/kink/analyze.py); if so spread the arm's turn over
-  particles 2 to 4 in particle_system.ts; sleep tests and goldens move (docs/design/kink_diag.md)
 - **K1624** · Carry K1315's ends bar (no ink past the over thread's outline, no dot, no stub) over to gf as a
   check: an under-tail-end class in .claude/probes/K1436/k1436_screen_scan.ts or the mirror probe
   K1433/eval_u.ts (gf_default_gate.md:139). K1315, K1045, K1049 and K1250 still name rp=outline, deleted in
@@ -2666,6 +2665,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1621** · Kinks (K1619): turn K90's bend limit (splineBend, spline_generator.ts) back on at about 1.25 h for both renderers? Dropped: Levi 2026-11-25 on the bend-limit picture: 'It does not' look right. Bends stay; the physics route is K1622 (2026-11-25).
 - **K1625** · K1618 removed RevealFx.revealWidth; if branch k1395-s1 reads it, its merge fails type-check: fix at that merge. Dropped: K1395 stage 1 touched only gf_look.ts and merged clean after K1618 (2026-11-25).
 - **K1619** · Kink diagnosis: same physics and same centre line under both renderers; gf's exact inner border turns bends tighter than half the thread width into corners; they cluster on junction arms (docs/design/kink_diag.md). Done in this commit (2026-11-25).
 - **K1618** · Delete the rp=outline renderer (Levi 2026-11-25: 'Delete it now'): src/render/outline/, its tests, flags oe/ob/obt, the frame_loop import; modules gf still reads move, not die; then close cull group c (.claude/probes/gf-gate/cull.md). Done in 6f10a910b (2026-11-25).
