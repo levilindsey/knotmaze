@@ -325,10 +325,6 @@ Next free ID: K1614.
 - **K1562** · The laptop's knotmaze clone, after K1493's history rewrite (2026-11-20): on a clean tree run
   `git fetch`, then `git reset --hard origin/master` (or clone afresh). Do not `git pull` there first: a pull
   merges the old history, and a push after it brings the 362 MB back (docs/ledger_notes.md `## K1493`)
-- **K1607** · K1584 looks from stage 8 (pictures sent 2026-11-24 20:50): (a) 18 places where today runs a
-  border into its neighbour in a corner and the gap build ends it short (s8/out/levi18.png; same kind as
-  K1605's stem far ends): joined or gap; (b) the three wrong loops' eye opens at the foot since stages 3-4 and
-  the arm reads as a wedge (s8/out/eyes8_k.png): close the foot like today or keep
 
 ## In progress
 
@@ -3076,6 +3072,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1607** · K1584 stage 8 looks, answered by Levi: (a) the 18 corners keep the gap (2026-11-25: 'Beautiful', then 'of course we want B'); (b) the three wrong loops' eyes: 's8 is perfect'. Done in f915561ca (2026-11-25).
 - **K1611** · Answered 2026-11-25: k63's stage 10 look mostly right, taper and angle good; the wedge ends early at k176 (hook past its outer end), a little at k63 too: stage 11. Done in f915561ca (2026-11-25).
 - **K1609** · Levi 2026-11-25: wedge at #1-#3 (k63, k176, k265), wider at its outer side; looser balls: the V1/stage 8 column is fine for all (stage 5 has an extra gap at A_3 k157, A_c k141, A_5 k2); stage 10 builds it. Done in 0bf40476c (2026-11-25).
 - **K1603** · Levi 2026-11-25: V1 is ok, but only the last row's ball (A_a k202) is tight enough to need the wedge; stage 9 brief docs/design/K1584_s9_brief.md. Done in e841a4008 (2026-11-25).
