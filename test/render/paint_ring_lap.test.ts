@@ -360,24 +360,6 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // grid line, where p's own float32 rounding already picks the cell; one
   // off there moves the list's edge by an ulp, not by a cell.
   "field/band_b_glsl.ts: floor(p / uCell)": [1, "the band's corner-grid cell (K1040 S4b, form B's cornersNear): one off only for a point on a grid line, where p's float32 rounding already picks the cell"],
-  // K1240: the outline's paint pass (draw.ts's PAINT_FS and outline_app's
-  // copy) takes s's lap nearest the run's middle; the tie band's dS wraps a
-  // closed chain's s difference into (-len/2, len/2].
-  "outline/draw.ts: floor((0.5 * (t0.x + t0.y) - s) / t2.w + 0.5)": [1, "the paint pass's nearest lap to a run's middle (K1240): ambiguous only at the antipode, outside the run whose pixels it paints"],
-  "outline/outline_app.ts: floor((0.5 * (t0.x + t0.y) - s) / t2.w + 0.5)": [1, "the app's copy of draw.ts's paint pass (K1240): the same nearest lap, ambiguous only at the antipode"],
-  "outline/outline_app.ts: mod(d, len)": [2, "the GPU tie band's closed-chain s difference (K1240 S4b) and the reveal footprint's copy, rvdS (K1291 s2): one off only next to a lap boundary, where the fold into (-len/2, len/2] gives the same d"],
-  "outline/outline_app.ts: mod(s, len)": [1, "the band's zAtS ring wrap (K1324 s2, draw.ts zAtC's twin for the self-pass burial rule): one lap off only next to a lap boundary, where u lands at -0 (the first segment, extrapolated by a rounding error) or len (the closing segment's far end, z[0]): both read the closing point's z"],
-  "outline/outline_app.ts: floor(u / float(n))": [1, "the ring reveal mask's sample wrap (K1291 s2, rvMask): one off only at a lap boundary, where u lands at -0 or n; k0 and the fraction are clamped, so both read the same ring point"],
-  "outline/outline_app.ts: floor(s / L)": [1, "the reveal footprint's ring wrap (K1291 s2, rvFoot): it only seeds the binary search's start; the walk wraps both ways on folded rvdS distances, so a lap off finds the same foot"],
-  "outline/rec_glsl.ts: mod(u, L)": [1, "the fill records' closed-chain arc wrap (K1247 s19, recWrap; offsetRow's ((u % L) + L) % L): one off only at a lap boundary, where u lands at -0 or L and the segment search reads the same point (sample 0) or a continuous tiny extrapolation; GPU vs CPU checked to 0.006 px"],
-  // K1247 s20: mode 4's shader placement (recSpan, recCs; chain_frame colAt's twin).
-  "outline/rec_glsl.ts: floor(sA / L)": [1, "recSpan's closed-chain wrap of a record's start (K1247 s20): one off only at a lap boundary, where a lands at L (or -0) instead of 0; a >= sm then takes the last segment, whose end is sample 0, and sB and base shift with a, so every column reads the same point"],
-  "outline/rec_glsl.ts: floor(max(0.0, sB) / L)": [1, "recSpan's search bound for the record's last vertex (K1247 s20): the bound carries two laps of margin, so a lap short still brackets it"],
-  "outline/rec_glsl.ts: floor(r / S + 0.5)": [1, "recCs, the column nearest a polygon vertex (K1247 s20; K1247 s27, K1327: chain_frame colR's twin): the division only guesses m, and the products and compares after it settle the largest m with (m - 0.5) S <= r, so a guess one off is corrected and the column matches the CPU exactly (GPU vs CPU max 0.0016 px on the 12 census scenes)"],
-  // K1247 s23: the band placement's s difference (band_place.ts bpD, draw.ts dSC's twin).
-  "outline/band_place.ts: mod(d, L)": [1, "the band placement's closed-chain s difference (K1247 s23, bpD; dSC's ((d % L) + L) % L): one off only next to a lap boundary, where the fold into (-L/2, L/2] gives the same d"],
-  // K1247 s24: bpNear's window start, past 4 slots (band_gpu.ts's ((sC - r) % len + len) % len).
-  "outline/band_place.ts: mod(sC - r, oL)": [1, "bpNear's closed-chain window start (K1247 s24, slots past 4; band_gpu.ts's ((sC - r) % len + len) % len): one lap off only when sC - r lies within the division's error of a lap boundary; a then lands at about oL, and the split at oL covers the same arc, or just under 0, and the window loses at most that error at its start, a window-edge tie (twin7: slot-only quads 0 on muse_hash, def, g41; fat's 32 are window-edge ties, at most 0.0002 px)"],
   // K1362 s2: the per-pixel form B pass (gf_glsl.ts, eval.ts's port).
   "gpu_field/gf_glsl.ts: floor(float(k) / float(n))": [1, "pmod's estimate, corrected by one integer step either way (kLapOf's pattern)"],
   "gpu_field/gf_look.ts: floor(raw / s)": [1, "kPulseV's crest phase (K1414 24C's lkCrest, paint_glsl's twin): periodic, either side is the same crest"],

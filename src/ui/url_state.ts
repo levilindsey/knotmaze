@@ -2462,7 +2462,7 @@ export function encodeParams(params: UrlParams): string {
 
 // RELATIVE ("?<token>"): the path survives, so the same build works at the
 // root and under a prefix (levi.dev/knotmaze/).
-// K1458: the link flags that are no param (`rp`, `gfh`, `oe`, `ob`, `gln`, ...) stay
+// K1458: the link flags that are no param (`rp`, `gfh`, `gfk`, `gln`, ...) stay
 // after the token: their readers read the address once at load, so a rewrite that
 // dropped them would give a reload a different renderer. Param keys (they live in
 // the token), the seed keys and `daily` (a panel edit leaves the daily) drop.

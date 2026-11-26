@@ -13,8 +13,7 @@
 // blend), ramp (more than one configuration), plain.
 // Limits: it reads the evaluator's own coverage, so it cannot see a fill that is itself wrong; and it cannot judge
 // a corner's shape.
-import { buildModel } from "../K1314/k1314_census.ts";
-import { gfTablesOf } from "../K1362/k1362s1_census.ts";
+import { buildModel, gfTablesOf } from "../K1436/bar_model.ts"; // was K1314's buildModel + K1362's gfTablesOf (rp=outline deleted 2026-11-25)
 
 export const STRAY = 0.25;
 export type Cls = "plain" | "ramp" | "tie" | "thru";

@@ -22,7 +22,7 @@
 // Finds: v1's finds() (connected flagged pixels, gaps of 2 bridged) with a length floor of MINLEN aa of edge.
 // Classes as v1 (plain, ramp, tie, thru) from the site's pixel. Thresholds and their measurement: k1436_scan.ts.
 import { analyze, finds, type Find, type Raster } from "../K1433/k1433_lib.ts";
-import { runAt, runColour, type RGB } from "../../../src/render/outline/paint.ts";
+import { runAt, runColour, type RGB } from "./bar_model.ts"; // was src/render/outline/paint.ts (deleted 2026-11-25)
 export { makeJudge, rasterJudge, modelOf, tablesOf, loadEval, CLS, type Find, type Raster } from "../K1433/k1433_lib.ts";
 
 const env = (k: string, d: number): number => (process.env[k] !== undefined && process.env[k] !== "" ? +process.env[k]! : d);

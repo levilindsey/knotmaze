@@ -4,8 +4,8 @@
 //   node scripts/run_node.mjs .claude/probes/K1436/k1436_sheet.ts <list.tsv> <out.png> [ppu=100]
 //   list rows: scene<TAB>x<TAB>y<TAB>kind<TAB>cls (GF_HOME as the scan that found them)
 import { readFileSync } from "node:fs";
-import { writePng } from "../K1314/k1314_crops.ts";
-import { runAt, runColour, type RGB } from "../../../src/render/outline/paint.ts";
+import { writePng } from "./bar_model.ts";
+import { runAt, runColour, type RGB } from "./bar_model.ts"; // was src/render/outline/paint.ts + K1314 crops (deleted 2026-11-25)
 import { makeJudge, modelOf, tablesOf, rasterJudge, allFindsV2, P as PAR } from "./k1436_lib.ts";
 import { GfEval } from "../../../src/render/gpu_field/eval.ts";
 const [list, out, ppuS] = process.argv.slice(2);

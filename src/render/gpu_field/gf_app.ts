@@ -5,7 +5,7 @@
 // into an RGBA8 target of (ink, coverage); a RenderContainer in the ribbon's
 // place composites it: the fill (one colour; section colours are a later
 // stage) under the ink. The ribbon's base and fillets (root children 0, 1)
-// are hidden while it runs, as outline_app.ts hides them.
+// are hidden while it runs.
 //
 // K1362 c1: the build leaves main. A frame whose samples moved gathers a lean
 // input (`gatherSceneInputLean`: copies of the sample buffers, the crossing
@@ -971,7 +971,7 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
     const ps = ctx.scene.ps;
     if (!r || !ps) return;
     // Before the renderer's first update there are no samples yet: wait
-    // for them (the export throws on a chain without any; outline_app's).
+    // for them (the export throws on a chain without any).
     if (r.chainSamples.length < ps.chains.length || r.chainSamples.some((s) => !s)) return;
     try {
       const g = gl();

@@ -13,7 +13,7 @@ describe("K1458 URL-only flags", () => {
     expect(urlOnlyFlags("?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1")).toBe("&rp=gf&gfh=1");
     expect(urlOnlyFlags("?3.FGH1HtvQeDjm6e4BII")).toBe("");
     expect(urlOnlyFlags("")).toBe("");
-    expect(urlOnlyFlags("?rp=outline&oe=0&ob=0&gln=0")).toBe("&rp=outline&oe=0&ob=0&gln=0");
+    expect(urlOnlyFlags("?rp=gf&gfk=0&gln=0")).toBe("&rp=gf&gfk=0&gln=0");
   });
 
   it("drops the seed keys and the daily", () => {

@@ -6,8 +6,8 @@
 // Rows: spec, sfx, FLAG|clean, {kind:cls: px+px}, then the band's level and least wIn near the spot (x W).
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
-import { writePng } from "../K1314/k1314_crops.ts";
-import { runAt, runColour, type RGB } from "../../../src/render/outline/paint.ts";
+import { writePng } from "./bar_model.ts";
+import { runAt, runColour, type RGB } from "./bar_model.ts"; // was src/render/outline/paint.ts + K1314 crops (deleted 2026-11-25)
 import { loadEval, makeJudge, modelOf, tablesOf, rasterJudge, allFindsV2, P as PAR } from "./k1436_lib.ts";
 import { allFinds } from "../K1433/k1433_lib.ts";
 

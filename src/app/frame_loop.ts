@@ -207,24 +207,13 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // canvas); with the flag off only this check runs.
   // K1040 S4b: with `fieldBand` the same slot runs form B's passes
   // (src/render/field/field_b_app.ts) instead; a flip swaps the two.
-  // K1240 S4: with the link flag `rp=outline` the same slot runs the
-  // redesign (src/render/outline/outline_app.ts) in every look.
+  // K1618 (2026-11-25): the K1240 redesign `rp=outline` that also ran here
+  // is deleted; an `rp=outline` link now draws today's look.
   let labelApp: { frame(): void; after(): void; dispose(): void; busy?(): boolean } | null = null;
-  let labelKind: "label" | "field" | "outline" | "gf" | null = null;
+  let labelKind: "label" | "field" | "gf" | null = null;
   let labelLoading = false;
-  const outlineFlag =
-    typeof location !== "undefined" && new URLSearchParams(location.search).get("rp") === "outline";
   // K1362 s2: `rp=gf`, form B's look per pixel on the GPU (src/render/gpu_field/gf_app.ts).
   const gfFlag = typeof location !== "undefined" && new URLSearchParams(location.search).get("rp") === "gf";
-  // K1247 s18: the fill's records, read here because the link rewrite drops
-  // the key before outline_app.ts loads. K1247 s20: on by default under
-  // `rp=outline`; `oe=0` turns them off (today's resampled fill).
-  if (outlineFlag && new URLSearchParams(location.search).get("oe") !== "0") (globalThis as { __knotOutlineFillRec?: boolean }).__knotOutlineFillRec = true;
-  // K1247 s22: the border band as a fixed layout of records (band_rec.ts), placed on main (band_place.ts).
-  // K1247 s25: on by default under `rp=outline`; `ob=0` turns them off (today's band, band_gpu.ts).
-  if (outlineFlag && new URLSearchParams(location.search).get("ob") !== "0") (globalThis as { __knotOutlineBandRec?: boolean }).__knotOutlineBandRec = true;
-  // K1247 s25: `obt=1` times the band placement pass by GPU timer query (probes only; a query costs frame time).
-  if (outlineFlag && new URLSearchParams(location.search).get("obt") === "1") (globalThis as { __knotBandTfTime?: boolean }).__knotBandTfTime = true;
   // K1439: `gfh=1` under `rp=gf` draws junction membership from the arms' home intervals (K1438; gf_glsl.ts homeForm),
   // its fade following the fadeLength slider live. Off by default: without it the programs and tables are master's.
   if (gfFlag && new URLSearchParams(location.search).get("gfh") === "1") (globalThis as { __knotGfHome?: boolean }).__knotGfHome = true;
@@ -233,8 +222,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   if (gfFlag && new URLSearchParams(location.search).get("gfh") === "1" && new URLSearchParams(location.search).get("gfk") !== "0") (globalThis as { __knotGfKRetry?: boolean }).__knotGfKRetry = true;
   const labelFrame = (): void => {
     const r = scene.renderer;
-    const kind = gfFlag ? "gf" : outlineFlag ? "outline" : params.fieldBand ? "field" : "label";
-    const on = !!r && (gfFlag || outlineFlag || (r.threadLook === 1 && r.labelInk));
+    const kind = gfFlag ? "gf" : params.fieldBand ? "field" : "label";
+    const on = !!r && (gfFlag || (r.threadLook === 1 && r.labelInk));
     if (!on || (labelApp && labelKind !== kind)) {
       labelApp?.dispose();
       labelApp = null;
@@ -248,8 +237,6 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       const again = (): void => flags.push(Flag.GEOM);
       const load = kind === "gf"
         ? import("../render/gpu_field/gf_app").then((m) => m.createGfApp(ctx, again))
-        : kind === "outline"
-        ? import("../render/outline/outline_app").then((m) => m.createOutlineApp(ctx, again))
         : kind === "field"
         ? import("../render/field/field_b_app").then((m) => m.createFieldBApp(ctx, again))
         : import("../render/label/label_app").then((m) => m.createLabelApp(ctx, again));
