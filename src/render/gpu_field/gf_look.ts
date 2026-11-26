@@ -2197,6 +2197,27 @@ export function lookColour(T: Pick<GfLookTable, "data">, P: ArrayLike<number>, c
   return [0, 1, 2].map((j) => A[j] + (B[j] - A[j]) * u);
 }
 
+/**
+ * K1627 s2: CPU twin of lkCornerMix's weight. A corner pixel p's share of arm B's colour: its distances to the two
+ * arms' outline lines (through the tangent points TA, TB, perpendicular to eA, eB, the unit vectors from the corner
+ * circle's centre to them; corner pixels lie on the lines' inner sides) as dA / (dA + dB). 0 on A's outline, 1 on
+ * B's, 0.5 on the bisector, and continuous between, so the corner meets each thread in its own colour with no edge.
+ */
+export function cornerMixW(p: readonly number[], TA: readonly number[], eA: readonly number[], TB: readonly number[], eB: readonly number[]): number {
+  const dA = Math.max(0, -((p[0] - TA[0]) * eA[0] + (p[1] - TA[1]) * eA[1]));
+  const dB = Math.max(0, -((p[0] - TB[0]) * eB[0] + (p[1] - TB[1]) * eB[1]));
+  return dA + dB > 0 ? dA / (dA + dB) : 0.5;
+}
+
+/**
+ * K1627 s2: CPU twin of lkArmS. The s on an arm where p projects onto the arm's segment A -> B (vertices x, y, s)
+ * that holds the tangent point T at s: s plus p's run from T along the segment, in s per length.
+ */
+export function cornerArmS(s: number, A: readonly number[], B: readonly number[], p: readonly number[], T: readonly number[]): number {
+  const dx = B[0] - A[0]; const dy = B[1] - A[1]; const l2 = dx * dx + dy * dy;
+  return l2 > 0 ? s + ((p[0] - T[0]) * dx + (p[1] - T[1]) * dy) * (B[2] - A[2]) / l2 : s;
+}
+
 // the look's globals (after layers()' own; MAXS is defined by then)
 const G_ANCHOR = "int labC; float labS; int cWk; int cWa; int cWb; float cCov;\n";
 const G_LOOK = `// K1389 s1: the label's piece (-1: a corner, whose s rides lkS) and key, as each site sets labC; the best
@@ -2209,6 +2230,9 @@ float lkTw = 0.0;
 // K1627: the best configuration's corner chain (its label's chain when that label is a corner, else -1): lkGap's
 // corner self skip
 int lkCs = -1;
+// K1627 s2: the label's corner (lkKi, per surface lkki; -1 for a piece) and the best configuration's (lkKib; -1 unless
+// its label is a corner): the corner colour's blend reads its two arms
+int lkKi = -1; int lkKib = -1; int lkki[MAXS];
 `;
 const M_ANCHOR = "\nvoid main() {\n";
 function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? s : s + ".0"; }
@@ -2499,6 +2523,28 @@ vec3 lkMat(int c, float sf) {
   vec2 q = vec2(floor(s), fract(s));
   vec4 col = lkColour(c, q);
   return mix(col.rgb, uGold, lkPaint(c, q));
+}
+// K1627 s2: arm c's s where the pixel p projects onto the arm's segment at s (its tangent point T's s): s plus p's run
+// along that segment from T, in the segment's s per length (cornerArmS's twin)
+float lkArmS(int c, float s, vec2 p, vec2 T) {
+  vec2 q = lookQs(c, s); int v = int(F(uOCh + 3 * c).x) + int(q.x);
+  vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1);
+  vec2 d = B.xy - A.xy; float l2 = dot(d, d);
+  return l2 > 0.0 ? s + dot(p - T, d) * (B.z - A.z) / l2 : s;
+}
+// K1627 s2: a corner's colour and gold at p. Each arm's colour (gold mixed in) at p's projection onto it, blended by
+// p's distances to the two arms' outline lines (cornerMixW): arm A's alone on A's outline, B's alone on B's, so the
+// corner runs from one thread's colour to the other's with no edge and meets each thread in its own colour. The
+// label's flat tangent-point colour drew each half of the corner in one colour, a hard edge where the halves met.
+vec4 lkCornerMix(int k, vec2 p) {
+  vec4 K2 = F(uOK + 6 * k + 2); vec4 K3 = F(uOK + 6 * k + 3); vec4 K4 = F(uOK + 6 * k + 4); vec4 K5 = F(uOK + 6 * k + 5);
+  int ca = int(K3.x); int cb = int(K3.y);
+  vec2 qa = lookQs(ca, lkArmS(ca, K3.z, p, K4.zw)); vec2 qb = lookQs(cb, lkArmS(cb, K3.w, p, K5.xy));
+  float dA = max(0.0, -dot(p - K4.zw, K2.xy)); float dB = max(0.0, -dot(p - K5.xy, K2.zw));
+  float w = dA + dB > 0.0 ? dA / (dA + dB) : 0.5;
+  float ga = lkPaint(ca, qa); float gb = lkPaint(cb, qb);
+  vec3 a = mix(lkColour(ca, qa).rgb, uGold, ga); vec3 b = mix(lkColour(cb, qb).rgb, uGold, gb);
+  return vec4(mix(a, b, w), mix(ga, gb, w));
 }
 // K1414: the label foot's sample float and the pixel's distance from the foot point (the rim's across)
 vec2 lkFoot(int c, vec2 q, vec2 p) {
@@ -2868,19 +2914,19 @@ const SITES: [string | RegExp, string, number][] = [
     "float band(float D) { return 1.0 - ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D); }", 1],
   // layers(), LABRUN: a piece label, then a corner's
   ["labE = e; labC = PC(j); }", "labE = e; labC = PC(j); lkJ = j; lkK = pkey[j]; }", 1],
-  ["labC = nearerA ? int(K3.x) : int(K3.y); }", "labC = nearerA ? int(K3.x) : int(K3.y); lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; }", 1],
+  ["labC = nearerA ? int(K3.x) : int(K3.y); }", "labC = nearerA ? int(K3.x) : int(K3.y); lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; lkKi = k; }", 1],
   // layers(), the full program: per surface, then the top's
-  ["scch[e] = PC(j);", "scch[e] = PC(j); lkj[e] = j;", 1],
-  ["scch[e] = nearerA ? int(K3.x) : int(K3.y);", "scch[e] = nearerA ? int(K3.x) : int(K3.y); lkj[e] = -1; lks[e] = nearerA ? K3.z : K3.w;", 1],
-  ["labC = top >= 0 ? scch[top] : -1;", "labC = top >= 0 ? scch[top] : -1; if (top >= 0) { lkJ = lkj[top]; lkS = lks[top]; lkK = sckey[top]; }", 1],
+  ["scch[e] = PC(j);", "scch[e] = PC(j); lkj[e] = j; lkki[e] = -1;", 1],
+  ["scch[e] = nearerA ? int(K3.x) : int(K3.y);", "scch[e] = nearerA ? int(K3.x) : int(K3.y); lkj[e] = -1; lks[e] = nearerA ? K3.z : K3.w; lkki[e] = k;", 1],
+  ["labC = top >= 0 ? scch[top] : -1;", "labC = top >= 0 ? scch[top] : -1; if (top >= 0) { lkJ = lkj[top]; lkS = lks[top]; lkK = sckey[top]; lkKi = lkki[top]; }", 1],
   // layers1()
   ["if (pd[0] < h) labC = PC(0);", "if (pd[0] < h) { labC = PC(0); lkJ = 0; lkK = pkey[0]; }", 1],
   // the configurations' best, the through corner's own label
-  ["if (w > bestW) { bestW = w; lab = labC;", "if (w > bestW) { bestW = w; lab = labC; lkJb = lkJ; lkSb = lkS; lkKb = lkK; lkCs = labC >= 0 && lkJ < 0 ? labC : -1;", 1],
-  ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
+  ["if (w > bestW) { bestW = w; lab = labC;", "if (w > bestW) { bestW = w; lab = labC; lkJb = lkJ; lkSb = lkS; lkKb = lkK; lkCs = labC >= 0 && lkJ < 0 ? labC : -1; lkKib = labC >= 0 && lkJ < 0 ? lkKi : -1;", 1],
+  ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG; lkKib = -1;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 - 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); if (lkKb < BIG) { vec2 lkb2 = lkBall(p, lab, lkArc(lab, lq)); if (lkb2.y > 0.0 || ((lkg2.x > 0.0 || lkg2.y > 0.0) && lkb2.x < 1.0)) { lkBs = lkb2.x; lkTw = lkb2.y; lkg2 = lkGap(lkKb, p, lq, lab); lkBs = 1.0; lkTw = 0.0; } } float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); if (lkKib >= 0) { vec4 lkCm = lkCornerMix(lkKib, p); lkCo.rgb = lkCm.rgb; lkgp = lkCm.a; } lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 - 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); if (lkKb < BIG) { vec2 lkb2 = lkBall(p, lab, lkArc(lab, lq)); if (lkb2.y > 0.0 || ((lkg2.x > 0.0 || lkg2.y > 0.0) && lkb2.x < 1.0)) { lkBs = lkb2.x; lkTw = lkb2.y; lkg2 = lkGap(lkKb, p, lq, lab); lkBs = 1.0; lkTw = 0.0; } } float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 
@@ -2965,7 +3011,7 @@ export function lookForm(src: string): string {
     out = out.replace(sdPlain, "float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / (uH * max(rvM(lab, lkArc(lab, lq)), 1e-6)), -1.0, 1.0);");
   }
   // the sites every program carries
-  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "lkExploreLook(uExLook", "exAt(c, s)", "exBurnAt(lab, lkArc(lab, lq))", "lkCharLook(lkCo.rgb", "lkEmberLook(lkCo.rgb", "o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);", "layout(location = 1) out vec4 o1;", "layout(location = 2) out vec4 o2;", "lkHiC = uGold * lkgp;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
+  for (const must of ["lkJb = lkJ;", "lkKib = labC >= 0 && lkJ < 0 ? lkKi : -1;", "if (lkKib >= 0) { vec4 lkCm = lkCornerMix(lkKib, p);", "lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "lkExploreLook(uExLook", "exAt(c, s)", "exBurnAt(lab, lkArc(lab, lq))", "lkCharLook(lkCo.rgb", "lkEmberLook(lkCo.rgb", "o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);", "layout(location = 1) out vec4 o1;", "layout(location = 2) out vec4 o2;", "lkHiC = uGold * lkgp;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
   return out;
 }
 

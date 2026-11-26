@@ -1,0 +1,37 @@
+[
+  [
+    "int lkCs = -1;",
+    "int lkCs = -1; int lkKi = -1; int lkKib = -1; int lkki[MAXS];"
+  ],
+  [
+    "lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; }",
+    "lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; lkKi = k; }"
+  ],
+  [
+    "lkj[e] = -1; lks[e] = nearerA ? K3.z : K3.w;",
+    "lkj[e] = -1; lks[e] = nearerA ? K3.z : K3.w; lkki[e] = k;"
+  ],
+  [
+    "lkK = sckey[top]; }",
+    "lkK = sckey[top]; lkKi = lkki[top]; }"
+  ],
+  [
+    "lkCs = labC >= 0 && lkJ < 0 ? labC : -1;",
+    "lkCs = labC >= 0 && lkJ < 0 ? labC : -1; lkKib = labC >= 0 && lkJ < 0 ? lkKi : -1;"
+  ],
+  [
+    "lkJb = -1; lkSb = K3.z; lkKb = BIG;",
+    "lkJb = -1; lkSb = K3.z; lkKb = BIG; lkKib = -1;"
+  ],
+  [
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {",
+    "float lkArmS(int c, float s, vec2 p, vec2 Tp) {\n  vec2 q = lookQs(c, s); vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q.x);\n  vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1);\n  vec2 d = B.xy - A.xy; float l2 = dot(d, d);\n  return l2 > 0.0 ? s + dot(p - Tp, d) * (B.z - A.z) / l2 : s;\n}\nvec4 lkCornerMix(int k, vec2 p) {\n  vec4 K2 = F(uOK + 6 * k + 2); vec4 K3 = F(uOK + 6 * k + 3); vec4 K4 = F(uOK + 6 * k + 4); vec4 K5 = F(uOK + 6 * k + 5);\n  int ca = int(K3.x); int cb = int(K3.y);\n  vec2 qa = lookQs(ca, lkArmS(ca, K3.z, p, K4.zw)); vec2 qb = lookQs(cb, lkArmS(cb, K3.w, p, K5.xy));\n  float dA = max(0.0, -dot(p - K4.zw, K2.xy)); float dB = max(0.0, -dot(p - K5.xy, K2.zw));\n  float w = dA + dB > 0.0 ? dA / (dA + dB) : 0.5;\n  float ga = lkPaint(ca, qa); float gb = lkPaint(cb, qb);\n  vec3 a = mix(lkColour(ca, qa).rgb, uGold, ga); vec3 b = mix(lkColour(cb, qb).rgb, uGold, gb);\n  return vec4(mix(a, b, w), mix(ga, gb, w));\n}\n",
+    "vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {"
+  ],
+  [
+    "float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp);",
+    "float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp);",
+    " if (lkJb < 0 && lkKib >= 0) { vec4 lkCm = lkCornerMix(lkKib, p); lkCo.rgb = lkCm.rgb; lkgp = lkCm.a; }"
+  ]
+]
+

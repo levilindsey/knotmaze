@@ -57,3 +57,41 @@ Stop when every Done holds or after 2 h of wall clock, whichever first. A compac
 this brief and `git log`. This is the second stage: if a part cannot be fixed without damage elsewhere, land
 nothing of that part and say so with pictures. On stopping: commit WIP, append `## Handoff (stage 2)` here,
 commit, and report: verdict first, sheet paths, counts, a `Ledger items` list and the handle fields.
+
+## Handoff (stage 2)
+
+Agent run 2026-11-26 00:07-02:07, branch `k1627-s2` (worktree `.claude/worktrees/k1627-s2`).
+Evidence: `.claude/probes/K1627/` (out/ untracked).
+
+**Wedges: fixed, on the branch** (`lkCornerMix` in `src/render/gpu_field/gf_look.ts`, commit 652cb99f6). A
+corner-labelled pixel now blends its two arms' colours (gold mixed in), each read at the pixel's projection onto
+that arm, weighted by its distances to the two outline lines: arm A's colour alone on A's outline, B's alone on
+B's, the mean on the bisector. Only pixels whose winning label is a corner (`lkKib >= 0`) read anything new. Out of
+the reveal path (fx, `lkRainbow`, reveal alpha untouched).
+- Cause: `p_labviz.json` on master paints each label flat: every wedge edge is the boundary between the corner's
+  two flat halves (nearer-arm split on the bisector). The fix itself is the confirming change: all six named wedges
+  and Levi's place are gone on L (sheet `out/sheet_s2_1..2.png`, `out/sheet_s2_levi6x_1.png`). `p_cblend.json`
+  (the blend patched onto master) did not compile (its insertion point was wrong) - no result from it.
+- L, master -> mine: 208 changed places at > 6 levels (20,705 px); the 12 largest viewed
+  (`out/sheet_s2_otherL_1.png`), each a junction corner whose flat halves became one smooth run. The three crossing
+  gaps (2234,936), (2329,358), (2346,380) are unchanged.
+- The other mazes: all 21 captured (out/s2b): 59-208 places each, every step 1-2 levels (single-colour ink: the
+  same colour blended with itself); the six largest viewed (`out/amp_s2b.png`), all on corner fillets.
+  screen.py (`an.ps1`, out/an_s2b): identical master | mine on all 21 (closed 104, part 245, bare 492, none 24,
+  gap 28935; loose pieces 44/10/38/1787 both).
+- Residual seen: at (1815,1150) a faint vertical tone step remains where the corner meets the arm piece; under
+  6 levels, not on any named place.
+
+**Specks: NOT fixed - dropped (second-stage rule).** Cause confirmed by change: the corner pixel nearer arm A has
+key zA - zt, and where arm B rides above A by more than zt, `lkGap` lets B's pieces cut it inside B's outline
+margin at the corner's point. Skipping the corner's other arm within sx of its tangent arc (`p_noother.json`,
+commit 1be278ced) removed all seven specks and the tip at (1149,1643), but it also closed part of the three real
+crossing gaps the brief keeps ((2234,936) most, (2329,358), (2346,380)): those are other-arm cuts at the corner's
+own point too, so a distance-to-the-point window will not separate them. Reverted in 06ffde7cc. Pictures:
+`out/sheet_s2_speckskip_1..2.png` (master | master + skip | change). Next: separate a real over-pass of the other
+arm (its piece crosses this arm's thread) from its outline margin at the point, or take the corner's key from
+max(zA, zB) only at the point - back to Levi first (two-stage rule).
+
+Tests: `test/render/gf_corner_mix.test.ts` (new: every program's sites, the one call at the output, the weight
+line; `cornerMixW`/`cornerArmS` twins), lookForm must-haves for the two new lines. `npm test` green (252 files),
+`npm run build` passes, on 06ffde7cc.

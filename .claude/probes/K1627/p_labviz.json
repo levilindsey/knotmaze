@@ -1,0 +1,30 @@
+[
+  [
+    "int lkCs = -1;",
+    "int lkCs = -1; int lkKi = -1; int lkKib = -1; int lkki[MAXS];"
+  ],
+  [
+    "lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; }",
+    "lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; lkKi = k; }"
+  ],
+  [
+    "lkj[e] = -1; lks[e] = nearerA ? K3.z : K3.w;",
+    "lkj[e] = -1; lks[e] = nearerA ? K3.z : K3.w; lkki[e] = k;"
+  ],
+  [
+    "lkK = sckey[top]; }",
+    "lkK = sckey[top]; lkKi = lkki[top]; }"
+  ],
+  [
+    "lkCs = labC >= 0 && lkJ < 0 ? labC : -1;",
+    "lkCs = labC >= 0 && lkJ < 0 ? labC : -1; lkKib = labC >= 0 && lkJ < 0 ? lkKi : -1;"
+  ],
+  [
+    "lkJb = -1; lkSb = K3.z; lkKb = BIG;",
+    "lkJb = -1; lkSb = K3.z; lkKb = BIG; lkKib = -1;"
+  ],
+  [
+    "lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p);",
+    "lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); if (lkJb < 0) { if (lkKib >= 0) { vec4 vK3 = F(uOK + 6 * lkKib + 3); vec3 hv = 0.5 + 0.5 * cos(6.2832 * (fract(float(lkKib) * 0.618034) + vec3(0.0, 0.333, 0.667))); lkCo.rgb = (lab == int(vK3.x) && lkSb == vK3.z) ? hv : hv * 0.55; } else lkCo.rgb = vec3(1.0, 0.95, 0.0); } else { float lum = dot(lkCo.rgb, vec3(0.3, 0.59, 0.11)); lkCo.rgb = vec3(lum * 0.6 + 0.2); }"
+  ]
+]

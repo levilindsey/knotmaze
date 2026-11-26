@@ -11,7 +11,7 @@ $here = $PSScriptRoot
 $repo = (git -C $here rev-parse --show-toplevel).Trim()
 $sha = (git -C $repo rev-parse $Ref).Trim()
 $s7 = $sha.Substring(0, 7)
-$root = Join-Path $env:TEMP "knotmaze-K1627s1-$Tag"
+$root = Join-Path $env:TEMP "knotmaze-K1627s2-$Tag"
 $out = Join-Path $here 'out'; New-Item -ItemType Directory $out -Force | Out-Null
 $cap = Join-Path $here 'cap.ps1'
 $log = Join-Path $out "preview_$Tag.log"
@@ -47,7 +47,7 @@ try {
   if ($jobs) { $jobs | Wait-Process }
   $pinTag = if ($ThenPin) { $ThenPin } else { $Tag }
   # K1627: -Then 'tag:patch.json;tag2:patchF=f.json' reruns stream 1's mazes per entry, pinned to this run's views
-  $hl = Select-String -Path (Join-Path $out "$pinTag\L\cap.log") -Pattern 'done ([0-9a-f]{8})' -ErrorAction SilentlyContinue | Select-Object -Last 1
+  $hl = if (Test-Path (Join-Path $out "$pinTag\L\cap.log")) { Select-String -Path (Join-Path $out "$pinTag\L\cap.log") -Pattern 'done ([0-9a-f]{8})' -ErrorAction SilentlyContinue | Select-Object -Last 1 } else { $null }
   if ($hl -and -not $env:LHASH) { $env:LHASH = $hl.Matches[0].Groups[1].Value; "LHASH $($env:LHASH)" }
   foreach ($t in ($Then -split ';' | Where-Object { $_ })) {
     $tt, $pp = $t -split ':', 2
