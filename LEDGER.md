@@ -321,6 +321,14 @@ Next free ID: K1630.
   - branch: mainline (k1395-s2 merged; worktree kept); last commit: `e119402d5`
   - evidence: .claude/probes/K1395/s2/ (sheets.ps1, counts.py, sheet.py, crop.py); sheets untracked in the k1395-s2 worktree out/sh/
   - next: Levi looks at the reveals under rp=gf. Left: comet and burn colour 0.74 to 0.85x of today's at two frames near the front (untested causes: the composite's border fade thresholds alpha; the junction cuts at the front). A third stage only if he names it
+- **K1627** · rp=gf: a notch (a wedge of paper, a pointed tab left) cut into a junction's rounded corner where
+  a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of
+  `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important').
+  Picture: .claude/probes/K1627/levi_phone.png (untracked)
+  - owner: nobody since 2026-11-26 02:10: stage 2 landed, specks back to Levi
+  - branch: mainline (k1627-s2 worktree kept); last commit: `7682cf7c5`
+  - evidence: .claude/probes/K1627/ (p_noother.json, sheet_c.py; out/sheet_s2_speckskip_1.png, _2.png untracked in the k1627-s2 worktree)
+  - next: Waiting on Levi: 7 specks of 1-6 px of paper at corner points remain on his link (and the 4 px tip at (1141,1638)); the other-arm skip removes them but closes parts of the 3 real crossing gaps, so it was dropped. Two stages done: a third only if Levi names it (it must tell a real over-pass from the outline margin). Residual: faint tone step under 6 levels at (1815,1150)
 
 ## In progress
 
@@ -600,14 +608,6 @@ Next free ID: K1630.
   - branch: k1626-s3 (from k1626-s2 at 307a0e7e2, from k1626-s1), .claude/worktrees/k1626-s3; nothing landed; last commit: 307a0e7e2 on k1626-s2
   - evidence: .claude/probes/K1626/ on k1626-s2 (widthjump.ts, wj_diag.ts, jeye.ts, eyetab.py, bench.ts, cap3.mjs; out/K1626_s2_sheet.png untracked)
   - next: stage 2 opens the joint eyes (under 1.5 w: 44 -> 1; Levi's J138 0.80 -> 2.05; sheet sent to him) but a width jump 0.75 -> 0.5 on his link never re-sleeps (joint eye 12's pressure). Finishing run (docs/design/K1626_s3_brief.md): per-eye release, numeric pass lines. Land s1+s2+fix by squash once it passes and Levi says yes to the look; then carry K1622 over. Residuals to file at landing: eyes limited by arm material (J64 1.84, ?4 J5 1.47, ?7 J115 at 44%), ?8 sharp turns 3 -> 7, no build sleeps at tw 0.75 within 40 s
-- **K1627** · rp=gf: a notch (a wedge of paper, a pointed tab left) cut into a junction's rounded corner where
-  a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of
-  `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important').
-  Picture: .claude/probes/K1627/levi_phone.png (untracked)
-  - owner: claude session 09c7a672 (opus agent K1627 s2, coordinator same session), started 2026-11-26 00:10
-  - branch: k1627-s2, .claude/worktrees/k1627-s2; stage 1 landed in f7ebe0cae; last commit: `f7ebe0cae`
-  - evidence: .claude/probes/K1627/ (run.ps1, cap.ps1, chg.py, sheet.py); stage 1 sheets untracked in the k1627-s1 worktree look/
-  - next: stage 2 (docs/design/K1627_s2_brief.md): colour wedges in corners (6 places on Levi's link) and 7 paper specks + one 4 px tip; show Levi the sheet, land when clean. Second stage: no third unless he names it
 
 ## Next, in order
 
