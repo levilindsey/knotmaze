@@ -329,6 +329,16 @@ Next free ID: K1630.
   - branch: mainline (k1627-s2 worktree kept); last commit: `7682cf7c5`
   - evidence: .claude/probes/K1627/ (p_noother.json, sheet_c.py; out/sheet_s2_speckskip_1.png, _2.png untracked in the k1627-s2 worktree)
   - next: Waiting on Levi: 7 specks of 1-6 px of paper at corner points remain on his link (and the 4 px tip at (1141,1638)); the other-arm skip removes them but closes parts of the 3 real crossing gaps, so it was dropped. Two stages done: a third only if Levi names it (it must tell a real over-pass from the outline margin). Residual: faint tone step under 6 levels at (1815,1150)
+- **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
+  2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
+  of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
+  job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
+  keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
+  src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
+  - owner: nobody since 2026-11-26 02:15: finishing run done, every pass line holds; waiting for Levi's yes on the look
+  - branch: k1626-s3 (holds s1 + s2 + the fix), .claude/worktrees/k1626-s3; nothing landed; last commit: ebc556d1c on k1626-s3 (fix ff5a98e2c)
+  - evidence: .claude/probes/K1626/ on k1626-s3 (widthjump.ts, wj12.ts, s3_sweep.ps1, s3_cmp.py); sheet for Levi: k1626-s2 worktree .claude/probes/K1626/out/K1626_s2_sheet.png (untracked, sent)
+  - next: On Levi's yes to the stage 2 look: check old history (merge-base --is-ancestor d39e363fe k1626-s3), git merge --squash k1626-s3, npm test, build, push, watch deploy; then carry K1622 (k1622-s1) over, run its perf2.ts (gate 5%). File at landing: an eye short of material at a width change stops pushing until the next width change (openings of released eyes after a jump unmeasured; closest pair 1.75 w on his link, 1.58 w on ?1); eyes limited by arm material (J64 1.84, ?4 J5 1.47, ?7 J115 44%); ?8 sharp turns 3 -> 7; no build sleeps at tw 0.75 within 40 s; fix off at widths >= 0.7
 
 ## In progress
 
@@ -598,16 +608,6 @@ Next free ID: K1630.
   - branch: k1622-s1, .claude/worktrees/k1622-s1 (not landed); last commit: `494d62c50`
   - evidence: .claude/probes/K1622/ on k1622-s1 (settle.ts, seeds.ps1, drag.ts, perf2.ts, caps.ps1, pairs.py; out/pic/pair_levi.png, pair_s1..s5.png untracked)
   - next: arm sharp turns fall (width 0.8: 4.85 -> 0.44 per 1000; default 1.60 -> 0.00), sleeps on more seeds, drag same; but the picture at Levi's spot barely changes and step cost is unmeasured. After K1626 lands: carry over onto master (same file, particle_system.ts), run perf2.ts under the perf lock (gate totalPct <= 5), land if Levi says the look is no worse. The brief's FHH link is wrong: FGH is right (?3.FGH1HtvQeDjm6e4BII)
-- **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
-  2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
-  of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
-  job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
-  keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
-  src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
-  - owner: claude session 09c7a672 (opus agent K1626 finishing run, coordinator same session), started 2026-11-26 01:35, 1 h cap
-  - branch: k1626-s3 (from k1626-s2 at 307a0e7e2, from k1626-s1), .claude/worktrees/k1626-s3; nothing landed; last commit: 307a0e7e2 on k1626-s2
-  - evidence: .claude/probes/K1626/ on k1626-s2 (widthjump.ts, wj_diag.ts, jeye.ts, eyetab.py, bench.ts, cap3.mjs; out/K1626_s2_sheet.png untracked)
-  - next: stage 2 opens the joint eyes (under 1.5 w: 44 -> 1; Levi's J138 0.80 -> 2.05; sheet sent to him) but a width jump 0.75 -> 0.5 on his link never re-sleeps (joint eye 12's pressure). Finishing run (docs/design/K1626_s3_brief.md): per-eye release, numeric pass lines. Land s1+s2+fix by squash once it passes and Levi says yes to the look; then carry K1622 over. Residuals to file at landing: eyes limited by arm material (J64 1.84, ?4 J5 1.47, ?7 J115 at 44%), ?8 sharp turns 3 -> 7, no build sleeps at tw 0.75 within 40 s
 
 ## Next, in order
 
