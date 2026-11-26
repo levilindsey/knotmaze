@@ -1,0 +1,32 @@
+diff --git a/src/render/gpu_field/gf_look.ts b/src/render/gpu_field/gf_look.ts
+index a787266d7..54aa1a29d 100644
+--- a/src/render/gpu_field/gf_look.ts
++++ b/src/render/gpu_field/gf_look.ts
+@@ -759,7 +759,7 @@ export class GfGapTable {
+           wr.push(km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))], Math.ceil(w / so.arcPer) + (off >= 0 ? packP : packN));
+         }
+       }
+-      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, { c: x.underChain, km: keptOf(x.underChain, su) }) : null;
++      const jfs = r.overMember && !k1584q("k84j") ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, { c: x.underChain, km: keptOf(x.underChain, su) }) : null;
+       for (let i = 0; i < ks.length; i++) {
+         const k = ks[i];
+         ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0);
+@@ -1724,7 +1724,7 @@ export function fanAt(F: ArrayLike<number>, b: number, n: number, closed: boolea
+ 
+ /** Today's crossing gap beyond the over thread's edge (world units): the casing's margin plus crossing_gaps' CUT_BIAS. */
+ export function lookGap(r: { style: { casingWidth: number; threadWidth: number } }): number {
+-  return Math.max(0, (r.style.casingWidth - r.style.threadWidth) / 2) + CUT_BIAS;
++  return Math.max(0, (r.style.casingWidth - r.style.threadWidth) / 2) + CUT_BIAS + k1584q("k84g");
+ }
+ 
+ /** K1398: today's under-thread fade length at a crossing (world units): the renderer's fadeLength, gap_mask.ts's fade. */
+@@ -2523,3 +2523,9 @@ void main() {
+   else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float m = k.a > 0.0 ? k.a : 1.0; float a = clamp((min(ink / m, 1.0) - 0.36) * 3.5, 0.0, 1.0) * m; if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(C * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } }
+   else { float a = ink + (1.0 - ink) * cov; o = vec4(S * (0.9 * ink) + C * (a - 0.9 * ink), a); }
+ }`;
++
++try { if (typeof location !== "undefined" && !(globalThis as { __k1584q?: string }).__k1584q) (globalThis as { __k1584q?: string }).__k1584q = location.search; } catch { /* worker */ }
++/** K1584 s2 PROBE ONLY, never commit: a number from the page's query. */
++function k1584q(k: string): number {
++  try { const m = new RegExp("[?&]" + k + "=([-0-9.]+)").exec((globalThis as { __k1584q?: string }).__k1584q ?? ""); return m ? +m[1] : 0; } catch { return 0; }
++}

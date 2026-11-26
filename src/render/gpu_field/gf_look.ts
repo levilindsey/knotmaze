@@ -414,6 +414,27 @@ export interface GfGapSource extends GfLookSource {
   /** K1458: each chain's fused-joint ctrls (the renderer's junctionArcCtrls) and their clearance (crossing_gaps.ts jointClear): today's joint window cap. */
   joints?: ReadonlyMap<number, readonly { ctrl: number }[]>;
   jointClear?: number;
+  /**
+   * K1584 s3: gf's own joint geometry (gfJointArcs: per chain, the fractional field-vertex index of each joint corner's
+   * tangent point). Given, a crossing side's joint room runs to the nearest of these (less GAP_EXIT_PAD in s3; to the
+   * tangent point itself, per border, since K1584 s4) and to the
+   * nearest joint ctrl less a fill half-width, instead of to the joint ctrl less jointClear (the ribbon renderer's fillet
+   * reach, 1.72 on link A, which held 123 of its sides at the clearance scales' floors, the tiny gap, with the joint's
+   * outline still far off).
+   */
+  jointArcs?: ReadonlyMap<number, readonly number[]>;
+  /**
+   * K1584 s4: each jointArcs point's side of its chain (gfJointArcs' lats: +1 left, -1 right, 0 both). Given, the room
+   * is per BORDER: a corner on the left limits only the left border's gap (link A_4 t84e: one border's close corner
+   * cut the other's full gap to the tiny one), and the joint flags give way to per-border scales.
+   */
+  jointLats?: ReadonlyMap<number, readonly number[]>;
+  /**
+   * K1584 s7: each jointArcs point's corner's other chain (gfJointArcs' partners, same order). Given, a crossing's slots
+   * from its nearest PAIR corner on (the corner's chains are the crossing's under and over, where the border turns into
+   * the fillet that joins the two) carry GAP_FAR_OFF: the outline's far term is off there (the corner rule, K1595 Q4).
+   */
+  jointPartners?: ReadonlyMap<number, readonly number[]>;
   /** K1482 s15: whether chain c's kept sample k (a field vertex) belongs to a fused joint's surface (eval.ts member(): a group, ramp > 0). */
   overMember?: (c: number, k: number) => boolean;
 }
@@ -424,6 +445,60 @@ const GAP_FAR = 64; // winM far outside any window
 // K1458: the over range searched around the crossing (gapWindow's R), and how far past a window end the bake still names its over pass
 const GAP_OVER_RANGE = 3.4;
 const GAP_SLOT_OUT = 0.3;
+/** K1584 s4: past a border's own gap end (its first clearing of the over's fill, margin and fade), one march step and
+ *  the exit pad more before its cut closes (the march finds the clearing up to a step late). */
+const GAP_END_PAD = GAP_MARCH_STEP + GAP_EXIT_PAD;
+/** K1584 s5: crossing gaps carve into junction outlines (each border's gap runs whole to its own end, past its joint
+ *  room); false restores stage 4's room-bounded border gaps (A/B probes only: env GF_S4ROOM=1 in Node). */
+const GAP_CARVE = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_S4ROOM !== "1";
+const GAP_NOEND_ROOM = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_NOENDROOM === "1";
+/** K1584 s6: a ball (lkBall, ballScaleAt) scales the gap of its own chain's pixels whose foot lies within this much arc
+ *  (world) of the corner's tangent point on that chain: past the ball's own reach, short of any other pass of the chain. */
+export const GAP_BALL_ARC = 1.0;
+/**
+ * K1584 s7 corner rule: a bit above the right border code (codes stop at 1023), set on a slot whose outline far term is
+ * off. x = over chain + (code + GAP_FAR_OFF) / 4096 keeps x's fraction under 0.5, so the chain still reads int(x + 0.5).
+ */
+export const GAP_FAR_OFF = 1024;
+/**
+ * K1584 s8: how far (world, both as a distance and as arc along the under) the over's tangent point of a pair corner
+ * may lie from the under's to count as the same corner's, and be projected onto the under (its fillet start there).
+ */
+const GAP_FILLET_REACH = 1.5;
+
+/**
+ * K1584 s6: lkBall's CPU twin. The scale on the gap's margin and fade at (px, py) for a pixel labelled (c, arc): the least
+ * |p - centre| / (fillet radius + W) over the tight-turn corners (kTight) in `ks` (default: every corner) that have c as a
+ * chain with arc within GAP_BALL_ARC of that chain's tangent point; 1 when none does.
+ */
+export function ballScaleAt(
+  T: { nK: number; kTight?: ArrayLike<number>; kCa: ArrayLike<number>; kCb: ArrayLike<number>; kSa: ArrayLike<number>; kSb: ArrayLike<number>; kCx: ArrayLike<number>; kCy: ArrayLike<number>; kR: ArrayLike<number> },
+  W: number, c: number, arc: number, px: number, py: number, ks?: Iterable<number>,
+): number {
+  let s = 1;
+  if (!T.kTight) return s;
+  const list = ks ?? Array.from({ length: T.nK }, (_, k) => k);
+  for (const k of list) {
+    if (T.kTight[k] !== 1) continue;
+    const onA = T.kCa[k] === c && Math.abs(arc - T.kSa[k]) < GAP_BALL_ARC;
+    const onB = T.kCb[k] === c && Math.abs(arc - T.kSb[k]) < GAP_BALL_ARC;
+    if (!onA && !onB) continue;
+    s = Math.min(s, Math.sqrt((px - T.kCx[k]) ** 2 + (py - T.kCy[k]) ** 2) / Math.max(T.kR[k] + W, 1e-6));
+  }
+  return clamp01(s);
+}
+
+/** K1584 s6: lkCut's CPU twin (the window terms left out: inside a window, wm large): the cut at distance d from the over
+ *  centreline for half-width h, gap margin and fade, the side's scales (scM, scF) and the ball's scale bs. */
+export function gapCutAt(d: number, h: number, margin: number, fade: number, sinT: number, aa: number, scM: number, scF: number, bs: number): number {
+  const pxw = 2 * aa;
+  const inner = (() => { const t = clamp01((d - (h - aa)) / (2 * aa)); return t * t * (3 - 2 * t); })();
+  const b = scM > 0 ? bs : 1;
+  const fw = Math.max(fade * scF * b * Math.max(sinT, 0.2), pxw);
+  const e = d - h - margin * scM * b;
+  const k = clamp01((e + 0.5 * pxw) / Math.max(fw, pxw));
+  return (1 - k * k * (3 - 2 * k)) * inner;
+}
 
 function gapPointAt(S: GapSamples, arc: number, o: { x: number; y: number }): void {
   const a = S.closed ? ((arc % S.total) + S.total) % S.total : Math.max(0, Math.min(S.total, arc));
@@ -441,7 +516,7 @@ function gapPointAt(S: GapSamples, arc: number, o: { x: number; y: number }): vo
  * [winNeg, winPos] of arc from the under centre. capNeg/capPos bound the march (the caller's neighbour
  * caps); a side whose distance never clears runs to its cap, as the solve's does.
  */
-export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number, fillHalf: number, margin: number, fade: number, capNeg: number, capPos: number, roomNeg = 1e6, roomPos = 1e6, oNeg = GAP_OVER_RANGE, oPos = GAP_OVER_RANGE, selfEx = 0): [number, number, number, number, number, number] {
+export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number, fillHalf: number, margin: number, fade: number, capNeg: number, capPos: number, roomNeg = 1e6, roomPos = 1e6, oNeg = GAP_OVER_RANGE, oPos = GAP_OVER_RANGE, selfEx = 0, bRooms?: readonly number[]): number[] {
   // the over polyline's reach around the crossing (the march's caps stay inside it). K1460 s3: a self
   // crossing's over range stops at the split (today's oCapNeg / oCapPos), and a point within selfEx of
   // the under point's own arc is no over pass (today's polyDist exclusion): without both, the polyline
@@ -457,9 +532,17 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
     if (per > 0) da -= per * Math.floor(da / per + 0.5);
     return Math.abs(da) < selfEx;
   };
-  const dAt = (arcU: number): { d: number; sin: number } => {
+  // K1584 s4: with per-border rooms, each border's own distance to the over polyline (its point fillHalf off the
+  // centreline, +1 left / -1 right of the under tangent): an oblique crossing's two borders clear the over at
+  // different arcs, so each border's scales are measured on its own clearing
+  const bD = [0, 0];
+  const dAt = (arcU: number, wantB = false): { d: number; sin: number } => {
     gapPointAt(su, arcU, pt);
-    let bd = Infinity, bi = 0;
+    gapPointAt(su, arcU - su.arcPer, p0); gapPointAt(su, arcU + su.arcPer, p1);
+    let tux = p1.x - p0.x, tuy = p1.y - p0.y;
+    const lu = Math.hypot(tux, tuy) || 1; tux /= lu; tuy /= lu;
+    const lx = pt.x - tuy * fillHalf, ly = pt.y + tux * fillHalf, rx = pt.x + tuy * fillHalf, ry = pt.y - tux * fillHalf;
+    let bd = Infinity, bi = 0, bl = Infinity, br = Infinity;
     for (let i = 0; i + 1 < nO; i++) {
       if (selfEx > 0 && (near(oa[i], arcU) || near(oa[i + 1], arcU))) continue;
       const ax = ox[i], ay = oy[i], dx = ox[i + 1] - ax, dy = oy[i + 1] - ay;
@@ -467,25 +550,48 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
       const u = l2 > 0 ? Math.max(0, Math.min(1, ((pt.x - ax) * dx + (pt.y - ay) * dy) / l2)) : 0;
       const ex = pt.x - ax - dx * u, ey = pt.y - ay - dy * u, d2 = ex * ex + ey * ey;
       if (d2 < bd) { bd = d2; bi = i; }
+      if (wantB) {
+        const ul = l2 > 0 ? Math.max(0, Math.min(1, ((lx - ax) * dx + (ly - ay) * dy) / l2)) : 0;
+        const elx = lx - ax - dx * ul, ely = ly - ay - dy * ul;
+        bl = Math.min(bl, elx * elx + ely * ely);
+        const ur = l2 > 0 ? Math.max(0, Math.min(1, ((rx - ax) * dx + (ry - ay) * dy) / l2)) : 0;
+        const erx = rx - ax - dx * ur, ery = ry - ay - dy * ur;
+        br = Math.min(br, erx * erx + ery * ery);
+      }
     }
-    gapPointAt(su, arcU - su.arcPer, p0); gapPointAt(su, arcU + su.arcPer, p1);
-    let tux = p1.x - p0.x, tuy = p1.y - p0.y;
-    const lu = Math.hypot(tux, tuy) || 1; tux /= lu; tuy /= lu;
+    bD[0] = Math.sqrt(bl); bD[1] = Math.sqrt(br);
     const oi = Math.max(0, Math.min(nO - 2, bi));
     let tox = ox[oi + 1] - ox[oi], toy = oy[oi + 1] - oy[oi];
     const lo = Math.hypot(tox, toy) || 1; tox /= lo; toy /= lo;
     return { d: Math.sqrt(bd), sin: Math.abs(tux * toy - tuy * tox) };
   };
-  const sc6: [number, number, number, number, number, number] = [0, 0, 1, 1, 1, 1];
+  // [winNeg, winPos, side scales (4), per-border scales (8), per-border cut ends (4: K1584 s4, 1e6 = none)]
+  const sc6: number[] = [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1e6, 1e6, 1e6, 1e6];
   const march = (dir: number, cap: number, room: number): number => {
     const allD = 2 * fillHalf + margin, exitD = allD + fade;
     let all = Number.NaN, allSin = 1, win = Number.NaN, prevS = 0, prevD = Number.NaN, sil = Number.NaN, cut = Number.NaN;
+    // K1584 s4: per border (left, right) when either border's room is near: where it clears the over's fill and its margin
+    const rB = bRooms ? (dir > 0 ? [bRooms[2], bRooms[3]] : [bRooms[0], bRooms[1]]) : null;
+    const wantB = rB !== null && Math.min(rB[0], rB[1]) < 1e5;
+    const silB = [Number.NaN, Number.NaN], cutB = [Number.NaN, Number.NaN], prevB = [Number.NaN, Number.NaN];
+    // K1584 s4: where each border first clears the over's fill, margin and fade: the end of its own gap. Past it the
+    // window may run on (the over, a joint member too, comes back within reach on the way into the joint: A_c j104,
+    // or the over's end cap: A_c x111 by t48e); a cut there takes the joint's outline or leaves a sliver.
+    const endB = [Number.NaN, Number.NaN];
     for (let s = 0; ; s += GAP_MARCH_STEP) {
       const sc = Math.min(s, cap);
-      const { d, sin } = dAt(uC + dir * sc);
+      const { d, sin } = dAt(uC + dir * sc, wantB);
       const cross = (lvl: number): number => Number.isNaN(prevD) || d === prevD ? sc : prevS + (sc - prevS) * ((lvl - prevD) / (d - prevD));
       if (Number.isNaN(sil) && d >= fillHalf) sil = cross(fillHalf);
       if (Number.isNaN(cut) && d >= fillHalf + margin) cut = cross(fillHalf + margin);
+      if (wantB) for (let b = 0; b < 2; b++) {
+        const db = bD[b], pb = prevB[b];
+        const crossB = (lvl: number): number => Number.isNaN(pb) || db === pb ? sc : prevS + (sc - prevS) * ((lvl - pb) / (db - pb));
+        if (Number.isNaN(silB[b]) && db >= fillHalf) silB[b] = crossB(fillHalf);
+        if (Number.isNaN(cutB[b]) && db >= fillHalf + margin) cutB[b] = crossB(fillHalf + margin);
+        if (Number.isNaN(endB[b]) && db >= fillHalf + margin + fade) endB[b] = crossB(fillHalf + margin + fade);
+        prevB[b] = db;
+      }
       if (Number.isNaN(all) && d >= allD) { all = cross(allD); allSin = sin; }
       if (Number.isNaN(win) && d >= exitD) win = Math.min(cap, cross(exitD) + GAP_MARCH_STEP + GAP_EXIT_PAD);
       if (Number.isNaN(win) && !Number.isNaN(all) && sc >= all + fade / Math.max(allSin, 0.2) + GAP_MARCH_STEP) win = Math.min(cap, sc + GAP_EXIT_PAD);
@@ -493,6 +599,32 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
       prevD = d; prevS = sc;
     }
     const w = Number.isNaN(win) ? cap : win;
+    // K1584 s4: each border's scales from its own room and clearing, with no floor: the gap shrinks to what fits before
+    // the joint corner's tangent point on that border (where its outline turns into the joint's), and runs whole when
+    // the room holds it. Nothing fits (the corner sits at the over's outline) gives 0, 0.
+    // K1584 s5 (Levi: "we need to add support for having gaps carve into junctions"): a border's gap no longer yields
+    // to its joint room. It keeps its full margin and fade and runs to its own end (endB), carving into the junction's
+    // outline where the joint's corner sits at the over's edge. carveB keeps stage 4's room scales for A/Bs only.
+    // K1584 s7 rule K (K1601, Levi on three loop tips: "an extra gap in the middle of a sharply turning border that isn't
+    // actually at a crossing"): a border with no end of its own (it never clears the over's fill, margin and fade) whose
+    // joint room lies past its own gap (its cut, else its fill exit, + fade + GAP_END_PAD) keeps stage 4's room scales and
+    // stops at its room: past that room the border runs on round the loop's turn, which is no longer this crossing's.
+    const keepK = [false, false];
+    if (wantB && rB) for (let b = 0; b < 2; b++) {
+      const rm = rB[b];
+      if (!Number.isNaN(endB[b])) sc6[14 + (dir > 0 ? 2 : 0) + b] = endB[b];
+      const g0 = Number.isNaN(cutB[b]) ? silB[b] : cutB[b];
+      keepK[b] = GAP_CARVE && Number.isNaN(endB[b]) && rm < 1e5 && !Number.isNaN(g0) && rm >= g0 + fade + GAP_END_PAD;
+      // its end is the room (codeAt adds the pad back)
+      if (keepK[b]) sc6[14 + (dir > 0 ? 2 : 0) + b] = Math.max(0, rm - GAP_END_PAD);
+      if ((GAP_CARVE && !keepK[b]) || !(rm < 1e5)) continue;
+      const ct = Math.min(Number.isNaN(cutB[b]) ? w : cutB[b], w), sl = Math.min(Number.isNaN(silB[b]) ? ct : silB[b], ct);
+      const mArc = Math.max(ct - sl, 1e-6);
+      const ms = Math.min(1, Math.max(0, (rm - sl) / mArc));
+      const o = 6 + (dir > 0 ? 4 : 0) + 2 * b;
+      sc6[o] = ms;
+      sc6[o + 1] = fade > 0 ? Math.min(1, Math.max(0, (rm - (sl + mArc * ms)) / fade)) : 1;
+    }
     // K1458: crossing_gaps.ts clearScales: near a fused joint the side's margin (floor 0.5) and then its fade
     // (floor 0.45) shrink by the shortfall only
     if (room < 1e5) {
@@ -506,6 +638,36 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
     // K1476: the lanes never clear (two arms of one joint crossing just before it, then riding side by side
     // into it): there is no all-lanes exit to protect, and today's ribbon is handed to the fan inside the
     // joint's room, so the window ends at the room instead of running to its cap along the fan's arms.
+    // K1584 s5: with per-border ends, a cleared window runs whole: each border's cut stops at its own end (endB), so the
+    // room no longer caps it (the cap ended the far border's cut short of its gap, a closed side by a joint).
+    if (GAP_CARVE && rB) {
+      // K1584 s7 rule K: on a side with a rule-K border the window runs to the longest of those borders' rooms, the
+      // other borders' own ends + GAP_END_PAD (a no-end border with a cut: w, as K1476 has it) and all + GAP_EXIT_PAD
+      // (stage 5 stretched it to the cap, round the loop's turn); a side without one is untouched
+      if (keepK[0] || keepK[1]) {
+        let kw = 0, ke = Number.isNaN(all) ? 0 : all + GAP_EXIT_PAD;
+        for (let b = 0; b < 2; b++) {
+          if (keepK[b]) { kw = Math.max(kw, rB[b]); continue; }
+          const r = !Number.isNaN(endB[b]) ? endB[b] + GAP_END_PAD : !Number.isNaN(cutB[b]) ? w : Number.NaN;
+          if (!Number.isNaN(r)) ke = Math.max(ke, r);
+        }
+        return Math.min(w, Math.max(kw, ke));
+      }
+      if (!Number.isNaN(all)) return w;
+      // K1476's case with a border that clears past the room (the centreline never clears within the cap: A_3 x166, x303,
+      // x317, each beside a joint): the window runs to the last border's own end, each border's cut stopping at its own
+      // end; a border with no end of its own keeps the room as its end (stage 4's window, no riding cut along the arm)
+      // (a border that clears the over's fill and margin but not its fade within the cap reaches the cap: A_5 x127, x146)
+      let e = Number.NaN;
+      for (let b = 0; b < 2; b++) {
+        const r = !Number.isNaN(endB[b]) ? endB[b] : !Number.isNaN(cutB[b]) ? w : Number.NaN;
+        if (!Number.isNaN(r)) e = Number.isNaN(e) ? r : Math.max(e, r);
+      }
+      if (!Number.isNaN(e) && e + GAP_END_PAD > room) {
+        if (GAP_NOEND_ROOM) for (let b = 0; b < 2; b++) if (Number.isNaN(endB[b])) sc6[14 + (dir > 0 ? 2 : 0) + b] = Math.max(0, room - GAP_END_PAD);
+        return Math.min(w, e + GAP_END_PAD);
+      }
+    }
     return Number.isNaN(all) ? Math.min(w, room) : Math.min(w, Math.max(room, all + GAP_EXIT_PAD));
   };
   sc6[0] = march(-1, capNeg, roomNeg); sc6[1] = march(1, capPos, roomPos);
@@ -516,6 +678,8 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
 const GAP_JOINT_OB = 0.04;
 /** K1482 s15: the over arc around the crossing (each way) whose samples the joint flag reads. */
 const GAP_JOINT_RA = 1.5;
+/** K1584 s1: the under arc from a slot within which a member under sample keeps s18's flag on it. */
+const GAP_JOINT_UA = 0.1;
 /**
  * K1482 s15: the bake's joint flag for each slot a crossing wins (ks: the slots' under sample indices on su; km: the
  * over chain's kept index of each over sample). GfGapTable writes it into the slot's y fraction (over chain + 0.125 * bits) and lkGap reads it: per side
@@ -531,7 +695,7 @@ const GAP_JOINT_RA = 1.5;
  * GAP_JOINT_RA (arc) of a slot lies within the cut's reach of its outline point: the crossing sits on an arm of a fused
  * joint, so the full cut's ending erased the arm's outline where it meets the joint's (link A j22/j88/t80s/t65s/t70s/t81s).
  */
-export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }, un?: { c: number; km: ArrayLike<number> }): number[] {
+export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number, so: GapSamples, oC: number, km: ArrayLike<number>, ks: readonly number[], su: GapSamples, sc: { fh: number; mg: number; fd: number }, un?: { c: number; km: ArrayLike<number>; tight?: readonly boolean[] }): number[] {
   const out = new Array<number>(ks.length).fill(0);
   const pt = { x: 0, y: 0 };
   const mx: number[] = [], my: number[] = [], nx: number[] = [], ny: number[] = [];
@@ -541,7 +705,7 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
     gapPointAt(so, k * so.arcPer, pt);
     if (mem(c, km[k])) { mx.push(pt.x); my.push(pt.y); } else { nx.push(pt.x); ny.push(pt.y); }
   }
-  const ux: number[] = [], uy: number[] = [];
+  const ux: number[] = [], uy: number[] = [], um = new Set<number>();
   if (un) {
     const R = Math.round(GAP_JOINT_RA / su.arcPer), seen = new Set<number>();
     for (const k0 of ks) for (let q = k0 - R; q <= k0 + R; q++) {
@@ -549,26 +713,33 @@ export function gapJointFlags(mem: (c: number, k: number) => boolean, c: number,
       if (su.closed) k = ((k % su.count) + su.count) % su.count; else if (k < 0 || k >= su.count) continue;
       if (seen.has(k)) continue;
       seen.add(k);
-      if (mem(un.c, un.km[k])) { ux.push(su.positions[2 * k]); uy.push(su.positions[2 * k + 1]); }
+      if (mem(un.c, un.km[k])) { ux.push(su.positions[2 * k]); uy.push(su.positions[2 * k + 1]); um.add(k); }
     }
   }
   if (!mx.length && !ux.length) return out;
   const reach2 = (sc.fh + sc.mg + sc.fd) ** 2, off = sc.fh + GAP_JOINT_OB, nn2 = sc.fh * sc.fh, uxy = su.positions;
   const last = su.count - 1;
-  const near = new Array<number>(ks.length).fill(0);
+  const near = new Array<number>(ks.length).fill(0), RU = Math.round(GAP_JOINT_UA / su.arcPer);
   for (let i = 0; i < ks.length; i++) {
     const k = ks[i];
     const ka = su.closed ? (k + last) % su.count : Math.max(0, k - 1), kb = su.closed ? (k + 1) % su.count : Math.min(last, k + 1);
     let tx = uxy[2 * kb] - uxy[2 * ka], ty = uxy[2 * kb + 1] - uxy[2 * ka + 1];
     const tl = Math.sqrt(tx * tx + ty * ty) || 1; tx /= tl; ty /= tl;
     let bits = 0, nb = 0;
+    // K1584 s1: s18's under rule holds only on slots at the joint itself (a member under sample within GAP_JOINT_UA of
+    // arc). It used to hold on every slot within the cut's reach of a member sample, which took the gap from the
+    // crossing's own exit too wherever a joint lay within about 1 of it (link A: 263 of its 1,400 border exits).
+    // K1584 s3: and not on a slot inside its side's joint room when that side has room for the full gap (un.tight false:
+    // the crossing's own exit, whose full gap ends before the joint's outline starts); slots past the room keep it.
+    let uNear = false;
+    if (!un?.tight || un.tight[i]) for (let q = k - RU; q <= k + RU && !uNear; q++) uNear = um.has(su.closed ? ((q % su.count) + su.count) % su.count : q);
     for (const [sd, bit] of [[1, 1], [-1, 2]] as const) {
       const qx = uxy[2 * k] - sd * ty * off, qy = uxy[2 * k + 1] + sd * tx * off; // the left normal is (-ty, tx)
       let dM = Infinity, dN = Infinity;
       for (let m = 0; m < mx.length; m++) { const dx = mx[m] - qx, dy = my[m] - qy; dM = Math.min(dM, dx * dx + dy * dy); }
       for (let m = 0; m < nx.length; m++) { const dx = nx[m] - qx, dy = ny[m] - qy; dN = Math.min(dN, dx * dx + dy * dy); }
       if (dM < reach2 && dM <= dN) { nb |= bit; if (dN >= nn2) bits |= bit; }
-      for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } }
+      if (uNear) for (let m = 0; m < ux.length; m++) { const dx = ux[m] - qx, dy = uy[m] - qy; if (dx * dx + dy * dy < reach2) { bits |= bit; break; } }
     }
     out[i] = bits; near[i] = nb;
   }
@@ -675,22 +846,136 @@ export class GfGapTable {
       const roomN = su.closed ? su.total / 4 : uC;
       const capP = Math.max(0.15, Math.min(CUT_REACH, (twinP ? 0.5 : 0.8) * gapP, splitP, roomP));
       const capN = Math.max(0.15, Math.min(CUT_REACH, (twinN ? 0.5 : 0.8) * gapN, splitN, roomN));
-      // K1458: the room to the nearest fused joint on each side, past its clearance (crossing_gaps.ts jRoomNeg/Pos)
+      // K1458: the room to the nearest fused joint on each side, past its clearance (crossing_gaps.ts jRoomNeg/Pos).
+      // K1584 s3: with gf's joint geometry given (jointArcs), the room runs to the nearest joint corner's tangent point
+      // (less the exit pad), where the joint's outline leaves the under thread's, and to the nearest joint ctrl less a
+      // fill half-width; the clearance scales then yield only by the shortfall of that room.
       let jRoomP = 1e6, jRoomN = 1e6;
-      const jl = r.joints?.get(x.underChain);
-      if (jl) for (const jc of jl) {
-        let d = kArcOfCtrl(D, r.kcv[x.underChain], jc.ctrl) - uC;
+      // K1584 s4: and per border: [neg left, neg right, pos left, pos right]. The corner room runs to the tangent point
+      // itself, no exit pad: the pad closed about 40% of the sides whose corner sits just past the over's outline
+      // (A_3 x256 by t60e, a notch in s3), and the joint's outline only starts at the tangent point.
+      const bRoom = [1e6, 1e6, 1e6, 1e6];
+      const room = (arc: number, clear: number, lat = 0): void => {
+        let d = arc - uC;
         if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
-        if (d >= 0) jRoomP = Math.min(jRoomP, Math.max(0, d - (r.jointClear ?? 0)));
-        else jRoomN = Math.min(jRoomN, Math.max(0, -d - (r.jointClear ?? 0)));
+        const v = Math.max(0, Math.abs(d) - clear), o = d >= 0 ? 2 : 0;
+        if (d >= 0) jRoomP = Math.min(jRoomP, v);
+        else jRoomN = Math.min(jRoomN, v);
+        if (lat >= 0) bRoom[o] = Math.min(bRoom[o], v);
+        if (lat <= 0) bRoom[o + 1] = Math.min(bRoom[o + 1], v);
+      };
+      const ja = r.jointArcs;
+      const jl = r.joints?.get(x.underChain);
+      // K1584 s4: with the corners' sides given, the joint ctrl caps the window alone (lat NaN: no border); a border's
+      // room runs to its own corners, so a border no joint corner meets keeps the full gap beside a junction
+      const jlat = r.jointLats?.get(x.underChain), ctrlLat = ja && r.jointLats ? Number.NaN : 0;
+      if (jl) for (const jc of jl) room(kArcOfCtrl(D, r.kcv[x.underChain], jc.ctrl), ja ? r.fillHalf : (r.jointClear ?? 0), ctrlLat);
+      const jt = ja?.get(x.underChain);
+      // K1584 s7 corner rule (K1595 Q4; Levi on seven stems beside junctions: today's look, the stem joined to its cup):
+      // per border, [neg left, neg right, pos left, pos right], the off of the nearest PAIR corner's tangent point, a
+      // junction corner whose two chains are this crossing's under and over. There the under's border turns into the
+      // fillet that joins it to the over, whose outline is the fillet's other half: the far term finds the over "near"
+      // all along it and the window never clears, so the cut ran on round the corner into the junction.
+      const jp = r.jointPartners?.get(x.underChain);
+      const pairB = [1e6, 1e6, 1e6, 1e6];
+      // K1584 s8 (Levi on the seven stems: today's look): per border, the off of the pair corner's FILLET START on the
+      // under, the nearer to the crossing of the under's own tangent point (pairB) and the over's tangent point of the
+      // same corner projected onto the under. Where the border runs alongside the over into the corner, the over's
+      // tangent point lies nearer the crossing: the fillet's bend starts there, and s7's flag (at the under's tangent
+      // point) left the far term cutting that bend (A_6 k197, A_d k148: a notch where today joins the stem to its cup).
+      const pairF = [1e6, 1e6, 1e6, 1e6];
+      const jtO = ja?.get(x.overChain), jpO = r.jointPartners?.get(x.overChain);
+      let rawO: number[] | null = null;
+      const pU = { x: 0, y: 0 }, pO = { x: 0, y: 0 }, pS = { x: 0, y: 0 };
+      // the over's tangent point (its corner with the under) nearest the under's at `arc`, projected onto the under
+      // (the nearest under sample within GAP_FILLET_REACH of arc): its off from the crossing, NaN when none lies in reach
+      const overTpOff = (arc: number): number => {
+        if (!jtO || !jpO) return Number.NaN;
+        if (!rawO) {
+          const kmO = keptOf(x.overChain, so);
+          rawO = [];
+          for (let k = 0; k < so.count; k++) if (rawO[kmO[k]] === undefined) rawO[kmO[k]] = k;
+        }
+        gapPointAt(su, arc, pU);
+        let best = Infinity, bx = 0, by = 0;
+        for (let q = 0; q < jtO.length; q++) {
+          if (jpO[q] !== x.underChain) continue;
+          const f = jtO[q], i = Math.max(0, Math.min(rawO.length - 1, Math.floor(f))), j = Math.min(rawO.length - 1, i + 1);
+          gapPointAt(so, (rawO[i] + Math.max(0, Math.min(1, f - i)) * (rawO[j] - rawO[i])) * so.arcPer, pO);
+          const dd = (pO.x - pU.x) ** 2 + (pO.y - pU.y) ** 2;
+          if (dd < best) { best = dd; bx = pO.x; by = pO.y; }
+        }
+        if (!(best < GAP_FILLET_REACH * GAP_FILLET_REACH)) return Number.NaN;
+        let bd = Infinity, ba = arc;
+        const n = Math.ceil(GAP_FILLET_REACH / su.arcPer);
+        for (let i = -n; i <= n; i++) {
+          const a2 = arc + i * su.arcPer;
+          if (!su.closed && (a2 < 0 || a2 > su.total)) continue;
+          gapPointAt(su, a2, pS);
+          const dd = (pS.x - bx) ** 2 + (pS.y - by) ** 2;
+          if (dd < bd) { bd = dd; ba = a2; }
+        }
+        let d = ba - uC;
+        if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
+        return d;
+      };
+      if (jt) {
+        // field vertex (kept index) -> its first raw sample, the arc the window marches in
+        const km = keptOf(x.underChain, su), raw: number[] = [];
+        for (let k = 0; k < su.count; k++) if (raw[km[k]] === undefined) raw[km[k]] = k;
+        for (let q = 0; q < jt.length; q++) {
+          const f = jt[q];
+          const i = Math.max(0, Math.min(raw.length - 1, Math.floor(f))), j = Math.min(raw.length - 1, i + 1);
+          const arc = (raw[i] + Math.max(0, Math.min(1, f - i)) * (raw[j] - raw[i])) * su.arcPer, lat = jlat ? jlat[q] ?? 0 : 0;
+          room(arc, 0, lat);
+          if (!jp || jp[q] !== x.overChain) continue;
+          let d = arc - uC;
+          if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
+          const o = d >= 0 ? 2 : 0;
+          if (lat >= 0) pairB[o] = Math.min(pairB[o], Math.abs(d));
+          if (lat <= 0) pairB[o + 1] = Math.min(pairB[o + 1], Math.abs(d));
+          const dO = overTpOff(arc);
+          const fS = dO === dO && (dO >= 0) === (d >= 0) ? Math.min(Math.abs(d), Math.abs(dO)) : Math.abs(d);
+          if (lat >= 0) pairF[o] = Math.min(pairF[o], fS);
+          if (lat <= 0) pairF[o + 1] = Math.min(pairF[o + 1], fS);
+        }
       }
+      const perB = r.jointLats !== undefined && ja !== undefined;
       // K1460 s3: a self crossing's over range and own-arc exclusion, as setupUnder hands marchUnder (oCapNeg/Pos
       // take splitBwd/Fwd; selfEx = both half-widths + margin + fade + the exit pad)
       const oRN = self ? Math.min(GAP_OVER_RANGE, splitP) : GAP_OVER_RANGE, oRP = self ? Math.min(GAP_OVER_RANGE, splitN) : GAP_OVER_RANGE;
       const selfEx = self ? 2 * r.fillHalf + r.margin + r.fade + GAP_EXIT_PAD : 0;
-      const [wn, wp, msN, fsN, msP, fsP] = gapWindow(su, so, uC, oC, r.fillHalf, r.margin, r.fade, capN, capP, jRoomN, jRoomP, oRN, oRP, selfEx);
+      const gw = gapWindow(su, so, uC, oC, r.fillHalf, r.margin, r.fade, capN, capP, jRoomN, jRoomP, oRN, oRP, selfEx, perB ? bRoom : undefined);
+      // K1584 s7 corner rule (K1595 Q4 form b): from the nearest pair corner on, each side's slots carry the far-off flag
+      // (the right code's 1024 bit): the shader's far term (lkNearOn) is off there, its loop term untouched. A slot
+      // whose cell holds the tangent point is flagged too: the fillet's pixels carry the tangent point's s. Closing the
+      // codes instead (form a) also shrank the loop term's cut, which moved two right loops (A_3 x49, A_d x241).
+      const stopN = Math.min(pairB[0], pairB[1]), stopP = Math.min(pairB[2], pairB[3]);
+      // K1584 s8: the flag starts earlier where a border's own gap (gw[14 + o]) runs on to its corner's fillet start:
+      // from the latest point either border still needs the far term, that border's fillet start, the other's code
+      // reach (its gap end + GAP_END_PAD + a sample, codeAt). A crossing's gap beside a junction whose borders end short
+      // of their fillets keeps s7's flag, so its length is untouched (D_a x174: a shared min over both borders took
+      // 3 px of its gap). The flag is per slot, both borders: a side where one border runs into its fillet while the
+      // other's gap reaches past that fillet start keeps the far cut on the first's bend (A_c k310, reported).
+      const flagOf = (o: number, stop: number): number => {
+        if (!(stop < 1e5)) return Infinity;
+        const f7 = stop - su.arcPer / 2;
+        let into = false, need = 0;
+        for (let b = 0; b < 2; b++) {
+          const f = pairF[o + b], e = gw[14 + o + b];
+          if (f < 1e5 && e >= f) { into = true; need = Math.max(need, f); } else need = Math.max(need, e + GAP_END_PAD + su.arcPer);
+        }
+        return into ? Math.min(f7, need) : f7;
+      };
+      const flagN = flagOf(0, stopN), flagP = flagOf(2, stopP);
+      const wn = gw[0], wp = gw[1], msN = gw[2], fsN = gw[3], msP = gw[4], fsP = gw[5];
       // K1458: the side's clearance scales ride the scan field's fraction (gwScales)
-      const packN = (Math.round(fsN * 31) * 32 + Math.round(msN * 31)) / 1024, packP = (Math.round(fsP * 31) * 32 + Math.round(msP * 31)) / 1024;
+      const pk = (ms: number, fs: number): number => Math.round(fs * 31) * 32 + Math.round(ms * 31);
+      // K1584 s4: per border, the left border's code rides z's fraction and the right border's x's (quarter scale since
+      // s7, which adds GAP_FAR_OFF, so the chain still reads int(x + 0.5)); code 0 (nothing fits before that border's joint corner, or the slot lies past
+      // its room, on the joint's own outline) closes that border's cut as the old flag did. A code that rounds to 0
+      // while something fits takes 1 (a margin of 1/31).
+      const bCode = (ms: number, fs: number, live: boolean): number => live ? Math.max(1, pk(ms, fs)) : 0;
       this.wins?.push(cents.indexOf(e), wn, wp, capN, capP);
       let ent = byChain.get(x.underChain);
       if (!ent) { ent = { m: new Float32Array(su.count).fill(-GAP_FAR), o: new Float32Array(su.count * 3).fill(-1) }; byChain.set(x.underChain, ent); }
@@ -720,6 +1005,22 @@ export class GfGapTable {
       const kc = Math.round(uC / su.arcPer);
       const km = keptOf(x.overChain, so);
       const ks: number[] = [], wr: number[] = []; // K1482 s15: the slots this crossing wins (under sample) and their y, z (kept index, scan + pack)
+      const rc: number[] = []; // K1584 s4: each slot's right-border code (x's fraction)
+      // K1584 s4: each border's code at a slot: its own scales, or 0 past its joint room (the window runs on into the
+      // joint, where the over thread, a member too, comes back within the cut's reach of the joint's outline: link A_c
+      // j104; that stretch is the joint's own outline, which stays closed). Without jointLats both borders take the
+      // side's scales. This replaces the joint flag (K1482 s15/s17/s18), which closed whole crossing sides.
+      // K1584 s5: with GAP_CARVE the room closes nothing: the cut runs past the joint corner into the junction's outline,
+      // to the border's own end (A_c j104's over coming back is past that end, so its stretch still stays closed).
+      const codeAt = (off: number, b: number): number => {
+        if (!perB) return off >= 0 ? pk(msP, fsP) : pk(msN, fsN);
+        const o = (off >= 0 ? 2 : 0) + b, rm = bRoom[o];
+        if (!GAP_CARVE && rm < 1e5 && Math.abs(off) > rm) return 0;
+        // past the border's own gap (it cleared the over's fill, margin and fade) the window cuts nothing of it
+        if (Math.abs(off) > gw[14 + o] + GAP_END_PAD + su.arcPer) return 0;
+        const ms = gw[6 + 2 * o], fs = gw[7 + 2 * o];
+        return bCode(ms, fs, ms > 0);
+      };
       for (const dir of [1, -1]) {
         let a = oC;
         for (let j = dir > 0 ? 0 : 1; j <= su.count; j++) {
@@ -749,13 +1050,13 @@ export class GfGapTable {
           if (so.closed) s = ((s % so.total) + so.total) % so.total;
           // the shader scans the field's vertices, which are the kept samples: bake their index
           ks.push(k);
-          wr.push(km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))], Math.ceil(w / so.arcPer) + (off >= 0 ? packP : packN));
+          rc.push(codeAt(off, 1) + (Math.abs(off) >= (off >= 0 ? flagP : flagN) ? GAP_FAR_OFF : 0));
+          wr.push(km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))], Math.ceil(w / so.arcPer) + codeAt(off, 0) / 1024);
         }
       }
-      const jfs = r.overMember ? gapJointFlags(r.overMember, x.overChain, so, oC, km, ks, su, { fh: r.fillHalf, mg: r.margin, fd: r.fade }, { c: x.underChain, km: keptOf(x.underChain, su) }) : null;
       for (let i = 0; i < ks.length; i++) {
         const k = ks[i];
-        ent.o[3 * k] = x.overChain + 0.125 * (jfs ? jfs[i] : 0);
+        ent.o[3 * k] = x.overChain + rc[i] / 4096;
         ent.o[3 * k + 1] = wr[2 * i];
         ent.o[3 * k + 2] = wr[2 * i + 1];
       }
@@ -1730,6 +2031,73 @@ export function gfJointClear(fillHalf: number, filletReachPerHalf: number, cuspR
   return Math.max(fillHalf * 1.1, fillHalf * filletReachPerHalf * cuspRadius * 0.55) + gap;
 }
 
+/** K1584 s3: the tables' fields gfJointArcs reads (tables.ts GfTables). */
+export interface GfJointArcTables {
+  nK: number; kThru: ArrayLike<number>; kCa: ArrayLike<number>; kCb: ArrayLike<number>; kSa: ArrayLike<number>; kSb: ArrayLike<number>;
+  cV0: ArrayLike<number>; cNV: ArrayLike<number>; cClosed: ArrayLike<number>; cLen: ArrayLike<number>; vs: ArrayLike<number>;
+  /** K1584 s4: the corner centres and the field vertices, for each tangent point's side (gfJointArcs' lats). */
+  kCx?: ArrayLike<number>; kCy?: ArrayLike<number>; vx?: ArrayLike<number>; vy?: ArrayLike<number>;
+}
+
+/**
+ * K1584 s3: where each chain's outline turns into a fused joint's: every joint corner's tangent point on it (tables
+ * kCa/kSa and kCb/kSb; a through pass's bend corner, kThru, is no joint), as a fractional field-vertex index (the kept
+ * sample, past an open chain's pad vertex). GfGapTable measures a crossing side's joint room to these (GfGapSource.jointArcs).
+ * K1584 s4: given lats (and T's corner centres and vertices), each point's side of its chain, in the same order: +1 when
+ * the corner's centre lies left of the chain's direction (the left normal (-ty, tx)), -1 right, 0 unknown (both
+ * borders). That border alone turns into the joint's outline there (GfGapSource.jointLats).
+ * K1584 s7: given partners, each point's corner's other chain, in the same order (GfGapSource.jointPartners).
+ */
+export function gfJointArcs(T: GfJointArcTables, lats?: Map<number, number[]>, partners?: Map<number, number[]>): Map<number, number[]> {
+  const out = new Map<number, number[]>();
+  const latOf = (k: number, c: number, f: number): number => {
+    if (!T.kCx || !T.kCy || !T.vx || !T.vy) return 0;
+    const v0 = T.cV0[c], n = T.cNV[c], pad = T.cClosed[c] !== 1 && T.vs[v0] < 0 ? 1 : 0, b = v0 + pad, last = v0 + n - 1;
+    let i = Math.min(last, b + Math.floor(f)), j = Math.min(last, i + 1);
+    if (j === i) i = Math.max(b, j - 1);
+    if (j === i) return 0;
+    const u = Math.max(0, Math.min(1, f - (i - b)));
+    const tx = T.vx[j] - T.vx[i], ty = T.vy[j] - T.vy[i];
+    const px = T.vx[i] + tx * u, py = T.vy[i] + ty * u;
+    const cr = tx * (T.kCy[k] - py) - ty * (T.kCx[k] - px);
+    return Number.isFinite(cr) && cr !== 0 ? Math.sign(cr) : 0;
+  };
+  for (let k = 0; k < T.nK; k++) {
+    if (T.kThru[k] === 1) continue;
+    for (const [c, s0, pc] of [[T.kCa[k], T.kSa[k], T.kCb[k]], [T.kCb[k], T.kSb[k], T.kCa[k]]]) {
+      if (!(c >= 0 && c < T.cV0.length) || !Number.isFinite(s0)) continue;
+      const v0 = T.cV0[c], n = T.cNV[c], closed = T.cClosed[c] === 1, pad = !closed && T.vs[v0] < 0 ? 1 : 0;
+      let lo = v0 + pad, hi = v0 + n - 1;
+      if (hi < lo) continue;
+      let s = s0;
+      if (closed && T.cLen[c] > 0) s = T.vs[lo] + ((((s - T.vs[lo]) % T.cLen[c]) + T.cLen[c]) % T.cLen[c]);
+      let f: number;
+      if (s <= T.vs[lo]) f = 0;
+      else if (s >= T.vs[hi]) f = hi - lo;
+      else {
+        const b = lo;
+        while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T.vs[m] <= s) lo = m; else hi = m; }
+        const ds = T.vs[hi] - T.vs[lo];
+        f = lo - b + (ds > 0 ? (s - T.vs[lo]) / ds : 0);
+      }
+      let L = out.get(c);
+      if (!L) { L = []; out.set(c, L); }
+      L.push(f);
+      if (lats) {
+        let A = lats.get(c);
+        if (!A) { A = []; lats.set(c, A); }
+        A.push(latOf(k, c, f));
+      }
+      if (partners) {
+        let P = partners.get(c);
+        if (!P) { P = []; partners.set(c, P); }
+        P.push(pc);
+      }
+    }
+  }
+  return out;
+}
+
 /**
  * CPU twin of the look form's lkColour: chain c's colour at sample k (counted from the chain's first sample, its
  * extension vertex already taken off) and fraction u, or null (no label).
@@ -1756,6 +2124,8 @@ const G_LOOK = `// K1389 s1: the label's piece (-1: a corner, whose s rides lkS)
 // configuration's copies; the output colour (K1389 s2)
 int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec4(0.0); float lkHi = 0.0; vec3 lkHiC = vec3(0.0); float lkHiA = 0.0; float lkE = 1.0;
 int lkj[MAXS]; float lks[MAXS];
+// K1584 s6: the ball's scale on the gap's margin and fade (lkBall), 1 everywhere else
+float lkBs = 1.0;
 `;
 const M_ANCHOR = "\nvoid main() {\n";
 function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? s : s + ".0"; }
@@ -1861,7 +2231,8 @@ vec3 lkGwSlot(int c, vec2 q) {
   if (k >= last) { k = last; u = 0.0; }
   int b = int(H.y);
   vec4 A = GW4(b + k); vec4 B = GW4(b + min(k + 1, last));
-  if (A.y >= 0.0 && floor(B.y) == floor(A.y) && abs(B.z - A.z) < A.w + B.w) return vec3(u < 0.5 ? A.y : B.y, mix(A.z, B.z, u), max(A.w, B.w));
+  // K1584 s4: the scan range is the wider slot's, its border code (w's fraction) the nearer slot's, as x's is
+  if (A.y >= 0.0 && floor(B.y) == floor(A.y) && abs(B.z - A.z) < A.w + B.w) return vec3(u < 0.5 ? A.y : B.y, mix(A.z, B.z, u), max(floor(A.w), floor(B.w)) + fract(u < 0.5 ? A.w : B.w));
   vec4 P = (u < 0.5 && A.y >= 0.0) || B.y < 0.0 ? A : B;
   return P.yzw;
 }
@@ -2231,10 +2602,12 @@ float lkJCut(int c, vec2 q, vec2 p, vec4 f1) {
 // (K1423: the cut lives only inside the window marched along the under thread, and its fade part
 // dissolves over the window's last half fade of arc)
 // K1458: sc = the side's (margin, fade) clearance scales near a fused joint (today's marginScale / fadeScale)
+// K1584 s6: lkBs (1 but at a ball, lkBall) scales an open border's margin and fade; a closed one (sc.x < 0) keeps its own
 float lkCut(float d, float sinT, float exg, float wm, float pxw, vec2 sc) {
   float inner = ss(uH - uAA, uH + uAA, d);
-  float fw = max(uLkF * sc.y * max(sinT, 0.2), 2.0 * uAA);
-  float e = d - uH - uLkG * sc.x;
+  float bs = sc.x > 0.0 ? lkBs : 1.0;
+  float fw = max(uLkF * sc.y * bs * max(sinT, 0.2), 2.0 * uAA);
+  float e = d - uH - uLkG * sc.x * bs;
   float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);
   float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;
   if (uGwLive > 0.5) {
@@ -2244,14 +2617,49 @@ float lkCut(float d, float sinT, float exg, float wm, float pxw, vec2 sc) {
   }
   return cut;
 }
+// K1584 s6 (Levi, 2026-11-24: "taper the gap--it should be widen out from the ball center, so it shows as a wedge cut
+// out from the center; the fade should then also taper here"): a tight turn's ball (K1572 s41, the corner's texel 5 .w)
+// on the label's own chain, within ${lkF(GAP_BALL_ARC)} of arc of the corner's tangent point there, scales the gap's
+// margin and fade by the pixel's distance from the ball's centre over the ball's radius (fillet radius + W): no gap at
+// the centre, the ordinary gap where the ball ends. The pixel's corner list (kk, nk) holds every corner in reach.
+// CPU twin: ballScaleAt.
+float lkBall(vec2 p, int c, float arc) {
+  float s = 1.0;
+  for (int i = 0; i < nk; i++) {
+    int k = kk[i] & 32767;
+    vec4 K5 = F(uOK + 6 * k + 5);
+    if (K5.w < 0.5) continue;
+    vec4 K3 = F(uOK + 6 * k + 3);
+    if (!((int(K3.x) == c && abs(arc - K3.z) < ${lkF(GAP_BALL_ARC)}) || (int(K3.y) == c && abs(arc - K3.w) < ${lkF(GAP_BALL_ARC)}))) continue;
+    vec4 K0 = F(uOK + 6 * k);
+    s = min(s, length(p - K0.xy) / max(K0.z + uW, 1e-6));
+  }
+  return clamp(s, 0.0, 1.0);
+}
 vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
   float g = 0.0; float gA = 0.0;
   vec2 tu = lkTanS(cU, qU);
   float wm = uGwLive > 0.5 ? lkWinM(cU, qU) : 1e3;
   float pxw = 2.0 * uAA;
   vec3 sl = uGwLive > 0.5 && wm > -pxw ? lkGwSlot(cU, qU) : vec3(-1.0, 0.0, 0.0);
-  vec2 sc = vec2(1.0);
-  if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
+  // K1584 s4: the slot's border codes (GfGapTable: the left border's in z's fraction, the right border's in x's at quarter
+  // scale, s7; (fade * 32 + margin) of 31): the pixel takes its own border's (its side of the under tangent at its foot).
+  // Code 0 closes that border's outline cut as the joint flag did (margin -1 px, 0.3 of the fade): the slot lies past
+  // that border's joint room, on the joint's own outline, or nothing fits before its joint corner. The coverage (scA)
+  // never reads the closure: it keeps the old clearance floors there.
+  // K1584 s7 corner rule: the right code's 1024 bit (GAP_FAR_OFF) turns the outline's far term off (fo).
+  vec2 sc = vec2(1.0); vec2 scA = sc; bool jf = false; bool fo = false;
+  if (sl.x >= 0.0) {
+    int pk = int(fract(sl.z) * 1024.0 + 0.5); int pkR = int(fract(sl.x) * 4096.0 + 0.5);
+    fo = pkR >= 1024; pkR -= fo ? 1024 : 0;
+    if (pkR != pk) { vec2 fU = lkFoot(cU, qU); if ((tu.x * (p.y - fU.y) - tu.y * (p.x - fU.x)) < 0.0) pk = pkR; }
+    jf = pk == 0;
+    // K1482 s16: a closed border's margin is -1 px (lkCut's e = d - uH - uLkG * sc.x, so sc.x = -pxw / uLkG): with no
+    // margin the short fade began at the over's outline, and the first pixel past it kept 0.13-0.53 of the cut, a 1 px
+    // light line between the over's outline and the under's at the joint (link A j60, j36, j143, t16e, j146, j157, t70s)
+    sc = jf ? vec2(uLkG > 0.0 ? -pxw / uLkG : 0.0, 0.3) : vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0;
+    scA = jf ? vec2(0.5, 0.45) : sc;
+  }
   // K1460 s4: the pixel's own arc and today's selfEx (both half-widths + margin + fade + the exit pad), for lkNearOn's
   // self crossing: its own thread is no over pass within sx of that arc (today's gapSegFull skip).
   float aU = lkArc(cU, qU);
@@ -2265,22 +2673,10 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
   // out from under the named over thread and at once ended on the host (g41_user_tw64 j71), leaving a nub of
   // ground in the fill look beside the host. Outside a window (cS < 0) every higher piece still cuts both.
   int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;
-  // K1482 s15: the slot's joint flag (the over chain's fraction, GfGapTable's gapJointFlags; bits 1 left of the under
-  // tangent, 2 right, 3 both): on a flagged side the crossing's cut of the OUTLINE takes no margin and 0.3 of the fade
-  // (stage 13's c1, decided per slot side in the bake instead of per piece here)
-  int jb = sl.x >= 0.0 ? int(fract(sl.x) * 8.0 + 0.5) : 0;
-  bool jf = jb == 3;
-  if (jb == 1 || jb == 2) { vec2 fU = lkFoot(cU, qU); jf = jb == ((tu.x * (p.y - fU.y) - tu.y * (p.x - fU.x)) >= 0.0 ? 1 : 2); }
-  // K1482 s16: and its margin is -1 px (lkCut's e = d - uH - uLkG * sc.x, so sc.x = -pxw / uLkG): with no margin the
-  // short fade began at the over's outline, and the first pixel past it (inner about 0.87) kept 0.13-0.53 of the cut,
-  // a 1 px light line between the over's outline and the under's at the joint (link A j60, j36, j143, t16e, j146,
-  // j157, t70s). Starting the fade a pixel inside the outline leaves that pixel's ink whole; a long fade still runs
-  // past it, one pixel nearer. At margin 0 there is nothing to scale and the flagged cut keeps no margin.
-  vec2 scJ = jf ? vec2(uLkG > 0.0 ? -pxw / uLkG : 0.0, 0.3 * sc.y) : sc;
-  // K1482 s16: g0 is the outline cut without the flag (g where jf is false), which alone gates the coverage's
-  // far-reach term below. Gated by the flagged g (never above g0), a flagged side could take that term where g0
-  // had already passed 0.999, so the flag reached the coverage and with it the fill look; gated by g0 the
-  // coverage (y) never reads the flag
+  // K1482 s16: g0 is the outline cut without the closure (g where jf is false), which alone gates the coverage's
+  // far-reach term below. Gated by the closed g (never above g0), a closed border could take that term where g0
+  // had already passed 0.999, so the closure reached the coverage and with it the fill look; gated by g0 the
+  // coverage (y) never reads the closure
   float g0 = 0.0;
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
@@ -2288,10 +2684,10 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
     vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
-    float cj = lkCut(pd[j], sinT, exg, wm, pxw, sc);
+    float cj = lkCut(pd[j], sinT, exg, wm, pxw, scA);
     if (cS < 0) gA = max(gA, cj); // K1561: inside a window (cS >= 0) the named piece adds its coverage cut below, with its outline cut
     if (cS < 0) g = max(g, cj);
-    else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, scJ) : cj); g0 = max(g0, cj); gA = max(gA, cj); }
+    else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, sc) : cj); g0 = max(g0, cj); gA = max(gA, cj); }
     // K1417: no casing term (the composite clears the gap to the background in every look).
   }
   // K1458: the over thread past the candidate list's reach. A piece enters the list only within
@@ -2306,8 +2702,8 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
         vec2 to = lkTanS(cO, N.yz);
         float sinT = abs(tu.x * to.y - tu.y * to.x);
         float exg = uExLive > 0.5 ? exAt(cO, lkArc(cO, N.yz)).x : 1.0;
-        float cN = lkCut(N.x, sinT, exg, wm, pxw, sc);
-        g = max(g, jf ? lkCut(N.x, sinT, exg, wm, pxw, scJ) : cN);
+        float cN = lkCut(N.x, sinT, exg, wm, pxw, scA);
+        if (!fo) g = max(g, jf ? lkCut(N.x, sinT, exg, wm, pxw, sc) : cN);
         if (gA < 0.999 && g0 < 0.999) gA = max(gA, cN);
       }
     }
@@ -2383,7 +2779,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); if (lkg2.x > 0.0 || lkg2.y > 0.0) { lkBs = lkBall(p, lab, lkArc(lab, lq)); if (lkBs < 1.0) lkg2 = lkGap(lkKb, p, lq, lab); lkBs = 1.0; } float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 

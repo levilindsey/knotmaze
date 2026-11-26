@@ -36,6 +36,38 @@ strokes toward today's, and do not use today's border strokes as a bar.
   (an arm's outline meets the joint's outline: j63, j15, j148, t57e). Gating it on dN >= reach removed t81s's tick
   but opened all of them (3902 px at 274 places, backed out in 6e0a51c2f). dN, dM and an offset-fold proxy do not
   separate t81s from them. Diff a gap-flag change over all of link A's border look; the mirror has no gap cuts.
+- THE JOINT FLAG IS WHY CROSSING GAPS ARE MISSING (K1584 s1, a candidate, not approved): a flagged side has margin
+  -1 px by design, and the flag sat on 467 of link A's 1,400 border exits (A_8 451, D_1 392), s18's under rule on
+  269 of them. `GAP_JOINT_UA` 0.1 keeps s18 only on slots within that arc of a member under sample: gaps open at
+  about 130 places a maze (150-180 on D), all brighter, but one border also opens at s18's named sites (j15, j22,
+  j148, j88, t65s, t80s, t57e); arc gates of 0.3 and up put every flag back. A plain gap is 0.07 world, 3 px.
+  Count with `.claude/probes/K1584/s1/gapcheck.ts` (handoff in `docs/design/K1584_crossing_gaps.md`).
+- GOOD, TINY AND NO GAP (K1584 s3, waits on Levi's look): the good gap is the full cut (margin 0.07, fade 0.14); the
+  tiny one is K1458's clearance scales at their floors (0.5, 0.45), from a joint room measured to the joint ctrl less
+  `jointClear` (the ribbon renderer's fillet reach, 1.72 on link A), which was 0 on most of those sides; no gap is
+  the joint flag. s3 measures the room to gf's own joint corners (`gfJointArcs`: each corner's tangent point, less
+  GAP_EXIT_PAD) and the joint ctrl less a fill half-width, and keeps s18's under rule per SLOT: on a side that room
+  leaves short of the full gap (`tight`), on a slot past the side's room, and on a side with no joint. Per side alone
+  it opened A_c j104's fused-joint outline (the slots past the room belong to the joint). All 21 mazes: full 22,402
+  to 25,856 of 29,800, scaled 2,348 to 534, under rule 2,578 to 1,178 (link A: 862 to 1,080, 123 to 36, 204 to 95).
+  This opens some of s24's V-corner sites (j88's x119, j22's x57); the over rule (about 170 a maze) is untouched.
+  The room is per side, the min over every corner on the under chain: at A_4 t84e (x356, side +1) the lat -1 border
+  fell from the full gap to the floor scales, the one place on 21 mazes where s3 shrank a gap. That side's lat +1
+  border is joint-flagged 0.48 along chain 84, so its joint's corner likely sets the room (inferred; a room per
+  border would be the refinement).
+  Counts: `.claude/probes/K1584/s3/counts.ps1` + `cntsum.py`; handoff in `docs/design/K1584_s3_brief.md`.
+- NO SIDE CLOSED BY A FLAG (K1584 s4, waits on Levi's look): the joint flag's over rule (s15/s17) and under rule
+  (s18) are gone; each BORDER gets its own code (gap table: right border in x's fraction / 2048, left in z's / 1024,
+  code round(fs*31)*32 + round(ms*31), 0 = closed). A border's room runs to its own joint corners' tangent points
+  (the source's `jointLats` give each corner's side; lat 0 holds both), with no exit pad (the pad closed x256); the joint ctrl less a fill half
+  caps only the window. No floors: the gap shrinks to what fits, 0 only when the corner sits at the over's outline.
+  What the flags protected: a slot past a border's room closes it (the joint's own outline), and a border's cut ends
+  where it first clears the over's fill, margin and fade (`GAP_END_PAD` past it; sc6 14..17), so an over coming back
+  on the way into a joint (A_c j104) or past its end cap (A_c x111 by t48e) cuts nothing. 21 mazes, s3 to s4: full
+  25,856 to 28,811 of 29,800, closed 3,076 to 264 (188 more keep over 0.8 of the border in the margin band and
+  read closed). Where the border rides inside
+  the over's margin into a joint, its cut still runs the ride (slits, A_3 x100). Counts:
+  `.claude/probes/K1584/s4/counts.ps1` + `cntsum4.py`; handoff in `docs/design/K1584_s4_brief.md`.
 - CONVERGING OUTLINES (K1482 s25, no fix): a third corner try for arms cut behind their root added ticks (backed out,
   edd983c0f). j15's Z spike is no corner: chain 70's start strokes over chain 5, whose group-15 arm its crossing with
   chain 70 cuts, and burying that stroke opens the eye's outline. t23e's outlines run tangent (corner r <= 0.03 h).

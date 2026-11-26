@@ -27,13 +27,12 @@ import { buildFieldScene, type SceneExportInput } from "../field/scene_export";
 import { gatherLeanSkeleton, gatherSceneInput, gatherSceneInputLean, type SceneExportCtx } from "../field/scene_export_hook";
 import { splineBend, type SplineSamples } from "../../geometry/spline_generator";
 import { buildTables, withHome, type GfTables } from "./tables";
-import { GfEval } from "./eval";
 import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build";
 import type { GfKeys } from "./gf_keys";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
 import { GfExploreTable, gfExploring } from "./gf_explore";
 import { knotUniformValues } from "../paint_model";
-import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, gfJointClear, gfMarkerUniforms, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfMarkerUniforms, type GfPaintSource, type GfRimSource, GfRouteTable, routeDeclKey, type GfRouteSource } from "./gf_look";
+import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, gfJointArcs, gfJointClear, gfMarkerUniforms, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfMarkerUniforms, type GfPaintSource, type GfRimSource, GfRouteTable, routeDeclKey, type GfRouteSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 import { GfLossGuard, sessionLossStore } from "../../app/context_loss";
@@ -673,28 +672,20 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
       })),
       fillHalf: xr.style.threadWidth / 2, margin: lookGap(r), fade: lookFade(r),
       joints: xr.junctionArcCtrls, jointClear: gfJointClear(xr.style.threadWidth / 2, xr.FILLET_REACH_PER_HALF, xr.cuspRadius, lookGap(r)),
-      overMember: gwMember(lookFade(r)),
+      jointArcs: gwJoints(), jointLats: gwJl, jointPartners: gwJp,
     }, gwPool.pop());
     stats.gwMs.push(performance.now() - t0);
     return P;
   };
-  // K1482 s15: the bake's joint flag reads the over pass's membership as the shader takes it (eval.ts member(),
-  // home membership as this pass compiled it, the live fade): field vertex k of chain c, past an open chain's pad
-  let gwEv: GfEval | null = null, gwEvT: GfTables | null = null;
-  const gwMember = (fade: number): ((c: number, k: number) => boolean) | undefined => {
-    if (!T || !pass) return undefined;
-    // K1588 s3: without the junction rule's footprint (aJoint). Read here it flags 79 more gap exits on the 21 test
-    // mazes (a short cut, the gap closed); on the branch the rule came from (K1584's gap steps) the bake reads no
-    // membership, so the rule changes no gap there, nor here.
-    if (gwEvT !== T || !gwEv) { gwEvT = T; gwEv = new GfEval({ ...withHome(T, pass.home), aJoint: undefined }); }
-    const ev = gwEv; ev.fadeLength = fade;
-    const Tt = ev.T;
-    return (c, k) => {
-      if (c < 0 || c >= Tt.cV0.length) return false;
-      const v0 = Tt.cV0[c]; const pad = Tt.cClosed[c] !== 1 && Tt.vs[v0] < 0 ? 1 : 0;
-      const m = ev.memberAt(c, Tt.vs[v0 + Math.min(Tt.cNV[c] - 1, k + pad)]);
-      return m.g >= 0 && m.ramp > 0;
-    };
+  // K1584 s3: the joint corners' tangent points per chain (gfJointArcs), once per tables build; s4: and their sides
+  // (the joint flag and its membership reads, K1482 s15-s18, gave way to per-border rooms); s7: and each corner's
+  // other chain (the corner rule's pair corners)
+  let gwJa: Map<number, number[]> | undefined, gwJaT: GfTables | null = null, gwJl: Map<number, number[]> | undefined;
+  let gwJp: Map<number, number[]> | undefined;
+  const gwJoints = (): Map<number, number[]> | undefined => {
+    if (!T) { gwJl = undefined; gwJp = undefined; return undefined; }
+    if (gwJaT !== T) { gwJaT = T; gwJl = new Map(); gwJp = new Map(); gwJa = gfJointArcs(T, gwJl, gwJp); }
+    return gwJa;
   };
   // K1500: the marker discs' gap uniforms (gf_look.ts gfMarkerUniforms), recomputed with the gap bake
   // (their windows march with margin and fade, so a slider move re-derives them with it)
