@@ -329,10 +329,6 @@ Next free ID: K1614.
   border into its neighbour in a corner and the gap build ends it short (s8/out/levi18.png; same kind as
   K1605's stem far ends): joined or gap; (b) the three wrong loops' eye opens at the foot since stages 3-4 and
   the arm reads as a wedge (s8/out/eyes8_k.png): close the foot like today or keep
-- **K1611** · K1584 stage 10 look: the wider wedge at the three tight balls (A_3 k63 reads as an open mouth,
-  4.31 px at the ball's edge vs the ordinary 4.36; A_5 k176 a triangle closed by a foot; A_6 k265 unchanged
-  from stage 8). Keep, or back to stage 8's slit? Sheets .claude/probes/K1584/s10/out/sheet10.png,
-  sheet10_fade.png in worktree agent-a2dfb242b056cf793 (sent 2026-11-25)
 
 ## In progress
 
@@ -796,11 +792,11 @@ Next free ID: K1614.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: nobody since 2026-11-25 11:20: stages 1 to 8 landed on master (f915561ca); waiting on Levi's look at stage 10 (K1611)
-  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: dd8074f47 on branch worktree-agent-a2dfb242b056cf793 (stages 9, 10: not landed); master has stage 8 as f915561ca
+  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (coordinator) with its stage 11 agent, started 2026-11-25 11:45
+  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: master f915561ca (stages 1 to 8); stages 9, 10 on branch worktree-agent-a2dfb242b056cf793 at dd8074f47; stage 11 on branch k1584-s11 (worktree .claude/worktrees/k1584-s11)
   - evidence: .claude/probes/K1584/ (s8, s9, s10, land8 tools; outputs untracked in the worktrees agent-a2dfb242b056cf793 and k1584-land8)
-  - next: after Levi answers K1611: a stage on current master porting stage 10's tight wedge (cherry-pick a0f00983b, d580f0230, ac3f194f1 from the gap branch) with K1612's two fixes; then K1608 corners
-  - brief: docs/design/K1584_s10_brief.md on the gap branch (Handoff, stage 10)
+  - next: stage 11 report: view its three-ball sheet, send to Levi, land by squash if the hook is gone and only the three balls change
+  - brief: `docs/design/K1584_s11_brief.md`
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
@@ -3080,6 +3076,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1611** · Answered 2026-11-25: k63's stage 10 look mostly right, taper and angle good; the wedge ends early at k176 (hook past its outer end), a little at k63 too: stage 11. Done in f915561ca (2026-11-25).
 - **K1609** · Levi 2026-11-25: wedge at #1-#3 (k63, k176, k265), wider at its outer side; looser balls: the V1/stage 8 column is fine for all (stage 5 has an extra gap at A_3 k157, A_c k141, A_5 k2); stage 10 builds it. Done in 0bf40476c (2026-11-25).
 - **K1603** · Levi 2026-11-25: V1 is ok, but only the last row's ball (A_a k202) is tight enough to need the wedge; stage 9 brief docs/design/K1584_s9_brief.md. Done in e841a4008 (2026-11-25).
 - **K1605** · Levi 2026-11-25: A_a x148 closed (s7) is right; stem far ends fold into K1607a. Done in e5d0a5106 (2026-11-25).
