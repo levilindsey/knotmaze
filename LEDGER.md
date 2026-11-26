@@ -305,6 +305,15 @@ Next free ID: K1628.
   questions (how long a first-visit wait is acceptable, must gf carry the reveal colours before the flip,
   phone first or desktops first); the rp=outline recommendation (freeze now, delete after the flip). Closes
   K1310 when adopted
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: nobody since 2026-11-25 23:12: stage 3 failed (both places fixed, 207 other places notched; not landed)
+  - branch: k1604-s3, .claude/worktrees/k1604-s3 (not for landing); last commit: c1cb7eac3 (handoff); rule b1562c352 gated, 1f5d7acad ungated
+  - evidence: .claude/probes/K1604/s3/ on k1604-s3 (out/named_k4_1.png, grid_k4_01..09.png untracked)
+  - next: Levi picks: keep the two leftovers as they are and close (recommended; revisit after K1627, same gap code), or name another way. No fourth stage unless he names it
 
 ## In progress
 
@@ -581,15 +590,6 @@ Next free ID: K1628.
   - branch: k1622-s1, .claude/worktrees/k1622-s1; last commit: this commit (brief)
   - evidence: .claude/probes/kink/, docs/design/kink_diag.md
   - next: stage 1 (docs/design/K1622_s1_brief.md): confirm the junction-arm cause by a change, fix in src/physics; on report view its master|new crops, send to Levi, land only on his yes to the look
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: claude session 09c7a672 (opus agent K1604 s3, coordinator same session), started 2026-11-25 22:25
-  - branch: k1604-s3, .claude/worktrees/k1604-s3; last commit: this commit (brief)
-  - evidence: branches k1604-s1, k1604-s2 (.claude/probes/K1604/)
-  - next: stage 3, named by Levi ('Let's try that'): cut by the under thread's own gap across the whole end (docs/design/K1604_s3_brief.md); on report view the sheet, send to Levi; no fourth stage unless he names it
 - **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
   2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
   of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
