@@ -577,9 +577,10 @@ Next free ID: K1626.
 - **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
   rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
   fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
-  - owner: claude agent K1395 s1 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, started 2026-11-25 19:10
-  - branch: k1395-s1, worktree .claude/worktrees/k1395-s1; last commit: none yet
-  - next: view its per-mode sheets (today, gf before, gf now), send to Levi, land the finished modes by squash
+  - owner: claude session 09c7a672 (opus agent K1395 s2, coordinator same session), started 2026-11-25 21:50
+  - branch: k1395-s2, .claude/worktrees/k1395-s2; last commit: this commit (stage 1's rainbow stripe order landed)
+  - evidence: `.claude/probes/K1395/s1/`
+  - next: stage 2: find why gf colours 35 to 60% more thread mid-reveal (suspect per-sample alpha), fix, per-mode sheets; on report view the sheets, send to Levi, land finished modes; second and last stage
 - **K1620** · Temporary panel checkbox 'New renderer' that reloads with or without rp=gf&gfh=1 (Levi,
   2026-11-25); remove it at the rp=gf flip
   - owner: nobody, since 2026-11-25: landed, waits for the flip
@@ -2293,8 +2294,6 @@ Every other item below waits on the trigger it names.
 - **K1623** · Today's renderer draws the border thread look with broken-up borders across the maze interior on
   ?3.FGH1HtvQeDjm6e4BII (master 843e32370); gf draws the same state cleanly. Moot at the flip (K1619's side
   finding, docs/design/kink_diag.md)
-- **K1625** · K1618 removed RevealFx.revealWidth; if branch k1395-s1 reads it, its merge fails type-check: fix
-  at that merge
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2667,6 +2666,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1625** · K1618 removed RevealFx.revealWidth; if branch k1395-s1 reads it, its merge fails type-check: fix at that merge. Dropped: K1395 stage 1 touched only gf_look.ts and merged clean after K1618 (2026-11-25).
 - **K1619** · Kink diagnosis: same physics and same centre line under both renderers; gf's exact inner border turns bends tighter than half the thread width into corners; they cluster on junction arms (docs/design/kink_diag.md). Done in this commit (2026-11-25).
 - **K1618** · Delete the rp=outline renderer (Levi 2026-11-25: 'Delete it now'): src/render/outline/, its tests, flags oe/ob/obt, the frame_loop import; modules gf still reads move, not die; then close cull group c (.claude/probes/gf-gate/cull.md). Done in 6f10a910b (2026-11-25).
 - **K1616** · Ledger cull list (.claude/probes/gf-gate/cull.md): 7 waiting items answered or overtaken, 18 stale in-progress, 72 rp=outline items moot if it retires, 10 duplicates; nothing closed until Levi says which groups go. Dropped: done: Levi said 'Do it' 2026-11-25; closed the sure and likely rows, kept every 'ask' row (2026-11-25).
