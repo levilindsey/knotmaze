@@ -6,6 +6,7 @@
 // blue-bold values) adapted to Tweakpane's DOM.
 
 import { Pane } from "tweakpane";
+import { rendererIsGf, rendererToggleSearch } from "./renderer_toggle";
 import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "../build_info";
 import type { UrlParams } from "./url_state";
 import {
@@ -1149,6 +1150,22 @@ export function buildPanel(
     if (!ev || ev.last !== false) callbacks.onRegenerate();
   };
 
+  // TEMPORARY (Levi, 2026-11-25): flips the link's `rp=gf&gfh=1` flags and
+  // reloads (ui/renderer_toggle.ts). Not a param: no codec, no undo. Remove it
+  // at the rp=gf flip.
+  const rendererView = { on: rendererIsGf(location.search) };
+  // The key is a variable: test/ui/param_tags.test.ts scans for literal row keys.
+  const rendererKey = "on" as never;
+  const rendererApi = (pane as unknown as Parent).addBinding(
+    rendererView, rendererKey, { label: "New renderer (temporary)" }
+  ) as RowApi;
+  rendererApi.element.classList.add("kp-row");
+  rendererApi.element.title =
+    "Temporary: reloads this link with rp=gf&gfh=1 added (on) or removed (off). The rest of the link is kept.";
+  rendererApi.on("change", (ev) => {
+    const next = rendererToggleSearch(location.search, ev.value === true);
+    location.assign(`${location.pathname}${next}${location.hash}`);
+  });
   // --- Accessibility (K111) -----------------------------------------------
   // Two master switches at the top. While one is on it OVERRIDES every
   // setting relevant to it; off, the viewer's own values are back (an

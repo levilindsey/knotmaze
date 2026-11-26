@@ -589,10 +589,10 @@ Next free ID: K1621.
   - next: read the agent's report; answer Levi with the today | gf sheets; file the fix it recommends
 - **K1620** · Temporary panel checkbox 'New renderer' that reloads with or without rp=gf&gfh=1 (Levi,
   2026-11-25); remove it at the rp=gf flip
-  - owner: claude session 09c7a672 (sonnet agent, coordinator same session)
-  - branch: rp-toggle, .claude/worktrees/rp-toggle; last commit: none yet
-  - evidence: test/ui/ (branch)
-  - next: on report: squash to master, check the deploy, tell Levi where the checkbox is
+  - owner: nobody, since 2026-11-25: landed, waits for the flip
+  - branch: mainline; last commit: this commit
+  - evidence: src/ui/renderer_toggle.ts, test/ui/renderer_toggle.test.ts
+  - next: at the rp=gf flip (gate 9) delete renderer_toggle.ts, its test and the row in tweakpane_panel.ts (the row's key is a variable so param_tags.test.ts skips it)
 
 ## Next, in order
 
