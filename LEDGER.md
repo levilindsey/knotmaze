@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1609.
+Next free ID: K1611.
 
 ## Waiting on Levi
 
@@ -329,6 +329,11 @@ Next free ID: K1609.
   border into its neighbour in a corner and the gap build ends it short (s8/out/levi18.png; same kind as
   K1605's stem far ends): joined or gap; (b) the three wrong loops' eye opens at the foot since stages 3-4 and
   the arm reads as a wedge (s8/out/eyes8_k.png): close the foot like today or keep
+- **K1609** · K1584 stage 9 looks (pictures sent 2026-11-25 08:30): (a) mark where the wedge's line falls on
+  the 76-ball sheets (.claude/probes/K1584/s9/out/rank_1..6.png in worktree agent-a2dfb242b056cf793; line now
+  42.5 deg opening, GAP_WEDGE_THETA, only A_3 k63 on the tight side; unseen A_5 k176 43.2 and A_6 k265 44.9
+  sit next); (b) at k63 the wedge now adds 6 px over no wedge (cmpn9.png): keep the wedge or drop it; (c)
+  looser balls draw stage 5's plain gap: right, or today's whole ball
 
 ## In progress
 
@@ -792,10 +797,10 @@ Next free ID: K1609.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (stage 9 agent, started 2026-11-25)
-  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `e841a4008`
-  - evidence: .claude/probes/K1584/s8/, .claude/probes/K1584/s7/out/s8a/ (untracked, in that worktree)
-  - next: stage 9 report: tightness table, ranked ball sheet for Levi to mark the line, s9a capture; then Levi: gaps land or hold, and confirm 'Beautiful' on K1607a = keep the gap
+  - owner: nobody since 2026-11-25 08:20: stage 9 done, waiting on Levi's looks
+  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `e3ea69f25`
+  - evidence: .claude/probes/K1584/s9/ (captures s7/out/s9a, s9n) in worktree agent-a2dfb242b056cf793
+  - next: Levi: wedge line on the rank sheets, gaps land or hold, confirm K1607a = keep the gap; then land by squash (branch is not old history)
   - brief: `docs/design/K1584_s9_brief.md`
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
@@ -2657,6 +2662,10 @@ Every other item below waits on the trigger it names.
 - **K1608** · K1584 stage 8: corner places the flag still misses, outside the seven stems: A_c k310 (19 px;
   needs a far bit per border, a shader and encoding change), A_9 k307 (cut inside the border's own gap), A_3
   k148 (partial), A_a x344 (s8/out/stems8.png, lower rows)
+- **K1610** · K1584 stage 9 leftovers: A_3 k63 keeps a 149 px loose piece (today 156); stage 5's loose pieces
+  are back at loose-side balls A_3 k103, A_5 k185, A_a k101, A_a k202, A_c k141 (29-77 px); A_9 k43 1 px
+  unexplained vs stage 5; A_a x344 reads bare (docs/design/K1584_s9_brief.md handoff, branch
+  worktree-agent-a2dfb242b056cf793)
 
 ## Approved, to schedule (2026-10-11)
 
