@@ -1510,7 +1510,8 @@ export class GfDynTable {
  * K1395 (24D): the appearance reveal's colours under the look. GfFxTable bakes, per kept sample in
  * GfLookTable.positions' layout (two RGBA texels a sample), what paint_math's kFxColor / kGlow give
  * today's shader at that sample this frame: texel 0 = (rainbow progress, materialize alpha, burn age,
- * interior solidity), texel 1 = (sample index, frontier glow, left cut margin, right cut margin). The burn age rides to the shader,
+ * interior solidity), texel 1 = (sample index, frontier glow, right cut margin, left cut margin; left = the
+ * (-t.y, t.x) edge as in samp_table, so .z is the side lkJCut reads where its sd < 0). The burn age rides to the shader,
  * which runs kBurn's envelope over the label's section colour with the live flicker phases (uFxPh);
  * the rainbow's stripes and white wash run there too (their across coordinate is the pixel's own).
  * Interior solidity (kComposePaint's hiA over an empty base: the stronger of the glow and, while the
@@ -1611,8 +1612,12 @@ export class GfFxTable {
         tmp[o + 3] = Math.max(glow, fxHere ? this.pOut.alpha : 0);
         tmp[o + 4] = k;
         tmp[o + 5] = glow;
-        tmp[o + 6] = jMargin(k, true);
-        tmp[o + 7] = jMargin(k, false);
+        // K1395 s2: lkJCut reads .z where sd = dot(p - foot, (-t.y, t.x)) < 0, the (t.y, -t.x) edge:
+        // the chain's RIGHT (samp_table: left = the (-t.y, t.x) edge, the strip's aUV.y = 0 side, whose
+        // kJunctionSideCut side < 0 tests RANGE_CUT_LEFT). K1459 baked left into .z: every side cut landed
+        // on the opposite edge.
+        tmp[o + 6] = jMargin(k, false);
+        tmp[o + 7] = jMargin(k, true);
       }
       // compact to the kept samples and pad the tail, exactly as positions() does
       const xy = r.chainSamples[ch]!.positions;
@@ -2665,8 +2670,8 @@ vec2 lkTanS(int c, vec2 q) {
 }
 // K1459: today's junction cuts over the baked per-side margins (fabric_sdf kJunctionCut /
 // kJunctionSideCut): 1 outside, 0 deep inside the fan's share, a one-pixel ramp at the edge.
-// The pixel's side is the sign of its lateral offset from the label's centreline, as the
-// ribbon mesh's vUV.y side is (left = the entry's left, chain terms).
+// The pixel's side is the sign of its lateral offset from the label's centreline: sd < 0 is the
+// (t.y, -t.x) edge, the entry's RIGHT in samp_table's terms (the bake puts the right margin in .z).
 float lkJCut(int c, vec2 q, vec2 p, vec4 f1) {
   vec2 tn = lkTan(c, q.x);
   float sd = dot(p - lkFoot(c, q), vec2(-tn.y, tn.x));

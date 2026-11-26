@@ -481,8 +481,10 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
     // rebuildFillets, on every geometry change: ~7 ms of main's ~30 per
     // build on the desktop) draws nothing. A null layer is the renderer's
     // own no-fillets state (rebuildFillets returns at once); gf's tables
-    // read none of what it writes (junctionCutEntries and recBaseByJn feed
-    // the ribbon's RANGES and paint, jointGate the fans). detach() puts the
+    // read none of what it writes at rest (recBaseByJn feeds the ribbon's
+    // paint, jointGate the fans). The one reader is the reveal's FX bake
+    // (K1459's side cuts read junctionCutEntries): jnEntries() rebuilds into
+    // the hidden layer on the frames that bake (K1395 s2). detach() puts the
     // layer back and the next paint tick rebuilds it.
     if (!opts().fillets && r.filletLayer) {
       filletsOff = { r, layer: r.filletLayer };
@@ -741,10 +743,27 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
     stats.dynMs.push(performance.now() - t0);
     return P;
   };
+  // K1395 s2: today's junction side cuts for the reveal's FX bake. Only the fan rebuild publishes
+  // junctionCutEntries, and it returns at once while attach() holds the layer off, so under gf the
+  // list stayed empty and the bake cut no wedge side: whole arm stretches inside a junction's cut
+  // window coloured where today's ribbons draw nothing (comet at 0.4: 427 entries today, 0 under
+  // gf). The entries follow the joint gate (a record before its tOn publishes none), so while the
+  // reveal runs the rebuild runs each baking frame, as today's paint tick does (revealOn skips its
+  // key), into the layer that stays hidden.
+  const jnEntries = (r: NonNullable<typeof ctx.scene.renderer>): void => {
+    if (!filletsOff || filletsOff.r !== r || r.filletLayer !== null) return;
+    r.filletLayer = filletsOff.layer;
+    try {
+      r.rebuildFillets();
+    } finally {
+      r.filletLayer = null;
+    }
+  };
   // K1395 (24D): this frame's baked reveal FX (gf_look.ts GfFxTable), in the look positions' layout
   const fxSnap = (): Float32Array | null => {
     const r = ctx.scene.renderer;
     if (!r || !fxTab || lkKey < 0 || !pass?.lookable || opts().look === false) return null;
+    if (rvDrawn) jnEntries(r);
     const src = r as unknown as GfPaintSource;
     // K1459: today's junction cuts for the FX bake (paint_state's reach formula over the
     // renderer's live style; the caps and side entries ride the same renderer)

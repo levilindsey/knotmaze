@@ -100,15 +100,24 @@ describe("K1395 gf FX table", () => {
     expect(fxAt(V, 0, N, false, 0, 0)[6]).toBeCloseTo(1, 5);
     expect(fxAt(V, 0, N, false, 0, 0)[7]).toBeCloseTo(1, 5);
     expect(fxAt(V, 0, N, false, 2, 0)[6]).toBeCloseTo(-1, 5);
-    // a left-only side entry at arc 2, window [0, 1]: left margin peaks at the centre, right keeps the end margin
+    // a left-only side entry at arc 2, window [0, 1]: left margin peaks at the centre, right keeps the end margin.
+    // K1395 s2: left (samp_table's (-t.y, t.x) edge) rides texel 1's .w, right its .z: lkJCut reads .z where
+    // sd = dot(p - foot, (-t.y, t.x)) < 0, the right edge (K1459 had them swapped, every side cut on the wrong edge).
     V = new GfFxTable().values(rSrc, undefined, { L: 1, caps, entries: [{ chain: 0, center: 2, lo: 0, hi: 1, left: true, right: false }] });
+    expect(fxAt(V, 0, N, false, 2, 0)[7]).toBeCloseTo(1, 5);
+    expect(fxAt(V, 0, N, false, 3, 0)[7]).toBeCloseTo(0, 5);
+    expect(fxAt(V, 0, N, false, 2, 0)[6]).toBeCloseTo(-1, 5);
+    expect(fxAt(V, 0, N, false, 4, 0)[7]).toBeCloseTo(-3, 5);
+    V = new GfFxTable().values(rSrc, undefined, { L: 1, caps, entries: [{ chain: 0, center: 2, lo: 0, hi: 1, left: false, right: true }] });
     expect(fxAt(V, 0, N, false, 2, 0)[6]).toBeCloseTo(1, 5);
-    expect(fxAt(V, 0, N, false, 3, 0)[6]).toBeCloseTo(0, 5);
     expect(fxAt(V, 0, N, false, 2, 0)[7]).toBeCloseTo(-1, 5);
-    expect(fxAt(V, 0, N, false, 4, 0)[6]).toBeCloseTo(-3, 5);
     // the shader cuts the interior solidity by the pixel-side margin, and only under the reveal
     const rf = lookForm(revealForm(gfFs(false, true)));
     expect(rf).toContain("float lkJCut(int c, vec2 q, vec2 p, vec4 f1)");
+    expect(rf).toContain("sd < 0.0 ? f1.z : f1.w");
+    // K1395 s2: gf's attach() hides the fillet layer, so the cut entries are rebuilt into it on each baking frame
+    const app0 = readFileSync(new URL("../../src/render/gpu_field/gf_app.ts", import.meta.url), "utf8");
+    expect(app0).toContain("if (rvDrawn) jnEntries(r);");
     expect(rf).toContain("lkHi = f0.w * lkJCut(lab, lq, p, f1);");
   });
   it("the reveal table's width is the mask times the rainbow swell; its mask is untouched", () => {
