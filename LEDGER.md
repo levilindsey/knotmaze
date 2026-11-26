@@ -23,18 +23,6 @@ Next free ID: K1619.
 
 ## Waiting on Levi
 
-- **K1596** · [ANSWERED Nov 24 16:45: `junction land`, Levi: SO MUCH BETTER. Landing waits on K1588 stage 2 (pinhole, bulb), K1600 (drag check) and on a port: the rule is built on gap stage 4, which does not land as is (K1595, K1601), so it must go to master without the gap steps or with fixed ones] rp=gf junction change (K1588) is built on a branch and shown on the gap page
-  https://claude.ai/artifact/M45ueV1LNNP9Rjmps6EuSt (section "The junction change"): it clears the wedges,
-  blobs and barbs beside junctions (Levi's six A_3 places; x132's sliver is shorter, a point is left), trims
-  ends beside a junction, one end goes blunt (A_6 x326). `junction land` (after stage 2 fixes a 2 px pinhole
-  and a bulb, on top of the gaps) or `junction keep` (drop it)
-- **K1589** · rp=gf gap step (K1584 stage 5) is built and waits on five answers, page
-  https://claude.ai/artifact/M45ueV1LNNP9Rjmps6EuSt: `balls whole` (the gap stops at a tight turn's ball,
-  K1572; one more gap step) or `balls as built` [ANSWERED 2026-11-24 16:00, neither: the gap at a ball is a wedge cut from the ball's centre, widening outward, and the fade narrows with it; K1584 stage 6 builds it, four answers left] (222 solid spots lose ink, about 7 of 70 viewed are broken
-  balls, 7 notched); `loops open` or `loops closed` (hook and loop tips under a thread) [ANSWERED 16:10: open is right, except loops 2, 13, 14, filed as K1601]; the crossing numbers
-  of K1586's eye and K1587's junction [ANSWERED 16:20: eye x100, junction x305]; `stems joined` or `stems as built` (K1595); `gaps land` or `gaps keep
-  today's`. Offered on the page (v8) and in chat, optional: `closed sides again` (one diagnosis-first step at
-  the sides still closed, K1594 and K1591; no word keeps them). Nothing lands while K1600 is open
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -310,18 +298,6 @@ Next free ID: K1619.
   Measured at dpr 1.5 (617x1130, 2026-11-13, t32r): def 12.6, muse_hash 16.4, fat 7.7 ms; the s7 split
   did not help there. Half of def's time does not scale with pixels (K1376), so a smaller canvas buys less
   than its pixel count; hold this until s8 explains that fixed cost.
-- **K1377** · The Pixel went screen-locked during the night (locked at every check 05:24-06:47 on 2026-11-13,
-  after s6 used it until 05:04), so stage 7's split has no Pixel numbers. Unlock it when convenient; Claude
-  never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
-  change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
-  started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
-- **K1444** · rp=gf home membership looks (after K1439 makes it live behind a flag): (1) on by default? (2)
-  spot 4 (muse_hash 5.88,8.50) rounds the corner where rp=outline draws a dive shadow; (3) g41_user_tw64
-  17.80,9.55: soft band at the default fadeLength, no line at 1.2, where master and rp=outline draw a fading
-  stub; sheets .claude/probes/K1438/out/sheet_fl_1..2.png, sheet_worse.png. 2026-11-19: (1) is technical and
-  moves to K1523; at (2) and (3) master has since closed the loose fragments, and home differs from Nov 18's
-  master by a few px (.claude/probes/K1485/out/o_spots.png: Nov 18 | + home | today). Recommended to Levi:
-  close (page: https://claude.ai/artifact/U6sVjxHNm72V15UK6T12jR)
 - **K1562** · The laptop's knotmaze clone, after K1493's history rewrite (2026-11-20): on a clean tree run
   `git fetch`, then `git reset --hard origin/master` (or clone afresh). Do not `git pull` there first: a pull
   merges the old history, and a push after it brings the 362 MB back (docs/ledger_notes.md `## K1493`)
@@ -329,31 +305,9 @@ Next free ID: K1619.
   questions (how long a first-visit wait is acceptable, must gf carry the reveal colours before the flip,
   phone first or desktops first); the rp=outline recommendation (freeze now, delete after the flip). Closes
   K1310 when adopted
-- **K1616** · Ledger cull list (.claude/probes/gf-gate/cull.md): 7 waiting items answered or overtaken, 18
-  stale in-progress, 72 rp=outline items moot if it retires, 10 duplicates; nothing closed until Levi says
-  which groups go
 
 ## In progress
 
-- **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
-  (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
-  docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
-  tables bit-identical. Re-run k1362s2_census.ps1 on master, then fix stages under a new digest; K1315's ends
-  join the same bar. Levi (2026-11-15): getting these spots truly correct is the most important thing now; the
-  bar is the look he approves, not form B's (form B fails K1315's ends and jumps under K1267's jitter)
-  - owner: nobody since 2026-11-16 20:12: c5 merged (36e63c4b); the remaining work moved to K1438/K1439 (membership from the tables), which supersede patching the tie rules
-  - branch: `worktree-agent-ae6e6ae2a52900882`, worktree `.claude/worktrees/agent-ae6e6ae2a52900882`; last commit: `36e63c4b`
-  - evidence: .claude/probes/K1407/out/c5/; c4: .claude/probes/K1407/out/c4/
-  - next: after K1439 lands: re-run K1433's scan and the 29 spots, then the two smudges (K1432) and the lie-along sites (K1441) against what is left; then K1426 (vertex cap GPU cost) and K1430 (phone)
-  - brief: `docs/design/K1407_c5_bar.md`
-- **K1310** · Redesign course check (assessment 2026-11-11): (1) write the gate for making rp=outline the
-  default; (2) a crop sheet, outline vs form B at the worst spots, so Levi says which differences still
-  matter; (3) put speed first: the worker frame on def is ~120-185 ms during a drag vs K1247's 3 ms target;
-  (4) pause K1283 after s11 until (2) is answered
-  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5
-  - branch: mainline; last commit: `1fb47bd3`
-  - evidence: docs/design/K1240_gate.md; .claude/probes/K1240/proto/k1310_sheet.ps1; untracked .claude/probes/K1240/out/k1310/sheet.png
-  - next: Speed: K1247 s18-s19 merged (record fill behind oe=1, def worker frame 190 -> 156-164 ms p50); s20+s21 make it the default (merge pending s21's structure cost); the projected floor is ~2.7 ms only with every part GPU-placed and a fixed band topology. Look: K1314 census s1 = 57 artifacts at 47 spots (fix stages running, s2 spikes); K1315 asks Levi about tail ends. Pixel lines unmeasured: next K156 round
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
@@ -362,17 +316,6 @@ Next free ID: K1619.
   - evidence: kit .claude/probes/K863/trace/work38/ (tools, cand/J3NV = the kit's build, spec k863n_var2.json, NOTES_k863n.md, crops/v2_*), out38/png/ (sheets: font | v6.8 | J3M | J3n | variant), NOTES.md entry 'K863 J3n'
   - next: J3NV (work38/cand/J3NV) is the kit's build; the next stage builds on its join_params. Open on it: J3m's o notch (rough FAIL) and Levi's next look notes
   - brief: `docs/design/K863_cursive_j3n.md`
-- **K114** · Gameplay round 2, designed in
-  `docs/design/K80_gameplay_additions.md` section R: burn race, cut
-  verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
-  1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
-  swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
-  K280, residuals K281).
-  - owner: nobody since 2026-10-21 13:04 (merged; agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `edcecb94`
-  - evidence: `.claude/probes/K114/beat/`
-  - next: a real phone pass and Levi feel of tempo/L and the pulse (the spoken-finish-time quirk located 2026-10-21: no speech code exists; a clock switch from any mode restarts the solve, symmetrically - switch_probe.mjs; the While-riding page order passes 12/12 - see the K114_beat.md tail note)
-  - brief: `docs/design/K114_beat.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cacf586..19c585c, walk 90dd0da, title 1f8cd12, cartouche 879abee, emblems 171f49e+64d27dd,
   capitals 6351ff3, accents a5d858b, Greek 6d317d3 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
@@ -381,45 +324,6 @@ Next free ID: K1619.
   - evidence: .claude/probes/K115/stage9/ (main checkout since the merge: stills shots1-4, the a search, suite_final.log); stage 8's .claude/probes/K115/stage8/
   - next: Levi's calls (K580); then the rest of the set under the lint, the class-pair lint and items 5-7 (reveal, metrics, sheets); then Levi's look, the final ς (K582), stage 7's live dates, K557, K569
   - brief: `docs/design/K115_stage9.md`
-- **K74** · Maze design, decided (Levi, 2026-10-13;
-  `docs/design/K74_maze_design.md`): every mechanism gets params whose
-  neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2
-  (H1, the fused arm cut; calls K261, residuals K278) merged; stage 3 is
-  the trap-zone finish, stage 4 the greedy-trap search and K46's bands.
-  - owner: nobody since 2026-10-15 08:31 (stage 3's brief merged in a0c6879; docs agent
-    `ae4714d103b5fd3bf` of claude session 05e60da0, worktree removed 2026-10-19, K161). Stage 2's agent
-    a2c61932e9e358104 (session d8031183) finished; worktrees removed by the K161 sweep
-    2026-10-15, branches kept
-  - branch: mainline; last commit: `0fd08e7` (stage 4 sim-first; stage 3 83d4405, stages 1-2 8ba8834..30a949a)
-  - evidence: `.claude/probes/K74/` (stage 2 in `stage2/`, sheets in
-    `out/`); the design agent's probes, copied from its swept worktree 2026-10-15 (its branch,
-    patch-identical with master, deleted 2026-10-19)
-  - next: K521 done in c79bb74; stage 4 build half done in b728fbf (K527/K532: greedy-trap search behind `greedyTrap`, H1-in-loop only; gF median 2.86 -> 3.38, within-1.5x 20.0% -> 11.7%, both-targets 38.8% -> 59.2%, generation 25 -> 74 ms median; off = byte-identical). Left: the before/after sheet K543 and the phone timing K544.
-    Dead-end branches as deeper traps are out of scope; K80's brief does not settle them
-  - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`; stage 4's brief: `docs/design/K74_stage4.md`
-- **K80** · The minotaur, decided (Levi, 2026-10-13; design
-  `docs/design/K80_gameplay_additions.md` section 0, Levi's answers in
-  `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with
-  guard and stalker variants, real time as its own mode, turn-aligned as
-  a modifier. Real time merged (`113ae4d`); turns stages 1, 2 and 3a merged (3a: the wait on
-  every input, the give-up and roam-min knobs, the turn pull, K294, K293); stalker call K421.
-  - owner: nobody since 2026-10-15 10:15 (turns 3a done, merged 10:15; agent `ad4536aff31e4c7ba`
-    of claude session 05e60da0, worktree on K161's sweep list). Stage 2's agent a1579d5c460af2d20 of claude
-    d8031183 (earlier agents af5995f5900f0f945 and a9c90f15cd6a55710; worktrees removed by the
-    K161 sweep 2026-10-15, branches kept)
-  - branch: mainline; last commit: `6d8bb4a` (turns 3b; 3a is 8b5bd9f..43457c1). Merged before: turns
-    81892d4..0036d03 and 40f74d1..dea013f, K174 52a4e53..f258161
-  - evidence: main checkout `.claude/probes/K80/` (`stage3/`: `wait_inputs.mjs`, `banner/`,
-    `compare_after.ts`, `sim.ts`, sweeps, `shots/`, `rerun/K120`, `rerun/K329`; `turns2/`,
-    `turns/`, `rt/`) and `.claude/probes/K174/rt/`; the research's branch
-    `worktree-agent-a25726c24f262b138` (5 commits not on master; worktree swept 2026-10-15)
-  - next: turns 3b done in 6d8bb4a (per-run telegraph alphas, catch feedback with K270 diagnosed and fixed, section 2.10's sounds and fog bleed; the contact sheet `.claude/probes/K80/stage3b/contact_sheet.png` is emulated - the real-phone sheet is K524, Levi's look call K525).
-    Next: the chevrons, once Levi answers K696 (K324 stage 2 merged in af0f823). Check their main.ts
-    overlap with the K114 walker before running them together.
-    Before a daily pins a minotaur, waits enter `fc.taps` and K47's fingerprint covers its
-    params; real time's phone check is K177
-  - brief: `docs/design/K80_turns_stage3.md` (3b: sections 2.7, 2.8, 2.10; "Stage 3a handoff");
-    `docs/design/K80_turns.md`; `docs/design/K80_realtime.md`; `docs/design/K80.md`
 - **K156** · The round phone pass, `scripts/phone_pass.ps1` (K152 (1),
   from K81's gate kit): two builds run interleaved through a frame bench
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
@@ -439,51 +343,6 @@ Next free ID: K1619.
   - evidence: .claude/probes/K268/proof/ (run_census.ps1, census3a.mjs, far_scan.mjs, lock_take.ps1); test/render/paint_explore.test.ts; outputs untracked in proof/out/
   - next: Phone census passed 31/31 (K156 round 2026-11-10d rerun, 08b65e81): PROOF rows pass (fade and beacon ghosts 0, under-cuts 0), far_scan 0 visible far-branch pixels. Left: read in census3a.mjs which beacon figure the gate means (its before field still reads 449 ghosts, the final row 0), then close; PROOF coverage of a visible far branch is K1272
   - brief: docs/design/K268.md (Far-flag fix handoff)
-- **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
-  calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
-  in-thread. Stage 7 (05ae710..4420d6c) builds the first scene from the Worker's name and
-  modulepreloads its chunk: ready 139-165 ms in on the desktop (master 363-396), first visible
-  unchanged (K307's compiles set it). The phone (K411's window) still misses the 250 ms gate: the
-  worker is ready 311-459 ms after the main chunk (master 454-764); its module alone evaluates at 233-364.
-  - owner: nobody since 2026-10-15 10:32 (the phone pass, done in K411's window by claude session 05e60da0; stage 7's agent `a29b026fa5e2829ee` finished 08:57, merged 09:00, worktree on K161's sweep list)
-  - branch: mainline; last commit: `4420d6c`
-  - evidence: `.claude/probes/K7/stage7/` (`run_s7.ps1`, `phone_run.ps1`, `s7_desktop.txt`, `s7_phone.txt`, `k7_results.jsonl`, `table_s7.mjs`, `spike/`); stages 3-6 beside it
-  - next: Levi's F6 review with the phone numbers (above); then K412
-  - brief: `docs/design/K7_worker.md`, "Stage 7 handoff" ("Not done", "For the next stage")
-  - env: the phone, under the phone lock (`phone_run.ps1` takes it and runs `stage5/phone_setup.ps1`)
-- **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
-  prioritize). Stage 2 merged (9b66725..3ca7f56): a program registry and a warm-up that links
-  every program blocking (parallel links never reach Chrome's disk cache, K385; call F8).
-  - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
-  - branch: mainline; last commit: `a7e199e` (stage 3 late enable)
-  - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (d1aefae), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: Chrome on the phone restarted again 2026-11-11 11:03 (seen by K156 round 2026-11-11, which did not run: the phone was asleep). Next phone window: the salted traced load (salt_p1109a.js) re-checks the restart case (21 translates expected) and re-plants; the window after it, with no Chrome restart in between, tests warm across a page load (0 translates). Never restart Chrome on the phone
-  - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
-- **K8** · G3: SDF ribbons drawn from one shared sample texture
-  (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
-  tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: nobody since 2026-11-10 05:48 (phone stage done; agent a42a1b95d18237761 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, merged)
-  - branch: mainline; last commit: `0fe6316c`
-  - evidence: .claude/probes/K8/sdf_phone/ (count.mjs, diffspots.mjs, bench.ps1, verify.ps1, bench_diag.mjs; outputs untracked), .claude/probes/K8/sdf_cost/, scripts/bench_frame.mjs
-  - next: Phone A/B done (K156 round 2026-11-10d rerun, 08b65e81): A 53702915 -11 / -6 / -11% render sync (dense / max fabric / knot gs 24), B nothing, C -2 / -1.5 / -7%; rp=sdf still +134 / +112 / +101 ms over default (was +170 / +139 / +130), so G3-3 cannot flip. The cost left is c67a75ff gap search itself: next a GPU frame split or the search per-pixel count, then a phone round
-  - brief: docs/design/K8_sdf_phone.md (Handoff 1)
-- **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
-  swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
-  lifecycle, scene, audio_map; M4 at 592b12b): main.ts 5709 → 3725 lines; R1-R2 (`src/render/ribbon/`; R2 at b88376c): ribbon_renderer.ts 7747 → 5989.
-  - owner: nobody since 2026-10-15 15:00 (merged)
-  - branch: mainline; last commit: `2a688a6` (R5 c6444e6 + e30edb8, M5 2a688a6)
-  - evidence: M4's `.claude/probes/K5/M4/` and R2's `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
-  - next: R4 done 2026-10-21 (pluck_host 94e409f5, strip_pass; Handoff in `docs/design/K5_R4.md`); next in the lane is K8 G3-2, then G4-1 before R5. M4 leftovers K506.
-  - brief: `docs/design/K5_K6_split.md` (Stage M4 brief); the R lane `docs/design/K5_R2.md`
-- **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, `?2gozcj.MgaM`):
-  stage 2 fixed issues 1, 2, 4 and 5 (1039c5d); left is issue 3, the dark U at a tucked tip's root. At 13:39
-  (`.claude/probes/K397/levi_1339.png`) truncated dots and issue 3 still show sometimes; the dot vibration is gone.
-  - owner: nobody since 2026-10-15 16:17 (merged; agent `a2806c50953dec23d` of claude session 05e60da0)
-  - branch: mainline; last commit: `2ea5c01`
-  - evidence: `.claude/probes/K397/stage3/`
-  - next: phone pass done (2026-10-16, master 6d8bb4a, Pixel 11): issue 3's dark U and the truncated dots not seen on 13 frontiers of Levi's link; the free cap's look is K477's, narrowed there. Nothing else owed; close when K477 lands. Evidence `.claude/probes/K397/stage6/out/`.
-  - brief: `docs/design/K397.md`
-  - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
   stub, its rounded cap included (2026-10-15 13:39, `?2gozcj.MgaM`, `.claude/probes/K397/levi_1339.png`).
   With K397's truncated dots and Levi's rule that a pluck sound shows the pluck effect (`docs/design/K459.md`).
@@ -492,14 +351,6 @@ Next free ID: K1619.
   - evidence: `.claude/probes/K459/`
   - next: item 1 CLOSED 2026-10-21 (hypothesis (iii) rejected, 0-px slot-reject diff; no truncation reproduced at 20 moves - see the Handoff's Open list) and item 3's silence landed in 9a32835b. Left: the free cap's checks (K477: base collapse, tip AA, pinned cap) and the phone free-end look, both Wave 5/eye work
   - brief: `docs/design/K459.md`
-- **K370** · Worker input latency, p50 (target 50 ms). Stage 1 merged (918c824): raw pointer
-  input on; desktop means daily 118 -> 110 ms, knot 93; phone about 185 (before 4c7f4db). 50 ms
-  needs fewer or cheaper substeps (K610, K316), main's drag frame under 12 ms (K611), and B.
-  - owner: nobody since 2026-10-20 15:55 (merged; agent `aa8bfad6d1cc3d6bf` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `918c824`
-  - evidence: `.claude/probes/K370/`
-  - next: stage 2 briefed (`docs/design/K370_s2.md`); desktop half done 2026-10-21: the worker substep premium does not reproduce (daily +4%, knot +4% per substep; no lever built; Handoff in the brief). Left: the phone half in the Wave 5 window (re-measure post-`4c7f4db`, cpu6 clock, paused-render drag)
-  - brief: `docs/design/K370.md`
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
   Open calls: K606; the paint stage is K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
@@ -508,20 +359,6 @@ Next free ID: K1619.
   - evidence: `.claude/probes/K580/s5/`
   - next: Levi calls K718 and K606, then a stage for the chosen fixes; K643 lint upkeep; a phone glyph look
   - brief: `docs/design/K580_s5.md`
-- **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (6d8bb4a) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`. Its q8 is answered (K525).
-  - owner: nobody since 2026-10-20 18:25 (merged; agent `a57e1aa8c7ba233b0` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `4d1a783`
-  - evidence: `.claude/probes/K546/`
-  - next: stages 2-3 landed 2026-10-21 (Handoffs in the design doc; contact sheet `.claude/probes/K546/s3/`); stage 4 (ripped in half) waits on Levi's Q1 after seeing the sheet
-  - brief: `docs/design/K546_s1.md`
-- **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
-  minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
-  Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: nobody since 2026-10-21 12:49 (merged; agent `ab3d78ded2f219f62` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `0f4df60b`
-  - evidence: `.claude/probes/K137/s4/`
-  - next: the s3b sims and the K784 phone batch (all look pieces done 2026-10-21: scent 4.34, the fray, darkness/lantern 4.17, sonar 4.26, tunnels 4.13; Handoffs in docs/design/K137_s6.md); muddy runs done in this merge
-  - brief: `docs/design/K137_s4.md`
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
@@ -548,56 +385,6 @@ Next free ID: K1619.
   - evidence: .claude/probes/K1220/s6/ (tracked tools; untracked fix.patch, out/sheets rebuilt from the final shots, statemask.txt). S6's Handoff and Claude's view end docs/design/K1220_s6_fan_footprint.md: the teeth are gone and the fans stay in pluck and flow, but dark seams show at the cut edges and the fill east of the stem is paler than the stem. S4 (291780c5 + 331f425d) stays on master
   - next: When K1240 S2 reports and Levi decides: if the forks move onto the outline, close K1220 and fold its checks into K1240; if not, S6b from fix.patch (the fan paints the ribbons' rims and continues the stem's paint; Done 3's reshoot; then S6's Done 5). Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%)
   - brief: `docs/design/K1220_s6_fan_footprint.md`
-- **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
-  cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
-  prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: nobody since 2026-11-10 19:42 (merged; agent `a6107b5edd571a0aa` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `8d56f5c0`
-  - evidence: src/render/outline/, .claude/probes/K1240/s4/ tools; untracked .claude/probes/K1240/out/s4/ (S4 at 60f934b7 on worktree-agent-a5393aa1f25f2ff33)
-  - next: S4b merged: rp=outline draws the redesign in the app (outline worker 117 ms a def frame, from 3.4 s; structure once; flag off byte-identical). Next: the Pixel timing when the phone is free; flow on (fw=1) never settles: flow in the outline's shader on a resting build vs a throttle, decided by checks; the worker cost is K1247's
-  - brief: `docs/design/K1240_s4b_cost.md`
-  - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989; S3d's code for the baselines is proto/outline_s3d.ts (untracked), recreated by the one-line command in s3f_exact_s3dbase.ts's header
-- **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
-  7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
-  (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 20:30 (s36 stopped; the route waits on K1362)
-  - branch: worktree-agent-ac12b65b77f80f097, worktree .claude/worktrees/agent-ac12b65b77f80f097 (not merged: the pool fails latency on every drag, 250-340 ms vs master's 103-134, and fat's frame p95); last commit: `1fd68bfa`
-  - evidence: .claude/probes/K1247/k1247s36_* (branch), out/s36/ (untracked, in the worktree)
-  - next: If K1362's per-pixel route holds, drop the pool and K1359's flag removal goes with the outline worker; if not, cut the 35-50 ms main pays to draw each new outline (OutlinePass upload, transform-feedback passes), then rerun k1247s36_run.ps1
-  - brief: `docs/design/K1247_s36_pool.md`
-- **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
-  from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
-  face edge, triangle edge and junction. Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-11 09:42 (agent `a0e0c69694779aaec` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 07:56, 2 h cap ~09:56); stage 3 done on its branch, not merged: fails the main frame (+4.3 ms fill at rest, 9.9 vs 5.8 ms) and worker (+14%) guards)
-  - branch: worktree-agent-a0e0c69694779aaec, worktree C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-a0e0c69694779aaec; last commit: `4b1025cc`
-  - evidence: .claude/probes/K1278/k1278s3_seam.mjs, k1278s3_guards.ps1; untracked .claude/probes/K1278/out/s3/ in that worktree (seam.json, crops/, guards/)
-  - next: Held: stage 3 (4b1025cc, branch) halves junction steps but fails the speed guards (+4.3 ms main, +14% worker). Waits on K1247 s18: if the outline moves to fixed records evaluated per frame, the fan feet move with it, so stage 4 is re-scoped then
-  - brief: `docs/design/K1278_s3.md`
-- **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
-  corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
-  x349). Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-11 10:09 (merged; agent `ae62168490360313e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `c0531aa1`
-  - evidence: .claude/probes/K1240/out/k1283s11/ (untracked), .claude/probes/K1240/proto/k1283s11_*
-  - next: Stopped after stage 11. Its ink work continues as K1314 fix stages (bar: zero artifacts, not distance to form B); stage 11 numbers are regression guards in docs/design/K1240_gate.md
-  - brief: `docs/design/K1283_s11.md`
-- **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
-  base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
-  handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
-  - owner: nobody since 2026-11-11 07:55 (merged; agent `a06c167761380dff5` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `00317716`
-  - evidence: `.claude/probes/K1291/`
-  - next: Stage 3 merged at 00317716 (corner specks gone, rainbow head swell, main frame at s1 cost). Stage 4 waits for K1278 s3 to free outline_app/paint (junction priority): f100 corner specks (ring burn/rainbow 332, muse rainbow f85 186), rainbow colour order (outline purple-first vs today red-first), dark notch at the rainbow head (out/s3/crops/crops/muse_trace-rainbow_f50_0_front.png), threads start-marker glow, muse comet border fade (K1308), the swell over crossings behind the front
-  - brief: `docs/design/K1291_s3.md`
-- **K1314** · rp=outline artifacts to zero (Levi 2026-11-11: "in general rp=outline looks a little better for
-  most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
-  colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
-  0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 20:52 (stage 14 merged; the rest waits on K1362; agent `ad90b8e20a29ae822` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `6428d6eb`
-  - evidence: .claude/probes/K1314/k1314s13_*, out/s13/ (s13 flags liftEnd/liftOwn/ownEdge); out/s14/ (untracked)
-  - next: Waits on K1362 (Levi 2026-11-12: very bullish on the GPU distance route). If it holds, the census runs on it and the rest (j58a chevron, K1315 ends) is fixed there. If K1362 proves it cannot, s15: piece 196 run-end alpha per pixel (or split its first quad), rootTie skipping junction roots (j96), then the BAND_FS blend (K1314 s14 handoff)
-  - brief: `docs/design/K1314_s14_j58a_seam.md`
 - **K1362** · Render split: per pixel on the GPU (form B's distance, from closed-form crossing and junction
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
@@ -630,14 +417,6 @@ Next free ID: K1619.
   - evidence: `.claude/probes/K1387/`
   - next: the Pixel ABBA (k1387_phone.ps1; base 2b1cffe1 against the s2 merge, rp=gf) when the phone's screen is on: main ms/frame, gf builds/s, the drag's sim/wall (s2 handoff, Next)
   - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
-- **K1448** · Muse batch 25 (rp=gf look leftovers in gf_look.ts, one run after another in the main checkout):
-  25A K1447 pulse fan, 25B K1431 reveal counts and ghost, 25C K1424 route bands, 25D K1434 burn char in
-  explore view; brief docs/design/K1448_muse_batch25.md
-  - owner: muse session via the K1053 chain (.claude/probes/K1053/chain.log), started by claude session 09c7a672-a414-402a-97da-b3176839a2e5 on 2026-11-17 05:58
-  - branch: mainline; last commit: `5285760f`
-  - evidence: .claude/probes/K1053/chain.log, each run's .claude/probes/<ID>/out/25<X>/
-  - next: 25A running, then 25B, 25C, 25D; after each handoff Claude views its crops against today and files follow-ups; restart with .claude/probes/K1053/start.ps1 if the chain stops on a gate
-  - brief: `docs/design/K1448_muse_batch25.md`
 - **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
   wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
@@ -648,13 +427,6 @@ Next free ID: K1619.
   - evidence: .claude/probes/K1451/ (k1451_26e_*.ts, out_26e_*; handoff 26E in docs/design/K1464_muse_batch26.md)
   - next: FIRST: K1482 stage 4 found the page never built with home (gfh=1 only set homeOn at upload), so stage 3/4's pin clip (1329b88d, 97d33ae9: spots 5 and 7) was verified in Node only and has not drawn on screen, and Muse 26E's home-on build time (190.6 against 162.4 ms over 12 scenes, +17%) measured a path the page does not run. K1482 stage 5 turned the home build on at gfh=1 (3b2bde03, on its branch): spots 5 and 7 are fixed on screen, page tablesMs 15.9 against 19.9 ms median (one load each, spread as large); stage 6 lands it once x154's ragged cut is fixed; then re-measure the page's build time and decide whether 2 ms a scene matters (the next lever is fewer pins, not a faster pin)
   - brief: `docs/design/K1451_s4_spots_5_7.md`
-- **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
-  thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
-  - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
-  - branch: mainline; last commit: `8b71e3dc8`
-  - evidence: .claude/probes/K1053/chain.log, done.txt
-  - next: 26Y passed its gate 2026-11-19 14:17 (K1461 closed in 9b268a257; its border numbers filed as a residual). 26W (K1467: closed items' probe output leaves the index) passed its gate 2026-11-19 23:57 (K1467 closed in db8f123b8; tracked probe bytes went from 1,085,186,846 to 515,196,231, re-counted by the coordinator at 067b772d6, which also read test/repo/probe_budget.test.ts and found no lock, listener, Chrome or scratch worktree of the run left). It pushed c1f942762 (3525 files leave the index: a worktree that pulls loses them from disk, the main checkout keeps them) and 775d295ca (a probe-budget test in npm test and the force-add rule in .claude/rules/probes.md). 26Z (K1223: the dead quiet path leaves the paint code) passed its gate 2026-11-20 03:20 and K1223 is closed in 067b772d6: the coordinator re-ran its grep (no line left), read the commit's file list and the callers of kPaintAt (none passes a quiet flag) and saw its deploy succeed; link A and the pulse, telegraph and gold path states moved 0-3 px, at the floor; the plain link has no 0 px floor (K1544). Left: 26Z2 (K1473: pulses and telegraph bars re-run under rp=gf), held with a # in queue.txt while K1482 stages run; it follows batch 27's 27C, 27F and 27G (K1531's handle has the chain's state). When the chain stops, read chain.log's gate line and each run's Handoff in the brief, file its ledger items, refill queue.txt and restart with pwsh -NoProfile -File .claude/probes/K1053/start.ps1 after pulling the main checkout. Close this item when 26Z2 has reported. Not for Muse: K1359 (goes with the outline worker if rp=gf holds, K1247). Held while K1482's stages edit tables.ts: K1502
-  - brief: `docs/design/K1464_muse_batch26.md`
 - **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
   band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
@@ -675,18 +447,6 @@ Next free ID: K1619.
   - evidence: .claude/probes/K1468/s2/ (warm.ps1, interleave.ps1, summarize.mjs), rest.mjs, probe build 182fb101 (#k1468p=div|alu)
   - next: 2026-11-20: a cold-profile load of live 1bf4c77, GPU watchdog on, watched for 245 s, lost no context (ctxEvents 0, losses 0; gf switched in at 115 s; .claude/probes/K1482/s27_live/warm3.json.txt, coordinator worktree); three more cold loads lost none in their 66 s. The kill did not show on this build in these four. Muse 26I (handoff f8d5c07d): the link A frame-time gap does not reproduce on master (interval 18.6 ms against ae2b4dfb's 24.1), no fix needed. Still owed: item 2 of the brief, the pixel A/B and its freeze recipe
   - brief: `docs/design/K1468_s2_frame_time.md`
-- **K1469** · Verify Muse 26B's K1459 fix on screen (01c72dfc, live in aad94eb7: the reveal's interior cut at
-  junctions by today's own cuts, lkJCut): only its unit test and a rest frame were checked, because pinned gf
-  reveal frames came out blank or frontier-glow only (gf's stats resetting between polls on master too:
-  K1468's context loss, or a pin and async-compile interaction since 26A, not established). Once K1468 lands:
-  k1459_cap + k1459_guard2, k1431_inkcmp counts and ghost, an instant sheet pair and the two 4x crops (today |
-  master gf | new gf) under .claude/probes/K1395/out/26B/; look at the lateral sign of lkJCut by eye; then
-  close K1459 or revert (Handoff 26B, docs/design/K1464_muse_batch26.md)
-  - owner: nobody since 2026-11-17 19:56 (agent `ab2cc2513ac20a475` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-17 19:08, 1 h cap ~20:08); stopped at its 1 h cap about 20:00: gf's reveal draws no thread ink on master (pinned and live, all programs ready, link b.FMKB4DIQ), so the cut cannot be judged)
-  - branch: `worktree-agent-ab2cc2513ac20a475`, worktree `.claude/worktrees/agent-ab2cc2513ac20a475`; last commit: `b1118def`
-  - evidence: .claude/probes/K1395/out/26B/ (M_def_f4_whole.png, pw_live.png), .claude/probes/K1459/k1469_pinwatch.mjs, k1469_live.mjs
-  - next: folded into K1472 stage 2 (its items 1-3: three-build reveal sheets today | master | master with 01c72dfc reverted, and the verdict to keep, repair or revert 01c72dfc); close this item, and K1459, from that report
-  - brief: `docs/design/K1469_reveal_cut_check.md`
 - **K1472** · rp=gf on Levi's own link (`?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1`: the trace/burn reveal plays,
   unlike every checked link). Live fc520c2d: no blink, but gf needs two programs before it composes (cold
   151-282 s under load), shows only fragments meanwhile and stray dashes and outlines after; today's reveal
@@ -800,27 +560,6 @@ Next free ID: K1619.
   - evidence: .claude/probes/K1584/s11/ (tools tracked; outputs in worktree .claude/worktrees/k1584-s11)
   - next: none unless Levi names a place; open leftovers are K1614, K1613, K1604 and the part-gap residual
   - brief: docs/design/K1584_s12_brief.md, docs/design/K1604_s1_brief.md
-- **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
-  on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
-  restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
-  counted 1,672 / 1,600 px are K1537's ring. A re-run on the same, already used profile restarted again (dump
-  13:09:03, at the 0.5 stop). Not known: whether either change makes K1468's kill likelier. Nothing of K1584
-  or K1588 lands until it is (docs/ledger_notes.md)
-  - owner: nobody since 2026-11-24 17:55 (the four-build rerun ended)
-  - branch: mainline (tools only); last commit: this commit
-  - evidence: .claude/probes/K1482/out/guards/dc_chain_1545.log and dc_comb_warm, dc_comb_fresh, dc_s4_fresh, dc_s5_fresh, dc_s4j_fresh under it (dragcheck_b_r1.txt, dragcheck_r1.txt)
-  - next: Result: on new Chrome profiles all four builds failed one of the two drag checks, the control (stage 4, e8aab8b50) included; no failure is a pixel verdict: dragcheck_b died in prep (pageerror reading 'stats' of undefined, then 180 s wait timeout; s4: Runtime.callFunctionOn timeout) on comb, s4, s4j; dragcheck lost the WebGL context once on s5; every stop compared with a live context was 0 px. Warm profile, combined build: PASS. So not caused by the gap or junction change (observed); cause of the context loss / dead page on new profiles unknown (inferred: cold shader cache plus GPU load from agents' captures). Next: run both drag checks on the landing build (k1588-land) with the guards' warm profile, nothing else on the GPU; land on PASS. Then find why a new profile loses the context (repeat s4 fresh alone on an idle machine)
-  - brief: docs/ledger_notes.md ## K1600
-- **K1601** · rp=gf gap step: an extra gap in the middle of a sharply turning border that is not at a crossing
-  (Levi, Nov 24, call 2 of the gap page: loops 2, 13, 14 = A_b x75, A_8 x65, A_5 x277 are wrong, the other
-  twelve open loops and hooks are right). The narrow teardrop's inner border is cut at its tip and left as a
-  pointed wedge. Maybe K1586's eye. Diagnosis first (read-only agent, worktree .claude/worktrees/k1584-s7 at
-  stage 5), then the fix as K1584 stage 7 after stage 6, same files
-  - owner: nobody since 2026-11-24 16:51: diagnosis done, the fix waits for K1584 stage 6 to finish (same file)
-  - branch: k1584-s7 at .claude/worktrees/k1584-s7 (stage 5, 9894c1091; node_modules is a junction to the gap worktree's: remove the junction, not its target); last commit: `046abce1f`
-  - evidence: docs/design/K1601_findings.md and .claude/probes/K1601/ on k1584-s7 (rulek.py list = the 44 crossings rule K changes)
-  - next: K1584 stage 7 in the gap worktree after stage 6: rule K (findings Q4) in gf_look.ts gapWindow - a border with no end of its own whose room is at least its cut + fade + 0.12 keeps stage 4's behaviour; expected: A_b x75 -37, A_8 x65 -26, A_5 x277 -7, A_3 x100 -29 px, the 12 right loops bit-identical, 44 of 7450 crossings change; view the three, x100 and all 44. Same stage: K1595's fix when its diagnosis reports
-  - brief: docs/design/K1601_findings.md on the branch (the agent saves its prompt at the top)
 - **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
   (1 px neck, ragged top edge; the gap step clears it;
   .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
@@ -1092,14 +831,6 @@ Every other item below waits on the trigger it names.
   edges, and cross ji 65's, loop ji 64's and 106's dark edges, alike in 7474d09b, master and K1218 S6's
   branch; and x4 ji 101's violet sliver at the eye's upper left, in all three. Unattributed (K1218 S6's
   handoff, `docs/design/K1218_s6_swept_arcs.md`, sheets in its worktree's `s6/out/sheets/`).
-- **K1254** · K1240's outline writes one flat typed array plus offset tables for pieces, regions and faces,
-  with adapters for the checks. Today's shape alone costs 2 ms median / 5 ms p95 of K1247's 3 / 6 ms on def
-  (k1247s3_floor.ts: flat 1.2 / 1.3); it is also K1252's snapshot format. After K1247 stage 4 (same file)
-- **K1256** · K1240's outline: frame() leads outside corners from K1247 stage 4 (unmeasured):
-  crossingsPhaseC's OSR-exit deopts, frameFast's wrong-map and generic-global deopts, and about 40
-  cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
-- **K1311** · Route bands (K81) in rp=outline's junction fans: without them pink wedges poke into the gold
-  path at lit junctions, the max steps 42-51 in muse_hash and ring (K1278 s3 handoff, docs/design/K1278_s3.md)
 - **K1045** · Junction eyes, DECIDED (Levi 2026-11-11: "form B's open eye"); rp=outline must draw it in a K1314 fix stage: where two junctions sit close, their threads close in a
   small eye of paper. Form B leaves a dot about 0.16 across, today's look a thin lens (0.67 x 0.12), or it
   could be covered (`docs/design/K1040_s1b_holes_fades.md` F1). The outline
@@ -1108,25 +839,6 @@ Every other item below waits on the trigger it names.
 - **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
-- **K1335** · g41_user_tw64 j28's right side: two faint shades beside the outline (form B draws a hairline
-  sliver) are end tails p838/p839 drawn by outline.ts tailAlpha (K1324 s2); clear them in outline.ts, or fold
-  them into K1315's end look (crop `.claude/probes/K1324/out/s2/j28r_after/spot_001.png`)
-- **K1339** · zChains (about 17 ms def drag p50) in a second worker beside frame: it reads only the scene, so
-  the critical path loses it with identical output; s30 plan stage 3, and on the Pixel only after incremental
-  zChains (stage 6): a second worker may land on a little core (K1247 s28 handoff,
-  `docs/design/K1247_s28_fill_zchains_speed.md`)
-- **K1340** · fill's fans, disks and tails placed on the GPU like the record strips, with a twin test: fill
-  about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff)
-- **K1353** · A pieces cache (pieces is the largest frame phase after s31, 11.6 ms def; its inputs are global
-  tables, so split them per chain first), and skip held chains' setup and resampling with s31's dirty set
-  (fat's border cache costs +0.44 ms) (K1247 s31 handoff)
-  - next: the held-chain half went with the incremental route (K1247 s35); the pieces cut is a frame() cut (s35 route R2), after R1 GPU placement inside the pool
-- **K1359** · Remove K1247's incremental options: KF_INC (snap, cache, jlocal, jx, jxw, span, jxa), SNAP_DBG
-  and the request's exact, in their own commit after K1314 s13 and K1247 s36 land. In s34's ABBA they cost def
-  +24.8 ms, and the incremental route stops (K1247 s35 handoff, docs/design/K1247_s35_route_review.md, Stop
-  doing)
-- **K1360** · Measure the outline worker pool on the Pixel at K = 2 and 3 (K1247 s35 projects 15-22 Hz from
-  the pool alone); rides the next phone round (K156), after K1247 s36 lands
 - **K1409** · K1407 residual (from run 23A): rp=gf broken_ink at 90 - port form B's closed-form corner growth
   (corner_cf) into the gf tables or close the r gap, foot-term burial/selfW weights, through-eye (win=5)
   overwrites at r>=0.16h, plateau self-tie depth at self-crossings (14 finds), vround discs (6). Census reads:
@@ -1217,6 +929,14 @@ Every other item below waits on the trigger it names.
   - branch: mainline; last commit: `ad4cf2d96`
   - evidence: .claude/probes/K1583/ (review_tiles.py and review_page.py build the page from out/27Z7, untracked); page https://claude.ai/artifact/GX7vem1oaafgo3vsNQ9Yvk (175 tiles, new renderer only: todays renderer drew too faint in the capture recipe to serve as a reference)
   - next: republish the review page after K1584, K1585 and K1586 land, and only once the coordinator has viewed every tile first
+- **K370** · Worker input latency, p50 (target 50 ms). Stage 1 merged (918c824): raw pointer
+  input on; desktop means daily 118 -> 110 ms, knot 93; phone about 185 (before 4c7f4db). 50 ms
+  needs fewer or cheaper substeps (K610, K316), main's drag frame under 12 ms (K611), and B.
+  - owner: nobody since 2026-10-20 15:55 (merged; agent `aa8bfad6d1cc3d6bf` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `918c824`
+  - evidence: `.claude/probes/K370/`
+  - next: stage 2 briefed (`docs/design/K370_s2.md`); desktop half done 2026-10-21: the worker substep premium does not reproduce (daily +4%, knot +4% per substep; no lever built; Handoff in the brief). Left: the phone half in the Wave 5 window (re-measure post-`4c7f4db`, cpu6 clock, paused-render drag)
+  - brief: `docs/design/K370.md`
 
 ## Residuals (known, not fixed)
 
@@ -2196,25 +1916,10 @@ Every other item below waits on the trigger it names.
   1000·200 × 260·200 × 3 = 31 GB, and node reached 15.5 GB at 16:10 on 2026-11-06. Commit memory fell to 2.2
   GB free and Claude Code reaped a background shell. Fix: validate the numbers and cap the output (the tracked
   copies under K1139/K1208/K1220 too).
-- **K1245** · K1240 S2 open work (see Handoff in docs/design/K1240_s2_structural_outline.md): L=0 junction
-  arms and junction clusters (muse_hash j155/j156, def j34, g41_user_tw64 j33/j71/j27); structural-builder
-  performance (def median 396 ms vs 3 ms target); per-spot app sheets beside fbb/today look need a stable
-  world-point camera; border-band outside misses on close parallel threads; eye depth-tie path exercised only
-  by construction.
-- **K1248** · K1240 moving frames: S3e's structure() is the diagram and moved = fresh exactly, but frame() rebuilds the
-  piece list (def 4373 -> 4330 at 0.5h) and parks covered pieces: moved fails 10/24 at 0.1h, 4/6 at 0.5h. S3f (K1240's
-  handle) moves the piece list into structure() (`docs/design/K1240_s3f_fixed_pieces.md`; notes).
 - **K1250** · A pulse's glow inside a junction is not perfectly smooth (Levi on K1244, 2026-11-09: 'I guess
   it's ok, but it still isn't perfectly smooth'). K1240 repaints it on one junction polygon (paint on the
   outline's geometry, Levi 2026-11-06); recheck on K1244's sheets (.claude/probes/K1211/out6/) when the
   outline reaches the app.
-- **K1258** · The row measure (k1247_exact.ts, the cmprows rows) takes a neighbouring arm's tA term on the
-  paper side of a corner arc, so an outline sample lying exactly on form B's edge reads 1-3.7 px instead of 0
-  (def A, g41_def_tw64 A, def 0.5 A; master too). Fix it before those rows gate (from K1257; k1257_rowdiag.ts,
-  K1257_formb_corners.md handoff)
-- **K1264** · The end tails (K1240 round 4, b1930378) cost def +1.8 ms in piece emission (piecesCapsEtc 1.44
-  -> 3.2 ms): f at 17 grid points per tail, each a foot walk over 8h of the other arm. Rule a tail out per
-  corner before the scan, or fewer points under a conservative test (K1240_s3f_round4.md handoff)
 - **K1265** · rp=sdf at max fabric has no same-state pair: it never sleeps, so its pages froze in different
   states. Restore one captured state on both pages (captureScene / restoreScene) and pair them (K8 Handoff 1)
 - **K1266** · rp=sdf: where a curve folds tighter than the ribbon's half-width, two quads may still both draw
@@ -2225,16 +1930,6 @@ Every other item below waits on the trigger it names.
 - **K1270** · Max fabric's weave shows a light blob inside one dark eye, (780,960) of a 2400x1350 shot, on the
   default path and rp=sdf alike, so it predates K8's fix; not attributed
   (.claude/probes/K8/sdf_cost/out/crops/maxfab_weave.png, untracked)
-- **K1274** · K1247 s14 leftover: the tail that comes and goes at g41_def_tw64 corner 105 (eps 0.1's worst,
-  7.103 px): a near-tie (depth margin -0.015 zt full, +0.020 reduced). Its existence should come from
-  structure; stage 11's five continuous measures failed the union bar (K1247_s14_seam.md handoff,
-  `k1247s14_tail`)
-- **K1275** · K1247 s14 leftover: a closed chain's seam station falls back to its key's midpoint when the free
-  stretch around it is closed, and could then sit inside a cut (no scene does it today; K1247_s14_seam.md
-  handoff)
-- **K1276** · The K1240 prototype's `verify --ref` reads 48 failures that predate K1247 stage 14 (its
-  handoff); not yet sorted into stale baselines and real ones
-- **K1281** · K1240 outline jumps left after stage 17 (f5761d43; def 15 places, muse_hash 17, fat 0): 13 of def's 15 are the corner foot flipping across a concave bisector (K16_CB=arc takes def to 3 but census vs form B +212, 3 crossings over 12 px: ring x10, def x81, x131); j176 the physics crossing binding sliding 1.6 px about 2.1h away (src physics, or the gain tool's input radius); j35 under arc; muse_hash's 17 undiagnosed; the full builder still the fallback past 2n+8 points. K1290 (97f4f2e2, not adopted): forward corner-arc ends take def 66 -> 4 jump pairs but census +1.8%, frame() +6%, still need the nearest search to insert, and concentric corners (j55, j156) switch roots; revisit once K1283 has the corners matching form B at rest, choosing the root once in structure() (s17 handoff in docs/design/K1247_s17_feet.md, K1290's in docs/design/K1290_forward.md)
 - **K1284** · K1279 leftovers: a pass span that runs into a junction keeps the straight reach, a choice from
   positions that can snap (not seen in the jitter runs); fade steps under the bar (max 0.04 at d 0.001) from
   the span walk's h/4 steps; cut 273 spot b keeps a 79 px sliver at 0.74 ink where form B is solid
@@ -2244,119 +1939,21 @@ Every other item below waits on the trigger it names.
 - **K1286** · K1277 leftover: up to 16 dense border pieces on def use fill_tri's equal-fraction fallback, and
   def's chain point counts change on 7 recorded frames with the same diagram (chain 16: 34 to 36 at frame 25),
   a count from positions (docs/design/K1277_triangles.md handoff)
-- **K1287** · K1247 s16 leftover: continuous END-arm feet (EB) make muse_hash x308 9.4 px further from form B
-  (65.7 -> 75.1; not visible in a crop), and stage 16 adds s14 cracks on muse_hash (4 px in 4) and def (2 px
-  in 1) (docs/design/K1247_s16_continuous.md handoff)
-- **K1288** · K1247 s16 leftover: addPointAtC's nearest-segment pick flips between two border branches about
-  0.01 px apart on a fold (muse_hash cyc10 #200, 1.311 px); union drawn > 0.25 px went 4/14/5 -> 2/16/8
-  (still/cyc10/cyc18). The branch should come from structure; K16_PS=1 halves it but adds hits elsewhere (s16
-  handoff)
-- **K1289** · K1278 paint residuals (9f6a38f2): 41/90/74 edge seams over 1/255 (app/step/kink), mostly
-  junction-to-strip and junction-to-tail (tails carry no neighbour slots); a ghost-strip seam on muse_hash
-  (23.218, 26.683) reaches 79/255; thin striped slivers at hub edges show in
-  out/k1278/crops/k1278_worst_junctions.png; 7 junction windows steppier than form B; the paint's thread term
-  is worse than master at 24 crossings (muse_hash x71, x149; g41_def_tw64 x191, x71)
-- **K1292** · k1240s4_crops (K1240 S4) steps to sim 40 a substep apart from run to run, so g41_ring_tw64 reads
-  two physics hashes (a4b8c1bf, ea67fc77); step a fixed substep count (.claude/probes/K1240/s4/)
-- **K1294** · The outline's border pieces have no frame-to-frame motion guard: k1247s15_gain.ts measures faces
-  only, so a border jump between frames passes every check (K1283 s2 handoff, docs/design/K1283_s2.md)
-- **K1295** · K1278 s2's foot search (footNear at mouths and pieceless strips) raised the outline's fill p50
-  on def from about 21 to 24.5 ms; a cheaper search is one of K1247's cuts (docs/design/K1278_s2.md handoff)
-- **K1296** · The outline's GPU paint vs its CPU twin was not re-measured on src after K1278 s2
-  (docs/design/K1278_s2.md handoff)
-- **K1298** · Outline (rp=outline) def j45: a soft under-pass form B draws faded stays hard after K1283 s3
-  (3237 -> 3240 px); not a tail, the drawing piece unknown (docs/design/K1283_s3.md handoff;
-  .claude/probes/K1240/out/k1283s3/crops/spots_final.png row 6)
-- **K1299** · Outline caps draw at alpha 1: form B fades none of the 54 caps in the 12 census scenes today
-  (k1283s3_capcmp.ts), but a buried cap would draw full ink (K1283 s3 handoff)
-- **K1300** · K1278's seam tool: its frozen reference copy (k1278_base_fill.ts) reads the tails' band points
-  since K1283 s3 lengthened them; point it at the fill points if that column matters (K1283 s3 handoff)
-- **K1301** · Outline worker frame after K1283 s3+s4: s3 +5.7% (tail walk), s4 within 5% by ABBA but its frame
-  part still 3-9 ms over; re-bench quietly with K1247's cuts (bench_abba4.json in
-  .claude/probes/K1240/out/k1283s4/)
 - **K1302** · scripts/phone_pass idle_wait.ps1 exits at once with 'no phone connected' when the wireless adb
   link has dropped though the phone is up; it could adb connect once before giving up (K156 round 2026-11-10d
   rerun handoff, docs/design/K156.md)
-- **K1303** · K1283 s6: round-end seams steeper than form B 459 vs its 449 (muse_hash disk|junc 37, disk|tail
-  27, steps of 1-4/255); DISK_M 64 gives 452 at +7% fill time (docs/design/K1283_s6.md handoff)
-- **K1304** · def gain hold max 3.96 at f35 (20.023, 18.999), region 672, since K1283 s5 (master 3.34 before);
-  whether the fold cut causes it is untested, the no-cut gain run hung (docs/design/K1283_s6.md handoff,
-  k1283s6_gainloc.ts)
-- **K1306** · rp=outline palette outlier: muse finish marker stub end (chain 35, run 64, by the exit) is
-  lighter in today's look than the outline (max 62.7/255; K1291 s1 palette check,
-  .claude/probes/K1291/out/s1/palette/)
-- **K1307** · X-shaped strokes in the outline band at muse_hash junctions, seen by K1291 s1, not located:
-  check against form B in K1283's next stage
-- **K1308** · rp=outline reveal looks against today's (K1291 s2): on muse the comet's grey border fades in
-  with its thread (17,385 px past today's footprint at f20); the start marker's soft start is missing (s1).
-  Crops: .claude/probes/K1291/out/s2/crops/muse_bloom-comet_*
-- **K1309** · K1291 s2 checks not run: the thread reveal's end looks other than beacon (fade, dots) are wired
-  but unmeasured; the probe's ring wrap crop never fired (k1291_reveal.mjs, cause unchecked)
-- **K1312** · K1278 s3's fan gate smoothstep(0, FAN_GATE, n w) leaves faint spokes that crease along triangle
-  edges in rp=outline junction fans (branch worktree-agent-a0e0c69694779aaec, docs/design/K1278_s3.md)
-- **K1313** · rp=outline: where band_gpu.ts's 4 pass slots overflow (187 passes on muse_hash, 130 on
-  g41_user_tw64), the CPU and GPU bands disagree; the census also ignores contacts with a third thread (K1283
-  s11 handoff, docs/design/K1283_s11.md)
-- **K1316** · rp=outline record fill (K1247 s20): 1 px of paper where a fill piece starts on a junction fillet
-  arc, off the chain's border polygon (census paper def 61 vs 60, g41_user_tw64 56 vs 55); muse_hash f8
-  (16.20, 19.83) junction owner swap, per-chain hues only (1034 px), app paint converges.
-  `docs/design/K1247_s20_records_look.md` handoff.
-- **K1318** · rp=outline fallback builder (outline.ts buildOutlineFull) lacks K1314 s3's thruRoomC (a through
-  bend's arc yields to the next junction's corner) and TailIn.bend (a stub cap under the arc): the fast path
-  has both (K1314 s3 handoff, docs/design/K1314_s3_corners.md); nor s4's bend join (same-side room, thruFitC,
-  the meet X) or first meet (docs/design/K1314_s4_bends_eyes.md handoff); the pins did not need them
-- **K1320** · ob=1 band records decimate some record runs mid-drag: muse_hash runs past q0+2 (137
-  piece-frames), 7 wide pieces, def 3 runs (K1247 s23 slack census, `.claude/probes/K1247/k1247s23_slack.ts`;
-  handoff in docs/design/K1247_s23_band_shader.md). Matters once ob=1 is the default (K1247 s24 reports
-  whether it shows)
-- **K1323** · K1314's census reference (after K1321): at muse_hash j78c its fill colour has a seam at the
-  fillet cone's edge and a faint smear (the old reference too); small reference specks at g41_def_tw64 j45
-  (the disk meets the band) and g41_user_tw64 j49 (top right). Crops .claude/probes/K1321/out/sheet_y.png,
-  sheet_ca1.png
-- **K1326** · `.claude/probes/K1247/k1247s22_census.ts` still caches form B tiles unkeyed (`K1247/out/fb`,
-  `fbf`, `FBDIR`), read back by size: a stale cache passes after a reference change. Key them by the reference
-  code's hash as `k1314_census.ts` `refCacheDirs` does (0b10c10b), or retire the script
-- **K1330** · The K1314 census reference draws a thin paper crack between two arms of one junction group;
-  neither master nor K1247 s26 draws it (s26 handoff)
 - **K1336** · band_gpu.ts alphaCpu lacks K1324 s2's self-pass burial term (draw.ts selfBury, BAND_FS zAtS), so
   that CPU mirror disagrees with the GPU at self-crossings like muse_hash x22 (943ae592)
-- **K1337** · K1247 s27's fan rule and FLOOR_EDGE made 7 and 25 junctions slightly worse against the reference
-  (muse_hash 1390, +47 cells; `.claude/probes/K1247/k1247s27_jmis.ts`), none visible; a faint seam inside c8's
-  under-pass (in master too)
-- **K1343** · `k1247s29_bench.ps1`'s fat link `p9ar6.EihVJ8adf0_iA8kPQ0HgzAtI` is codec v9 and builds p9ar6 at
-  today's defaults, so s29's fat numbers are not fat; today's fat token is `p9ar6.FHFUnxp1_T-IDyQ9`
-  (`k1247s28_bench.ps1`). Old K1040/K1239 smoke scripts carry it too
-- **K1345** · Faint rp=outline residue beside the band at muse_hash x58 (up to 0.046 ink) and x345 (0.015),
-  none above 0.05, below the census bar (K1325 s2; crops `.claude/probes/K1325/out/s2/x4/`)
 - **K1347** · Census vs app at g41_user_tw64 (5.19, 17.60): the census band gives .888 where the app gives 1.0
   (on master before K1324 s3 too); the census crop shows a needle and a hard diagonal there
   (`.claude/probes/K1324/out/s3/moved8x/spot_003.png`)
-- **K1351** · c8's under-pass after K1346 s1's fan fix: the dotted seam is gone, a straight soft diagonal
-  shading edge remains where form B shades smoothly (muse_hash (19.41, 14.16);
-  `.claude/probes/K1346/out/s1/final8x/c8.png`)
-  - owner: nobody since 2026-11-12 21:32 (Muse s1 done: no-cost machinery landed at bd43324e, thruGate still off; the rest waits on K1362)
-  - branch: mainline; last commit: `5ec049e1`
-  - evidence: .claude/probes/K1351/k1351s1_*; census_k1351s1 in .claude/probes/K1314/out/s1/ (untracked)
-  - next: Waits on K1362 (the GPU route replaces the CPU outline). If K1362 proves it cannot: cut muse_hash frame +2.5 ms (322 extra piece objects a frame in piecesPhaseC), a clean swap pair, then thruGate on and re-pin outline_port (s1 handoff); re-baseline census_k1314s13c on master first
-  - brief: `docs/design/K1351_s1_muse_thru_cost.md`
 - **K1354** · K1346's fold checks (bandFoldScan, bandFoldsClean) cost 0.5-0.7 ms per def frame; the fast exit
   could reuse the band builder's inner points (about 0.5 ms). One app ABBA (K1346 s2 run 2) put def band +0.85
   ms over a 0.5 spread while Node's band is equal; one quiet app ABBA settles it
   (docs/design/K1346_s2_fold_speed.md handoff)
-- **K1355** · GPU vs CPU band tie differs by 0.49 at muse_hash (19.75,14.76), on master too (K1314 s11
-  `.claude/probes/K1314/k1314s11_gpu.ts`); may share K1336's cause, needs a twin check of its own
 - **K1358** · K1341 s3 residual: muse_hash fill/band pool +0.33+-0.26 / +0.65+-0.37 ms in swap-averaged A/B
   (per-pair intervals include zero in 2 of 3 pairs; def gates hold). If pursued, bisect wrapL sites in
   zAtC/footNear/dSC or the GC shift with k1341s3_ab.ts swap pairs, not the s2 tool.
-- **K1361** · The outline update is memory-bound past about 6 workers (K1247 s35,
-  .claude/probes/K1247/k1247s35_contend.mjs: 51 updates/s at 6 Node workers, 32.5/s at 12, GC 8-16%), so
-  cutting its memory traffic widens the pool
-- **K1363** · draw.ts CONTACT_CACHE makes the outline's contacts depend on history: two workers fed the same
-  scene differ in bandRec/passTex unless the cache is bypassed (K1247 s36 handoff). Matters only if outputs
-  must be history-free (a pool, replays).
-- **K1364** · rp=outline's band blend: BAND_FS / draw.ts stack the two tie-dimmed run bands one over the other
-  where form B blends the two orders' ink; the last part of muse_hash j58a's chevron (4.752, 33.504) (K1314
-  s14 handoff in docs/design/K1314_s14_j58a_seam.md). Moot if K1362 replaces the band render.
 - **K1371** · rp=gf's drawn tables trail the physics by one build (18-19 ms desktop, 34 ms Pixel) since they
   build in gf_worker.ts; and buildFieldSceneLean skips diag-only fields, so a buildTables read of one is
   caught only by gf_build.test.ts and the in-app verify, not the digest (K1362 c1).
@@ -2417,9 +2014,6 @@ Every other item below waits on the trigger it names.
   16.3/12.4 -> 19.5-20.2/18.7-18.8), over Done 4's +10%. Node phase medians (def census scene): corners 14.4
   master -> 18.0 new (solveV 3 + CF grow 7 ms warm; w memo + w(V)=0 skip already in, digest unchanged). Next:
   cut CF per-corner cost (arm-piece reuse across a junction's corners, or a cheaper w) and re-bench.
-- **K1414** · rp=gf look bakes only the traveled spans+caps gold (K1405, 58f8a9ca): pulse crests and the
-  telegraph still draw only in today's look; the hover rim landed under gf in 52891e5e (24F) and the K81
-  junction route bands are K1424 (not landed)
 - **K1420** · rp=gf bench baseline: preview builds read p50 def 15.7 / fat 15.45 ms per rebuild on master
   (K1407 c1, out/c1/bench_c1*.json) against 23F's dev-server 11.6 / 12.0; cause not measured (matters for
   K1413)
@@ -2480,9 +2074,6 @@ Every other item below waits on the trigger it names.
   pulse suppression in the look (corner/fan reach), not more window tuning. Telegraph in border is done
   (1.017, IoU 0.958). Probe: .claude/probes/K1414/k1414h_ab.mjs + mask_h.mjs, state seed 7 10 moves clocks
   100/100.45/101.3 tlk=border.
-- **K1452** · rp=gf cold start: a fresh profile's first load blocks the main thread about 110 s on the
-  desktop, then 38 s and 29 s more after the reveal ends (shader compiles, unconfirmed; warm profiles show
-  none); it also breaks every bench that waits 120 s (K1449's handoff, .claude/probes/K1444/blink2.mjs GAPS)
 - **K1453** · Muse batch 25 overwrote a held perf lock at 06:45 and 07:45 (2026-11-17) during K1449's parity
   and bench runs: the batch's lock step must wait on another owner's lock, not replace it (K1448 brief's How
   to work, chain.ps1)
@@ -2999,47 +2590,17 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1249** · Cursive in the app: one glyph source in src/ (J3M's alphabet as data, one join rule, Hershey only
   for missing characters), with the K863 kit's checks as tracked tests. None of the 152 cursive commits since
   10-25 touches src/. Proposed to Levi 2026-11-07; after K1236 (notes).
-- **K1252** · Run the redesigned outline's frame() in the physics worker (K7), beside the sim: moves
-  outline.ts into src/, sends structure()'s tables once per diagram, adds the outline as flat typed arrays to
-  the snapshot. Off main's frame, not the worker's, so it complements K1247's gate
-  (docs/design/K1247_s2_speed.md Handoff 1, Route 5)
-- **K1255** · Port K1240's whole corner integrator (growIntegC to footNearM, its WalkCaches and polylines in
-  WASM memory) once K1247's corner solve settles: about 3 ms of def's frame at best, so it can't close the
-  gate alone (K1247_wasm_kernel.md handoff; harness .claude/probes/K1240/wasm/frame_wasm.ts)
 - **K1259** · Time form B's build with K1257's closed-form corners under the perf lock (the same growth in the
   outline took 7.3-7.5 ms against the old growth's 6.5); form B is the probes' float64 reference and the fbb
   flag's path (from K1257)
-- **K1260** · K1247 lead: a clear-margin certificate for the corner growth. 79.1% of margin calls are clear;
-  replaying only those saves about 1.18 ms of the corners' 6.7. Catch: the walks swap tests on segments a
-  moving foot crosses, so one clear walk does not certify the next (K1247_s7_cf_speed.md, Handoff 1)
-- **K1261** · K1247 lead: reuse corners across frames (a corner whose arms moved less than a tolerance keeps
-  last frame's growth). Needs a recorded drag to size how many corners stay still per frame; cold = warm must
-  still hold (K1247_s7_cf_speed.md, Handoff 1)
-- **K1262** · K1247 lead: setupBorders' mergeBorders deopts (176 OSR deopts a def run, --trace-deopt at stage
-  7); setupBorders is 5.0 of def's 19 ms frame (K1247_s7_cf_speed.md, Handoff 1)
-- **K1268** · K1247's 3 ms gate needs a lever past reduction (stage 8: 7.6 ms floor) and WASM (1.2-2x):
-  recompute only what moved, per junction, with the outline's continuity bounding what a frame can change
-  (docs/design/K1247_s10_reduce.md). S15 measured it negative on def: no delta holds the bar while the outline jumps, and even continuous only 32-point blocks in every phase reach the p95 (s15 handoff). S16 re-bound at delta 0.07-0.0875 px (gain 2.9-3.6): block reuse projects 2-3x at p95, chain closure 1.2-1.4x, so this lever alone can't reach 3 ms
 - **K1269** · K8 rp=sdf: a tighter trapezoid per segment (lever (a)), and an fw=0 bench_frame to time the SDF
   pass alone on dense and max fabric, where the desktop frame is CPU-bound (docs/design/K8_sdf_cost.md,
   Handoff 1)
 - **K1272** · K268 PROOF coverage: on the census's 10-move frame only c100 has in-between pixels; the other
   shaped slots judge 0 px (under thread hidden at the crossing). Find frames or seeds where more shaped slots
   show their under thread (with K547's visible far branch), including one where `far_scan.mjs` reads farVisible > 0, so the GPU shows the far-flag fix (0c1fc78e). docs/design/K268.md (Proof stage and Far-flag fix handoffs)
-- **K1305** · rp=outline redraws every frame at rest since K1291 s1 (main 6.0-6.4 ms vs master outline
-  1.3-1.7; today 12.4-12.9): the paint clock and the choice arms pulse. Cache the band (it reads no paint) and
-  redraw only the fill (docs/design/K1291_s1.md handoff item 2)
 - **K1317** · An app scene-replay hook (load a captured physics scene into the app), so the app's paint can be
   compared same-state mid-drag across builds; K1247 s20 could compare only at rest.
-- **K1329** · One strip rule that both `fill_tri.ts` `fillFrame` and the record fill (`recStrip`) call, ending
-  the port-and-tie cycle each fillFrame change costs (K1247 s26)
-- **K1342** · zChains' algorithm toward 2 ms: coarser walk steps refined near hits, or last frame's result as
-  a proven seed; about 100k nearest-segment calls a frame today (K1247 s28 handoff)
-- **K1348** · The outline hold's tolerance: T = 1 device px (halves the released share, ~4-5 ms on def) or a
-  0.05 px skip for held-chain pieces (closure ~300 -> ~162 pieces). Decide by checks (census at held
-  positions, max px error mid-drag); ask Levi with a picture only if it shows (K1247 s30 plan)
-- **K1349** · A per-frame budget scheduler for the outline worker's p95: recompute dirty spans up to a
-  deadline, carry the rest with a bounded lag (K1247 s30 plan; def p95 16.4% new points)
 - **K1365** · K156 kit: sample the Pixel GPU clock (devfreq cur_freq, read-only) beside every phone timing;
   K1362 s3 showed a short pass at one per frame runs at 460 MHz against 1286 back to back
   (.claude/probes/K1362/k1362s3_gpuclk.mjs could move into scripts/phone_pass/)
@@ -3058,8 +2619,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   per-frame cost, the physics' own sim/wall and thermals (K1362_c1_cpu_off_main.md, K1369_s2_motion_rate.md)
 - **K1403** · rp=gf look: move the per-build colour position compute (0.4 ms on the desktop, now the look's
   main cost) to the gf worker (K1389 s2 handoff)
-- **K1465** · rp=outline ignores the thread look setting (tlk); if it is kept, decide whether it follows
-  tlk=border as gf does (from K1455)
 - **K1540** · rp=gf: GF_KXO (K1482 stage 28's first try, WIP 13184cdd2, undone in
   4798557a2: in master's history, not in the code) turns 22 V points on link A, where a tail end's outline meets
   a crossing thread's, into rounds: 11 clean (t56e t63e t59e t29e t39e t36e t54s t83e t58e t4s j143), 4 faulty
@@ -3089,6 +2648,98 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1616** · Ledger cull list (.claude/probes/gf-gate/cull.md): 7 waiting items answered or overtaken, 18 stale in-progress, 72 rp=outline items moot if it retires, 10 duplicates; nothing closed until Levi says which groups go. Dropped: done: Levi said 'Do it' 2026-11-25; closed the sure and likely rows, kept every 'ask' row (2026-11-25).
+- **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads. Dropped: finished Muse batch tracker (2026-11-25).
+- **K1448** · Muse batch 25 (rp=gf look leftovers in gf_look.ts, one run after another in the main checkout): 25A K1447 pulse fan, 25B K1431 reveal counts and ghost, 25C K1424 route bands, 25D K1434 burn char in explore view; brief docs/design/K1448_muse_batch25.md. Dropped: finished Muse batch tracker (2026-11-25).
+- **K1414** · rp=gf look bakes only the traveled spans+caps gold (K1405, 58f8a9ca): pulse crests and the telegraph still draw only in today's look; the hover rim landed under gf in 52891e5e (24F) and the K81 junction route bands are K1424 (not landed). Dropped: K1473 done in bc615b6ae; route bands are K1424 (2026-11-25).
+- **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial; docs/design/K1362_s1_gpu_formb.md, Accuracy). Dropped: work moved to K1438/K1439 (done); the bar is Levi's approved look plus K1436 (2026-11-25).
+- **K1601** · rp=gf gap step: an extra gap in the middle of a sharply turning border that is not at a crossing (Levi, Nov 24, call 2 of the gap page: loops 2, 13, 14 = A_b x75, A_8 x65, A_5 x277 are wrong, the other twelve open loops and hooks are right). Dropped: rule K landed with K1584 stage 7 in f915561ca (2026-11-25).
+- **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the counted 1,672 / 1,600 px are K1537's ring. Dropped: K1584 and K1588 landed; the fresh-profile half is K1468/K1456 (2026-11-25).
+- **K1452** · rp=gf cold start: a fresh profile's first load blocks the main thread about 110 s on the desktop, then 38 s and 29 s more after the reveal ends (shader compiles, unconfirmed; warm profiles show none); it also breaks every bench that waits 120 s (K1449's handoff, .claude/probes/K1444/blink2.mjs GAPS). Dropped: same fault as K1456 and K1468 (2026-11-25).
+- **K1469** · Verify Muse 26B's K1459 fix on screen (01c72dfc, live in aad94eb7: the reveal's interior cut at junctions by today's own cuts, lkJCut): only its unit test and a rest frame were checked, because pinned gf reveal frames came out blank or frontier-glow only (gf's stats resetting between polls on master too: K1468's context loss, or a pin and async-compile interaction since 26A, not established). Dropped: folded into K1472 stage 2 (2026-11-25).
+- **K1310** · Redesign course check (assessment 2026-11-11): (1) write the gate for making rp=outline the default; (2) a crop sheet, outline vs form B at the worst spots, so Levi says which differences still matter; (3) put speed first: the worker frame on def is ~120-185 ms during a drag vs K1247's 3 ms target; (4) pause K1283 after s11 until (2) is answered. Dropped: superseded by docs/design/gf_default_gate.md (K1615) (2026-11-25).
+- **K1465** · rp=outline ignores the thread look setting (tlk); if it is kept, decide whether it follows tlk=border as gf does (from K1455). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1349** · A per-frame budget scheduler for the outline worker's p95: recompute dirty spans up to a deadline, carry the rest with a bounded lag (K1247 s30 plan; def p95 16.4% new points). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1348** · The outline hold's tolerance: T = 1 device px (halves the released share, ~4-5 ms on def) or a 0.05 px skip for held-chain pieces (closure ~300 -> ~162 pieces). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1342** · zChains' algorithm toward 2 ms: coarser walk steps refined near hits, or last frame's result as a proven seed; about 100k nearest-segment calls a frame today (K1247 s28 handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1329** · One strip rule that both `fill_tri.ts` `fillFrame` and the record fill (`recStrip`) call, ending the port-and-tie cycle each fillFrame change costs (K1247 s26). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1305** · rp=outline redraws every frame at rest since K1291 s1 (main 6.0-6.4 ms vs master outline 1.3-1.7; today 12.4-12.9): the paint clock and the choice arms pulse. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1268** · K1247's 3 ms gate needs a lever past reduction (stage 8: 7.6 ms floor) and WASM (1.2-2x): recompute only what moved, per junction, with the outline's continuity bounding what a frame can change (docs/design/K1247_s10_reduce.md). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1262** · K1247 lead: setupBorders' mergeBorders deopts (176 OSR deopts a def run, --trace-deopt at stage 7); setupBorders is 5.0 of def's 19 ms frame (K1247_s7_cf_speed.md, Handoff 1). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1261** · K1247 lead: reuse corners across frames (a corner whose arms moved less than a tolerance keeps last frame's growth). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1260** · K1247 lead: a clear-margin certificate for the corner growth. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1255** · Port K1240's whole corner integrator (growIntegC to footNearM, its WalkCaches and polylines in WASM memory) once K1247's corner solve settles: about 3 ms of def's frame at best, so it can't close the gate alone (K1247_wasm_kernel.md handoff; harness .claude/probes/K1240/wasm/frame_wasm.ts). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1252** · Run the redesigned outline's frame() in the physics worker (K7), beside the sim: moves outline.ts into src/, sends structure()'s tables once per diagram, adds the outline as flat typed arrays to the snapshot. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1364** · rp=outline's band blend: BAND_FS / draw.ts stack the two tie-dimmed run bands one over the other where form B blends the two orders' ink; the last part of muse_hash j58a's chevron (4.752, 33.504) (K1314 s14 handoff in docs/design/K1314_s14_j58a_seam.md). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1363** · draw.ts CONTACT_CACHE makes the outline's contacts depend on history: two workers fed the same scene differ in bandRec/passTex unless the cache is bypassed (K1247 s36 handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1361** · The outline update is memory-bound past about 6 workers (K1247 s35, .claude/probes/K1247/k1247s35_contend.mjs: 51 updates/s at 6 Node workers, 32.5/s at 12, GC 8-16%), so cutting its memory traffic widens the pool. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1355** · GPU vs CPU band tie differs by 0.49 at muse_hash (19.75,14.76), on master too (K1314 s11 `.claude/probes/K1314/k1314s11_gpu.ts`); may share K1336's cause, needs a twin check of its own. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1351** · c8's under-pass after K1346 s1's fan fix: the dotted seam is gone, a straight soft diagonal shading edge remains where form B shades smoothly (muse_hash (19.41, 14.16); `.claude/probes/K1346/out/s1/final8x/c8.png`). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1345** · Faint rp=outline residue beside the band at muse_hash x58 (up to 0.046 ink) and x345 (0.015), none above 0.05, below the census bar (K1325 s2; crops `.claude/probes/K1325/out/s2/x4/`). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1343** · `k1247s29_bench.ps1`'s fat link `p9ar6.EihVJ8adf0_iA8kPQ0HgzAtI` is codec v9 and builds p9ar6 at today's defaults, so s29's fat numbers are not fat; today's fat token is `p9ar6.FHFUnxp1_T-IDyQ9` (`k1247s28_bench.ps1`). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1337** · K1247 s27's fan rule and FLOOR_EDGE made 7 and 25 junctions slightly worse against the reference (muse_hash 1390, +47 cells; `.claude/probes/K1247/k1247s27_jmis.ts`), none visible; a faint seam inside c8's under-pass (in master too). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1330** · The K1314 census reference draws a thin paper crack between two arms of one junction group; neither master nor K1247 s26 draws it (s26 handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1326** · `.claude/probes/K1247/k1247s22_census.ts` still caches form B tiles unkeyed (`K1247/out/fb`, `fbf`, `FBDIR`), read back by size: a stale cache passes after a reference change. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1323** · K1314's census reference (after K1321): at muse_hash j78c its fill colour has a seam at the fillet cone's edge and a faint smear (the old reference too); small reference specks at g41_def_tw64 j45 (the disk meets the band) and g41_user_tw64 j49 (top right). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1320** · ob=1 band records decimate some record runs mid-drag: muse_hash runs past q0+2 (137 piece-frames), 7 wide pieces, def 3 runs (K1247 s23 slack census, `.claude/probes/K1247/k1247s23_slack.ts`; handoff in docs/design/K1247_s23_band_shader.md). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1318** · rp=outline fallback builder (outline.ts buildOutlineFull) lacks K1314 s3's thruRoomC (a through bend's arc yields to the next junction's corner) and TailIn.bend (a stub cap under the arc): the fast path has both (K1314 s3 handoff, docs/design/K1314_s3_corners.md); nor s4's bend join (same-side room, thruFitC, the meet X) or first meet (docs/design/K1314_s4_bends_eyes.md handoff); the pins did not need them. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1316** · rp=outline record fill (K1247 s20): 1 px of paper where a fill piece starts on a junction fillet arc, off the chain's border polygon (census paper def 61 vs 60, g41_user_tw64 56 vs 55); muse_hash f8 (16.20, 19.83) junction owner swap, per-chain hues only (1034 px), app paint converges. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1313** · rp=outline: where band_gpu.ts's 4 pass slots overflow (187 passes on muse_hash, 130 on g41_user_tw64), the CPU and GPU bands disagree; the census also ignores contacts with a third thread (K1283 s11 handoff, docs/design/K1283_s11.md). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1312** · K1278 s3's fan gate smoothstep(0, FAN_GATE, n w) leaves faint spokes that crease along triangle edges in rp=outline junction fans (branch worktree-agent-a0e0c69694779aaec, docs/design/K1278_s3.md). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1309** · K1291 s2 checks not run: the thread reveal's end looks other than beacon (fade, dots) are wired but unmeasured; the probe's ring wrap crop never fired (k1291_reveal.mjs, cause unchecked). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1308** · rp=outline reveal looks against today's (K1291 s2): on muse the comet's grey border fades in with its thread (17,385 px past today's footprint at f20); the start marker's soft start is missing (s1). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1307** · X-shaped strokes in the outline band at muse_hash junctions, seen by K1291 s1, not located: check against form B in K1283's next stage. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1306** · rp=outline palette outlier: muse finish marker stub end (chain 35, run 64, by the exit) is lighter in today's look than the outline (max 62.7/255; K1291 s1 palette check, .claude/probes/K1291/out/s1/palette/). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1304** · def gain hold max 3.96 at f35 (20.023, 18.999), region 672, since K1283 s5 (master 3.34 before); whether the fold cut causes it is untested, the no-cut gain run hung (docs/design/K1283_s6.md handoff, k1283s6_gainloc.ts). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1303** · K1283 s6: round-end seams steeper than form B 459 vs its 449 (muse_hash disk|junc 37, disk|tail 27, steps of 1-4/255); DISK_M 64 gives 452 at +7% fill time (docs/design/K1283_s6.md handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1301** · Outline worker frame after K1283 s3+s4: s3 +5.7% (tail walk), s4 within 5% by ABBA but its frame part still 3-9 ms over; re-bench quietly with K1247's cuts (bench_abba4.json in .claude/probes/K1240/out/k1283s4/). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1300** · K1278's seam tool: its frozen reference copy (k1278_base_fill.ts) reads the tails' band points since K1283 s3 lengthened them; point it at the fill points if that column matters (K1283 s3 handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1299** · Outline caps draw at alpha 1: form B fades none of the 54 caps in the 12 census scenes today (k1283s3_capcmp.ts), but a buried cap would draw full ink (K1283 s3 handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1298** · Outline (rp=outline) def j45: a soft under-pass form B draws faded stays hard after K1283 s3 (3237 -> 3240 px); not a tail, the drawing piece unknown (docs/design/K1283_s3.md handoff; .claude/probes/K1240/out/k1283s3/crops/spots_final.png row 6). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1296** · The outline's GPU paint vs its CPU twin was not re-measured on src after K1278 s2 (docs/design/K1278_s2.md handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1295** · K1278 s2's foot search (footNear at mouths and pieceless strips) raised the outline's fill p50 on def from about 21 to 24.5 ms; a cheaper search is one of K1247's cuts (docs/design/K1278_s2.md handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1294** · The outline's border pieces have no frame-to-frame motion guard: k1247s15_gain.ts measures faces only, so a border jump between frames passes every check (K1283 s2 handoff, docs/design/K1283_s2.md). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1292** · k1240s4_crops (K1240 S4) steps to sim 40 a substep apart from run to run, so g41_ring_tw64 reads two physics hashes (a4b8c1bf, ea67fc77); step a fixed substep count (.claude/probes/K1240/s4/). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1289** · K1278 paint residuals (9f6a38f2): 41/90/74 edge seams over 1/255 (app/step/kink), mostly junction-to-strip and junction-to-tail (tails carry no neighbour slots); a ghost-strip seam on muse_hash (23.218, 26.683) reaches 79/255; thin striped slivers at hub edges show in out/k1278/crops/k1278_worst_junctions.png; 7 junction windows steppier than form B; the paint's thread term is worse than master at 24 crossings (muse_hash x71, x149; g41_def_tw64 x191, x71). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1288** · K1247 s16 leftover: addPointAtC's nearest-segment pick flips between two border branches about 0.01 px apart on a fold (muse_hash cyc10 #200, 1.311 px); union drawn > 0.25 px went 4/14/5 -> 2/16/8 (still/cyc10/cyc18). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1287** · K1247 s16 leftover: continuous END-arm feet (EB) make muse_hash x308 9.4 px further from form B (65.7 -> 75.1; not visible in a crop), and stage 16 adds s14 cracks on muse_hash (4 px in 4) and def (2 px in 1) (docs/design/K1247_s16_continuous.md handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1281** · K1240 outline jumps left after stage 17 (f5761d43; def 15 places, muse_hash 17, fat 0): 13 of def's 15 are the corner foot flipping across a concave bisector (K16_CB=arc takes def to 3 but census vs form B +212, 3 crossings over 12 px: ring x10, def x81, x131); j176 the physics crossing binding sliding 1.6 px about 2.1h away (src physics, or the gain tool's input radius); j35 under arc; muse_hash's 17 undiagnosed; the full builder still the fallback past 2n+8 points. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1276** · The K1240 prototype's `verify --ref` reads 48 failures that predate K1247 stage 14 (its handoff); not yet sorted into stale baselines and real ones. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1275** · K1247 s14 leftover: a closed chain's seam station falls back to its key's midpoint when the free stretch around it is closed, and could then sit inside a cut (no scene does it today; K1247_s14_seam.md handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1274** · K1247 s14 leftover: the tail that comes and goes at g41_def_tw64 corner 105 (eps 0.1's worst, 7.103 px): a near-tie (depth margin -0.015 zt full, +0.020 reduced). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1264** · The end tails (K1240 round 4, b1930378) cost def +1.8 ms in piece emission (piecesCapsEtc 1.44 -> 3.2 ms): f at 17 grid points per tail, each a foot walk over 8h of the other arm. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1258** · The row measure (k1247_exact.ts, the cmprows rows) takes a neighbouring arm's tA term on the paper side of a corner arc, so an outline sample lying exactly on form B's edge reads 1-3.7 px instead of 0 (def A, g41_def_tw64 A, def 0.5 A; master too). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1248** · K1240 moving frames: S3e's structure() is the diagram and moved = fresh exactly, but frame() rebuilds the piece list (def 4373 -> 4330 at 0.5h) and parks covered pieces: moved fails 10/24 at 0.1h, 4/6 at 0.5h. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1245** · K1240 S2 open work (see Handoff in docs/design/K1240_s2_structural_outline.md): L=0 junction arms and junction clusters (muse_hash j155/j156, def j34, g41_user_tw64 j33/j71/j27); structural-builder performance (def median 396 ms vs 3 ms target); per-spot app sheets beside fbb/today look need a stable world-point camera; border-band outside misses on close parallel threads; eye depth-tie path exercised only by construction. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1359** · Remove K1247's incremental options: KF_INC (snap, cache, jlocal, jx, jxw, span, jxa), SNAP_DBG and the request's exact, in their own commit after K1314 s13 and K1247 s36 land. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1360** · Measure the outline worker pool on the Pixel at K = 2 and 3 (K1247 s35 projects 15-22 Hz from the pool alone); rides the next phone round (K156), after K1247 s36 lands. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1353** · A pieces cache (pieces is the largest frame phase after s31, 11.6 ms def; its inputs are global tables, so split them per chain first), and skip held chains' setup and resampling with s31's dirty set (fat's border cache costs +0.44 ms) (K1247 s31 handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1340** · fill's fans, disks and tails placed on the GPU like the record strips, with a twin test: fill about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1339** · zChains (about 17 ms def drag p50) in a second worker beside frame: it reads only the scene, so the critical path loses it with identical output; s30 plan stage 3, and on the Pixel only after incremental zChains (stage 6): a second worker may land on a little core (K1247 s28 handoff, `docs/design/K1247_s28_fill_zchains_speed.md`). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1335** · g41_user_tw64 j28's right side: two faint shades beside the outline (form B draws a hairline sliver) are end tails p838/p839 drawn by outline.ts tailAlpha (K1324 s2); clear them in outline.ts, or fold them into K1315's end look (crop `.claude/probes/K1324/out/s2/j28r_after/spot_001.png`). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1311** · Route bands (K81) in rp=outline's junction fans: without them pink wedges poke into the gold path at lit junctions, the max steps 42-51 in muse_hash and ring (K1278 s3 handoff, docs/design/K1278_s3.md). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1256** · K1240's outline: frame() leads outside corners from K1247 stage 4 (unmeasured): crossingsPhaseC's OSR-exit deopts, frameFast's wrong-map and generic-global deopts, and about 40 cornerFallbackC fallbacks a frame (about 0.5 ms). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1254** · K1240's outline writes one flat typed array plus offset tables for pieces, regions and faces, with adapters for the checks. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1314** · rp=outline artifacts to zero (Levi 2026-11-11: "in general rp=outline looks a little better for most cases. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4 handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33). Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1283** · Junction borders of the outline (rp=outline) against form B. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every face edge, triangle edge and junction. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders, cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. Dropped: rp=outline deleted (Levi 2026-11-25: 'Delete it now', K1618) (2026-11-25).
+- **K8** · G3: SDF ribbons drawn from one shared sample texture (`docs/design/G3G4_sdf_geometry.md`). Dropped: cull 2026-11-25: gf supersedes the SDF ribbon route (2026-11-25).
+- **K114** · Gameplay round 2, designed in `docs/design/K80_gameplay_additions.md` section R: burn race, cut verb, beat rider, spider, Pluck Hero MVP. Dropped: cull 2026-11-25: its stages merged in October, no owner since; open calls keep their own items (2026-11-25).
+- **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus Levi's sleeper variant. Dropped: cull 2026-11-25: its stages merged in October, no owner since; open calls keep their own items (2026-11-25).
+- **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Dropped: cull 2026-11-25: its stages merged in October, no owner since; open calls keep their own items (2026-11-25).
+- **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, `?2gozcj.MgaM`): stage 2 fixed issues 1, 2, 4 and 5 (1039c5d); left is issue 3, the dark U at a tucked tip's root. Dropped: cull 2026-11-25: its stages merged in October, no owner since; open calls keep their own items (2026-11-25).
+- **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8): prioritize). Dropped: cull 2026-11-25: its stages merged in October, no owner since; open calls keep their own items (2026-11-25).
+- **K80** · The minotaur, decided (Levi, 2026-10-13; design `docs/design/K80_gameplay_additions.md` section 0, Levi's answers in `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with guard and stalker variants, real time as its own mode, turn-aligned as a modifier. Dropped: cull 2026-11-25: its stages merged in October, no owner since; open calls keep their own items (2026-11-25).
+- **K74** · Maze design, decided (Levi, 2026-10-13; `docs/design/K74_maze_design.md`): every mechanism gets params whose neutral value turns it off. Dropped: cull 2026-11-25: its stages merged in October, no owner since; open calls keep their own items (2026-11-25).
+- **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Dropped: cull 2026-11-25: its stages merged in October, no owner since; open calls keep their own items (2026-11-25).
+- **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's calls K302). Dropped: cull 2026-11-25: its stages merged in October, no owner since; open calls keep their own items (2026-11-25).
+- **K1377** · The Pixel went screen-locked during the night (locked at every check 05:24-06:47 on 2026-11-13, after s6 used it until 05:04), so stage 7's split has no Pixel numbers. Dropped: a one-night note from 2026-11-13, long past (2026-11-25).
+- **K1444** · rp=gf home membership looks (after K1439 makes it live behind a flag): (1) on by default? Dropped: overtaken: its questions continue as K1523 and K1582 (2026-11-25).
+- **K1589** · rp=gf gap step (K1584 stage 5) is built and waits on five answers, page https://claude.ai/artifact/M45ueV1LNNP9Rjmps6EuSt: `balls whole` (the gap stops at a tight turn's ball, K1572; one more gap step) or `balls as built` [ANSWERED 2026-11-24 16:00, neither: the gap at a ball is a wedge cut from the ball's centre, widening outward, and the fade narrows with it; K1584 stage 6 builds it, four answers left] (222 solid spots lose ink, about 7 of 70 viewed are broken balls, 7 notched); `loops open` or `loops closed` (hook and loop tips under a thread) [ANSWERED 16:10: open is right, except loops 2, 13, 14, filed as K1601]; the crossing numbers of K1586's eye and K1587's junction [ANSWERED 16:20: eye x100, junction x305]; `stems joined` or `stems as built` (K1595); `gaps land` or `gaps keep today's`. Dropped: answered: gaps landed f915561ca, c2d628e03, 3d516f1ce (2026-11-25).
+- **K1596** · [ANSWERED Nov 24 16:45: `junction land`, Levi: SO MUCH BETTER. Dropped: answered: junction rule landed as K1588, 140abd573 (2026-11-25).
 - **K1608** · place 3's hook border: crisp gap with an angled end (K1584 stage 12), same at 190 like places. Done in 3d516f1ce (2026-11-25).
 - **K1612** · k176's pinch and hook fixed by stage 11 (tables only); the long-fade part moved to its own residual. Done in c2d628e03 (2026-11-25).
 - **K1607** · K1584 stage 8 looks, answered by Levi: (a) the 18 corners keep the gap (2026-11-25: 'Beautiful', then 'of course we want B'); (b) the three wrong loops' eyes: 's8 is perfect'. Done in f915561ca (2026-11-25).
