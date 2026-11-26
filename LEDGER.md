@@ -586,10 +586,10 @@ Next free ID: K1630.
   samples against 3.5 elsewhere, K1619): test whether the junction cover causes it (change the cover grading
   on the frozen state, re-measure with .claude/probes/kink/analyze.py); if so spread the arm's turn over
   particles 2 to 4 in particle_system.ts; sleep tests and goldens move (docs/design/kink_diag.md)
-  - owner: claude session 09c7a672 (opus agent K1622 s1, coordinator same session), started 2026-11-25 22:10
-  - branch: k1622-s1, .claude/worktrees/k1622-s1; last commit: this commit (brief)
-  - evidence: .claude/probes/kink/, docs/design/kink_diag.md
-  - next: stage 1 (docs/design/K1622_s1_brief.md): confirm the junction-arm cause by a change, fix in src/physics; on report view its master|new crops, send to Levi, land only on his yes to the look
+  - owner: nobody since 2026-11-25 23:55 (stage 1 stopped at the 2 h cap; pictures sent to Levi)
+  - branch: k1622-s1, .claude/worktrees/k1622-s1 (not landed); last commit: `494d62c50`
+  - evidence: .claude/probes/K1622/ on k1622-s1 (settle.ts, seeds.ps1, drag.ts, perf2.ts, caps.ps1, pairs.py; out/pic/pair_levi.png, pair_s1..s5.png untracked)
+  - next: arm sharp turns fall (width 0.8: 4.85 -> 0.44 per 1000; default 1.60 -> 0.00), sleeps on more seeds, drag same; but the picture at Levi's spot barely changes and step cost is unmeasured. After K1626 lands: carry over onto master (same file, particle_system.ts), run perf2.ts under the perf lock (gate totalPct <= 5), land if Levi says the look is no worse. The brief's FHH link is wrong: FGH is right (?3.FGH1HtvQeDjm6e4BII)
 - **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
   2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
   of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
