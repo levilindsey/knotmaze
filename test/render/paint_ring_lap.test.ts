@@ -375,6 +375,8 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "gpu_field/gf_look.ts: floor(s / H.w)": [2, "exAt's and exBurnAt's wraps of s onto a ring's lap (K1396, K1434, gf_explore.ts's table): a ring's knot table closes with a knot at s = ring carrying the first knot's state, so a lap one low puts s just past ring and one high just under 0, and both clamp to that same seam state"],
   // K1414: the look form's route bands and hover rim (gf_look.ts).
   "gpu_field/gf_look.ts: floor(da / per + 0.5)": [1, "lkNearOn's K1460 s4 own-arc exclusion: wraps a segment point's arc offset from the pixel's onto a closed chain's lap; a lap off leaves |da| near per, far above the exclusion's reach, so the segment is kept as it would be untested"],
+  // K1627: lkGap's corner self skip, the same wrap as lkNearOn's.
+  "gpu_field/gf_look.ts: floor(da / cPer + 0.5)": [1, "lkGap's K1627 corner self skip: wraps the own-arm piece's arc offset from the corner's onto a closed chain's lap; a lap off leaves |da| near cPer, far above sx, so the piece cuts as it would untested"],
   // K1500 (26K): lkMarker's wrap of the foot's arc offset from the disc's centre onto a closed chain's lap.
   "gpu_field/gf_look.ts: floor(off / total + 0.5)": [1, "lkMarker's nearest lap: a lap off puts |off| near the antipode, outside every marker window, where the cut is 0 either way"],
   "gpu_field/gf_look.ts: mod(sf, H.z)": [1, "lkMat's wrap of a band arm's sample float onto a closed chain's lap (H.z is the sample count): the header's closing entry carries the first sample's colour, so a lap off lands on the seam sample from the other side, the same material point"],

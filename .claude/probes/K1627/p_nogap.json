@@ -1,0 +1,1 @@
+[["ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y;", "ink *= 1.0; cov *= 1.0;"], ["} else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }", "}"]]

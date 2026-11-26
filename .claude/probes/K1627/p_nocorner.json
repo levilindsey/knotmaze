@@ -1,0 +1,1 @@
+[["vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); if (lkKb < BIG) {", "vec2 lkg2 = lkKb < BIG && lkJb >= 0 ? lkGap(lkKb, p, lq, lab) : vec2(0.0); if (lkKb < BIG && lkJb >= 0) {"]]

@@ -1,0 +1,5 @@
+[["float lkBs = 1.0;", "float lkBs = 1.0; bool lkCorn = false;"],
+ ["vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0);", "lkCorn = lkJb < 0; vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0);"],
+ ["float lkg = lkg2.x; if (lkJb >= 0)", "lkCorn = false; float lkg = lkg2.x; if (lkJb >= 0)"],
+ ["    if (!(pkey[j] > key + uZt)) continue;\n    vec2 qO = lookQ(j, p);", "    if (!(pkey[j] > key + uZt)) continue;\n    if (lkCorn && PC(j) == cU) continue;\n    vec2 qO = lookQ(j, p);"]]
+

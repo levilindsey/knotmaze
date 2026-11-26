@@ -2206,6 +2206,9 @@ int lkj[MAXS]; float lks[MAXS];
 // K1584 s6: the ball's scale on the gap's margin and fade (lkBall), 1 everywhere else
 float lkBs = 1.0;
 float lkTw = 0.0;
+// K1627: the best configuration's corner chain (its label's chain when that label is a corner, else -1): lkGap's
+// corner self skip
+int lkCs = -1;
 `;
 const M_ANCHOR = "\nvoid main() {\n";
 function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? s : s + ".0"; }
@@ -2767,9 +2770,18 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
   // had already passed 0.999, so the closure reached the coverage and with it the fill look; gated by g0 the
   // coverage (y) never reads the closure
   float g0 = 0.0;
+  // K1627: a corner's own arm is no over pass of the corner. The corner's key is its nearer arm's z at the tangent
+  // point less uZt, so outside a window every piece above that z cut it, the arm itself included where a crossing's
+  // depth tent beside the junction lifts the arm toward the junction: a wedge of paper cut into the rounded corner
+  // (Levi's link, 18 places on it). The arm skips itself within sx of the corner's arc, as lkNearOn's self crossing
+  // does; any other thread's pass above it still cuts.
+  bool cSelf = lkCs >= 0 && lkCs == cU;
+  float cPer = 0.0;
+  if (cSelf) { vec4 cC0 = F(uOCh + 3 * cU); if (cC0.z > 0.5) cPer = F(uOV + int(cC0.x) + int(cC0.y) - 1).z; }
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
     vec2 qO = lookQ(j, p);
+    if (cSelf && PC(j) == cU) { float da = lkArc(cU, qO) - aU; if (cPer > 0.0) da -= cPer * floor(da / cPer + 0.5); if (abs(da) < sx) continue; }
     vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
@@ -2864,7 +2876,7 @@ const SITES: [string | RegExp, string, number][] = [
   // layers1()
   ["if (pd[0] < h) labC = PC(0);", "if (pd[0] < h) { labC = PC(0); lkJ = 0; lkK = pkey[0]; }", 1],
   // the configurations' best, the through corner's own label
-  ["if (w > bestW) { bestW = w; lab = labC;", "if (w > bestW) { bestW = w; lab = labC; lkJb = lkJ; lkSb = lkS; lkKb = lkK;", 1],
+  ["if (w > bestW) { bestW = w; lab = labC;", "if (w > bestW) { bestW = w; lab = labC; lkJb = lkJ; lkSb = lkS; lkKb = lkK; lkCs = labC >= 0 && lkJ < 0 ? labC : -1;", 1],
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
