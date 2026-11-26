@@ -52,3 +52,51 @@ Stop when every Done holds or after 2 h of wall clock, whichever first. A compac
 this brief and `git log`. This is the second stage: if the eyes cannot be opened without costing the sleep,
 stop and say so with pictures. On stopping: commit WIP, append `## Handoff (stage 2)` here, commit, and
 report: verdict first, picture paths, numbers, a `Ledger items` list and the handle fields.
+
+## Handoff (stage 2)
+
+Stopped at the 2 h cap (2026-11-26 ~01:35). Source state: a4f07f431 + c7e05f439 (no rate limit; see below).
+
+**Verdict: the eyes open, the settle still sleeps, but one binding fails: stage 1's width jump
+(tw 0.75 -> 0.5) on Levi's link no longer re-sleeps.** ?1's jump re-sleeps (+5.6 s).
+
+Technique (`src/physics/particle_system.ts`, `applyJointEyePressure`, constants above
+`JOINT_EYE_DIST_PER_WIDTH`): a joint eye is two arms of one fused joint whose first passes outward (within 8
+ctrl, none between) are one crossing's over and under. Each substep, pairs across the eye are pushed apart in
+2D toward the lens target (H/2)(sin(pi tA) + sin(pi tB)), H = 3.0 widths, REPULSION_STIFFNESS 0.15. Tried and
+dropped: a 3D lens (no effect), a fairing exemption, a global-repulsion skip; H 2.6 / 3.4 / 4.0.
+
+Eyes (first-pass joint eyes; n / min widths / under 1.5 / under 2), `jeye.ts` + `eyetab.py`, MAXC 8:
+total master 207 / - / 44 / 149; stage 1 207 / - / 42 / 150; stage 2 205 / - / 1 / 51. His link: master
+14 / 0.29 / 3 / 3, stage 1 14 / 0.25 / 3 / 3, stage 2 14 / 1.84 / 0 / 1. Per maze in
+`.claude/probes/K1626/out/census_{master,s1,mine}.json`. J138xX282 0.80 / 1.23 / 2.05; J64xX100 0.29 / 0.25 /
+1.84; J13xX38 1.18 / 1.38 / 2.02. The one stage-2 eye under 1.5 is ?4 J5xX19 (1.47); most sub-2 eyes sit at
+80-100% of their straight-arm material bound (J64 76%, ?7 J115xX178 44%).
+
+Cost: step B/A against master L 1.013, ?1 0.958, ?4 0.981 (`bench2.txt`); sleep 5.00 s both builds (?2 5.6).
+Stretch: his link maxStr 1.30; ?7 1.37 (stage 1 1.48); ?1 1.28 (stage 1 1.20). Sharp turns: his link 54
+(stage 1 56, master 50); ?8 7 (stage 1 3); ?9 6 (stage 1 8).
+
+Width jump re-sleep (tw 0.75 -> 0.5): master ?1 +2.9 / L +3.5; stage 1 +5.2 / +5.7; stage 2 +5.6 / never
+(40 sim-s; a standing move 7.5e-2 at chain 82 slot 53, outside every eye arm). Pressure off after the jump:
++4.0. Bisection (`wj_diag.ts`, MODE=skip<e>): skipping joint eye 12 alone re-sleeps it (+3.9); skipping any
+other eye does not. Rate limits (per pair, per substep, world): 0.002 re-sleeps (+4.7) but the settle's
+openings collapse; 0.005 re-sleeps (+3.9) with his link's min 0.62 (one eye under 1.5); 0.01 and 0.02 never
+re-sleep (min 1.35 / 1.78). Softer stiffness (x0.33, x0.5) never re-sleeps. So no single cap keeps both; the
+cap is NOT in src.
+
+Next: look at eye 12 after the jump (which joint and crossing, `wj_diag.ts` EYEN=12) and why its pressure
+drives a cycle at chain 82 slot 53: a per-eye release (stop pushing an eye whose target the arms' material
+cannot meet, the P3.37 lesson) is the likely fix, not a global cap. Then re-run widthjump.ts, the census and
+the bench.
+
+Picture (a4f07f431's state; viewed): `.claude/probes/K1626/out/K1626_s2_sheet.png` (master | stage 1 |
+stage 2; J138, J64, J13, J152, J132, J28 crops 720x720 at DSF 2, real time, settled, rp=gf, plus the three
+whole mazes) and `K1626_s2_sheet_eyes.json`. Tools: `cap3.mjs`, `compose3.py`, `seq3.ps1`, `wj_diag.ts`.
+
+Checks on babb80fb7 (source = a4f07f431): `npm test` green (251 files, 3224 tests), `npm run build` passes.
+Pins moved (c7e05f439): the byte_identity maze golden's three frames, hash -542937758 -> -636749779,
+680178677 -> -34876091, 714262602 -> -2142615734; knot goldens unchanged (no fused joints). New guard:
+`test/physics/joint_crossing.test.ts` (his link: asleep < 10 s, J138xX282 > 1.95, every eye > 1.75; ?1 every
+eye > 1.5). Joint eye 12's name is still unread: `wj_diag.ts` EYEN=12 printed nothing (its line runs before
+the eyes are built); print it after the settle.

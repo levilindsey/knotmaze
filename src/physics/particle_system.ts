@@ -371,6 +371,73 @@ const JN_MIN_SEPARATION = 2.2;
 const JN_SEP_PER_WIDTH = 5.7;
 const JN_SEP_RATE = 0.015;
 const JN_CLAMP_SCAN = 8;
+// K1626: JOINT HALF-SEGMENT material (Levi: "a junction with an adjacent
+// crossing ... Physics isn't doing a good enough job of keeping these
+// threads apart"). A fused joint sits at the MIDPOINT of a lattice edge,
+// so the through thread's segments beside it are half segments (rest
+// 0.28 / 0.354 against 0.559 / 0.707) and the material from the joint to
+// its first crossing is half the crossing pitch: at rest the crossing sat
+// 2.0-2.3 ctrl from the joint (2.3-3 widths at tw 0.34), those segments
+// already stretched 1.45-1.75x. The jnSep ratchet cannot help: it slides
+// the PASS along material that is not there, capped by MIN_PASS_SEPARATION
+// against the next pass and by half the span in a J-X-J corridor
+// (measured: jnSep 3.2 left the minimum where it was). Lengthening the
+// rests of the half segments within JN_HALF_SEG_REACH of each joint by
+// JN_HALF_SEG_SCALE (the bending triples through them follow) gives the
+// arm the material: on Levi's link the closest pair went 2.32 -> 2.74
+// widths and the pairs under 3 widths 65 -> 10; on D_1..D_a the pairs
+// under 1.5 widths 12-26 -> 0. FAT threads fill the lattice and cannot
+// take it: at tw 0.7 the extra kept D_1 awake (master sleeps at 5.0) and
+// at tw 0.8 every scale tried kept A_3 awake, so it fades out between
+// JN_HALF_SEG_FADE_LO and _HI thread width. JN_HALF_SEG_MAX_REST picks
+// the half segments: lattice rests below it are 0.177 / 0.28 / 0.354, the
+// full ones start at 0.559.
+const JN_HALF_SEG_MAX_REST = 0.4;
+const JN_HALF_SEG_REACH = 2;
+const JN_HALF_SEG_SCALE = 1.8;
+const JN_HALF_SEG_FADE_LO = 0.55;
+const JN_HALF_SEG_FADE_HI = 0.7;
+// A width change after the first step ramps the scale (the full 1 -> 1.8
+// over 3 s): x1.8 at once on a settled ?1 left it awake past 25 s, while
+// the same change ramped over 3 s re-slept 5.5 s later (frozen.ts on
+// master's settled state; .claude/probes/K1626/).
+const JN_HALF_SEG_RAMP_STEP = ((JN_HALF_SEG_SCALE - 1) * SUBSTEP) / 3;
+// K1626 s2: JOINT EYES. Two arms of one fused joint whose first passes
+// are the two passes of one crossing close an eye between the joint and
+// the crossing (Levi's J138: a T whose arms cross 2.6 ctrl out). Measured
+// per stage at rest (stage 1, his link): FAIRING closed every such eye
+// (-74e-3 to -110e-3 widths per substep along the opening), and global
+// repulsion squeezed J64 shut from outside (-29e-3). The kink-eye
+// pressure, adapted: the LENS law opens the eye - a particle at fraction
+// tA of arm A (0 at the joint, 1 at its pass, by lattice rest arc) and
+// one at tB of arm B want at least
+// JOINT_EYE_DIST_PER_WIDTH x width x (sin(pi tA) + sin(pi tB)) / 2
+// between them in the plane. Every target is met at once by a lens of
+// that opening, so the law never asks for an impossible shape, and it
+// asks nothing at the joint or the crossing. The arms keep their fairing
+// (unlike a kink loop's): exempt, the eyes opened ~0.3 widths more but
+// the arms rested with 1.5-3x the sharp (> 60 deg) turns of stage 1 on
+// the dailies, and half fairing still added them. 3.0: 2.6 left more
+// eyes under 2 widths; 3.4 never slept on ?1 (fairing on or halved) and,
+// with the arms exempt, delayed his link's sleep 5.0 -> 6.7 s; 4.0
+// never slept on ?1 - the kink law's pump.
+const JOINT_EYE_DIST_PER_WIDTH = 3.0;
+// K1626 s3: the PARKED-EYE RELEASE. An eye whose arms lack the material for
+// its lens parks short of it and pushes forever (P3.37: no push law can
+// exceed a taut chord), and the standing push pumps the crossings beside
+// it. On Levi's width jump (settled at tw 0.75, set 0.5) eye J149xX305
+// parked 0.35 widths short on 7 of its pairs within 3 s and stayed so,
+// while chain 82's passes beside it moved 0.28 world a frame and the knot
+// never slept. So at a width change, every eye already short of its lens at
+// the narrower of the two widths (worst pair under this fraction of its
+// target) stops pushing until the next change (releaseParkedEyes). It must
+// happen AT the change: released 0.3 s later the pump had started and the
+// knot never slept. A first settle (no change) is untouched. Rejected:
+// capping each pair at its arms' material bound (it closed the census's
+// eyes by 0.3-1.0 widths: in the settle an eye draws material in through
+// its crossing, which no bound from the arms sees) and holding a parked
+// eye at the shape it reached (Levi's link never slept).
+const JOINT_EYE_RELEASE_MET = 0.98;
 // Crossing coverage for the anti-riding 2D floor is measured in WORLD
 // ARC bounded by the renderer's erase reach - see updatePassCover.
 const COUPLING_STIFFNESS = 0.7;
@@ -1104,6 +1171,187 @@ export class ParticleSystem {
     }
   }
 
+  // K1626 s2: the joint eyes (see JOINT_EYE_DIST_PER_WIDTH). Per fused
+  // joint member and direction, the arm runs to the nearest pass outward
+  // (recordJunctionClamps' scan: within JN_CLAMP_SCAN, never across an
+  // open chain's seam). Two arms of one joint whose passes are the over
+  // and under of one crossing close an eye. An arm that runs through
+  // another fused member is no simple eye and is dropped.
+  private buildJointEyes(): void {
+    const eyes: NonNullable<ParticleSystem["jointEyes"]> = [];
+    this.jointEyes = eyes;
+    if (this.fusedJunctions.length === 0) return;
+    const crossingOf = new Map<CrossingPass, number>();
+    for (let i = 0; i < this.crossings.length; i++) {
+      crossingOf.set(this.crossings[i].over, i);
+      crossingOf.set(this.crossings[i].under, i);
+    }
+    for (let g = 0; g < this.fusedJunctions.length; g++) {
+      const arms: Array<{ c: number; s: number; d: number; m: number; p: CrossingPass; x: number }> = [];
+      for (const m of this.fusedJunctions[g]) {
+        const c = this.particleChain[m];
+        const chain = this.chains[c];
+        const len = chain.length;
+        const brk = this.chainBreakAfter[c];
+        const cyc = (v: number): number => ((v % len) + len) % len;
+        const slot = this.topology.ctrlOf[m];
+        const seamF = brk >= 0 ? cyc(brk + 0.5 - slot) : Infinity;
+        const seamB = brk >= 0 ? cyc(slot - (brk + 0.5)) : Infinity;
+        for (const d of [1, -1]) {
+          let best: CrossingPass | null = null;
+          let bestD = JN_CLAMP_SCAN;
+          for (const pass of this.passesByChain[c]) {
+            const dd = d > 0 ? cyc(pass.ctrl - slot) : cyc(slot - pass.ctrl);
+            if (dd > 0 && dd < bestD && dd <= (d > 0 ? seamF : seamB)) {
+              best = pass;
+              bestD = dd;
+            }
+          }
+          if (best === null) continue;
+          let clean = true;
+          for (let o = 1; o < bestD; o++) {
+            const q = chain[cyc(slot + d * o)];
+            if (this.fusedGroupOf[q] >= 0) {
+              clean = false;
+              break;
+            }
+          }
+          if (!clean) continue;
+          const x = crossingOf.get(best);
+          if (x === undefined) continue;
+          arms.push({ c, s: slot, d, m, p: best, x });
+        }
+      }
+      for (let i = 0; i < arms.length; i++) {
+        for (let j = i + 1; j < arms.length; j++) {
+          const A = arms[i];
+          const B = arms[j];
+          if (A.x !== B.x || A.p === B.p || A.m === B.m) continue;
+          eyes.push({ ca: A.c, sa: A.s, da: A.d, pa: A.p, cb: B.c, sb: B.s, db: B.d, pb: B.p });
+        }
+      }
+    }
+    this.jeyeStart = new Int32Array(eyes.length);
+    this.jeyeSplit = new Int32Array(eyes.length);
+    this.jeyeEnd = new Int32Array(eyes.length);
+    this.jeyeOff = new Uint8Array(eyes.length);
+  }
+
+  // Per-substep arm membership and fractions (passes slide, so the arms
+  // change length): every particle strictly between the joint slot and
+  // the pass, t = its rest arc from the joint over the arm's.
+  private updateJointEyes(): void {
+    const eyes = this.jointEyes as NonNullable<ParticleSystem["jointEyes"]>;
+    let n = 0;
+    const addArm = (c: number, slot: number, d: number, pass: CrossingPass): void => {
+      const chain = this.chains[c];
+      const len = chain.length;
+      const cum = this.chainRestCum[c];
+      const restAt = (f: number): number => {
+        const fl = Math.floor(f);
+        const s = ((fl % len) + len) % len;
+        return cum[s] + Math.floor(fl / len) * cum[len] + (f - fl) * (cum[s + 1] - cum[s]);
+      };
+      const span = d > 0 ? (((pass.ctrl - slot) % len) + len) % len : (((slot - pass.ctrl) % len) + len) % len;
+      const r0 = restAt(slot);
+      const total = Math.abs(restAt(slot + d * span) - r0);
+      if (!(total > 1e-9)) return;
+      for (let o = 1; o < span; o++) {
+        const f = slot + d * o;
+        const p = chain[((f % len) + len) % len];
+        if (n >= this.jeyeParts.length) {
+          const parts = new Int32Array(this.jeyeParts.length * 2);
+          parts.set(this.jeyeParts);
+          this.jeyeParts = parts;
+          const ts = new Float64Array(parts.length);
+          ts.set(this.jeyeT);
+          this.jeyeT = ts;
+        }
+        this.jeyeParts[n] = p;
+        this.jeyeT[n] = Math.min(1, Math.abs(restAt(f) - r0) / total);
+        n++;
+      }
+    };
+    for (let e = 0; e < eyes.length; e++) {
+      const E = eyes[e];
+      this.jeyeStart[e] = n;
+      addArm(E.ca, E.sa, E.da, E.pa);
+      this.jeyeSplit[e] = n;
+      addArm(E.cb, E.sb, E.db, E.pb);
+      this.jeyeEnd[e] = n;
+    }
+  }
+
+  // The lens law (see JOINT_EYE_DIST_PER_WIDTH) between one eye's two
+  // arms, with applyRepulsion's push and stiffness: a pair at fractions
+  // tA, tB wants (H/2)(sin(pi tA) + sin(pi tB)) apart IN THE PLANE. Not
+  // 3D like the kink law: a joint eye's arms are short enough to lie
+  // inside their crossing's depth tents (over arm up, under arm down,
+  // measured 1.4-2.1 widths apart in z), so a 3D gap is met while the
+  // arms touch on screen (J64: 0.14 widths apart in 2D).
+  private applyJointEyePressure(H: number, stiffness: number): void {
+    const P = this.positions;
+    const eyes = this.jointEyes as NonNullable<ParticleSystem["jointEyes"]>;
+    const half = H * 0.5;
+    for (let e = 0; e < eyes.length; e++) {
+      const a0 = this.jeyeStart[e];
+      const b0 = this.jeyeSplit[e];
+      const b1 = this.jeyeEnd[e];
+      if (this.jeyeOff[e] === 1) continue;
+      for (let u = a0; u < b0; u++) {
+        const i = this.jeyeParts[u];
+        const sA = Math.sin(Math.PI * this.jeyeT[u]);
+        for (let v = b0; v < b1; v++) {
+          const j = this.jeyeParts[v];
+          if (i === j) continue;
+          const target = half * (sA + Math.sin(Math.PI * this.jeyeT[v]));
+          const dx = P[j * 2] - P[i * 2];
+          const dy = P[j * 2 + 1] - P[i * 2 + 1];
+          const d2 = dx * dx + dy * dy;
+          if (d2 >= target * target || d2 < 1e-9) continue;
+          const dist = Math.sqrt(d2);
+          const push = ((target - dist) / dist) * stiffness * 0.5;
+          P[i * 2] -= dx * push;
+          P[i * 2 + 1] -= dy * push;
+          P[j * 2] += dx * push;
+          P[j * 2 + 1] += dy * push;
+        }
+      }
+    }
+  }
+
+  // K1626 s3: the parked-eye release (see JOINT_EYE_RELEASE_MET), at a
+  // width change: every eye whose worst pair stands under
+  // JOINT_EYE_RELEASE_MET of its lens target at width-scale H stops
+  // pushing (jeyeOff) until the next change.
+  private releaseParkedEyes(H: number): void {
+    const P = this.positions;
+    const eyes = this.jointEyes as NonNullable<ParticleSystem["jointEyes"]>;
+    const half = H * 0.5;
+    this.jeyeOff.fill(0);
+    for (let e = 0; e < eyes.length; e++) {
+      const a0 = this.jeyeStart[e];
+      const b0 = this.jeyeSplit[e];
+      const b1 = this.jeyeEnd[e];
+      let worst = 1;
+      for (let u = a0; u < b0; u++) {
+        const i = this.jeyeParts[u];
+        const sA = Math.sin(Math.PI * this.jeyeT[u]);
+        for (let v = b0; v < b1; v++) {
+          const j = this.jeyeParts[v];
+          if (i === j) continue;
+          const target = half * (sA + Math.sin(Math.PI * this.jeyeT[v]));
+          if (target <= 1e-9) continue;
+          const dx = P[j * 2] - P[i * 2];
+          const dy = P[j * 2 + 1] - P[i * 2 + 1];
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < target * worst) worst = d / target;
+        }
+      }
+      if (worst < JOINT_EYE_RELEASE_MET) this.jeyeOff[e] = 1;
+    }
+  }
+
   // Cumulative lattice rest arc per chain (see chainRestCum). An open
   // chain's seam entry (last slot -> slot 0) is a phantom; kink loops
   // never straddle the seam (its pass pair is unlinked), so it is unread.
@@ -1268,10 +1516,115 @@ export class ParticleSystem {
     this.prev[p * 2 + 1] = y;
   }
 
+  // K1626: collect the half segments within JN_HALF_SEG_REACH of every
+  // fused joint member along its chain (both ways, never across the open
+  // seam) and the bending triples through them. Knot mode has no fused
+  // joints, so the lists stay empty there.
+  private buildJnHalfSegs(): void {
+    const segs: number[] = [];
+    const base: number[] = [];
+    const bends: number[] = [];
+    this.jnHalfSegs = segs;
+    this.jnHalfBase = base;
+    this.jnHalfBends = bends;
+    if (this.fusedJunctions.length === 0) return;
+    const next = this.topology.next;
+    // Structural index of the segment each particle starts; bending index
+    // by its middle particle. Fusion springs (rest 0) are not segments.
+    const segOf = new Int32Array(this.particleCount).fill(-1);
+    this.structural.forEach((c, i) => {
+      if (c.rest > 0 && next[c.a] === c.b && c.a !== c.b) segOf[c.a] = i;
+    });
+    const bendOf = new Int32Array(this.particleCount).fill(-1);
+    this.bending.forEach((c, i) => {
+      const m = next[c.a];
+      if (m !== c.a && next[m] === c.b) bendOf[m] = i;
+    });
+    const picked = new Uint8Array(this.structural.length);
+    const pick = (startParticle: number): void => {
+      const s = segOf[startParticle];
+      if (s < 0 || picked[s]) return;
+      const rest = this.structural[s].rest;
+      if (rest >= JN_HALF_SEG_MAX_REST) return;
+      picked[s] = 1;
+      segs.push(s);
+      base.push(rest);
+    };
+    for (const group of this.fusedJunctions) {
+      for (const m of group) {
+        const c = this.particleChain[m];
+        const chain = this.chains[c];
+        const n = chain.length;
+        const brk = this.chainBreakAfter[c];
+        const slot = this.topology.ctrlOf[m];
+        let f = slot;
+        for (let o = 0; o < JN_HALF_SEG_REACH; o++) {
+          if (f === brk) break;
+          pick(chain[f]);
+          f = (f + 1) % n;
+        }
+        let b = slot;
+        for (let o = 0; o < JN_HALF_SEG_REACH; o++) {
+          const t = (b - 1 + n) % n;
+          if (t === brk) break;
+          pick(chain[t]);
+          b = t;
+        }
+      }
+    }
+    const pickedBend = new Uint8Array(this.bending.length);
+    for (const s of segs) {
+      const a = this.structural[s].a;
+      for (const mid of [a, next[a]]) {
+        const bi = bendOf[mid];
+        if (bi < 0 || pickedBend[bi]) continue;
+        const l1 = segOf[this.bending[bi].a];
+        const l2 = segOf[mid];
+        if (l1 < 0 || l2 < 0) continue;
+        pickedBend[bi] = 1;
+        bends.push(bi, l1, l2);
+      }
+    }
+  }
+
+  // K1626: the half segments' scale at this thread width (1 for fat
+  // threads, JN_HALF_SEG_SCALE below JN_HALF_SEG_FADE_LO).
+  private static jnHalfScale(threadWidth: number): number {
+    const fade = Math.max(
+      0,
+      Math.min(
+        1,
+        (JN_HALF_SEG_FADE_HI - threadWidth) /
+          (JN_HALF_SEG_FADE_HI - JN_HALF_SEG_FADE_LO)
+      )
+    );
+    return 1 + (JN_HALF_SEG_SCALE - 1) * fade;
+  }
+
+  // K1626: rest = lattice rest x k; each bending triple through a scaled
+  // segment rests at the sum of its two legs.
+  private setJnHalfRests(k: number): void {
+    if (this.jnHalfSegs === null) this.buildJnHalfSegs();
+    this.jnHalfK = k;
+    const segs = this.jnHalfSegs as number[];
+    if (segs.length === 0) return;
+    for (let i = 0; i < segs.length; i++) {
+      this.structural[segs[i]].rest = this.jnHalfBase[i] * k;
+    }
+    const bends = this.jnHalfBends;
+    for (let i = 0; i < bends.length; i += 3) {
+      this.bending[bends[i]].rest =
+        this.structural[bends[i + 1]].rest + this.structural[bends[i + 2]].rest;
+    }
+  }
+
   // Re-derive constraints + the collision segment successors after the chain
   // topology (chainBreakAfter) changes. Crossings/passes are unaffected by an
   // open seam, so only structural/bending and topology.next are rebuilt.
   private rebuildTopology(): void {
+    this.jnHalfSegs = null;
+    this.jnHalfK = NaN;
+    this.jointEyes = null;
     this.structural = [];
     this.bending = [];
     this.buildConstraints();
@@ -1530,6 +1883,41 @@ export class ParticleSystem {
   // JN_MIN_SEPARATION). Read only by passes carrying jn clamp records,
   // which exist only on the maze fabric.
   private jnSep = JN_MIN_SEPARATION;
+  // K1626 joint half segments (see JN_HALF_SEG_SCALE): structural
+  // indices with their lattice rests, and the bending triples through
+  // them as [bending, leg1, leg2] structural indices. Built on the first
+  // step (null until then; rebuildTopology clears it), rests rewritten
+  // only while the applied scale jnHalfK differs from the width's.
+  private jnHalfSegs: number[] | null = null;
+  private jnHalfBase: number[] = [];
+  private jnHalfBends: number[] = [];
+  private jnHalfK = NaN;
+  // K1626 s2 joint eyes (see JOINT_EYE_DIST_PER_WIDTH): per eye, the two
+  // arms (chain, joint slot, walk direction, first pass). Built on the
+  // first step (null until then; rebuildTopology clears it). The flat
+  // per-substep lists: parts of eye e are jeyeParts[jeyeStart[e] ..
+  // jeyeEnd[e]), arm A's first, arm B's from jeyeSplit[e]; jeyeT is each
+  // part's fraction along its arm.
+  private jointEyes: Array<{
+    ca: number;
+    sa: number;
+    da: number;
+    pa: CrossingPass;
+    cb: number;
+    sb: number;
+    db: number;
+    pb: CrossingPass;
+  }> | null = null;
+  private jeyeStart: Int32Array = new Int32Array(0);
+  private jeyeSplit: Int32Array = new Int32Array(0);
+  private jeyeEnd: Int32Array = new Int32Array(0);
+  private jeyeParts: Int32Array = new Int32Array(256);
+  private jeyeT: Float64Array = new Float64Array(256);
+  // K1626 s3: the eyes released at the last width change (1 = no push;
+  // see JOINT_EYE_RELEASE_MET), and the width that change set (-1 before
+  // the first substep).
+  private jeyeOff: Uint8Array = new Uint8Array(0);
+  private jeyeTw = -1;
   // (The loud-attractor A/B knobs - ab* multipliers and the slip-EMA
   // plumbing - were removed after their experiments concluded; the
   // measured verdicts live in the loud-attractor entry of
@@ -2361,6 +2749,18 @@ export class ParticleSystem {
       JN_MIN_SEPARATION,
       tuning.threadWidth * JN_SEP_PER_WIDTH
     );
+    // K1626: the first step takes the half segments' scale at once (the
+    // settle from the lattice); a later width change ramps it by at most
+    // JN_HALF_SEG_RAMP_STEP a substep.
+    const jnHalfTarget = ParticleSystem.jnHalfScale(tuning.threadWidth);
+    if (jnHalfTarget !== this.jnHalfK) {
+      const k0 = this.jnHalfK;
+      this.setJnHalfRests(
+        Number.isNaN(k0) || Math.abs(jnHalfTarget - k0) <= JN_HALF_SEG_RAMP_STEP
+          ? jnHalfTarget
+          : k0 + Math.sign(jnHalfTarget - k0) * JN_HALF_SEG_RAMP_STEP
+      );
+    }
     // Aesthetic spacing can never drop below the hard floor: at low
     // repulsion x wide threads the raw formula fell below the thread
     // width (rep 0.4 x taut 0.62 = 0.25 < width 0.52), silently
@@ -2452,6 +2852,20 @@ export class ParticleSystem {
     // Bindings are final for this substep: refresh the kink loops (eye
     // pressure + fairing exemption read them).
     if (this.kinks.length > 0) this.updateKinkLoops();
+    // K1626 s2: and the joint eyes (lens pressure reads them).
+    if (this.jointEyes === null) this.buildJointEyes();
+    const jeyes = (this.jointEyes as unknown[]).length > 0;
+    if (jeyes) this.updateJointEyes();
+    const jeyeH = tuning.threadWidth * JOINT_EYE_DIST_PER_WIDTH;
+    // K1626 s3: the parked-eye release at a width change (see
+    // JOINT_EYE_RELEASE_MET), judged at the narrower of the two widths.
+    if (tuning.threadWidth !== this.jeyeTw) {
+      const old = this.jeyeTw;
+      this.jeyeTw = tuning.threadWidth;
+      if (jeyes && old > 0) {
+        this.releaseParkedEyes(Math.min(old, this.jeyeTw) * JOINT_EYE_DIST_PER_WIDTH);
+      }
+    }
     this.probe("slide+transversality");
 
     for (let iter = 0; iter < CONSTRAINT_ITERATIONS; iter++) {
@@ -2495,6 +2909,9 @@ export class ParticleSystem {
       );
       if (this.kinks.length > 0) {
         this.applyKinkEyePressure(kinkEyeDist, REPULSION_STIFFNESS);
+      }
+      if (jeyes) {
+        this.applyJointEyePressure(jeyeH, REPULSION_STIFFNESS);
       }
       this.probe("repulsion");
       // Hard 3D floor: no two threads within the margin in 3D, ever. The
@@ -2607,7 +3024,8 @@ export class ParticleSystem {
     // (measured -21.6e-3 per loop particle per substep at the default
     // smooth 0.75, against bending's +26.5e-3 holding the eye open), and a
     // loop has no straightening left for it to do. Bending still evens the
-    // loop's curvature.
+    // loop's curvature. (Joint-eye arms keep it: K1626 s2, see
+    // JOINT_EYE_DIST_PER_WIDTH.)
     if (tuning.smooth > 0) {
       const k = tuning.smooth * FAIRING_MAX * settle;
       const kinkOf = this.topology.kinkOf;
