@@ -1,0 +1,13 @@
+diff --git a/src/render/gpu_field/gf_look.ts b/src/render/gpu_field/gf_look.ts
+index 1bc78b466..c73b8b924 100644
+--- a/src/render/gpu_field/gf_look.ts
++++ b/src/render/gpu_field/gf_look.ts
+@@ -461,7 +461,7 @@ export const GAP_BALL_ARC = 1.0;
+  * packed as corner texel 5 .w = 1 + angle) is under this many radians cuts its gap as a wedge; a wider one draws stage
+  * 5's gap. 42.5 degrees: the last row (A_3 k63) opens 40.1, the tightest of the other seven (A_6 k331) 45.2.
+  */
+-export const GAP_WEDGE_THETA = (42.5 * Math.PI) / 180;
++export const GAP_WEDGE_THETA = 0; // K1584 s9 probe build: no wedge anywhere
+ /**
+  * K1584 s7 corner rule: a bit above the right border code (codes stop at 1023), set on a slot whose outline far term is
+  * off. x = over chain + (code + GAP_FAR_OFF) / 4096 keeps x's fraction under 0.5, so the chain still reads int(x + 0.5).

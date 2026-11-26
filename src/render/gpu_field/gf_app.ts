@@ -672,19 +672,19 @@ const gfKRetry = (): true | undefined => ((globalThis as { __knotGfKRetry?: bool
       })),
       fillHalf: xr.style.threadWidth / 2, margin: lookGap(r), fade: lookFade(r),
       joints: xr.junctionArcCtrls, jointClear: gfJointClear(xr.style.threadWidth / 2, xr.FILLET_REACH_PER_HALF, xr.cuspRadius, lookGap(r)),
-      jointArcs: gwJoints(), jointLats: gwJl, jointPartners: gwJp,
+      jointArcs: gwJoints(), jointLats: gwJl, jointPartners: gwJp, jointWedges: gwJw,
     }, gwPool.pop());
     stats.gwMs.push(performance.now() - t0);
     return P;
   };
   // K1584 s3: the joint corners' tangent points per chain (gfJointArcs), once per tables build; s4: and their sides
   // (the joint flag and its membership reads, K1482 s15-s18, gave way to per-border rooms); s7: and each corner's
-  // other chain (the corner rule's pair corners)
+  // other chain (the corner rule's pair corners); s11: and whether it is a tight wedge (its border bakes the ordinary gap)
   let gwJa: Map<number, number[]> | undefined, gwJaT: GfTables | null = null, gwJl: Map<number, number[]> | undefined;
-  let gwJp: Map<number, number[]> | undefined;
+  let gwJp: Map<number, number[]> | undefined, gwJw: Map<number, number[]> | undefined;
   const gwJoints = (): Map<number, number[]> | undefined => {
-    if (!T) { gwJl = undefined; gwJp = undefined; return undefined; }
-    if (gwJaT !== T) { gwJaT = T; gwJl = new Map(); gwJp = new Map(); gwJa = gfJointArcs(T, gwJl, gwJp); }
+    if (!T) { gwJl = undefined; gwJp = undefined; gwJw = undefined; return undefined; }
+    if (gwJaT !== T) { gwJaT = T; gwJl = new Map(); gwJp = new Map(); gwJw = new Map(); gwJa = gfJointArcs(T, gwJl, gwJp, gwJw); }
     return gwJa;
   };
   // K1500: the marker discs' gap uniforms (gf_look.ts gfMarkerUniforms), recomputed with the gap bake

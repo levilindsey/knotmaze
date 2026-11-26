@@ -78,8 +78,9 @@ export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKe
     put(b + 2, T.kEax[k], T.kEay[k], T.kEbx[k], T.kEby[k]);
     put(b + 3, T.kCa[k], T.kCb[k], T.kSa[k], T.kSb[k]);
     put(b + 4, T.kZa[k], T.kZb[k], T.kTax[k], T.kTay[k]);
-    // K1482 s20: z = a retry corner (home membership only); K1572 s41: w = a tight turn (tables.ts tightTurns)
-    put(b + 5, T.kTbx[k], T.kTby[k], T.kExt?.[k] === 1 ? 1 : 0, T.kTight?.[k] === 1 ? 1 : 0);
+    // K1482 s20: z = a retry corner (home membership only); K1572 s41: w = a tight turn (tables.ts tightTurns), as
+    // 1 + its opening angle (K1584 s9: lkBall's wedge line, GAP_WEDGE_THETA; every other reader tests w > 0.5)
+    put(b + 5, T.kTbx[k], T.kTby[k], T.kExt?.[k] === 1 ? 1 : 0, T.kTight?.[k] === 1 ? 1 + T.kTheta[k] : 0);
   }
   for (let q = 0; q < T.nCh; q++) {
     put(o.chk + 2 * q, T.chV0[q], T.chN[q], T.chC[q], 0);

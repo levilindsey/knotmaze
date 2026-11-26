@@ -435,6 +435,13 @@ export interface GfGapSource extends GfLookSource {
    * the fillet that joins the two) carry GAP_FAR_OFF: the outline's far term is off there (the corner rule, K1595 Q4).
    */
   jointPartners?: ReadonlyMap<number, readonly number[]>;
+  /**
+   * K1584 s11: each jointArcs point's corner is a WEDGE (gfJointArcs' wedges, same order: 1 for a tight turn opening under
+   * GAP_WEDGE_THETA, the shader's open form, else 0). A wedge corner sets no border's room (its window room stays): the
+   * wedge's border bakes the ordinary gap, so past the corner list's reach (lkBall's tw 0) the wedge runs on open into
+   * the ordinary gap instead of the narrowed one (A_5 k176: chain 59's border kept 0.45/0 there, a dark foot 10-12 px out).
+   */
+  jointWedges?: ReadonlyMap<number, readonly number[]>;
   /** K1482 s15: whether chain c's kept sample k (a field vertex) belongs to a fused joint's surface (eval.ts member(): a group, ramp > 0). */
   overMember?: (c: number, k: number) => boolean;
 }
@@ -456,6 +463,22 @@ const GAP_NOEND_ROOM = (globalThis as { process?: { env?: Record<string, string 
  *  (world) of the corner's tangent point on that chain: past the ball's own reach, short of any other pass of the chain. */
 export const GAP_BALL_ARC = 1.0;
 /**
+ * K1584 s10: the wedge's line (Levi, 2026-11-25, on stage 9's ranked ball sheets: balls #1 A_3 k63, #2 A_5 k176 and #3
+ * A_6 k265 take the open wedge, #4 A_6 k331 on keep stage 8's). A tight turn whose opening angle (tables.ts kTheta,
+ * packed as corner texel 5 .w = 1 + angle) is under this many radians opens its wedge (lkBall .y, ballOpenAt); every
+ * tight turn still scales its gap by the distance from the ball's centre as stage 8 did. 45 degrees: k265 opens 44.87,
+ * k331 45.18. (Stage 9 drew stage 5's gap past a line at 42.5; Levi wants stage 8's wedge on the loose side.)
+ */
+export const GAP_WEDGE_THETA = (45 * Math.PI) / 180;
+/**
+ * K1584 s10 (Levi: the tight wedge "should be wider at its outer side, where it leaves the ball: about the ordinary gap's
+ * width there"): out to GAP_OPEN_FULL ball radii (fillet radius + W) from a tight wedge's centre, its own chain's gap
+ * takes the ordinary border code (margin and fade 1; no closure, no far-off flag), blending back to the slot's own code
+ * by GAP_OPEN_END radii (smoothstep). The s7 corner rule's narrow codes made stage 8's wedge a 1 px slit.
+ */
+export const GAP_OPEN_FULL = 2.0;
+export const GAP_OPEN_END = 3.0;
+/**
  * K1584 s7 corner rule: a bit above the right border code (codes stop at 1023), set on a slot whose outline far term is
  * off. x = over chain + (code + GAP_FAR_OFF) / 4096 keeps x's fraction under 0.5, so the chain still reads int(x + 0.5).
  */
@@ -466,26 +489,43 @@ export const GAP_FAR_OFF = 1024;
  */
 const GAP_FILLET_REACH = 1.5;
 
+type BallCorners = { nK: number; kTight?: ArrayLike<number>; kTheta: ArrayLike<number>; kCa: ArrayLike<number>; kCb: ArrayLike<number>; kSa: ArrayLike<number>; kSb: ArrayLike<number>; kCx: ArrayLike<number>; kCy: ArrayLike<number>; kR: ArrayLike<number> };
 /**
- * K1584 s6: lkBall's CPU twin. The scale on the gap's margin and fade at (px, py) for a pixel labelled (c, arc): the least
- * |p - centre| / (fillet radius + W) over the tight-turn corners (kTight) in `ks` (default: every corner) that have c as a
- * chain with arc within GAP_BALL_ARC of that chain's tangent point; 1 when none does.
+ * K1584 s6: lkBall's CPU twin (its .x). The scale on the gap's margin and fade at (px, py) for a pixel labelled (c, arc):
+ * the least |p - centre| / (fillet radius + W) over the tight-turn corners (kTight) in `ks` (default: every corner) that
+ * have c as a chain with arc within GAP_BALL_ARC of that chain's tangent point; 1 when none does. Every tight turn, at any
+ * angle (K1584 s10: the loose side of the line draws stage 8's wedge again; the line picks the wedge's form, ballOpenAt).
  */
-export function ballScaleAt(
-  T: { nK: number; kTight?: ArrayLike<number>; kCa: ArrayLike<number>; kCb: ArrayLike<number>; kSa: ArrayLike<number>; kSb: ArrayLike<number>; kCx: ArrayLike<number>; kCy: ArrayLike<number>; kR: ArrayLike<number> },
-  W: number, c: number, arc: number, px: number, py: number, ks?: Iterable<number>,
-): number {
-  let s = 1;
-  if (!T.kTight) return s;
+export function ballScaleAt(T: BallCorners, W: number, c: number, arc: number, px: number, py: number, ks?: Iterable<number>): number {
+  return ballAt(T, W, c, arc, px, py, ks).s;
+}
+/**
+ * K1584 s10: lkBall's .y twin, the open form's weight at (px, py): for a tight turn opening under GAP_WEDGE_THETA (the
+ * packed float 1 + kTheta against fround(1 + line), as the shader reads it) that has c as a chain near its tangent point,
+ * 1 - smoothstep(GAP_OPEN_FULL, GAP_OPEN_END, r) at r = |p - centre| / (fillet radius + W); the most over such turns, 0
+ * when none. Where it is 1 lkGap draws the ordinary border code (no closure, no far-off flag); between, it blends.
+ */
+export function ballOpenAt(T: BallCorners, W: number, c: number, arc: number, px: number, py: number, ks?: Iterable<number>): number {
+  return ballAt(T, W, c, arc, px, py, ks).open;
+}
+function ballAt(T: BallCorners, W: number, c: number, arc: number, px: number, py: number, ks?: Iterable<number>): { s: number; open: number } {
+  let s = 1; let open = 0;
+  if (!T.kTight) return { s, open };
   const list = ks ?? Array.from({ length: T.nK }, (_, k) => k);
+  const line = Math.fround(1 + GAP_WEDGE_THETA);
   for (const k of list) {
     if (T.kTight[k] !== 1) continue;
     const onA = T.kCa[k] === c && Math.abs(arc - T.kSa[k]) < GAP_BALL_ARC;
     const onB = T.kCb[k] === c && Math.abs(arc - T.kSb[k]) < GAP_BALL_ARC;
     if (!onA && !onB) continue;
-    s = Math.min(s, Math.sqrt((px - T.kCx[k]) ** 2 + (py - T.kCy[k]) ** 2) / Math.max(T.kR[k] + W, 1e-6));
+    const r = Math.sqrt((px - T.kCx[k]) ** 2 + (py - T.kCy[k]) ** 2) / Math.max(T.kR[k] + W, 1e-6);
+    s = Math.min(s, r);
+    if (Math.fround(1 + T.kTheta[k]) < line) {
+      const u = clamp01((r - GAP_OPEN_FULL) / (GAP_OPEN_END - GAP_OPEN_FULL));
+      open = Math.max(open, 1 - u * u * (3 - 2 * u));
+    }
   }
-  return clamp01(s);
+  return { s: clamp01(s), open };
 }
 
 /** K1584 s6: lkCut's CPU twin (the window terms left out: inside a window, wm large): the cut at distance d from the over
@@ -876,7 +916,7 @@ export class GfGapTable {
       // junction corner whose two chains are this crossing's under and over. There the under's border turns into the
       // fillet that joins it to the over, whose outline is the fillet's other half: the far term finds the over "near"
       // all along it and the window never clears, so the cut ran on round the corner into the junction.
-      const jp = r.jointPartners?.get(x.underChain);
+      const jp = r.jointPartners?.get(x.underChain), jw = r.jointWedges?.get(x.underChain);
       const pairB = [1e6, 1e6, 1e6, 1e6];
       // K1584 s8 (Levi on the seven stems: today's look): per border, the off of the pair corner's FILLET START on the
       // under, the nearer to the crossing of the under's own tangent point (pairB) and the over's tangent point of the
@@ -927,7 +967,8 @@ export class GfGapTable {
           const f = jt[q];
           const i = Math.max(0, Math.min(raw.length - 1, Math.floor(f))), j = Math.min(raw.length - 1, i + 1);
           const arc = (raw[i] + Math.max(0, Math.min(1, f - i)) * (raw[j] - raw[i])) * su.arcPer, lat = jlat ? jlat[q] ?? 0 : 0;
-          room(arc, 0, lat);
+          // K1584 s11: a wedge corner limits the window alone (lat NaN: no border; jointWedges)
+          room(arc, 0, jw?.[q] === 1 ? Number.NaN : lat);
           if (!jp || jp[q] !== x.overChain) continue;
           let d = arc - uC;
           if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
@@ -2037,6 +2078,8 @@ export interface GfJointArcTables {
   cV0: ArrayLike<number>; cNV: ArrayLike<number>; cClosed: ArrayLike<number>; cLen: ArrayLike<number>; vs: ArrayLike<number>;
   /** K1584 s4: the corner centres and the field vertices, for each tangent point's side (gfJointArcs' lats). */
   kCx?: ArrayLike<number>; kCy?: ArrayLike<number>; vx?: ArrayLike<number>; vy?: ArrayLike<number>;
+  /** K1584 s11: the tight-turn gate and each corner's opening, for each point's wedge flag (gfJointArcs' wedges). */
+  kTight?: ArrayLike<number>; kTheta?: ArrayLike<number>;
 }
 
 /**
@@ -2047,9 +2090,13 @@ export interface GfJointArcTables {
  * the corner's centre lies left of the chain's direction (the left normal (-ty, tx)), -1 right, 0 unknown (both
  * borders). That border alone turns into the joint's outline there (GfGapSource.jointLats).
  * K1584 s7: given partners, each point's corner's other chain, in the same order (GfGapSource.jointPartners).
+ * K1584 s11: given wedges, 1 where the point's corner is a tight turn opening under GAP_WEDGE_THETA (the test lkBall's
+ * open form makes, on the same float32 values), else 0, in the same order (GfGapSource.jointWedges).
  */
-export function gfJointArcs(T: GfJointArcTables, lats?: Map<number, number[]>, partners?: Map<number, number[]>): Map<number, number[]> {
+export function gfJointArcs(T: GfJointArcTables, lats?: Map<number, number[]>, partners?: Map<number, number[]>, wedges?: Map<number, number[]>): Map<number, number[]> {
   const out = new Map<number, number[]>();
+  const line = Math.fround(1 + GAP_WEDGE_THETA);
+  const wedgeOf = (k: number): number => (T.kTight?.[k] === 1 && T.kTheta && Math.fround(1 + T.kTheta[k]) < line ? 1 : 0);
   const latOf = (k: number, c: number, f: number): number => {
     if (!T.kCx || !T.kCy || !T.vx || !T.vy) return 0;
     const v0 = T.cV0[c], n = T.cNV[c], pad = T.cClosed[c] !== 1 && T.vs[v0] < 0 ? 1 : 0, b = v0 + pad, last = v0 + n - 1;
@@ -2093,6 +2140,11 @@ export function gfJointArcs(T: GfJointArcTables, lats?: Map<number, number[]>, p
         if (!P) { P = []; partners.set(c, P); }
         P.push(pc);
       }
+      if (wedges) {
+        let Wd = wedges.get(c);
+        if (!Wd) { Wd = []; wedges.set(c, Wd); }
+        Wd.push(wedgeOf(k));
+      }
     }
   }
   return out;
@@ -2126,6 +2178,7 @@ int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec
 int lkj[MAXS]; float lks[MAXS];
 // K1584 s6: the ball's scale on the gap's margin and fade (lkBall), 1 everywhere else
 float lkBs = 1.0;
+float lkTw = 0.0;
 `;
 const M_ANCHOR = "\nvoid main() {\n";
 function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? s : s + ".0"; }
@@ -2622,9 +2675,12 @@ float lkCut(float d, float sinT, float exg, float wm, float pxw, vec2 sc) {
 // on the label's own chain, within ${lkF(GAP_BALL_ARC)} of arc of the corner's tangent point there, scales the gap's
 // margin and fade by the pixel's distance from the ball's centre over the ball's radius (fillet radius + W): no gap at
 // the centre, the ordinary gap where the ball ends. The pixel's corner list (kk, nk) holds every corner in reach.
-// CPU twin: ballScaleAt.
-float lkBall(vec2 p, int c, float arc) {
-  float s = 1.0;
+// K1584 s10: every tight turn scales its gap so (.x, as stage 8 did). A turn opening under GAP_WEDGE_THETA (.w = 1 +
+// angle) also opens its wedge (.y): out to ${lkF(GAP_OPEN_FULL)} ball radii its own chain's gap takes the ordinary border
+// code, tapering back to the slot's own code by ${lkF(GAP_OPEN_END)} radii, so the wedge leaves the ball at the ordinary
+// gap's width. CPU twins: ballScaleAt, ballOpenAt.
+vec2 lkBall(vec2 p, int c, float arc) {
+  float s = 1.0; float tw = 0.0;
   for (int i = 0; i < nk; i++) {
     int k = kk[i] & 32767;
     vec4 K5 = F(uOK + 6 * k + 5);
@@ -2632,9 +2688,11 @@ float lkBall(vec2 p, int c, float arc) {
     vec4 K3 = F(uOK + 6 * k + 3);
     if (!((int(K3.x) == c && abs(arc - K3.z) < ${lkF(GAP_BALL_ARC)}) || (int(K3.y) == c && abs(arc - K3.w) < ${lkF(GAP_BALL_ARC)}))) continue;
     vec4 K0 = F(uOK + 6 * k);
-    s = min(s, length(p - K0.xy) / max(K0.z + uW, 1e-6));
+    float r = length(p - K0.xy) / max(K0.z + uW, 1e-6);
+    s = min(s, r);
+    if (K5.w < ${lkF(Math.fround(1 + GAP_WEDGE_THETA))}) tw = max(tw, 1.0 - smoothstep(${lkF(GAP_OPEN_FULL)}, ${lkF(GAP_OPEN_END)}, r));
   }
-  return clamp(s, 0.0, 1.0);
+  return vec2(clamp(s, 0.0, 1.0), tw);
 }
 vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
   float g = 0.0; float gA = 0.0;
@@ -2653,12 +2711,15 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
     int pk = int(fract(sl.z) * 1024.0 + 0.5); int pkR = int(fract(sl.x) * 4096.0 + 0.5);
     fo = pkR >= 1024; pkR -= fo ? 1024 : 0;
     if (pkR != pk) { vec2 fU = lkFoot(cU, qU); if ((tu.x * (p.y - fU.y) - tu.y * (p.x - fU.x)) < 0.0) pk = pkR; }
+    if (lkTw >= 1.0) fo = false;
     jf = pk == 0;
     // K1482 s16: a closed border's margin is -1 px (lkCut's e = d - uH - uLkG * sc.x, so sc.x = -pxw / uLkG): with no
     // margin the short fade began at the over's outline, and the first pixel past it kept 0.13-0.53 of the cut, a 1 px
     // light line between the over's outline and the under's at the joint (link A j60, j36, j143, t16e, j146, j157, t70s)
     sc = jf ? vec2(uLkG > 0.0 ? -pxw / uLkG : 0.0, 0.3) : vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0;
     scA = jf ? vec2(0.5, 0.45) : sc;
+    // K1584 s10: a tight wedge's open form (lkBall .y): the ordinary code, the closure and the far-off flag lifted
+    if (lkTw > 0.0) { sc = mix(sc, vec2(1.0), lkTw); scA = mix(scA, vec2(1.0), lkTw); if (lkTw >= 1.0) jf = false; }
   }
   // K1460 s4: the pixel's own arc and today's selfEx (both half-widths + margin + fade + the exit pad), for lkNearOn's
   // self crossing: its own thread is no over pass within sx of that arc (today's gapSegFull skip).
@@ -2779,7 +2840,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); if (lkg2.x > 0.0 || lkg2.y > 0.0) { lkBs = lkBall(p, lab, lkArc(lab, lq)); if (lkBs < 1.0) lkg2 = lkGap(lkKb, p, lq, lab); lkBs = 1.0; } float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w * lkJCut(lab, lq, p, f1); } vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); if (lkKb < BIG) { vec2 lkb2 = lkBall(p, lab, lkArc(lab, lq)); if (lkb2.y > 0.0 || ((lkg2.x > 0.0 || lkg2.y > 0.0) && lkb2.x < 1.0)) { lkBs = lkb2.x; lkTw = lkb2.y; lkg2 = lkGap(lkKb, p, lq, lab); lkBs = 1.0; lkTw = 0.0; } } float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y; lkHiA *= 1.0 - lkg2.y; if (lkCo.a > 0.0) lkCo.a = max(1.0 - lkg, 1.0 / 255.0); if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } } else if (ink > 0.0 || cov > 0.0) { lkFringe(p, ink, cov); }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 

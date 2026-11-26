@@ -404,6 +404,50 @@ describe("K1584 s4: per-border joint rooms (a right-angle crossing: both borders
     // no room: no end
     expect(win(1e6)[16]).toBe(1e6);
   });
+  it("K1584 s11: a wedge corner (jointWedges) sets no border's room: the window stays, the borders bake the ordinary gap", () => {
+    // the over crosses at x 10 and rides 0.3 to the left of the under (rule K's ride) into a pair corner (partner the
+    // over) RM past the crossing: a tight wedge's hairpin (A_5 k176, chain 59 under 76). A plain corner sets its
+    // border's room, and with it the per-border scales and ends (stages 4 to 7: on k176 the left border's 0.45/0
+    // narrowed code, a dark foot past the ball). Flagged a wedge it sets only the window's room, so the borders bake
+    // the ordinary gap (a crossing with no corner near): no room scales and no end closure. Here no other corner
+    // gives that side a border room, so the right border's closure past its own end goes too.
+    const ob = samples([[10, -10], [10, 0.3], [20, 0.3]]);
+    const g = new Float32Array(16);
+    g[0] = ob.total; g[1] = ob.arcPer; g[4] = 0; g[5] = ob.total;
+    g[8] = under.total; g[9] = under.arcPer; g[12] = 0; g[13] = under.total;
+    const kdB = { stat: new Float32Array(4), geom: g, reveal: new Float32Array(4), paint: new Float32Array(4) } as unknown as KData;
+    const kcvB = [
+      { ch: 0, nCtrl: 2, closed: false, geom: 0, total: ob.total },
+      { ch: 1, nCtrl: 2, closed: false, geom: 2, total: under.total },
+    ] as unknown as KChain[];
+    const RM = 10.5;
+    const table = (wedge?: number) => new GfGapTable().values({
+      ...src, kd: kdB, kcv: kcvB,
+      chainSamples: [{ positions: ob.positions, count: ob.count }, { positions: under.positions, count: under.count }],
+      crossings: [{ overChain: 0, overCtrl: 10 / ob.total, underChain: 1, underCtrl: 0.5 }],
+      joints: new Map([[1, [{ ctrl: 14 / under.total }]]]),
+      jointArcs: new Map([[1, [RM / under.arcPer]]]), jointLats: new Map([[1, [1]]]), jointPartners: new Map([[1, [0]]]),
+      ...(wedge === undefined ? {} : { jointWedges: new Map([[1, [wedge]]]) }),
+    });
+    const at = (V: Float32Array, x: number) => {
+      const i = 4 * (ob.count + Math.round(x / under.arcPer)), X = V[i + 1], Z = V[i + 3];
+      const right = Math.round((X - Math.floor(X)) * 4096);
+      return { wm: V[i], far: right >= GAP_FAR_OFF, left: Math.round((Z - Math.floor(Z)) * 1024), right: right % GAP_FAR_OFF };
+    };
+    const plain = table(), flag0 = table(0), wedge = table(1);
+    const xs = [9.8, 10.1, 10.3, 10.5, 10.6, 10.8, 11.2, 12, 13];
+    // a 0 flag changes nothing
+    for (const x of xs) expect(at(flag0, x)).toEqual(at(plain, x));
+    // the plain corner's per-border end closes the right border past its own gap (about 0.34 + the end pad)
+    for (const x of [10.6, 10.8, 12]) expect(at(plain, x).right).toBe(0);
+    for (const x of xs) {
+      const p = at(wedge, x), q = at(plain, x);
+      // the wedge: the ordinary code on both borders at every slot of the window; the window (winM: the corner still
+      // caps it) and the far-off flag (the pair corner's fillet) are the plain corner's
+      expect({ left: p.left, right: p.right }).toEqual({ left: FULL, right: FULL });
+      expect({ wm: p.wm, far: p.far }).toEqual({ wm: q.wm, far: q.far });
+    }
+  });
 });
 describe("K1584 s3: gfJointArcs (each joint corner's tangent point as a fractional field-vertex index)", () => {
   it("maps kSa/kSb past an open chain's pad vertex, wraps a closed chain, and skips through-pass bends", () => {
@@ -424,6 +468,20 @@ describe("K1584 s3: gfJointArcs (each joint corner's tangent point as a fraction
     }, lats);
     expect(lats.get(0)).toEqual([1]);
     expect(lats.get(1)).toEqual([-1]);
+    // K1584 s11: and each corner's wedge flag: a tight turn opening under GAP_WEDGE_THETA (45 degrees; float32 as the
+    // shader reads it), in the same order; a wider or loose turn 0; no kTight, 0
+    const wedgeOf = (tight: number, deg: number) => {
+      const w = new Map<number, number[]>();
+      gfJointArcs({ ...T, kThru: [0, 0], kTight: [tight, tight], kTheta: [(deg * Math.PI) / 180, (deg * Math.PI) / 180] }, undefined, undefined, w);
+      return [w.get(0), w.get(1)];
+    };
+    expect(wedgeOf(1, 43.15)).toEqual([[1, 1], [1, 1]]);
+    expect(wedgeOf(1, 44.87)).toEqual([[1, 1], [1, 1]]);
+    expect(wedgeOf(1, 45.5)).toEqual([[0, 0], [0, 0]]);
+    expect(wedgeOf(0, 40)).toEqual([[0, 0], [0, 0]]);
+    const none = new Map<number, number[]>();
+    gfJointArcs(T, undefined, undefined, none);
+    expect([none.get(0), none.get(1)]).toEqual([[0], [0]]);
   });
 });
 describe("K1460 s3: a kink loop's self-crossing window (setupUnder's split and selfEx)", () => {

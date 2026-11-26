@@ -96,7 +96,8 @@ describe("K1389 look form", () => {
       expect(f).toContain("float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);");
       expect(f).toContain("float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;");
       expect(f).not.toContain("CASE");
-      expect(f).toContain("vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); if (lkg2.x > 0.0 || lkg2.y > 0.0) { lkBs = lkBall(p, lab, lkArc(lab, lq)); if (lkBs < 1.0) lkg2 = lkGap(lkKb, p, lq, lab); lkBs = 1.0; } float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y;");
+      // K1584 s10: lkBall's .y (a tight wedge's open form) recomputes the gap even where the coded cut is 0
+      expect(f).toContain("vec2 lkg2 = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : vec2(0.0); if (lkKb < BIG) { vec2 lkb2 = lkBall(p, lab, lkArc(lab, lq)); if (lkb2.y > 0.0 || ((lkg2.x > 0.0 || lkg2.y > 0.0) && lkb2.x < 1.0)) { lkBs = lkb2.x; lkTw = lkb2.y; lkg2 = lkGap(lkKb, p, lq, lab); lkBs = 1.0; lkTw = 0.0; } } float lkg = lkg2.x; if (lkJb >= 0) { float mk = lkMarker(lab, lkArc(lab, lq), p); lkg = max(lkg, mk); lkg2.y = max(lkg2.y, mk); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y;");
     }
     expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0))");
     expect(LOOK_COMP_FS).not.toContain("CASE");
