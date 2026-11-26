@@ -797,11 +797,11 @@ Next free ID: K1611.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: nobody since 2026-11-25 08:20: stage 9 done, waiting on Levi's looks
-  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `e3ea69f25`
+  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (stage 10 agent, started 2026-11-25 09:00)
+  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `0bf40476c`
   - evidence: .claude/probes/K1584/s9/ (captures s7/out/s9a, s9n) in worktree agent-a2dfb242b056cf793
-  - next: Levi: wedge line on the rank sheets, gaps land or hold, confirm K1607a = keep the gap; then land by squash (branch is not old history)
-  - brief: `docs/design/K1584_s9_brief.md`
+  - next: stage 10 report: wedge at balls #1-#3 (Levi 2026-11-25: #2 yes, #3 just barely), wider at its outer side; then Levi: loose balls' look, gaps land or hold, confirm K1607a = keep the gap
+  - brief: `docs/design/K1584_s10_brief.md`
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
