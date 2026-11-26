@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1617.
+Next free ID: K1618.
 
 ## Waiting on Levi
 
@@ -795,10 +795,10 @@ Next free ID: K1617.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (coordinator) with two agents started 2026-11-25: stage 12 (branch k1584-s12) and K1604 stage 1 (branch k1604-s1)
-  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: master c2d628e03 (stages 9 to 11, squash of k1584-s11 592a147f3)
+  - owner: nobody since 2026-11-25 18:40: stages 1 to 12 landed, gap polish stopped (Levi: Proceed on the gf default gate, K1615)
+  - branch: mainline; last commit: `3d516f1ce`
   - evidence: .claude/probes/K1584/s11/ (tools tracked; outputs in worktree .claude/worktrees/k1584-s11)
-  - next: the two reports: view each sheet, land by squash what holds (review places 3, 5, 7; Levi: 'agreed. Fix them')
+  - next: none unless Levi names a place; open leftovers are K1614, K1613, K1604 and the part-gap residual
   - brief: docs/design/K1584_s12_brief.md, docs/design/K1604_s1_brief.md
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
@@ -2652,14 +2652,13 @@ Every other item below waits on the trigger it names.
   .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
   yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
   trims (A_c x12 and five others, invisible at normal scale)
+  - owner: nobody since 2026-11-25 18:13: stage 1 not landed (branch k1604-s1, 002e86b49)
+  - next: second and last try for A_3 x278 and A_6 x326: relabel the under pass only where the old label has no gap window (gf_look.ts); stage 1's plain relabel changed 359 places and smudged angled cut ends. Two-stage stop after that
 - **K1606** · K1584 stage 7/7b leftovers: A_3 x100, A_5 x258, A_8 x41, D_3 x100 went back to the stage 4 look;
   A_8 x304 gains a gap (no border removed); K1595's corner count (50) was too high; probe faults: pxdiff's 14
   px box misses outline pixels at 3x (use 40), the changed-places tool's 0 px miss at A_5 x277, cap7.ps1 has
   no retry on a frame timeout and needs warm profiles (warm7.ps1), wcap.ps1 logs carry no build stamp; a stray
   k1436s3-prev vite preview listens on port 5652 (look before stopping)
-- **K1608** · K1584 stage 8: corner places the flag still misses, outside the seven stems: A_c k310 (19 px;
-  needs a far bit per border, a shader and encoding change), A_9 k307 (cut inside the border's own gap), A_3
-  k148 (partial), A_a x344 (s8/out/stems8.png, lower rows)
 - **K1610** · K1584 stage 9 leftovers: A_3 k63 keeps a 149 px loose piece (today 156); stage 5's loose pieces
   are back at loose-side balls A_3 k103, A_5 k185, A_a k101, A_a k202, A_c k141 (29-77 px); A_9 k43 1 px
   unexplained vs stage 5; A_a x344 reads bare (docs/design/K1584_s9_brief.md handoff, branch
@@ -2674,6 +2673,8 @@ Every other item below waits on the trigger it names.
   dot (stage 11 fix 2, reverted b6d87aaf3): a fix must spread over the wedge's 3 radii and pass
   .claude/probes/K1584/s11/dot11.py. Also k63's ball centre is its own ink piece in today's look too (156 px
   today, 127 now). (docs/design/K1584_s11_brief.md handoff)
+- **K1617** · K1584 s12: at A_3 x254 and A_9 x320 the new crisp gap leaves only 1 to 2 light px at the cut's
+  acute corner (screen.py reads part); widen only if Levi marks them (.claude/probes/K1584/s12/band12.py)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -3078,6 +3079,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1608** · place 3's hook border: crisp gap with an angled end (K1584 stage 12), same at 190 like places. Done in 3d516f1ce (2026-11-25).
 - **K1612** · k176's pinch and hook fixed by stage 11 (tables only); the long-fade part moved to its own residual. Done in c2d628e03 (2026-11-25).
 - **K1607** · K1584 stage 8 looks, answered by Levi: (a) the 18 corners keep the gap (2026-11-25: 'Beautiful', then 'of course we want B'); (b) the three wrong loops' eyes: 's8 is perfect'. Done in f915561ca (2026-11-25).
 - **K1611** · Answered 2026-11-25: k63's stage 10 look mostly right, taper and angle good; the wedge ends early at k176 (hook past its outer end), a little at k63 too: stage 11. Done in f915561ca (2026-11-25).
