@@ -604,10 +604,10 @@ Next free ID: K1630.
   a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of
   `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important').
   Picture: .claude/probes/K1627/levi_phone.png (untracked)
-  - owner: claude session 09c7a672 (opus agent K1627 s1, coordinator same session), started 2026-11-25 22:55
-  - branch: k1627-s1, .claude/worktrees/k1627-s1; last commit: this commit (brief)
-  - evidence: .claude/probes/K1627/ (Levi's phone picture, untracked)
-  - next: stage 1 (docs/design/K1627_s1_brief.md): attribute the notch, fix in gpu_field/; runs beside K1604 s3 in the gap pass; on report view the sheet, send to Levi
+  - owner: claude session 09c7a672 (opus agent K1627 s2, coordinator same session), started 2026-11-26 00:10
+  - branch: k1627-s2, .claude/worktrees/k1627-s2; stage 1 landed in f7ebe0cae; last commit: `f7ebe0cae`
+  - evidence: .claude/probes/K1627/ (run.ps1, cap.ps1, chg.py, sheet.py); stage 1 sheets untracked in the k1627-s1 worktree look/
+  - next: stage 2 (docs/design/K1627_s2_brief.md): colour wedges in corners (6 places on Levi's link) and 7 paper specks + one 4 px tip; show Levi the sheet, land when clean. Second stage: no third unless he names it
 
 ## Next, in order
 
