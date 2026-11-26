@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1613.
+Next free ID: K1614.
 
 ## Waiting on Levi
 
@@ -796,11 +796,11 @@ Next free ID: K1613.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (coordinator; stage 10 agent ended 2026-11-25 10:28 at its stop rule; a landing-check agent of the same session runs next)
-  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: `dd8074f47`
-  - evidence: .claude/probes/K1584/s10/ (tools; outputs in s10/out/, capture in s7/out/s10a/), s8/, s9/
-  - next: Levi said 2026-11-25 'Can land now': land stage 8's build (tree of e5d0a5106) on master by squash after a merged-build check with the junction rule (tests + 21-maze capture vs s8a); then Levi's look at s10/out/sheet10.png and sheet10_fade.png, then K1611
-  - brief: docs/design/K1584_s10_brief.md (Handoff, stage 10)
+  - owner: nobody since 2026-11-25 11:20: stages 1 to 8 landed on master (f915561ca); waiting on Levi's look at stage 10 (K1611)
+  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: dd8074f47 on branch worktree-agent-a2dfb242b056cf793 (stages 9, 10: not landed); master has stage 8 as f915561ca
+  - evidence: .claude/probes/K1584/ (s8, s9, s10, land8 tools; outputs untracked in the worktrees agent-a2dfb242b056cf793 and k1584-land8)
+  - next: after Levi answers K1611: a stage on current master porting stage 10's tight wedge (cherry-pick a0f00983b, d580f0230, ac3f194f1 from the gap branch) with K1612's two fixes; then K1608 corners
+  - brief: docs/design/K1584_s10_brief.md on the gap branch (Handoff, stage 10)
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
@@ -2671,6 +2671,11 @@ Every other item below waits on the trigger it names.
   (gf_glsl.ts). (2) at fade 1.2 the tight wedge fades 19 to 27 more ball px than stage 8 (k63 58 vs 77 inked,
   k176 57 vs 84): scale the fade by the wedge's local width. Handoff in docs/design/K1584_s10_brief.md (branch
   worktree-agent-a2dfb242b056cf793, dd8074f47)
+- **K1613** · K1584 landing (f915561ca): about 470 px on the 21 mazes where the junction rule (K1588) applies
+  only partly at joint corners and border stub ends beside stage 8's cut ends (up to 23 levels, a few px a
+  place, 8 to 21 a maze on the A mazes); no gap changes. Sheets
+  .claude/probes/K1584/land8/out/sheet/dev_1..3.png, miss_1.png in worktree k1584-land8; numbers cmp4_t1.json
+  there. Also: K1584_s3_brief.md lines 62 and 95 link an untracked counts_s3.md
 
 ## Approved, to schedule (2026-10-11)
 
