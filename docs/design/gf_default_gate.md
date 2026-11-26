@@ -8,7 +8,8 @@ stops once you adopt it. Cull candidates for the ledger are in `.claude/probes/g
 **Order changed by Levi, 2026-11-25:** "Let's not bother with any swaps until we have the actual new version
 fully done." So gf is finished first: gates 1, 4, 5, 6 and 7 (colours, overlays, reveal with its colours,
 highlights, named places). Gate 2 (first visit), gate 3 (phone drag), gate 8's fresh-profile half and gate 9
-(the flip) wait until those hold, and question 3 (phone or desktop first) waits with them.
+(the flip) wait until those hold. Question 3 is answered ("Again, all or nothing"): one flip for every
+device, once every gate holds, the phone's included; no desktop-first step and no interim swap work.
 
 **How it relates to K1310 and `K1240_gate.md`.** That gate (approved 2026-11-11) was for rp=outline. Its
 speed line (3 ms a def frame in the worker) was never approached (183-193 ms, K1247), and the route moved to
