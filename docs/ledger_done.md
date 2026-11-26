@@ -3919,3 +3919,71 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1454 (Done 2026-11-17)
 
 - **K1454** · rp=gf: a pluck ripple (K279) draws over the maze instead of bending the threads (K1450's fix draws the maze to the screen past the ripple's filter); the full fix composites into the filter texture through Pixi's projection, in gf_pass.ts / gf_look.ts composite shaders (Handoff K1450). Done in b01cc37b (2026-11-17).
+
+## K1481 (Done 2026-11-18)
+
+- **K1481** · gf's compile poll waits on a 250 ms timer, so it no longer asks for a full rebuild on every frame while programs compile (251 of 251 rest frames before, 46 per 10 s after); the frames left are the link's own ambient paint, which today's renderer runs at the same rate without gf. The cold wait stays with K1456. Done in 0fc195b8 (2026-11-18).
+
+## K1474 (Done 2026-11-18)
+
+- **K1474** · gf fill matched today: the composite kept destination alpha, so a transparent backdrop added its colour (21,27,40) to every section colour; fill look now writes coverage alpha (border/both keep old blend). Strict interiors max 1/4/0 on ?3/?7/?b, border 0 px outside panel. Done in 649de0f4 (2026-11-18).
+
+## K1492 (Done 2026-11-18)
+
+- **K1492** · rp=gf's border outline fades over the crossing gap's whole ramp and follows the Crossing fade slider; seen on Levi's live link at fl 0.14 and 1.2 (.claude/probes/K1492/live/crop_014_vs_12.png). Done in 79b64bd8 (2026-11-18).
+
+## K1495 (Done 2026-11-18)
+
+- **K1495** · rp=gf's crossing fade equals today's on Levi's link: both ramp about 12 px at fl 1.2, held there by today's own junction limits, which gf copies (table and sheets: .claude/probes/K1495/out/sheet_reach.png, prof_cause.txt); no src change. Done in 39c29aad (2026-11-18).
+
+## K1498 (Done 2026-11-18)
+
+- **K1498** · Crossing fade on dense mazes (both renderers): on Levi's link the fade at 1.2 runs about 12 device px, not the ~51 the value asks for, because today's fade is held back near junctions (crossing_gaps.ts: FADE_JOINT_FLOOR's clearance scale, and the gap window's end about 43 px from the crossing); with the clearance scale off it reaches 14.5 px, and the window is the harder stop (K1495, .claude/probes/K1495/out/prof_cause.txt). Dropped: Levi, 2026-11-18: keep as is. A high fade keeps today's junction limits in both renderers (2026-11-18).
+
+## K1476 (Done 2026-11-18)
+
+- **K1476** · Muse 26G: a never-clearing gap window ends at the joint room; the long line is gone on muse_default_tw and muse_hash (a short speck remains at its left end, K1503; other scenes' changed sides: K1501). Done in 5dfb8810 (2026-11-18).
+
+## K1477 (Done 2026-11-18)
+
+- **K1477** · rp=gf: the under thread's border stroke tapers to a point and stops past a crossing at ring x68 (19.4, 20.0; 963 px in K1436's screen scan), g41_ring_tw64 j24 (the same spot, 660 px) and x67 (18.0, 20.6; 296 px); today's stroke runs through, the fill matches. Dropped: cause found by Muse 26H (no fix landed); continued as K1502 (2026-11-18).
+
+## K1500 (Done 2026-11-18)
+
+- **K1500** · rp=gf fades the thread away from the marker discs like today (Muse 26K, handoff b323cc2b; tiles viewed). Done in 8a48e50a (2026-11-18).
+
+## K1513 (Done 2026-11-18)
+
+- **K1513** · K1502 follow-up (Muse 26L, 2026-11-18): on Levi's link (?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1, hash fff8c9e5, .claude/probes/K1482/cap.mjs) list the sites whose border ink changes by more than 8 px with the home-off reach key windows (K=1.0) against master, each on a 4x tile master|new named better/same/worse; the muse_hash j49 tail-join class (26L5 bar, 17 px) is the one to watch - no site may turn worse. Dropped: answered by K1482 stage 11's recount on ad89a560: K1502 moved 10 sites on Levi's link by more than 8 px and broke none (out/s11/classes_base.txt); the x68 cut:plain class stays described in K1502 (2026-11-18).
+
+## K1501 (Done 2026-11-18)
+
+- **K1501** · Muse 26M: every changed window side better or same on screen (def, ring, g41_ring_tw64, lightpaper 0 px; g41_user_tw64 9 clusters, fill viewed); no source change. Border look of two of them: K1518. Done in 0286d168 (2026-11-18).
+
+## K1507 (Done 2026-11-18)
+
+- **K1507** · Muse 26O. Done in d3164dc2 (2026-11-18).
+
+## K1508 (Done 2026-11-18)
+
+- **K1508** · Muse 26O. Done in d3164dc2 (2026-11-18).
+
+## K1509 (Done 2026-11-18)
+
+- **K1509** · Muse 26O. Done in d3164dc2 (2026-11-18).
+
+## K1511 (Done 2026-11-18)
+
+- **K1511** · Muse 26O. Done in d3164dc2 (2026-11-18).
+
+## K1512 (Done 2026-11-18)
+
+- **K1512** · K1482 j49's tick needs how far a fused joint's fan reaches along the OVER thread (today's fan paints the over's outline across the under's faded tip); the window bake carries only the under thread's joints, so it is a new baked number, after Muse Run M leaves the bake (docs/design/K1482_s10_borders.md handoff, out/s10/pixels.txt). Dropped: folded into K1482 stage 15 (the baked per-crossing flag) (2026-11-18).
+
+## K1520 (Done 2026-11-18)
+
+- **K1520** · the K1436 bar never prunes: one ~1 GB build + src worktree per compared commit under TEMP\k1436s3-prev (10 GB) filled the disk 2026-11-18 21:13 and ended Muse Run P's checks; prune at start, refuse under 6 GB free (Muse Run Q part 1, docs/design/K1464_muse_batch26.md). Done in 1d678482 (2026-11-18).
+
+## K1499 (Done 2026-11-18)
+
+- **K1499** · rp=gf fades the thread away from the start and exit markers as today's does: Muse run 26K did this work and recorded it under K1500 (the run's brief carried the wrong ID); the dives item that K1500 held is re-filed as K1525. Done in b323cc2b7 (2026-11-18).
