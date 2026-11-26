@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1614.
+Next free ID: K1615.
 
 ## Waiting on Levi
 
@@ -788,10 +788,10 @@ Next free ID: K1614.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (coordinator) with its stage 11 agent, started 2026-11-25 11:45
-  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: master f915561ca (stages 1 to 8); stages 9, 10 on branch worktree-agent-a2dfb242b056cf793 at dd8074f47; stage 11 on branch k1584-s11 (worktree .claude/worktrees/k1584-s11)
-  - evidence: .claude/probes/K1584/ (s8, s9, s10, land8 tools; outputs untracked in the worktrees agent-a2dfb242b056cf793 and k1584-land8)
-  - next: stage 11 report: view its three-ball sheet, send to Levi, land by squash if the hook is gone and only the three balls change
+  - owner: nobody since 2026-11-25 13:20: stages 1 to 11 landed, no agent running
+  - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: master c2d628e03 (stages 9 to 11, squash of k1584-s11 592a147f3)
+  - evidence: .claude/probes/K1584/s11/ (tools tracked; outputs in worktree .claude/worktrees/k1584-s11)
+  - next: Levi's look at the landed wedge (picture sent 13:15); then the open residuals: K1608 corner misses, K1613, K1604 pictures
   - brief: `docs/design/K1584_s11_brief.md`
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
@@ -2657,17 +2657,16 @@ Every other item below waits on the trigger it names.
   are back at loose-side balls A_3 k103, A_5 k185, A_a k101, A_a k202, A_c k141 (29-77 px); A_9 k43 1 px
   unexplained vs stage 5; A_a x344 reads bare (docs/design/K1584_s9_brief.md handoff, branch
   worktree-agent-a2dfb242b056cf793)
-- **K1612** · K1584 stage 10 leftovers: (1) A_5 k176's wedge pinches shut 10 to 12 px from the ball's centre
-  (1.88 / 0 px vs the ordinary 3.05 to 3.14), where the corner list's reach ends (10.17 px, s10/kreach.ts);
-  fix candidates: ordinary code in the gap table's slots near tight corners, or a longer list reach
-  (gf_glsl.ts). (2) at fade 1.2 the tight wedge fades 19 to 27 more ball px than stage 8 (k63 58 vs 77 inked,
-  k176 57 vs 84): scale the fade by the wedge's local width. Handoff in docs/design/K1584_s10_brief.md (branch
-  worktree-agent-a2dfb242b056cf793, dd8074f47)
 - **K1613** · K1584 landing (f915561ca): about 470 px on the 21 mazes where the junction rule (K1588) applies
   only partly at joint corners and border stub ends beside stage 8's cut ends (up to 23 levels, a few px a
   place, 8 to 21 a maze on the A mazes); no gap changes. Sheets
   .claude/probes/K1584/land8/out/sheet/dev_1..3.png, miss_1.png in worktree k1584-land8; numbers cmp4_t1.json
   there. Also: K1584_s3_brief.md lines 62 and 95 link an untracked counts_s3.md
+- **K1614** · K1584: at fade 1.2 a tight wedge's ball keeps less ink than stage 8 did (k63 57 against 76 px,
+  k176 56 against 83); fades 0.14 and 0.5 about equal. A narrowing confined to the ball cuts a loose centre
+  dot (stage 11 fix 2, reverted b6d87aaf3): a fix must spread over the wedge's 3 radii and pass
+  .claude/probes/K1584/s11/dot11.py. Also k63's ball centre is its own ink piece in today's look too (156 px
+  today, 127 now). (docs/design/K1584_s11_brief.md handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -3072,6 +3071,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1612** · k176's pinch and hook fixed by stage 11 (tables only); the long-fade part moved to its own residual. Done in c2d628e03 (2026-11-25).
 - **K1607** · K1584 stage 8 looks, answered by Levi: (a) the 18 corners keep the gap (2026-11-25: 'Beautiful', then 'of course we want B'); (b) the three wrong loops' eyes: 's8 is perfect'. Done in f915561ca (2026-11-25).
 - **K1611** · Answered 2026-11-25: k63's stage 10 look mostly right, taper and angle good; the wedge ends early at k176 (hook past its outer end), a little at k63 too: stage 11. Done in f915561ca (2026-11-25).
 - **K1609** · Levi 2026-11-25: wedge at #1-#3 (k63, k176, k265), wider at its outer side; looser balls: the V1/stage 8 column is fine for all (stage 5 has an extra gap at A_3 k157, A_c k141, A_5 k2); stage 10 builds it. Done in 0bf40476c (2026-11-25).
