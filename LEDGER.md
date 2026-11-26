@@ -596,10 +596,10 @@ Next free ID: K1628.
   job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
   keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
   src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
-  - owner: claude session 09c7a672 (opus agent K1626 s1, coordinator same session), started 2026-11-25 22:45
-  - branch: k1626-s1, .claude/worktrees/k1626-s1; last commit: this commit (brief)
-  - evidence: .claude/probes/K1626/ (Levi's phone picture, untracked)
-  - next: stage 1 (docs/design/K1626_s1_brief.md; Levi: 'That physics issue should be a priority'): runs beside K1622 in src/physics/, lands first; on report view the crops, send to Levi, land on his yes
+  - owner: claude session 09c7a672 (opus agent K1626 s2, coordinator same session), started 2026-11-25 23:45
+  - branch: k1626-s2 (from k1626-s1), .claude/worktrees/k1626-s2; stage 1 on k1626-s1 at d2699c8dd, not landed (waits on Levi's yes to the look); last commit: d2699c8dd on k1626-s1
+  - evidence: .claude/probes/K1626/ on k1626-s1 (out/K1626_master_vs_mine.png untracked)
+  - next: stage 1 (half segments beside fused joints x1.8; joint-to-crossing 2.32 -> 2.74 w on Levi's link, his eye J138 0.80 -> 1.23 w, still nearly shut) sent to Levi; stage 2 (docs/design/K1626_s2_brief.md) opens the joint eyes; land by squash on his yes. Residuals from s1: ?9 sleeps 1 s later, one x1.48 segment on ?7, width-jump re-sleep +2 s, fix off at widths >= 0.7, a corner notch near J120 to recheck after K1627
 - **K1627** · rp=gf: a notch (a wedge of paper, a pointed tab left) cut into a junction's rounded corner where
   a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of
   `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important').
