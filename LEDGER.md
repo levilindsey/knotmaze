@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1618.
+Next free ID: K1619.
 
 ## Waiting on Levi
 
@@ -835,6 +835,12 @@ Next free ID: K1618.
   - owner: claude agent K1395 s1 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, started 2026-11-25 19:10
   - branch: k1395-s1, worktree .claude/worktrees/k1395-s1; last commit: none yet
   - next: view its per-mode sheets (today, gf before, gf now), send to Levi, land the finished modes by squash
+- **K1618** · Delete the rp=outline renderer (Levi 2026-11-25: 'Delete it now'): src/render/outline/, its
+  tests, flags oe/ob/obt, the frame_loop import; modules gf still reads move, not die; then close cull group c
+  (.claude/probes/gf-gate/cull.md)
+  - owner: claude agent outline-del of claude session 09c7a672-a414-402a-97da-b3176839a2e5, started 2026-11-25 20:35
+  - branch: outline-del, worktree .claude/worktrees/outline-del; last commit: none yet
+  - next: check its report (tests, build, three captures viewed), land by squash, close the outline ledger items
 
 ## Next, in order
 
