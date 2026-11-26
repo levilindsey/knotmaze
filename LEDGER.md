@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1615.
+Next free ID: K1617.
 
 ## Waiting on Levi
 
@@ -325,6 +325,13 @@ Next free ID: K1615.
 - **K1562** · The laptop's knotmaze clone, after K1493's history rewrite (2026-11-20): on a clean tree run
   `git fetch`, then `git reset --hard origin/master` (or clone afresh). Do not `git pull` there first: a pull
   merges the old history, and a push after it brings the 362 MB back (docs/ledger_notes.md `## K1493`)
+- **K1615** · rp=gf default gate (proposal, docs/design/gf_default_gate.md): adopt it or change it; its three
+  questions (how long a first-visit wait is acceptable, must gf carry the reveal colours before the flip,
+  phone first or desktops first); the rp=outline recommendation (freeze now, delete after the flip). Closes
+  K1310 when adopted
+- **K1616** · Ledger cull list (.claude/probes/gf-gate/cull.md): 7 waiting items answered or overtaken, 18
+  stale in-progress, 72 rp=outline items moot if it retires, 10 duplicates; nothing closed until Levi says
+  which groups go
 
 ## In progress
 
