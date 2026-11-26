@@ -788,11 +788,11 @@ Next free ID: K1615.
   tile A_3 b1). Muse run 27Z8 counts no-gap crossing sides on all 21 mazes and bisects Nov 17 to 22 for the
   commits that lost them (27Z5 named 3d7acffe4, 363b69487, cf38cf6bb at two spots; K1582 is likely the same
   fault). Then one Claude fix stage for the class, checked by the census
-  - owner: nobody since 2026-11-25 13:20: stages 1 to 11 landed, no agent running
+  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (coordinator) with two agents started 2026-11-25: stage 12 (branch k1584-s12) and K1604 stage 1 (branch k1604-s1)
   - branch: worktree-agent-a2dfb242b056cf793, worktree .claude/worktrees/agent-a2dfb242b056cf793 (checked 2026-11-24: d39e363fe is not an ancestor, merge-base with master 0b9684466; land by squash once Levi says the gaps land); last commit: master c2d628e03 (stages 9 to 11, squash of k1584-s11 592a147f3)
   - evidence: .claude/probes/K1584/s11/ (tools tracked; outputs in worktree .claude/worktrees/k1584-s11)
-  - next: Levi's look at the landed wedge (picture sent 13:15); then the open residuals: K1608 corner misses, K1613, K1604 pictures
-  - brief: `docs/design/K1584_s11_brief.md`
+  - next: the two reports: view each sheet, land by squash what holds (review places 3, 5, 7; Levi: 'agreed. Fix them')
+  - brief: docs/design/K1584_s12_brief.md, docs/design/K1604_s1_brief.md
 - **K1600** · K1584 + K1588 landing gate: the fill drag check (K1458 dragcheck.mjs, in K1482's guards) FAILED
   on the scratch build holding both changes (6764cc1fa, 2026-11-24 12:47 to 12:56): Chrome's GPU process
   restarted at the fade 1.2 stop (dump 12:51:55, 81 s into a 213 s wait); threads 0 px at all four stops, the
