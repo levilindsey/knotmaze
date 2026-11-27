@@ -327,6 +327,16 @@ Next free ID: K1632.
   - branch: mainline; k1626-s5 (.claude/worktrees/k1626-s5) keeps the probe tools; last commit: `29691186d`
   - evidence: .claude/probes/K1626/ on k1626-s5 (s5_tip.ts, s5_tiptab.py, seq5.ps1, perf5.ts); pictures out/sheet5.png, out/sheet5_zoom/zz28_2x.png (untracked)
   - next: Stage 5 landed (29691186d): J28's inner tip is a U. Levi looks at zz28_2x.png: enough, or more at J149's upper tip (unchanged; radius 1.6 rounds it but narrows 11 eyes by over 0.15, 1.45 narrows 6: his call, needs pictures first). Unchecked: ?4 bench median 1.040 (mean 1.025), thought to be its different settle; a frozen-state step check settles it
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: nobody since 2026-11-26 18:11: stage 6 stopped, not landed; back to Levi (third unlanded stage: s3, s5, s6)
+  - branch: k1604-s6 (.claude/worktrees/k1604-s6), from k1604-s5; not for landing as is; last commit: 44decd3b4 on k1604-s6 (handoff); code is V5 a2ec7b8b8 (tag s6v5)
+  - evidence: .claude/probes/K1604/s6/ on k1604-s6 (tools; out/ untracked: p6v5_1..3.png nine rows + p12 places master | f2 | V5, p6v5o_1..2.png other changes; p6_*.png is V1, p6v4_*.png V4)
+  - next: V5 keeps rows 2, 9, 12 and puts p12 #1, #10 back to master; rows 5, 6, 7, 11 still as master; new gaps stay at p12 #5, #6, #8 and partial cuts elsewhere (loose pieces 41-120 px: master 35, V5 328). Observed: the arm windows give both the good rows and the bad runs, and no tested measure separates them (distance, angle, run length, chain ends, ownership, junction membership). Pages sent to Levi 2026-11-26; no further stage unless he names it. Agent's leads: tell good arm runs from bad by whether the cut ends on the over's drawn outline; switch off the junction-side skip and the K1584 corner rule at rows 5, 6, 7, 11; run the cut's fade to the over's outline
+  - brief: docs/design/K1604_s6_brief.md (stage 6 handoff on the branch only)
 
 ## In progress
 
@@ -588,16 +598,6 @@ Next free ID: K1632.
   - branch: mainline; last commit: this commit
   - evidence: src/ui/renderer_toggle.ts, test/ui/renderer_toggle.test.ts
   - next: at the rp=gf flip (gate 9) delete renderer_toggle.ts, its test and the row in tweakpane_panel.ts (the row's key is a variable so param_tags.test.ts skips it)
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: claude agent 'K1604 stage 6 gap cut' under claude session 09c7a672 (started 2026-11-26 evening; Levi answered stage 5's pages, which names this stage)
-  - branch: k1604-s6 (.claude/worktrees/k1604-s6), from k1604-s5; last commit: 6f7e654f0 on k1604-s5 (stage 6 starts there)
-  - evidence: .claude/probes/K1604/s5/ on k1604-s5 (out/ untracked: p18_1..3.png, p12_1..2.png)
-  - next: Levi on stage 5's pages: row 9 good; 5, 6, 7, 11 no change; elsewhere p12 rows 1 and 5 had no problem and gained weird gaps, 2-4 fine either way, 6 worse but understandable. Stage 6 keeps rows 2/9/12, removes the new gaps, fixes 5/6/7/11; its report lands only if no clean place gains a gap. He has not judged rows 12, 13, 17 (p18_2/3 not sent)
-  - brief: `docs/design/K1604_s6_brief.md`
 
 ## Next, in order
 
