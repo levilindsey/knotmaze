@@ -4,14 +4,14 @@
 # 21 mazes in three streams pinned to the stage 11 views (out/pins/<maze>/gf_b2view.txt, copied from k1584-s11).
 # Profiles start as copies of k1584-s11's s11/out/profile1-3. Outputs: out/<Tag>/<maze>/. Run under the perf lock:
 #   pwsh scripts/perf_lock.ps1 -Owner "claude K1604 s1" -What "K1604 s1 cap <tag>" -Cmd "& '<this>' -Ref <sha> -Port 5635 -Tag m0"
-param([Parameter(Mandatory)][string]$Ref, [int]$Port = 5660, [Parameter(Mandatory)][string]$Tag, [switch]$NoWarm, [string]$Patch = '', [string]$PatchF = '', [string]$PinFrom = 'pins', [string]$WarmMazes = 'A_3,D_1', [string]$Then = '', [switch]$OnlyThen, [string]$ThenPin = '',
+param([Parameter(Mandatory)][string]$Ref, [int]$Port = 5660, [Parameter(Mandatory)][string]$Tag, [switch]$NoWarm, [string]$Patch = '', [string]$PatchF = '', [string]$PinFrom = 'pins', [string]$WarmMazes = 'A_3,D_1', [string]$Then = '', [switch]$OnlyThen, [string]$ThenPin = '', [string]$HashFrom = '',
       [string]$Streams = 'A_3,A_5,A_8,A_b,D_1,D_4,D_7;A_4,A_6,A_9,A_c,D_2,D_5,D_8;A_7,A_a,A_d,D_3,D_6,D_9,D_a')
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $repo = (git -C $here rev-parse --show-toplevel).Trim()
 $sha = (git -C $repo rev-parse $Ref).Trim()
 $s7 = $sha.Substring(0, 7)
-$root = Join-Path $env:TEMP "knotmaze-K1627s2-$Tag"
+$root = Join-Path $env:TEMP "knotmaze-K1627s3-$Tag"
 $out = Join-Path $here 'out'; New-Item -ItemType Directory $out -Force | Out-Null
 $cap = Join-Path $here 'cap.ps1'
 $log = Join-Path $out "preview_$Tag.log"
@@ -41,7 +41,7 @@ try {
   $jobs = if ($OnlyThen) { @() } else { foreach ($s in ($Streams -split ';')) {
     $i++
     $a = @('-NoProfile', '-File', $cap, '-Port', $Port, '-Tag', $Tag, '-Mazes', $s, '-Prof', "out\profile$i", '-OutRoot', $out)
-    if ($PinFrom) { $a += @('-PinFrom', $PinFrom) }; if ($Patch) { $a += @('-Patch', $Patch) }; if ($PatchF) { $a += @('-PatchF', $PatchF) }
+    if ($PinFrom) { $a += @('-PinFrom', $PinFrom) }; if ($HashFrom) { $a += @('-HashFrom', $HashFrom) }; if ($Patch) { $a += @('-Patch', $Patch) }; if ($PatchF) { $a += @('-PatchF', $PatchF) }
     Start-Process pwsh -ArgumentList $a -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $out "capmany_${Tag}_$i.log")
   } }
   if ($jobs) { $jobs | Wait-Process }
@@ -51,7 +51,7 @@ try {
   if ($hl -and -not $env:LHASH) { $env:LHASH = $hl.Matches[0].Groups[1].Value; "LHASH $($env:LHASH)" }
   foreach ($t in ($Then -split ';' | Where-Object { $_ })) {
     $tt, $pp = $t -split ':', 2
-    $a = @('-Port', $Port, '-Tag', $tt, '-Mazes', (($Streams -split ';')[0]), '-Prof', 'out\profile1', '-OutRoot', $out, '-PinFrom', $pinTag)
+    $a = @('-Port', $Port, '-Tag', $tt, '-Mazes', (($Streams -split ';')[0]), '-Prof', 'out\profile1', '-OutRoot', $out, '-PinFrom', $pinTag, '-HashFrom', $pinTag)
     if ($pp -like 'patchF=*') { $a += @('-PatchF', $pp.Substring(7)) } elseif ($pp) { $a += @('-Patch', $pp) }
     & pwsh -NoProfile -File $cap @a 2>&1 | Select-Object -Last 3
   }

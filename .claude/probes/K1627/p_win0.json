@@ -1,0 +1,6 @@
+[
+ [
+  "  for (int j = 0; j < np; j++) {\n    if (!(pkey[j] > key + uZt)) continue;\n    vec2 qO = lookQ(j, p);\n    if (cSelf",
+  "  int oC = -1; float oA = 0.0; float oPer = 0.0;\n  if (lkKib >= 0 && lkJb < 0) { vec4 oK3 = F(uOK + 6 * lkKib + 3); bool isA = cU == int(oK3.x) && lkSb == oK3.z; oC = isA ? int(oK3.y) : int(oK3.x); oA = lkArc(oC, lookQs(oC, isA ? oK3.w : oK3.z)); vec4 oC0 = F(uOCh + 3 * oC); if (oC0.z > 0.5) oPer = F(uOV + int(oC0.x) + int(oC0.y) - 1).z; if (!(cS < 0)) oC = -1; }\n  for (int j = 0; j < np; j++) {\n    if (!(pkey[j] > key + uZt)) continue;\n    vec2 qO = lookQ(j, p);\n    if (oC >= 0 && PC(j) == oC) { float db = lkArc(oC, qO) - oA; if (oPer > 0.0) db -= oPer * floor(db / oPer + 0.5); if (abs(db) < sx) continue; }\n    if (cSelf"
+ ]
+]

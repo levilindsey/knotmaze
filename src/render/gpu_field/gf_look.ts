@@ -2824,10 +2824,25 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
   bool cSelf = lkCs >= 0 && lkCs == cU;
   float cPer = 0.0;
   if (cSelf) { vec4 cC0 = F(uOCh + 3 * cU); if (cC0.z > 0.5) cPer = F(uOV + int(cC0.x) + int(cC0.y) - 1).z; }
+  // K1627 s3: nor is the corner's OTHER arm, below its own height there. The corner's key is the nearer arm's z, and
+  // the other arm's piece key (its z less pd zK) clears it out to pd = h (zB - zA) / uZt: where the other arm sits a
+  // little above the nearer one at the junction (0.01-0.07 of depth on Levi's link), that reaches just past its own
+  // outline into the rounded corner and cut a paper speck there (8 at 7 places on the link, the tip at a corner point
+  // among them). The other arm cuts a corner only above its own z at its tangent point (the corner table's kZa / kZb),
+  // in this loop and as the window's named over pass below (its key read at lkNearOn's point); every other thread
+  // keeps the corner's key. Corner labels only (lkKib >= 0, lkJb < 0): two table reads, and depth() at the near point.
+  int oC = -1; float oKey = key;
+  if (lkKib >= 0 && lkJb < 0) {
+    vec4 oK3 = F(uOK + 6 * lkKib + 3); vec4 oK4 = F(uOK + 6 * lkKib + 4);
+    bool oIsA = cU == int(oK3.x) && lkSb == oK3.z;
+    oC = oIsA ? int(oK3.y) : int(oK3.x);
+    oKey = max(key, (oIsA ? oK4.y : oK4.x) - uZt);
+  }
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
     vec2 qO = lookQ(j, p);
     if (cSelf && PC(j) == cU) { float da = lkArc(cU, qO) - aU; if (cPer > 0.0) da -= cPer * floor(da / cPer + 0.5); if (abs(da) < sx) continue; }
+    if (PC(j) == oC && !(pkey[j] > oKey + uZt)) continue;
     vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
@@ -2845,7 +2860,9 @@ vec2 lkGap(float key, vec2 p, vec2 qU, int cU) {
     if (sl.x >= 0.0) {
       int cO = int(sl.x + 0.5);
       vec3 N = lkNearOn(cO, sl.y, sl.z, p, cO == cU ? aU : -1.0, sx);
-      if (N.y >= 0.0) {
+      bool nOk = true;
+      if (cO == oC && N.y >= 0.0) { float sN = lkArc(cO, N.yz); nOk = depth(cO, sN, keyBin(cO, sN)) - N.x * uZt / uH > oKey + uZt; }
+      if (N.y >= 0.0 && nOk) {
         vec2 to = lkTanS(cO, N.yz);
         float sinT = abs(tu.x * to.y - tu.y * to.x);
         float exg = uExLive > 0.5 ? exAt(cO, lkArc(cO, N.yz)).x : 1.0;

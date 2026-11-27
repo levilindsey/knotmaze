@@ -4,7 +4,9 @@
 #   pwsh cap.ps1 -Port 5584 -Tag after -Mazes A_3,A_8,D_1 [-PinFrom <tag>]
 # -PinFrom pins each maze's view to <tag>'s gf_b2view.txt (the K1581 PINVIEW), so two builds compare pixel for pixel.
 # Run under scripts/perf_lock.ps1. Outputs (untracked): .claude/probes/K1584/s1/out/<Tag>/<Maze>/.
-param([Parameter(Mandatory)][int]$Port, [Parameter(Mandatory)][string]$Tag, [Parameter(Mandatory)][string]$Mazes, [string]$PinFrom = "", [switch]$NoGw, [string]$Prof = "profile", [string]$Extra = "", [string]$OutRoot = "", [string]$Patch = "", [string]$PatchF = "")
+param([Parameter(Mandatory)][int]$Port, [Parameter(Mandatory)][string]$Tag, [Parameter(Mandatory)][string]$Mazes, [string]$PinFrom = "", [switch]$NoGw, [string]$Prof = "profile", [string]$Extra = "", [string]$OutRoot = "", [string]$Patch = "", [string]$PatchF = "", [string]$HashFrom = "")
+# K1627 s3: -HashFrom none = each maze's first gf hash is its target (re-freeze after a physics change);
+#   -HashFrom <tag> = the hash that tag's capture landed on (out/<tag>/<maze>/cap.log 'done <hash>').
 $here = $PSScriptRoot
 $main = "C:\Users\lsl\Repositories\knotmaze"
 $capTool = Join-Path $main ".claude\probes\K1482\s40\cap40pin.mjs"
@@ -19,6 +21,13 @@ $env:PATCHF = if ($PatchF) { (Resolve-Path (Join-Path $here $PatchF)).Path } els
 foreach ($maze in ($Mazes -split ',')) {
   $maze = $maze.Trim(); if (-not $maze) { continue }
   $hashV, $q0 = $M[$maze]
+  if ($HashFrom -eq 'none') { $hashV = '' }
+  elseif ($HashFrom) {
+    $hl = Join-Path $(if ($OutRoot) { $OutRoot } else { Join-Path $here 'out' }) "$HashFrom\$maze\cap.log"
+    $hm = if (Test-Path $hl) { Select-String -Path $hl -Pattern 'done ([0-9a-f]{8})' | Select-Object -Last 1 } else { $null }
+    if (-not $hm) { "== $Tag ${maze}: no hash in $hl, skipped"; continue }
+    $hashV = $hm.Matches[0].Groups[1].Value
+  }
   $outD = if ($OutRoot) { Join-Path $OutRoot "$Tag\$maze" } else { Join-Path $here "out\$Tag\$maze" }
   New-Item -ItemType Directory $outD -Force | Out-Null
   $env:GF = "1"; $env:B2 = "1"; $env:SCENE = "1"; $env:DUMPGW = if ($NoGw) { $null } else { "1" }; $env:HASH = $hashV

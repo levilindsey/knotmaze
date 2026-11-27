@@ -1,0 +1,10 @@
+[
+ [
+  "  for (int j = 0; j < np; j++) {\n    if (!(pkey[j] > key + uZt)) continue;\n",
+  "  int oC = -1; float oZ = 0.0; if (lkKib >= 0 && lkJb < 0) { vec4 oK3 = F(uOK + 6 * lkKib + 3); vec4 oK4 = F(uOK + 6 * lkKib + 4); bool oIsA = cU == int(oK3.x) && lkSb == oK3.z; oC = oIsA ? int(oK3.y) : int(oK3.x); oZ = oIsA ? oK4.y : oK4.x; }\n  float keyR = oC >= 0 ? max(key, oZ - uZt) : key;\n  for (int j = 0; j < np; j++) {\n    if (!(pkey[j] > keyR + uZt)) continue;\n"
+ ],
+ [
+  "      vec3 N = lkNearOn(cO, sl.y, sl.z, p, cO == cU ? aU : -1.0, sx);\n      if (N.y >= 0.0) {",
+  "      vec3 N = lkNearOn(cO, sl.y, sl.z, p, cO == cU ? aU : -1.0, sx);\n      bool nOk = true; if (oC >= 0 && cO == oC && N.y >= 0.0) { float sN = lkArc(cO, N.yz); nOk = depth(cO, sN, keyBin(cO, sN)) - N.x * uZt / uH > max(key, oZ - uZt) + uZt; }\n      if (N.y >= 0.0 && nOk) {"
+ ]
+]

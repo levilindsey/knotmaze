@@ -1,0 +1,26 @@
+[
+ [
+  "int lkCs = -1;",
+  "int lkCs = -1; int lkDwC = -1; int lkDwN = 0; int lkDwS = -9; float lkDwK = 0.0; float lkDwD = 0.0;"
+ ],
+ [
+  "  int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;\n",
+  "  int cS = sl.x >= 0.0 ? int(sl.x + 0.5) : -1;\n  lkDwS = cS; lkDwC = -1; lkDwN = 0; lkDwK = 0.0; lkDwD = 0.0;\n"
+ ],
+ [
+  "    if (cS < 0) g = max(g, cj);\n",
+  "    float gPv = g; if (cS < 0) g = max(g, cj);\n"
+ ],
+ [
+  "    else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, sc) : cj); g0 = max(g0, cj); gA = max(gA, cj); }\n",
+  "    else if (PC(j) == cS) { g = max(g, jf ? lkCut(pd[j], sinT, exg, wm, pxw, sc) : cj); g0 = max(g0, cj); gA = max(gA, cj); }\n    if (g > gPv) { lkDwC = PC(j); lkDwK = pkey[j]; lkDwD = pd[j]; lkDwN = 0; }\n"
+ ],
+ [
+  "        if (!fo) g = max(g, jf ? lkCut(N.x, sinT, exg, wm, pxw, sc) : cN);",
+  "        float gPn = g; if (!fo) g = max(g, jf ? lkCut(N.x, sinT, exg, wm, pxw, sc) : cN); if (g > gPn) { lkDwN = 1; lkDwC = cO; lkDwD = N.x; }"
+ ],
+ [
+  "ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y;",
+  "if (lkJb < 0 && lkKib >= 0) { lkCo.rgb = vec3(float(lab + 1), float(lkKib - 256 * (lkKib / 256)), clamp(floor((lkDwK - (lkKb + uZt)) * 100.0 + 128.5), 0.0, 255.0)) / 255.0; if (lkDwC < 0) lkCo.b = 0.0; lkg = 0.0; lkg2 = vec2(0.0); } ink *= 1.0 - lkg; cov *= 1.0 - lkg2.y;"
+ ]
+]

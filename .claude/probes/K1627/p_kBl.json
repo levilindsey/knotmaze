@@ -1,0 +1,6 @@
+[
+ [
+  "  for (int j = 0; j < np; j++) {\n    if (!(pkey[j] > key + uZt)) continue;\n",
+  "  int oC = -1; float oZ = 0.0; if (lkKib >= 0 && lkJb < 0) { vec4 oK3 = F(uOK + 6 * lkKib + 3); vec4 oK4 = F(uOK + 6 * lkKib + 4); bool oIsA = cU == int(oK3.x) && lkSb == oK3.z; oC = oIsA ? int(oK3.y) : int(oK3.x); oZ = oIsA ? oK4.y : oK4.x; }\n  for (int j = 0; j < np; j++) {\n    if (!(pkey[j] > key + uZt)) continue;\n    if (oC >= 0 && PC(j) == oC && !(pkey[j] > max(key, oZ - uZt) + uZt)) continue;\n"
+ ]
+]
