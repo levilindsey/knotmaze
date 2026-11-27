@@ -44,16 +44,16 @@ exports[`maze byte identity (golden guard) > matches the recorded maze fingerpri
   "default": {
     "checkpoints": [
       {
-        "hash": 556174497,
-        "sum": 8784.02038,
+        "hash": -1576022839,
+        "sum": 8784.0961,
       },
       {
-        "hash": -72944018,
-        "sum": 8781.681965,
+        "hash": -2139033085,
+        "sum": 8781.860851,
       },
       {
-        "hash": 1265319886,
-        "sum": 8781.737795,
+        "hash": -1570471571,
+        "sum": 8781.905109,
       },
     ],
     "count": 557,
@@ -61,16 +61,16 @@ exports[`maze byte identity (golden guard) > matches the recorded maze fingerpri
   "fat": {
     "checkpoints": [
       {
-        "hash": -1257740924,
-        "sum": 8828.165328,
+        "hash": 1864396796,
+        "sum": 8827.753441,
       },
       {
-        "hash": 291209388,
-        "sum": 8842.938962,
+        "hash": 1706477847,
+        "sum": 8838.558264,
       },
       {
-        "hash": 1544543707,
-        "sum": 8856.643369,
+        "hash": 951068476,
+        "sum": 8858.896563,
       },
     ],
     "count": 564,

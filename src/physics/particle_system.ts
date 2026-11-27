@@ -463,6 +463,33 @@ const JOINT_EYE_RELEASE_MET = 0.98;
 // fairing with it closed J28 by 0.6-0.7 widths (and 4 other eyes by more
 // than 0.15), so it is not carried. Parked eyes (jeyeOff) are skipped.
 const JOINT_EYE_ARM_BEND = 0.6;
+// K1626 s5: the EYE-ARM HOOK RADIUS. Levi on the s4 sheet (2026-11-26):
+// J28's "eye's inner tip is still a small narrow notch ... More would be
+// better if it's not too much cost". J28's narrow end is not the lens's
+// crossing end: it is the inner bottom of a V the lens pushes into the
+// middle of arm A (3 widths off arm B), on a short lattice leg (0.78
+// widths), so the paper wedges to nothing (0.40 widths wide 0.25 widths
+// from its apex). The arm bend spreads the turn but keeps the V. So every
+// pair of interior particles of an eye's arm, 2..JOINT_EYE_HOOK_SPAN
+// apart along it, wants at least the chord an arc of radius
+// JOINT_EYE_HOOK_RADIUS widths spans over their current arc s along the
+// arm, 2R sin(s / 2R) (2R past a half circle): pull-only pushes apart at
+// JOINT_EYE_HOOK_STIFFNESS, so a V opens into a U and an arc of that
+// radius or rounder is left alone. Parked eyes (jeyeOff) and arms across
+// a chain break are skipped. Measured over his link and ?1..?a (fresh
+// census.ts states, master -> this): J28's paper at 0.25 / 0.5 widths
+// from the apex 0.40 / 0.57 -> 0.86 / 1.18 widths (the eye's crossing end
+// 1.08 -> 1.24), J149's 0.91 / 1.14 -> 0.98 / 1.24; sharp (> 60 deg)
+// turns 94 -> 91 (?8 7 -> 7); eyes under 1.5 widths 0 -> 0; J138 2.05,
+// J64 1.87, J13 1.97 unchanged; 3 of 204 eyes closed by more than 0.15
+// widths (?4's J5xX19 and J92xX138 by 0.35, neither touched by the law:
+// a different settle; ?5's J98xX110 by 0.16). R 1.6 rounded J28 to 1.07
+// and J149 to 1.21 but closed 8 eyes by more than 0.15 (?7's J116 by
+// 0.41); R 1.0 left J28 at 0.60; pairs only 2 apart (span 2), even at R
+// 2.0, left J28 at 0.75.
+const JOINT_EYE_HOOK_RADIUS = 1.3;
+const JOINT_EYE_HOOK_STIFFNESS = 0.6;
+const JOINT_EYE_HOOK_SPAN = 4;
 // Crossing coverage for the anti-riding 2D floor is measured in WORLD
 // ARC bounded by the renderer's erase reach - see updatePassCover.
 const COUPLING_STIFFNESS = 0.7;
@@ -1415,6 +1442,64 @@ export class ParticleSystem {
     }
   }
 
+  // K1626 s5: the eye-arm hook radius. Per eye arm, every pair of
+  // interior particles 2..span apart along the arm (their arc s on the
+  // current polyline) wants at least the chord an arc of radius R spans,
+  // 2R sin(s / 2R) (2R past a half circle); a pull-only push.
+  private applyJointEyeHookRadius(R: number, stiffness: number, span: number): void {
+    const P = this.positions;
+    const eyes = this.jointEyes as NonNullable<ParticleSystem["jointEyes"]>;
+    const ctrlOf = this.topology.ctrlOf;
+    if (this.jeyeArc.length < this.jeyeParts.length) this.jeyeArc = new Float64Array(this.jeyeParts.length);
+    const arc = this.jeyeArc;
+    const halfTurn = Math.PI * R;
+    for (let e = 0; e < eyes.length; e++) {
+      if (this.jeyeOff[e] === 1) continue;
+      for (let arm = 0; arm < 2; arm++) {
+        const u0 = arm === 0 ? this.jeyeStart[e] : this.jeyeSplit[e];
+        const u1 = arm === 0 ? this.jeyeSplit[e] : this.jeyeEnd[e];
+        if (u1 - u0 < 3) continue;
+        // Consecutive parts must be chain neighbours off the seam.
+        const c = this.particleChain[this.jeyeParts[u0]];
+        const len = this.chains[c].length;
+        const brk = this.chainBreakAfter[c];
+        let ok = true;
+        arc[u0] = 0;
+        for (let u = u0 + 1; u < u1 && ok; u++) {
+          const i = this.jeyeParts[u - 1];
+          const j = this.jeyeParts[u];
+          const ki = ctrlOf[i];
+          const kj = ctrlOf[j];
+          const lo = (ki + 1) % len === kj ? ki : (kj + 1) % len === ki ? kj : -2;
+          if (lo === -2 || lo === brk) ok = false;
+          const dx = P[j * 2] - P[i * 2];
+          const dy = P[j * 2 + 1] - P[i * 2 + 1];
+          arc[u] = arc[u - 1] + Math.sqrt(dx * dx + dy * dy);
+        }
+        if (!ok) continue;
+        for (let u = u0; u < u1; u++) {
+          const i = this.jeyeParts[u];
+          const wEnd = Math.min(u1 - 1, u + span);
+          for (let w = u + 2; w <= wEnd; w++) {
+            const j = this.jeyeParts[w];
+            const s = arc[w] - arc[u];
+            const want = s >= halfTurn ? 2 * R : 2 * R * Math.sin(s / (2 * R));
+            const dx = P[j * 2] - P[i * 2];
+            const dy = P[j * 2 + 1] - P[i * 2 + 1];
+            const d2 = dx * dx + dy * dy;
+            if (d2 >= want * want || d2 < 1e-18) continue;
+            const d = Math.sqrt(d2);
+            const corr = ((want - d) / d) * stiffness * 0.5;
+            P[i * 2] -= dx * corr;
+            P[i * 2 + 1] -= dy * corr;
+            P[j * 2] += dx * corr;
+            P[j * 2 + 1] += dy * corr;
+          }
+        }
+      }
+    }
+  }
+
   // K1626 s3: the parked-eye release (see JOINT_EYE_RELEASE_MET), at a
   // width change: every eye whose worst pair stands under
   // JOINT_EYE_RELEASE_MET of its lens target at width-scale H stops
@@ -2008,6 +2093,7 @@ export class ParticleSystem {
   private jeyeEnd: Int32Array = new Int32Array(0);
   private jeyeParts: Int32Array = new Int32Array(256);
   private jeyeT: Float64Array = new Float64Array(256);
+  private jeyeArc: Float64Array = new Float64Array(256);
   // K1626 s3: the eyes released at the last width change (1 = no push;
   // see JOINT_EYE_RELEASE_MET), and the width that change set (-1 before
   // the first substep).
@@ -3008,6 +3094,11 @@ export class ParticleSystem {
       if (jeyes) {
         this.applyJointEyePressure(jeyeH, REPULSION_STIFFNESS);
         this.applyJointEyeArmBends(JOINT_EYE_ARM_BEND);
+        this.applyJointEyeHookRadius(
+          JOINT_EYE_HOOK_RADIUS * tuning.threadWidth,
+          JOINT_EYE_HOOK_STIFFNESS,
+          JOINT_EYE_HOOK_SPAN,
+        );
       }
       this.probe("repulsion");
       // Hard 3D floor: no two threads within the margin in 3D, ever. The
