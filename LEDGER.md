@@ -312,16 +312,6 @@ Next free ID: K1632.
   - branch: mainline (k1395-s2 merged; worktree kept); last commit: `e119402d5`
   - evidence: .claude/probes/K1395/s2/ (sheets.ps1, counts.py, sheet.py, crop.py); sheets untracked in the k1395-s2 worktree out/sh/
   - next: Levi looks at the reveals under rp=gf. Left: comet and burn colour 0.74 to 0.85x of today's at two frames near the front (untested causes: the composite's border fade thresholds alpha; the junction cuts at the front). A third stage only if he names it
-- **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
-  2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
-  of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
-  job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
-  keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
-  src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
-  - owner: nobody since 2026-11-26 08:35 (stage 4 landed; waiting on Levi's look)
-  - branch: mainline (k1626-s4 worktree kept); last commit: `2bca35b65`
-  - evidence: .claude/probes/K1626/ (cap4.mjs, compose4.py, s4_meas.py, s4_census.ps1); pictures sent to Levi 2026-11-26: k1626-s4 worktree out/sheet4.png, sheet4_zoom/zz28.png, zz132.png (untracked)
-  - next: Levi says whether the rounded hooks are enough. Left: J28's inner tip is still a narrow notch and J149's upper tip pointed (next lever: the eye pressure's lens shape at the narrow end; a further stage only if Levi names it). If enough: close K1626
 - **K1631** · 36 small paper islands on the 21 test mazes under rp=gf (fork crotches, pinholes in thin
   crossing gaps on A_6/A_8/A_b/A_c, inside marker rings): another cause than K1627's corner specks, untouched,
   cause not found. Levi has not named this kind of place: show him the pictures and ask whether they matter
@@ -597,6 +587,16 @@ Next free ID: K1632.
   - branch: k1604-s4-shots from origin/master, .claude/worktrees/k1604-s4-shots (captures only); k1604-s3 (c1cb7eac3) not for landing; last commit: c1cb7eac3 on k1604-s3
   - evidence: .claude/probes/K1604/ on k1604-s3 (capture recipe, screen.py, s3 place lists)
   - next: Levi 2026-11-26 on the stage 3 sheets: 'a lot of these seem wrong still. I need to see some slightly zoomed out shots to tell what's going on', and the rule: 'the gap should cut through the border parallel to the overthread of the crossing', no partial cuts that leave dangling parts (his text says 'should have'; read as should not, confirm with him). Capture agent: today's master, the two named places and the grid's thread ends, close and zoomed out, marked. On report: view, send to Levi, ask which are wrong
+- **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
+  2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
+  of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
+  job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
+  keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
+  src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
+  - owner: claude session 09c7a672 (opus agent K1626 stage 5, coordinator same session), started 2026-11-26 13:50, 2 h cap
+  - branch: k1626-s5 from origin/master, .claude/worktrees/k1626-s5; stages 1-4 landed (2bca35b65); last commit: `2009db7ef`
+  - evidence: .claude/probes/K1626/ (cap4.mjs, compose4.py, s4_meas.py, s4_census.ps1, bench.ts)
+  - next: Levi 2026-11-26 on J28's inner tip: 'More would be better if it's not too much cost'. Stage 5 (docs/design/K1626_s5_brief.md): round the eye's narrow end within the cost lines (3% step, sleep 6.0 s, openings, sharp turns). On report: view master | yours, land when clean, send to Levi
 
 ## Next, in order
 
