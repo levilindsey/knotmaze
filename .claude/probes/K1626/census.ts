@@ -45,6 +45,8 @@ for (const [name, q0] of jobs) {
     smooth: p.smooth, stiffness: p.stiffness, gridAlign: p.gridAlign, threadWidth: p.threadWidth,
   };
   const graph = buildSceneGraph(params).graph;
+  // The S4 switch is seen at construction too (build-time keys such as nok).
+  (globalThis as unknown as { __K1626S4?: unknown }).__K1626S4 = process.env.S4 ? JSON.parse(process.env.S4) : undefined;
   const ps = new ParticleSystem(graph);
   // Experiment: JNSEP=<ctrl> pins the jn budget (the field is recomputed
   // from the constants each substep; a getter-only property wins).
@@ -94,7 +96,13 @@ for (const [name, q0] of jobs) {
       if (r1 !== undefined && r2 !== undefined) bc.rest = r1 + r2;
     }
   }
-  const gate = new SleepGate();
+  // K1626 s4: S4=<json> sets the eye-pressure probe switch (globalThis.__K1626S4)
+  // from scratch; with S4FROZEN=1 it is set only after a plain settle to sleep,
+  // then the state steps on to a second sleep (slept = the re-sleep's sim time).
+  const S4 = process.env.S4 ? JSON.parse(process.env.S4) : null;
+  const G = globalThis as unknown as { __K1626S4?: unknown };
+  G.__K1626S4 = S4 && process.env.S4FROZEN !== "1" ? S4 : undefined;
+  let gate = new SleepGate();
   let slept = Infinity;
   const t0 = performance.now();
   let substeps = 0;
@@ -102,6 +110,17 @@ for (const [name, q0] of jobs) {
     const s0 = ps.simTime;
     ps.step(0.1, tuning);
     if (gate.frame(physicsQuiet(ps), ps.simTime - s0)) { slept = ps.simTime; break; }
+  }
+  if (S4 && process.env.S4FROZEN === "1") {
+    G.__K1626S4 = S4;
+    gate = new SleepGate();
+    const tf = ps.simTime;
+    slept = Infinity;
+    while (ps.simTime < tf + CAP) {
+      const s0 = ps.simTime;
+      ps.step(0.1, tuning);
+      if (gate.frame(physicsQuiet(ps), ps.simTime - s0)) { slept = ps.simTime - tf; break; }
+    }
   }
   const wall = performance.now() - t0;
   const pos: Float32Array = ps.positions;

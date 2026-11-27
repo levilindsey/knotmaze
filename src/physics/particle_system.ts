@@ -438,6 +438,31 @@ const JOINT_EYE_DIST_PER_WIDTH = 3.0;
 // its crossing, which no bound from the arms sees) and holding a parked
 // eye at the shape it reached (Levi's link never slept).
 const JOINT_EYE_RELEASE_MET = 0.98;
+// K1626 s4: the EYE-ARM BEND. Levi on the s2 sheet (2026-11-26): "Row 5
+// and 6 though have some pretty sharply angled triangular hooks ... it
+// might be good to round that a bit" - J132xX254 (chain 84 turned 60 deg
+// at one particle) and J28xX64 (chain 8: 99 deg at slot 4, 43 deg at 3).
+// A hook sits on a short lattice segment pair (rest 0.354 against 0.559 /
+// 0.707): the lens pulls the arm out, bending (pull-only chords over two
+// legs, 0.18) lets the short pair fold, and the turn lands on one
+// particle. So each interior particle of an eye's arm gets one more
+// pull-only chord between its two neighbours, wanting the chord the two
+// legs would span if the particle turned through its arm's MEAN turn:
+// a turn above the arm's mean is opened toward it, one below is left
+// alone, so the arm's total turn spreads over its particles instead of
+// gathering at one. (A plain straightening chord, want = |ab| + |bc|,
+// also rounded the hooks but straightened the whole arm against the
+// lens.) Measured over his link and ?1..?a (11 settled census.ts states,
+// master -> this): J28's largest turn 98.9 -> 69.1 deg (two particles of
+// 56-64 deg now), J132's 60.1 -> 50.3, J149's 76.3 -> 62.7; sharp (> 60
+// deg) turns 94 -> 94 (?8 7 -> 7); eyes under 1.5 widths 1 -> 0 (?4's
+// J5xX19 1.47 -> 1.86); of 204 eyes 5 opened by more than 0.15 widths
+// and 1 closed by more (L J144xX297 3.03 -> 2.87); J138 2.05, J64 1.87,
+// J13 1.97. 0.4 rounded J28 only to 78 deg; 0.8 and 1.0 added 7 sharp
+// turns (?5, ?7, his link) for no rounder J28. Carrying K1622's arm
+// fairing with it closed J28 by 0.6-0.7 widths (and 4 other eyes by more
+// than 0.15), so it is not carried. Parked eyes (jeyeOff) are skipped.
+const JOINT_EYE_ARM_BEND = 0.6;
 // Crossing coverage for the anti-riding 2D floor is measured in WORLD
 // ARC bounded by the renderer's erase reach - see updatePassCover.
 const COUPLING_STIFFNESS = 0.7;
@@ -1316,6 +1341,76 @@ export class ParticleSystem {
           P[j * 2] += dx * push;
           P[j * 2 + 1] += dy * push;
         }
+      }
+    }
+  }
+
+  // K1626 s4: the eye-arm bend (see JOINT_EYE_ARM_BEND). Per eye and arm,
+  // the mean turn over the arm's interior particles; then per particle b
+  // with neighbours a and c, a pull-only chord a-c wanting
+  // sqrt(|ab|^2 + |bc|^2 + 2 |ab| |bc| cos(mean)). A particle whose legs
+  // cross an open chain's seam is skipped (it has no turn there).
+  private applyJointEyeArmBends(stiffness: number): void {
+    const P = this.positions;
+    const eyes = this.jointEyes as NonNullable<ParticleSystem["jointEyes"]>;
+    const ctrlOf = this.topology.ctrlOf;
+    const atSeam = (b: number): boolean => {
+      const c = this.particleChain[b];
+      const brk = this.chainBreakAfter[c];
+      if (brk < 0) return false;
+      const k = ctrlOf[b];
+      return k === brk || (k - 1 + this.chains[c].length) % this.chains[c].length === brk;
+    };
+    const meanTurn = (u0: number, u1: number): number => {
+      let sum = 0;
+      let n = 0;
+      for (let u = u0; u < u1; u++) {
+        const b = this.jeyeParts[u];
+        if (atSeam(b)) continue;
+        const chain = this.chains[this.particleChain[b]];
+        const len = chain.length;
+        const a = chain[(ctrlOf[b] - 1 + len) % len];
+        const c = chain[(ctrlOf[b] + 1) % len];
+        const ax = P[b * 2] - P[a * 2];
+        const ay = P[b * 2 + 1] - P[a * 2 + 1];
+        const bx = P[c * 2] - P[b * 2];
+        const by = P[c * 2 + 1] - P[b * 2 + 1];
+        const l = Math.sqrt((ax * ax + ay * ay) * (bx * bx + by * by));
+        sum += l > 1e-12 ? Math.acos(Math.max(-1, Math.min(1, (ax * bx + ay * by) / l))) : 0;
+        n++;
+      }
+      return n > 0 ? sum / n : 0;
+    };
+    for (let e = 0; e < eyes.length; e++) {
+      if (this.jeyeOff[e] === 1) continue;
+      const a0 = this.jeyeStart[e];
+      const b0 = this.jeyeSplit[e];
+      const b1 = this.jeyeEnd[e];
+      const cosA = Math.cos(meanTurn(a0, b0));
+      const cosB = Math.cos(meanTurn(b0, b1));
+      for (let u = a0; u < b1; u++) {
+        const b = this.jeyeParts[u];
+        if (atSeam(b)) continue;
+        const chain = this.chains[this.particleChain[b]];
+        const len = chain.length;
+        const a = chain[(ctrlOf[b] - 1 + len) % len];
+        const c = chain[(ctrlOf[b] + 1) % len];
+        const ax = P[b * 2] - P[a * 2];
+        const ay = P[b * 2 + 1] - P[a * 2 + 1];
+        const bx = P[c * 2] - P[b * 2];
+        const by = P[c * 2 + 1] - P[b * 2 + 1];
+        const l1 = Math.sqrt(ax * ax + ay * ay);
+        const l2 = Math.sqrt(bx * bx + by * by);
+        const want = Math.sqrt(l1 * l1 + l2 * l2 + 2 * l1 * l2 * (u < b0 ? cosA : cosB));
+        const dx = P[c * 2] - P[a * 2];
+        const dy = P[c * 2 + 1] - P[a * 2 + 1];
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d >= want || d < 1e-9) continue;
+        const corr = ((want - d) / d) * stiffness * 0.5;
+        P[a * 2] -= dx * corr;
+        P[a * 2 + 1] -= dy * corr;
+        P[c * 2] += dx * corr;
+        P[c * 2 + 1] += dy * corr;
       }
     }
   }
@@ -2912,6 +3007,7 @@ export class ParticleSystem {
       }
       if (jeyes) {
         this.applyJointEyePressure(jeyeH, REPULSION_STIFFNESS);
+        this.applyJointEyeArmBends(JOINT_EYE_ARM_BEND);
       }
       this.probe("repulsion");
       // Hard 3D floor: no two threads within the margin in 3D, ever. The
