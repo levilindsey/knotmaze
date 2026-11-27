@@ -329,6 +329,16 @@ Next free ID: K1631.
   - branch: mainline (k1627-s2 worktree kept); last commit: `7682cf7c5`
   - evidence: .claude/probes/K1627/ (p_noother.json, sheet_c.py; out/sheet_s2_speckskip_1.png, _2.png untracked in the k1627-s2 worktree)
   - next: Waiting on Levi: 7 specks of 1-6 px of paper at corner points remain on his link (and the 4 px tip at (1141,1638)); the other-arm skip removes them but closes parts of the 3 real crossing gaps, so it was dropped. Two stages done: a third only if Levi names it (it must tell a real over-pass from the outline margin). Residual: faint tone step under 6 levels at (1815,1150)
+- **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
+  2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
+  of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
+  job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
+  keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
+  src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
+  - owner: nobody since 2026-11-26 08:35 (stage 4 landed; waiting on Levi's look)
+  - branch: mainline (k1626-s4 worktree kept); last commit: `2bca35b65`
+  - evidence: .claude/probes/K1626/ (cap4.mjs, compose4.py, s4_meas.py, s4_census.ps1); pictures sent to Levi 2026-11-26: k1626-s4 worktree out/sheet4.png, sheet4_zoom/zz28.png, zz132.png (untracked)
+  - next: Levi says whether the rounded hooks are enough. Left: J28's inner tip is still a narrow notch and J149's upper tip pointed (next lever: the eye pressure's lens shape at the narrow end; a further stage only if Levi names it). If enough: close K1626
 
 ## In progress
 
@@ -594,20 +604,10 @@ Next free ID: K1631.
   samples against 3.5 elsewhere, K1619): test whether the junction cover causes it (change the cover grading
   on the frozen state, re-measure with .claude/probes/kink/analyze.py); if so spread the arm's turn over
   particles 2 to 4 in particle_system.ts; sleep tests and goldens move (docs/design/kink_diag.md)
-  - owner: claude session 09c7a672 (carried by the K1626 stage 4 agent), since 2026-11-26 07:50
-  - branch: k1622-s1 (not landed; being carried onto master inside k1626-s4); last commit: 494d62c50 on k1622-s1
-  - evidence: .claude/probes/K1622/ on k1622-s1 (settle.ts, perf2.ts, pairs.py)
-  - next: lands or is dropped with K1626 stage 4 (docs/design/K1626_s4_brief.md): cost gate 5%, sleep holds; Levi's spot barely changes with it (picture sent 2026-11-25, no verdict yet)
-- **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
-  2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
-  of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
-  job of keeping these threads apart. This is a recurring problem in other places too'). Fix in src/physics/:
-  keep a crossing a clear distance from a junction and the arms apart there. Starts when K1622's agent leaves
-  src/physics/ (one agent per file area). Picture: .claude/probes/K1626/levi_phone.png (untracked)
-  - owner: claude session 09c7a672 (opus agent K1626 stage 4, coordinator same session), started 2026-11-26 07:50, 2 h cap
-  - branch: k1626-s4 from origin/master, .claude/worktrees/k1626-s4; stages 1-3 landed in 3a799f7f2; last commit: `3a799f7f2`
-  - evidence: .claude/probes/K1626/ (jeye.ts, eyetab.py, widthjump.ts, bench.ts, cap3.mjs); sheet Levi judged: k1626-s2 worktree out/K1626_s2_sheet.png (untracked)
-  - next: Levi 2026-11-26: 'stage 2 is best!' (landed), but rows 5 and 6 (J132xX254, J28xX64) show 'pretty sharply angled triangular hooks', 'might be good to round that a bit'. Stage 4 (docs/design/K1626_s4_brief.md): carry K1622's arm-bend fix over, see if it rounds them, else round the eye's corners; openings, sleep and 5% cost hold. On report: view master | yours, send to Levi, land when clean
+  - owner: nobody since 2026-11-26 08:35
+  - branch: k1622-s1 (not landed); last commit: 494d62c50 on k1622-s1
+  - evidence: .claude/probes/K1622/ on k1622-s1; K1626 stage 4 handoff (docs/design/K1626_s4_brief.md)
+  - next: Levi: drop it (recommended) or say where the kink he meant is. Carried onto the landed joint eyes it closes J28 by 0.60 widths, narrows 5 eyes by more than 0.15 and adds 3 sharp turns; his spot (24.67, 35.10) does not visibly change with it
 
 ## Next, in order
 
