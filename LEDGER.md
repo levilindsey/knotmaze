@@ -317,6 +317,15 @@ Next free ID: K1632.
   cause not found. Levi has not named this kind of place: show him the pictures and ask whether they matter
   (k1627-s3 worktree .claude/probes/K1627/out/look_isl_1.png, _2.png, untracked; places in
   .claude/probes/K1627/sheet_places_s3_isl.json)
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: nobody since 2026-11-26 14:15: capture done, waiting on Levi to mark the wrong cuts
+  - branch: k1604-s4-shots (f69919052, capture scripts only, not for landing), .claude/worktrees/k1604-s4-shots; k1604-s3 (c1cb7eac3) not for landing; last commit: f69919052 on k1604-s4-shots
+  - evidence: .claude/probes/K1604/s4/ on k1604-s4-shots (run.ps1, cap.ps1, go.ps1, finder.cjs, sheet4.py); pages out/border_01..03.png (untracked, 18 places x 3 zooms, master bca87a4f2)
+  - next: Pages sent to Levi 2026-11-26 with the question: which rows are wrong, and is the rule 'no partial cuts' (his text said 'should have'). Coordinator's reading: rows 2, 7, 9, 13 suspect. No fix stage until he marks rows. Known gaps: row 7's pair (x292/j123, 61 px apart) may be mismapped; no fill-look page (the gf.png capture equalled the border look: check the capture path)
 
 ## In progress
 
@@ -578,15 +587,6 @@ Next free ID: K1632.
   - branch: mainline; last commit: this commit
   - evidence: src/ui/renderer_toggle.ts, test/ui/renderer_toggle.test.ts
   - next: at the rp=gf flip (gate 9) delete renderer_toggle.ts, its test and the row in tweakpane_panel.ts (the row's key is a variable so param_tags.test.ts skips it)
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: claude session 09c7a672 (sonnet capture agent, coordinator same session), started 2026-11-26, 1 h cap
-  - branch: k1604-s4-shots from origin/master, .claude/worktrees/k1604-s4-shots (captures only); k1604-s3 (c1cb7eac3) not for landing; last commit: c1cb7eac3 on k1604-s3
-  - evidence: .claude/probes/K1604/ on k1604-s3 (capture recipe, screen.py, s3 place lists)
-  - next: Levi 2026-11-26 on the stage 3 sheets: 'a lot of these seem wrong still. I need to see some slightly zoomed out shots to tell what's going on', and the rule: 'the gap should cut through the border parallel to the overthread of the crossing', no partial cuts that leave dangling parts (his text says 'should have'; read as should not, confirm with him). Capture agent: today's master, the two named places and the grid's thread ends, close and zoomed out, marked. On report: view, send to Levi, ask which are wrong
 - **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
   2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
   of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
