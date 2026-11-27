@@ -321,14 +321,6 @@ Next free ID: K1631.
   - branch: mainline (k1395-s2 merged; worktree kept); last commit: `e119402d5`
   - evidence: .claude/probes/K1395/s2/ (sheets.ps1, counts.py, sheet.py, crop.py); sheets untracked in the k1395-s2 worktree out/sh/
   - next: Levi looks at the reveals under rp=gf. Left: comet and burn colour 0.74 to 0.85x of today's at two frames near the front (untested causes: the composite's border fade thresholds alpha; the junction cuts at the front). A third stage only if he names it
-- **K1627** · rp=gf: a notch (a wedge of paper, a pointed tab left) cut into a junction's rounded corner where
-  a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of
-  `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important').
-  Picture: .claude/probes/K1627/levi_phone.png (untracked)
-  - owner: nobody since 2026-11-26 02:10: stage 2 landed, specks back to Levi
-  - branch: mainline (k1627-s2 worktree kept); last commit: `7682cf7c5`
-  - evidence: .claude/probes/K1627/ (p_noother.json, sheet_c.py; out/sheet_s2_speckskip_1.png, _2.png untracked in the k1627-s2 worktree)
-  - next: Waiting on Levi: 7 specks of 1-6 px of paper at corner points remain on his link (and the 4 px tip at (1141,1638)); the other-arm skip removes them but closes parts of the 3 real crossing gaps, so it was dropped. Two stages done: a third only if Levi names it (it must tell a real over-pass from the outline margin). Residual: faint tone step under 6 levels at (1815,1150)
 - **K1626** · Physics lets a junction's arms and a crossing right beside the junction crowd together (Levi,
   2026-11-25, phone picture: right side near the centre of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`, one arm
   of the junction passes over another thread straight out of the junction; 'Physics isn't doing a good enough
@@ -608,6 +600,14 @@ Next free ID: K1631.
   - branch: k1622-s1 (not landed); last commit: 494d62c50 on k1622-s1
   - evidence: .claude/probes/K1622/ on k1622-s1; K1626 stage 4 handoff (docs/design/K1626_s4_brief.md)
   - next: Levi: drop it (recommended) or say where the kink he meant is. Carried onto the landed joint eyes it closes J28 by 0.60 widths, narrows 5 eyes by more than 0.15 and adds 3 sharp turns; his spot (24.67, 35.10) does not visibly change with it
+- **K1627** · rp=gf: a notch (a wedge of paper, a pointed tab left) cut into a junction's rounded corner where
+  a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of
+  `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important').
+  Picture: .claude/probes/K1627/levi_phone.png (untracked)
+  - owner: claude session 09c7a672 (opus agent K1627 stage 3, coordinator same session), started 2026-11-26 08:40, 2 h cap
+  - branch: k1627-s3 from origin/master, .claude/worktrees/k1627-s3; stages 1-2 landed; last commit: `e14246410`
+  - evidence: .claude/probes/K1627/ (cap.ps1, run.ps1, places.py, an.ps1, p_*.json)
+  - next: Levi 2026-11-26: 'remove the specks' (he named the third stage). Stage 3 (docs/design/K1627_s3_brief.md): every speck and the tip gone on his link, true crossing gaps unchanged pixel for pixel. On report: view master | yours, land when clean, send the sheet
 
 ## Next, in order
 
