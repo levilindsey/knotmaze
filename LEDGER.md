@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1631.
+Next free ID: K1632.
 
 ## Waiting on Levi
 
@@ -331,6 +331,11 @@ Next free ID: K1631.
   - branch: mainline (k1626-s4 worktree kept); last commit: `2bca35b65`
   - evidence: .claude/probes/K1626/ (cap4.mjs, compose4.py, s4_meas.py, s4_census.ps1); pictures sent to Levi 2026-11-26: k1626-s4 worktree out/sheet4.png, sheet4_zoom/zz28.png, zz132.png (untracked)
   - next: Levi says whether the rounded hooks are enough. Left: J28's inner tip is still a narrow notch and J149's upper tip pointed (next lever: the eye pressure's lens shape at the narrow end; a further stage only if Levi names it). If enough: close K1626
+- **K1631** · 36 small paper islands on the 21 test mazes under rp=gf (fork crotches, pinholes in thin
+  crossing gaps on A_6/A_8/A_b/A_c, inside marker rings): another cause than K1627's corner specks, untouched,
+  cause not found. Levi has not named this kind of place: show him the pictures and ask whether they matter
+  (k1627-s3 worktree .claude/probes/K1627/out/look_isl_1.png, _2.png, untracked; places in
+  .claude/probes/K1627/sheet_places_s3_isl.json)
 
 ## In progress
 
@@ -600,14 +605,6 @@ Next free ID: K1631.
   - branch: k1622-s1 (not landed); last commit: 494d62c50 on k1622-s1
   - evidence: .claude/probes/K1622/ on k1622-s1; K1626 stage 4 handoff (docs/design/K1626_s4_brief.md)
   - next: Levi: drop it (recommended) or say where the kink he meant is. Carried onto the landed joint eyes it closes J28 by 0.60 widths, narrows 5 eyes by more than 0.15 and adds 3 sharp turns; his spot (24.67, 35.10) does not visibly change with it
-- **K1627** · rp=gf: a notch (a wedge of paper, a pointed tab left) cut into a junction's rounded corner where
-  a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of
-  `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important').
-  Picture: .claude/probes/K1627/levi_phone.png (untracked)
-  - owner: claude session 09c7a672 (opus agent K1627 stage 3, coordinator same session), started 2026-11-26 08:40, 2 h cap
-  - branch: k1627-s3 from origin/master, .claude/worktrees/k1627-s3; stages 1-2 landed; last commit: `e14246410`
-  - evidence: .claude/probes/K1627/ (cap.ps1, run.ps1, places.py, an.ps1, p_*.json)
-  - next: Levi 2026-11-26: 'remove the specks' (he named the third stage). Stage 3 (docs/design/K1627_s3_brief.md): every speck and the tip gone on his link, true crossing gaps unchanged pixel for pixel. On report: view master | yours, land when clean, send the sheet
 
 ## Next, in order
 
@@ -2693,6 +2690,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1627** · rp=gf: a notch (a wedge of paper, a pointed tab left) cut into a junction's rounded corner where a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important'). Done in efc686e04 (2026-11-26).
 - **K1621** · Kinks (K1619): turn K90's bend limit (splineBend, spline_generator.ts) back on at about 1.25 h for both renderers? Dropped: Levi 2026-11-25 on the bend-limit picture: 'It does not' look right. Bends stay; the physics route is K1622 (2026-11-25).
 - **K1625** · K1618 removed RevealFx.revealWidth; if branch k1395-s1 reads it, its merge fails type-check: fix at that merge. Dropped: K1395 stage 1 touched only gf_look.ts and merged clean after K1618 (2026-11-25).
 - **K1619** · Kink diagnosis: same physics and same centre line under both renderers; gf's exact inner border turns bends tighter than half the thread width into corners; they cluster on junction arms (docs/design/kink_diag.md). Done in this commit (2026-11-25).
