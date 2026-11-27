@@ -305,15 +305,6 @@ Next free ID: K1632.
   questions (how long a first-visit wait is acceptable, must gf carry the reveal colours before the flip,
   phone first or desktops first); the rp=outline recommendation (freeze now, delete after the flip). Closes
   K1310 when adopted
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: nobody since 2026-11-25 23:12: stage 3 failed (both places fixed, 207 other places notched; not landed)
-  - branch: k1604-s3, .claude/worktrees/k1604-s3 (not for landing); last commit: c1cb7eac3 (handoff); rule b1562c352 gated, 1f5d7acad ungated
-  - evidence: .claude/probes/K1604/s3/ on k1604-s3 (out/named_k4_1.png, grid_k4_01..09.png untracked)
-  - next: Levi picks: keep the two leftovers as they are and close (recommended; revisit after K1627, same gap code), or name another way. No fourth stage unless he names it
 - **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
   rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
   fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
@@ -605,6 +596,15 @@ Next free ID: K1632.
   - branch: k1622-s1 (not landed); last commit: 494d62c50 on k1622-s1
   - evidence: .claude/probes/K1622/ on k1622-s1; K1626 stage 4 handoff (docs/design/K1626_s4_brief.md)
   - next: Levi: drop it (recommended) or say where the kink he meant is. Carried onto the landed joint eyes it closes J28 by 0.60 widths, narrows 5 eyes by more than 0.15 and adds 3 sharp turns; his spot (24.67, 35.10) does not visibly change with it
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: claude session 09c7a672 (sonnet capture agent, coordinator same session), started 2026-11-26, 1 h cap
+  - branch: k1604-s4-shots from origin/master, .claude/worktrees/k1604-s4-shots (captures only); k1604-s3 (c1cb7eac3) not for landing; last commit: c1cb7eac3 on k1604-s3
+  - evidence: .claude/probes/K1604/ on k1604-s3 (capture recipe, screen.py, s3 place lists)
+  - next: Levi 2026-11-26 on the stage 3 sheets: 'a lot of these seem wrong still. I need to see some slightly zoomed out shots to tell what's going on', and the rule: 'the gap should cut through the border parallel to the overthread of the crossing', no partial cuts that leave dangling parts (his text says 'should have'; read as should not, confirm with him). Capture agent: today's master, the two named places and the grid's thread ends, close and zoomed out, marked. On report: view, send to Levi, ask which are wrong
 
 ## Next, in order
 
