@@ -327,6 +327,15 @@ Next free ID: K1632.
   - branch: mainline; k1626-s5 (.claude/worktrees/k1626-s5) keeps the probe tools; last commit: `29691186d`
   - evidence: .claude/probes/K1626/ on k1626-s5 (s5_tip.ts, s5_tiptab.py, seq5.ps1, perf5.ts); pictures out/sheet5.png, out/sheet5_zoom/zz28_2x.png (untracked)
   - next: Stage 5 landed (29691186d): J28's inner tip is a U. Levi looks at zz28_2x.png: enough, or more at J149's upper tip (unchanged; radius 1.6 rounds it but narrows 11 eyes by over 0.15, 1.45 narrows 6: his call, needs pictures first). Unchecked: ?4 bench median 1.040 (mean 1.025), thought to be its different settle; a frozen-state step check settles it
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: nobody since 2026-11-26 16:16: stage 5 ended, not landed; back to Levi (second unlanded stage)
+  - branch: k1604-s5 (.claude/worktrees/k1604-s5), not for landing as is: f2 src in 76123483b, f1 in a3e0f13fc + a17b1b04a; last commit: 6f7e654f0 on k1604-s5
+  - evidence: .claude/probes/K1604/s5/ on k1604-s5 (tools; out/ untracked: p18_1..3.png all 18 rows, p12_1..2.png the 12 largest changes elsewhere, tri6.png, grid_f2_1..9.png)
+  - next: Stage 5 extends the cut past the under's joint corner: fixes rows 2 and 12, row 9 and 13 leave a thin sliver, 7/11/17 unclear, 5 and 6 unchanged; elsewhere it breaks borders into dashes (8 of the 12 largest changes worse; 71k px at 1645 places; loose pieces 41-120 px 35 -> 359). Pages sent to Levi 2026-11-26; a further stage only if he names it. If so (handoff in docs/design/K1604_s5_brief.md on the branch): limit the longer cut by the angle between the under border and the over thread, bring back f1's row 6, find which over owns row 5's stretch. Also: three stale k1604-s3 processes (PIDs 81976, 79704, 83388) to stop
 
 ## In progress
 
@@ -588,15 +597,6 @@ Next free ID: K1632.
   - branch: mainline; last commit: this commit
   - evidence: src/ui/renderer_toggle.ts, test/ui/renderer_toggle.test.ts
   - next: at the rp=gf flip (gate 9) delete renderer_toggle.ts, its test and the row in tweakpane_panel.ts (the row's key is a variable so param_tags.test.ts skips it)
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: claude session 09c7a672 (opus agent K1604 stage 5, coordinator same session), started 2026-11-26 14:55, 2 h cap
-  - branch: k1604-s5 from origin/master, .claude/worktrees/k1604-s5; k1604-s3 and k1604-s4-shots hold tools only, not for landing; last commit: `4961df9c8`
-  - evidence: .claude/probes/K1604/ (s4/ capture tools on k1604-s4-shots; pages s4/out/border_01..03.png untracked)
-  - next: Levi 2026-11-26: rule confirmed (cut through the border parallel to the over thread, no partial cuts); 'rows 2, 5, 6, 7, 9, 11, 12, 13, 17 are the most wrong'. Stage 5 (docs/design/K1604_s5_brief.md) fixes those. On report: view master | yours for all 18 rows and the changes elsewhere, land when clean, send to Levi
 
 ## Next, in order
 
