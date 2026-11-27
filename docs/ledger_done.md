@@ -3987,3 +3987,59 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1499 (Done 2026-11-18)
 
 - **K1499** · rp=gf fades the thread away from the start and exit markers as today's does: Muse run 26K did this work and recorded it under K1500 (the run's brief carried the wrong ID); the dives item that K1500 held is re-filed as K1525. Done in b323cc2b7 (2026-11-18).
+
+## K1521 (Done 2026-11-19)
+
+- **K1521** · rp=gf, Crossing fade at joints: since K1482 s15/s18 an outline cut beside a fused joint (flagged crossing sides, about 1000+ slots on link A) starts at the over thread's edge and fades over 0.3 of the slider's length, so at a large fade (1.2) those outlines run nearly up to the over thread while ordinary crossings fade over the full length (29k px on link A; picture .claude/worktrees/agent-a077003d003b40d70/.claude/probes/K1482/out/s18/sheets/fl12_top.png). Dropped: Levi 2026-11-19: keep. Joint-side outlines keep the short 0.3 fade at every Crossing fade setting; no change (2026-11-19).
+
+## K1490 (Done 2026-11-19)
+
+- **K1490** · rp=gf border look at sharp V's (K1482 stage 3): where two threads' outlines converge at a sharp angle the ink runs together into a dark wedge, or leaves a light sliver under a pixel wide (wedge sites j15 j50 j82 j143 j158 t23e t59s t73e t84e, slivers j95 j147 t43s t56s: 13 of the 46 faulted sites). Dropped: answered, Levi 2026-11-19: 'Fix the wedges and notches, accept the slivers'. The 14 sites (wedge j15 j50 t23e t59s t81s t84e; notch j4 j14 j41 j47 j59 t4s t45s t58e) are K1482 stage 20; the 5 slivers (j71 j95 j147 t43s t56s) are accepted (2026-11-19).
+
+## K1522 (Done 2026-11-19)
+
+- **K1522** · rp=gf, the last two joint-side sites (j29, j49) are ordinary under-pass gaps ending next to a joint; closing them means joining the under thread's outline to the over thread's (no gap) at about 74 other crossings (u19) or about 11-17 under-tail and junction gaps (v19 / w19, a dot left at j50), which removes the over/under cue there. Dropped: Levi 2026-11-19: 'Keep today's gaps'. j29 and j49 stay as ordinary crossing-gap endings; the u19/v19/w19 joining rules are not landed (patches stay in .claude/probes/K1482/s19/) (2026-11-19).
+
+## K1515 (Done 2026-11-19)
+
+- **K1515** · At fused junctions today's renderer draws straight fan strokes through the junction where rp=gf's border look follows the threads' curves (j55, j36, j87, t16e, t2s on his link; K1482 stage 12). Dropped: Levi 2026-11-19: 'Keep the curves'. At fused junctions rp=gf's border look keeps following the threads' curves; gf's own picture stays the reference, today's straight fan strokes are not copied (2026-11-19).
+
+## K1519 (Done 2026-11-19)
+
+- **K1519** · The K1436 bar is noisy run to run on g41_user_tw64: two loads of identical src in one physics hash gave 14 finds under STRICT=1 (frames differ by 1-2 levels; .claude/probes/K1482/out/s13/bar.txt, bar_sheet.png). Done in bc6ec4cef (2026-11-19).
+
+## K1475 (Done 2026-11-19)
+
+- **K1475** · Probe: .claude/probes/K1458/dragcheck.mjs for gf at fade 1.2 sometimes finds no fresh load in state f9d72040 within 4 tries, so the stop compares nothing (2 of 3 runs in K1460 s5; K550's worker nondeterminism suspected, untested). Done in 9e358eae0 (2026-11-19).
+
+## K1461 (Done 2026-11-19)
+
+- **K1461** · K1458 tools: border.mjs crashes with Target closed while measuring, so gf's border look vs today's has no numbers (K1458 Do 4); .claude/probes/K1444/drag.mjs aims at the slider's filled bar, so its stops land off target (0.14 -> 0.28, 0.5 -> 0.62) and the first drag does nothing (fade part done in 9e358eae0, 26X: one physics state per load by parity alignment; 10/10 fade runs on f9d72040). Done in 9b268a257 (2026-11-19).
+
+## K1530 (Done 2026-11-19)
+
+- **K1530** · rp=gf: on `?3&xp=off&am=instant&rp=gf` master draws a different picture on two redraws of ONE frozen state (every shot UNSTABLE in K1525 s1's cap.mjs with paint clocks and background pinned; link A is stable, two-load control 0 px). Done in 27a2120bb (2026-11-19).
+
+## K1533 (Done 2026-11-19)
+
+- **K1533** · The perf lock had no fair way in: Muse 27A took it with "remove whatever is there, write my line, run" and re-took it with no gap for 80 minutes (2026-11-19 14:19-15:50), so K1482 stage 23's guards waited and never ran before it landed. Done in def4d127e (2026-11-19).
+
+## K1535 (Done 2026-11-19)
+
+- **K1535** · rp=gf's border look differs from today's renderer's (Muse 26Y's numbers). Dropped: already decided: Levi 2026-11-17 kept gf's own border look (K1455, .claude/rules/render-gpu-field.md). With explore off the two differ the same way (four live shots 2026-11-19, untracked .claude/probes/K1535/out), so nothing to ask (2026-11-19).
+
+## K1524 (Done 2026-11-19)
+
+- **K1524** · rp=gf corners: is rounding welcome at the sharp corners Levi did not name? Levi, 2026-11-19: "take the rounding". The second corner try is the default under gfh=1 (`gfk=0` turns it off), docs/design/K1524_keep_fault_gate.md deleted, probe branch `k1482s21-kclr` deleted; live 18:02. Done in 650aac4fa (2026-11-19).
+
+## K1529 (Done 2026-11-19)
+
+- **K1529** · rp=gf capture A/Bs: some loads of one build land on a view shifted by under a pixel (76,609 px differ, all on antialiased edges and soft shadows; not the reload after a hash miss, not concurrent GPU use, not the background; a per-page view state such as the eased camera's offset is inferred, not tested). Done in 9d519fb3a (2026-11-19).
+
+## K1479 (Done 2026-11-19)
+
+- **K1479** · K868 census states are not one per scene: ring froze on two physics hashes (50dd4ffd, 0a0ee15e) within one build in K1436's bar control, and g41_user_tw42 freezes on user_tw42.lightpaper's state, so its finds repeat lightpaper's. Done in fb18d719f (2026-11-19).
+
+## K1467 (Done 2026-11-19)
+
+- **K1467** · Tracked probe output 1034.9 MB (9530 files) -> 491.3 MB (6005) by git rm --cached only in c1f942762; disk and history keep every file (last tracking commit 9fa2bba1d); fresh worktrees 1061.6 -> 517.5 MB. Remains: open IDs K1482 100.2, K1395 72.5, K1407 59.8, K863 56.4, K1451 39.3 MB and 36.6 MB live-named closed sheets; guard test/repo/probe_budget.test.ts in 775d295ca (after-total + 100 MB, names git rm --cached). Done in c1f942762 (2026-11-19).
