@@ -588,14 +588,6 @@ Next free ID: K1632.
   - branch: mainline; last commit: this commit
   - evidence: src/ui/renderer_toggle.ts, test/ui/renderer_toggle.test.ts
   - next: at the rp=gf flip (gate 9) delete renderer_toggle.ts, its test and the row in tweakpane_panel.ts (the row's key is a variable so param_tags.test.ts skips it)
-- **K1622** · Kinks cluster on junction arms 1 to 1.5 world from a chain's end (36.5 sharp turns per 1000
-  samples against 3.5 elsewhere, K1619): test whether the junction cover causes it (change the cover grading
-  on the frozen state, re-measure with .claude/probes/kink/analyze.py); if so spread the arm's turn over
-  particles 2 to 4 in particle_system.ts; sleep tests and goldens move (docs/design/kink_diag.md)
-  - owner: nobody since 2026-11-26 08:35
-  - branch: k1622-s1 (not landed); last commit: 494d62c50 on k1622-s1
-  - evidence: .claude/probes/K1622/ on k1622-s1; K1626 stage 4 handoff (docs/design/K1626_s4_brief.md)
-  - next: Levi: drop it (recommended) or say where the kink he meant is. Carried onto the landed joint eyes it closes J28 by 0.60 widths, narrows 5 eyes by more than 0.15 and adds 3 sharp turns; his spot (24.67, 35.10) does not visibly change with it
 - **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
   (1 px neck, ragged top edge; the gap step clears it;
   .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
@@ -2690,6 +2682,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1622** · Kinks cluster on junction arms 1 to 1.5 world from a chain's end (36.5 sharp turns per 1000 samples against 3.5 elsewhere, K1619): test whether the junction cover causes it (change the cover grading on the frozen state, re-measure with .claude/probes/kink/analyze.py); if so spread the arm's turn over particles 2 to 4 in particle_system.ts; sleep tests and goldens move (docs/design/kink_diag.md). Dropped: Levi 2026-11-26: his spot looks the same with it and the second place looks worse (more kinked); on the landed joint eyes it also closes J28 by 0.60 widths. Branch k1622-s1 (494d62c50) not landed (2026-11-26).
 - **K1627** · rp=gf: a notch (a wedge of paper, a pointed tab left) cut into a junction's rounded corner where a thread passes under beside it (Levi, 2026-11-25, phone picture: right side, a third down, of `?3.FCBQ1H6L4-6NPbeg8HHN09w&rp=gf&gfh=1`; 'a generally recurring issue we must solve', 'pretty important'). Done in efc686e04 (2026-11-26).
 - **K1621** · Kinks (K1619): turn K90's bend limit (splineBend, spline_generator.ts) back on at about 1.25 h for both renderers? Dropped: Levi 2026-11-25 on the bend-limit picture: 'It does not' look right. Bends stay; the physics route is K1622 (2026-11-25).
 - **K1625** · K1618 removed RevealFx.revealWidth; if branch k1395-s1 reads it, its merge fails type-check: fix at that merge. Dropped: K1395 stage 1 touched only gf_look.ts and merged clean after K1618 (2026-11-25).
