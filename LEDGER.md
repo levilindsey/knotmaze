@@ -327,16 +327,6 @@ Next free ID: K1633.
   - branch: mainline; k1626-s5 (.claude/worktrees/k1626-s5) keeps the probe tools; last commit: `29691186d`
   - evidence: .claude/probes/K1626/ on k1626-s5 (s5_tip.ts, s5_tiptab.py, seq5.ps1, perf5.ts); pictures out/sheet5.png, out/sheet5_zoom/zz28_2x.png (untracked)
   - next: Stage 5 landed (29691186d): J28's inner tip is a U. Levi looks at zz28_2x.png: enough, or more at J149's upper tip (unchanged; radius 1.6 rounds it but narrows 11 eyes by over 0.15, 1.45 narrows 6: his call, needs pictures first). Unchecked: ?4 bench median 1.040 (mean 1.025), thought to be its different settle; a frozen-state step check settles it
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: nobody since 2026-11-27 17:30: stage 8 ended at its stop rule, nothing landed; back to Levi with pictures
-  - branch: k1604-s8, worktree .claude/worktrees/k1604-s8 (not mergeable: src holds the failed s8a rule); last commit: `d29ab1a5c`
-  - evidence: .claude/probes/K1604/s8/ on k1604-s8 (patches pW, pP, pWn, pPn; pages out/pg8_*.png untracked)
-  - next: Levi's call on pg8_rows_1.png / pg8_worse_1.png: keep today's, or a stage 9 he names (read back the pass test at rows 5 and 6, gate pW's window-off with it plus a distance to the junction; a junction gate needs a distance test, corner cells reach 3.81 world on A_6)
-  - brief: docs/design/K1604_s8_brief.md (handoff on branch k1604-s8)
 
 ## In progress
 
@@ -598,6 +588,16 @@ Next free ID: K1633.
   - branch: mainline; last commit: this commit
   - evidence: src/ui/renderer_toggle.ts, test/ui/renderer_toggle.test.ts
   - next: at the rp=gf flip (gate 9) delete renderer_toggle.ts, its test and the row in tweakpane_panel.ts (the row's key is a variable so param_tags.test.ts skips it)
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: claude agent (opus, stage 9 investigation) under claude session 09c7a672, started 2026-11-27 19:50
+  - branch: k1604-s9, worktree .claude/worktrees/k1604-s9 (stage 8 on k1604-s8, not mergeable); last commit: none yet (stage 8: d29ab1a5c)
+  - evidence: .claude/probes/K1604/s8/ on k1604-s8; stage 9's under .claude/probes/K1604/s9/ on k1604-s9
+  - next: agent reports by 2 h; view its pages, show Levi the exact-rule picture, then brief stage 10
+  - brief: `docs/design/K1604_s9_brief.md`
 
 ## Next, in order
 
