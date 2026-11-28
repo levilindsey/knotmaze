@@ -327,6 +327,16 @@ Next free ID: K1633.
   - branch: mainline; k1626-s5 (.claude/worktrees/k1626-s5) keeps the probe tools; last commit: `29691186d`
   - evidence: .claude/probes/K1626/ on k1626-s5 (s5_tip.ts, s5_tiptab.py, seq5.ps1, perf5.ts); pictures out/sheet5.png, out/sheet5_zoom/zz28_2x.png (untracked)
   - next: Stage 5 landed (29691186d): J28's inner tip is a U. Levi looks at zz28_2x.png: enough, or more at J149's upper tip (unchanged; radius 1.6 rounds it but narrows 11 eyes by over 0.15, 1.45 narrows 6: his call, needs pictures first). Unchecked: ?4 bench median 1.040 (mean 1.025), thought to be its different settle; a frozen-state step check settles it
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: nobody since 2026-11-28 02:05: stage 10 done (verdict mixed), waiting on Levi's look answer
+  - branch: k1604-s10, worktree .claude/worktrees/k1604-s10, not pushed; last commit: `4e11b1b30`
+  - evidence: .claude/probes/K1604/s10/ on k1604-s10 (bake + mirror tools; pages out/pages/rows_1.png, taper_choice.png, par_1.png untracked)
+  - next: Levi: are rows 5 and 6 right, and how should a shallow arm's border end (feather, sharp, today's stub)? Then stage 11 brief: chosen end, port list in the s10 handoff
+  - brief: docs/design/K1604_s10_brief.md on k1604-s10 (Handoff stage 10)
 
 ## In progress
 
@@ -588,16 +598,6 @@ Next free ID: K1633.
   - branch: mainline; last commit: this commit
   - evidence: src/ui/renderer_toggle.ts, test/ui/renderer_toggle.test.ts
   - next: at the rp=gf flip (gate 9) delete renderer_toggle.ts, its test and the row in tweakpane_panel.ts (the row's key is a variable so param_tags.test.ts skips it)
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: claude agent (opus, stage 10: bake + CPU probe) under claude session 09c7a672, started 2026-11-28 01:09
-  - branch: k1604-s10, worktree .claude/worktrees/k1604-s10 (stage 9 on k1604-s9 b8ebd464e); last commit: none yet (stage 9: b8ebd464e)
-  - evidence: .claude/probes/K1604/s9/ on k1604-s9 (gapmir.mts, exact.py, chk9.py; pages out/pages/pg9_*.png untracked)
-  - next: agent reports by 2 h; view its pages; if the datum gives the rule, brief stage 11 (port to lkGap) and ask Levi the two look questions (near-parallel border end, merged wedge)
-  - brief: `docs/design/K1604_s10_brief.md`
 
 ## Next, in order
 
