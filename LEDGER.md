@@ -593,10 +593,10 @@ Next free ID: K1633.
   .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
   yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
   trims (A_c x12 and five others, invisible at normal scale)
-  - owner: nobody since 2026-11-27 15:50: Levi said yes to the prototype's rows 5 and 6; stage 8 waits for the session restart
-  - branch: k1604-s8 (not created yet; stage 7 on k1604-s7, worktree .claude/worktrees/k1604-s7); last commit: `31e4ea175`
-  - evidence: .claude/probes/K1604/s7/ on branch k1604-s7
-  - next: launch one opus agent on docs/design/K1604_s8_brief.md
+  - owner: claude agent (opus, stage 8) under claude session 09c7a672, started 2026-11-27 15:57
+  - branch: k1604-s8, worktree .claude/worktrees/k1604-s8; last commit: none yet (base origin/master a49a52c60)
+  - evidence: .claude/probes/K1604/s7/ on branch k1604-s7; stage 8's under .claude/probes/K1604/ on k1604-s8
+  - next: agent reports by 2 h; view its pages, land if safe, show Levi
   - brief: `docs/design/K1604_s8_brief.md`
 
 ## Next, in order
