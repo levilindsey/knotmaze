@@ -593,10 +593,10 @@ Next free ID: K1633.
   .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
   yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
   trims (A_c x12 and five others, invisible at normal scale)
-  - owner: nobody since 2026-11-27 20:25: Levi paused all runs for four hours (until about 00:25 Nov 28); stage 9 agent stopped about 10 min in after a machine restart
-  - branch: k1604-s9, worktree .claude/worktrees/k1604-s9 (stage 8 on k1604-s8, not mergeable); last commit: none yet (stage 8: d29ab1a5c); probe tools untracked in the worktree
-  - evidence: .claude/probes/K1604/s9/ in the k1604-s9 worktree (gapmir.mts, eval9.gen.ts, chk9.py, uncommitted)
-  - next: after the pause: restart one opus agent on the brief in the same worktree (commit the probe tools first)
+  - owner: claude agent (opus, stage 9 investigation) under claude session 09c7a672, resumed 2026-11-28 00:28
+  - branch: k1604-s9, worktree .claude/worktrees/k1604-s9 (stage 8 on k1604-s8, not mergeable); last commit: none yet (stage 8: d29ab1a5c)
+  - evidence: .claude/probes/K1604/s9/ on k1604-s9
+  - next: agent reports by 02:30; view its pages, show Levi the exact-rule picture, then brief stage 10
   - brief: `docs/design/K1604_s9_brief.md`
 
 ## Next, in order
