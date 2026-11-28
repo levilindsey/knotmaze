@@ -961,8 +961,10 @@ Every other item below waits on the trigger it names.
   K1618: read them as gf
 - **K1632** · rp=gf converging borders beside a junction: where an under thread's border runs alongside
   another border into the junction the two merge into a hook or wedge (K1604 rows 7 top and 12; no gap
-  switch-off changes them, so it is joinery, not the gap). Not started; needs Levi to say it is wrong with a
-  picture first (k1604-s7 .claude/probes/K1604/s7/out/pg_rows_*.png)
+  switch-off changes them, so it is joinery, not the gap). Levi, 2026-11-27, on pg_rows_1.png: the hook at
+  the top of row 7 is wrong enough to work on, after K1604 stage 8 (row 12 not judged yet). Not started; next:
+  a one-page brief, stage 1 = the cause at row 7's hook, observed
+  (k1604-s7 .claude/probes/K1604/s7/out/pg_rows_*.png)
 
 ## Residuals (known, not fixed)
 
