@@ -593,11 +593,11 @@ Next free ID: K1633.
   .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
   yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
   trims (A_c x12 and five others, invisible at normal scale)
-  - owner: claude agent (opus, stage 9 investigation) under claude session 09c7a672, resumed 2026-11-28 00:28
-  - branch: k1604-s9, worktree .claude/worktrees/k1604-s9 (stage 8 on k1604-s8, not mergeable); last commit: none yet (stage 8: d29ab1a5c)
-  - evidence: .claude/probes/K1604/s9/ on k1604-s9
-  - next: agent reports by 02:30; view its pages, show Levi the exact-rule picture, then brief stage 10
-  - brief: `docs/design/K1604_s9_brief.md`
+  - owner: claude agent (opus, stage 10: bake + CPU probe) under claude session 09c7a672, started 2026-11-28 01:09
+  - branch: k1604-s10, worktree .claude/worktrees/k1604-s10 (stage 9 on k1604-s9 b8ebd464e); last commit: none yet (stage 9: b8ebd464e)
+  - evidence: .claude/probes/K1604/s9/ on k1604-s9 (gapmir.mts, exact.py, chk9.py; pages out/pages/pg9_*.png untracked)
+  - next: agent reports by 2 h; view its pages; if the datum gives the rule, brief stage 11 (port to lkGap) and ask Levi the two look questions (near-parallel border end, merged wedge)
+  - brief: `docs/design/K1604_s10_brief.md`
 
 ## Next, in order
 
