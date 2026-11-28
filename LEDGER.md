@@ -327,16 +327,6 @@ Next free ID: K1633.
   - branch: mainline; k1626-s5 (.claude/worktrees/k1626-s5) keeps the probe tools; last commit: `29691186d`
   - evidence: .claude/probes/K1626/ on k1626-s5 (s5_tip.ts, s5_tiptab.py, seq5.ps1, perf5.ts); pictures out/sheet5.png, out/sheet5_zoom/zz28_2x.png (untracked)
   - next: Stage 5 landed (29691186d): J28's inner tip is a U. Levi looks at zz28_2x.png: enough, or more at J149's upper tip (unchanged; radius 1.6 rounds it but narrows 11 eyes by over 0.15, 1.45 narrows 6: his call, needs pictures first). Unchecked: ?4 bench median 1.040 (mean 1.025), thought to be its different settle; a frozen-state step check settles it
-- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
-  (1 px neck, ragged top edge; the gap step clears it;
-  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
-  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
-  trims (A_c x12 and five others, invisible at normal scale)
-  - owner: nobody since 2026-11-27 13:12: stage 7 (investigation) done; waiting on Levi for stage 8
-  - branch: k1604-s7 (.claude/worktrees/k1604-s7), prototype switch gfgo, not for landing; last commit: 31e4ea175 on k1604-s7 (handoff)
-  - evidence: .claude/probes/K1604/s7/ on k1604-s7 (chk.py the rule checker, ana.py, sheet7.py, run.ps1, cap.ps1, perf7.ps1, p_*.json; out/ untracked: pg_rows_1..2, pg_worst_1..2, pg_rand_1..2, pg_worse_1..2, sw_rows_a3.png)
-  - next: Found: the cut's shape is already in the over's frame; what withholds it is the under's baked window (rows 5, 6, 9, 11) and the slot (row 7's lower meeting). Master fails the checker at 560 of 6859 junction-adjacent crossings, nearly all within 1 world of a junction on an arm. Prototype (window + slot skipped) halves uncut border, adds specks at hooks and arm ends. Stage 8 if Levi says go: within ~1 world of a junction stop gating by the window, keep the slot's hook protection, add a per-crossing limit on the under's pass clipped at the joint; score with chk.py on all 21 mazes. Open for that brief: gfgo=2 unscored, no D-maze prototype capture, frame cost needs three rounds (L's gap pass 4.4 -> 6.3 ms, one round), extend the checker past the band (rows 11, 13), border-look capture of L. Rows 12 and row 7's hook are converging borders (see the new joinery item). %TEMP%\knotmaze-K1604s7-* build folders left
-  - brief: docs/design/K1604_s7_brief.md (handoff on the branch only)
 
 ## In progress
 
@@ -598,6 +588,16 @@ Next free ID: K1633.
   - branch: mainline; last commit: this commit
   - evidence: src/ui/renderer_toggle.ts, test/ui/renderer_toggle.test.ts
   - next: at the rp=gf flip (gate 9) delete renderer_toggle.ts, its test and the row in tweakpane_panel.ts (the row's key is a variable so param_tags.test.ts skips it)
+- **K1604** · rp=gf junction rule (K1588, 140abd573) leftovers: A_3 x278 blob on a border only partly removed
+  (1 px neck, ragged top edge; the gap step clears it;
+  .claude/worktrees/k1588-land/.claude/probes/K1588/s3/sheets/zoom/A_3_x278.png); stage 1's three shapes not
+  yet shown to Levi (A_a x332 taper cut short, A_6 x326 blunt tip, about 23 ends 1 px short); six 1 px edge
+  trims (A_c x12 and five others, invisible at normal scale)
+  - owner: nobody since 2026-11-27 15:50: Levi said yes to the prototype's rows 5 and 6; stage 8 waits for the session restart
+  - branch: k1604-s8 (not created yet; stage 7 on k1604-s7, worktree .claude/worktrees/k1604-s7); last commit: `31e4ea175`
+  - evidence: .claude/probes/K1604/s7/ on branch k1604-s7
+  - next: launch one opus agent on docs/design/K1604_s8_brief.md
+  - brief: `docs/design/K1604_s8_brief.md`
 
 ## Next, in order
 
