@@ -4043,3 +4043,111 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1467 (Done 2026-11-19)
 
 - **K1467** · Tracked probe output 1034.9 MB (9530 files) -> 491.3 MB (6005) by git rm --cached only in c1f942762; disk and history keep every file (last tracking commit 9fa2bba1d); fresh worktrees 1061.6 -> 517.5 MB. Remains: open IDs K1482 100.2, K1395 72.5, K1407 59.8, K863 56.4, K1451 39.3 MB and 36.6 MB live-named closed sheets; guard test/repo/probe_budget.test.ts in 775d295ca (after-total + 100 MB, names git rm --cached). Done in c1f942762 (2026-11-19).
+
+## K1543 (Done 2026-11-20)
+
+- **K1543** · `npm test` fails 3 of the 7 tests in test/render/gf_k1482_switch.test.ts whenever env `GF_KRETRY=1` is set: the file pins the Node default off (run alone with and without the variable, 2026-11-20). Done in 1bf4c77d0 (2026-11-20).
+
+## K1542 (Done 2026-11-20)
+
+- **K1542** · rp=gf: the home burial (K1482 stage 28, fc1da3ad2) takes 2 antialias px off t56s, a clean corner, on link A (1040,267 on the stage's frame: outline 18,20,27 to paper 29,31,47; nothing to see at 6x). Done in e3bde61b0 (2026-11-20).
+
+## K1494 (Done 2026-11-20)
+
+- **K1494** · fade.mjs guard prints FAIL on cfe66a7d (fl=0: 677/679 sides pass, 348/350 crossings complete; fl=1.2: 439/451 sides, 287/299) while its distances match today (p90 |d-today| 0.0001-0.0124 world) - is the FAIL its crossing-completeness/dot criterion rather than a distance failure? Done in 7a4869708 (2026-11-20).
+
+## K1223 (Done 2026-11-20)
+
+- **K1223** · Quiet path, dead since K1211 S6 (13aab452): kPaintAt's quiet arg and kPulseCrestQuiet (`paint_glsl.ts`), the quiet flag (`paint_math.ts`), mode 2 in `arm_strip.ts` and joinery's writeStripRow, the quiet tests in `paint_gameplay.test.ts`. Done in 067b772d6 (2026-11-20).
+
+## K1539 (Done 2026-11-20)
+
+- **K1539** · K1482/cap.mjs freezes without alignFreezeParity, so each load plays the K1519 substep-parity lottery and reloads until HASH matches: in 27B's fixed 12-load set one load exhausted TRIES=6 on 10104c64 (six misses; 11 of 12 captured, all 0 px after the view pin, plus 2/2 supplement). Done in 3434cc5c7 (2026-11-20).
+
+## K1545 (Done 2026-11-20)
+
+- **K1545** · rp=gf, the six joints K1482 stage 30's in-leg run-on turned from a round hook into a point (j51, t28e, j83, j31, j161, t61s; the coordinator had recommended keeping the points). Levi 2026-11-20: 'all cases where you have removed the curved hook are very bad! The fundamental problem is that you have made it so the thread does appear to maintain its width and doesn't appear to travel in the correct direction to sign up with the thread on the other side'. The run-on is removed (gf_look.ts is the file from before stage 30) and his rule is binding lore (.claude/rules/render-gpu-field.md: the under pass keeps its width and its heading; never trade a hook for a point). The coordinator's capture of link A in one session, master | the revert | master: 508 px in 12 places as link A loads and the same 508 px with the corner retry off (385 lighter, 123 darker), fill 0 px, repeat master loads byte-equal (one session 10:07-10:20; .claude/probes/K1482/out/k1545/diff.txt); pushed 2026-11-20 10:25 inside bb958a136, deploy run 44792640853 green at 10:33; live: checked 10:45-10:50 on build bb958a1 (one cold load, 171.5 s, and two warm ones on the kept profile; passes over 0 and 0 context losses in every shot): against the old build's frame the changed places are the local capture's (t28e, j161, t81s, t61s, j83, j51, j31, t66s, t7s and the two tail tips, 5-47 px each at the live scale), plus the build stamp and the start marker's glow, which is also the repeat-load floor; the coordinator looked at the eight largest: the hook is back at the six joints, and t81s's step and t66s's notch are back (.claude/probes/K1482/k1545_live/live45_out.txt, live_hooks_1.png, live_hooks_2.png). t81s's nub is back with it (K1554). Done in 7d1605597 (2026-11-20).
+
+## K1541 (Done 2026-11-20)
+
+- **K1541** · rp=gf, j4 on link A: the paper pocket about 10 px across at its top left, where chain 82's outline meets arm a0's at a 90-degree corner. Dropped: Levi 2026-11-20: 'I don't see any problem at all with this picture. Fine as is' (2026-11-20).
+
+## K1527 (Done 2026-11-20)
+
+- **K1527** · rp=gf corners, leftover kind 2 (t4s's square inside corner, t81s's nub). Dropped: split on Levi's answer of 2026-11-20: t4s's rounding is an idea (K1555: 'this would be nice to round out, but is not too critical of the fix becomes too difficult to make or too costly'); t81s's nub, fixed by stage 30's run-on and back since its removal, is K1554 (2026-11-20).
+
+## K1546 (Done 2026-11-20)
+
+- **K1546** · rp=gf, the one-pixel specks and faint tips K1482 stage 30's run-on left at j51, j83 and beside its extensions. Dropped: the run-on that left them is removed (K1545, 7d1605597); the revert's capture is the picture from before stage 30 at those places (2026-11-20).
+
+## K1549 (Done 2026-11-20)
+
+- **K1549** · rp=gf corners, the change of approach put to Levi 2026-11-20 after fourteen site stages. His answers: 'Sgtm' to (b) the two-stage stop rule (binding; K1482's next and memory feedback_two_stage_stop), (c) the fault kinds counted on 20 other mazes (K1551, Muse 27L) and (d) what each corner rule costs (K1552, Muse 27M); and to (a), which places to finish: 'j15 must be fixed. The others are fine, except the corner rounding I mentioned above'. So j15 is K1482 stage 34 (brief docs/design/K1482_s34_j15_spike.md); t84e, j47, j59 with t23e, t59s, t58e and j41 stay as they are, with no stage; t4s's rounding is K1555; Muse run 27J (t84e's fold rule) is dropped. Done in b9d81599e (2026-11-20).
+
+## K1526 (Done 2026-11-20)
+
+- **K1526** · rp=gf corners, leftover kind 1 on link A (arms a crossing by another chain cut): j50 and t45s fixed (K1482 stages 28 and 29); j59's doubled band narrowed by stage 33's side-run gate (its leftover stub K1556, its table cost K1553); t84e (stage 32's lone-fold rule sits on master switched off, env GF_S32: docs/design/K1482_s32_t84e_paper.md), j47 and t23e accepted by Levi 2026-11-20 ('The others are fine', K1549); j4 fine (K1541). Each stage's numbers are in its handoff, docs/design/K1482_s26 to s33. Done in 928ed154a (2026-11-20).
+
+## K1551 (Done 2026-11-20)
+
+- **K1551** · rp=gf corner faults counted on 20 other mazes (K1549 c, Levi's yes 2026-11-20): a detector checked against link A's eye classes, then the faults per kind per maze, so the next corner rule is picked by how often its kind occurs. Done in 5d3674638 (2026-11-20).
+
+## K1552 (Done 2026-11-20)
+
+- **K1552** · rp=gf: what each corner rule costs (K1549 d, Levi's yes 2026-11-20; with K1456): its GLSL size, cold compile and link seconds, the redraw time with the second corner try on and off, and what each rule reads, toward corner decisions baked into the tables at maze build. Done in a3e0a0113 (2026-11-20).
+
+## K1556 (Done 2026-11-20)
+
+- **K1556** · rp=gf, j59 on link A after K1482 stage 33 (928ed154a, live): the doubled band is narrower (153 px lighter at one place, box 1024,1505-1044,1528 on the 3200x1800 frame; on the live frame 81 px at 768-783 x 1129-1145), and a short thick square stub (about 1013-1027 x 1520-1531) and a 1-2 px shoulder (1043,1504-1505) remain. Dropped: stage 33's side-run gate was reverted on Levi's word (2026-11-20, j59: 'the new render is very bad. It's completely removing a border'): 2afde92f0, live in dfe919f00; j59 draws its two close borders again (2026-11-20).
+
+## K1557 (Done 2026-11-20)
+
+- **K1557** · rp=gf: the side-run gate's thresholds sit close to its cases on link A: j59's pair never comes nearer than 1.98 h (RT_DMIN 1.945), a cap 1.91 h, the wedges at most 1.78 h (`### Handoff K1482 s33` in docs/design/K1482_s33_j59_run_gate.md). Dropped: moot: the side-run gate it tunes was reverted (2afde92f0, 2026-11-20) (2026-11-20).
+
+## K1553 (Done 2026-11-20)
+
+- **K1553** · rp=gf: K1482 stage 33's side-run gate adds about 9 ms to every table build while the second corner try is on (`sideRuns` in src/render/gpu_field/tables.ts fills `rtM`; the tables are rebuilt at every physics snapshot while the knot moves). Dropped: moot: the side-run gate's table build left with the revert (2afde92f0, 2026-11-20); Muse run 27N withdrawn (2026-11-20).
+
+## K1554 (Done 2026-11-20)
+
+- **K1554** · rp=gf, t81s on link A (929,1153 on the 3200x1800 frame; one of the 14 places Levi named, K1490, a wedge): its nub is back since the in-leg run-on was removed (K1545, 7d1605597). Dropped: not a fault: Levi 2026-11-20 'we want the step' (lore: .claude/rules/render-gpu-field.md, 2afde92f0); its rounder corner is K1559, the under pass's width below the crossing K1560 (2026-11-20).
+
+## K1485 (Done 2026-11-20)
+
+- **K1485** · rp=gf border look, a dead-end tail under the thread it meets: since 0a84d3d1 (K1482 s2) the tail stops just short of that thread, like an under pass, where it used to fuse into it (and drew a sliver across it). Dropped: Levi 2026-11-20: 'The today versions are the only ones that resemble something possibly that's possibly correct': today's join stays. The item's 'dead-end tail' was wrong wording: none of its places is a maze dead end (the scene record has no deadEnds entry there); each is a thread's end at a T junction (j3 chain 1 on chain 52, j61 chain 25 on chain 44, t18e chain 18 on chain 71, j76 chain 41 on chain 33, t50s chain 50 on chain 11) (2026-11-20).
+
+## K1470 (Done 2026-11-20)
+
+- **K1470** · rp=gf gfh=1, junction j71 (g41_user_tw64 4.981:7.472): since K1451 stage 4 the colour seam inside the web is a small trapezoid bump where it was a thin spike (21 px at 4x; pin 278 L's over window 0.658 -> 0.770). Dropped: Levi 2026-11-20: 'only the today versions of the outlines look right': today's outlines stay. The nub of gap he saw in the fill versions is K1561 (2026-11-20).
+
+## K1544 (Done 2026-11-20)
+
+- **K1544** · Captures of the plain knot link `?3&xp=off&am=instant` have no 0 px floor: two loads of ONE build, asleep, at one physics hash (0cbb8f07) differ by 193,124 px (today's renderer) and 101,249 px (rp=gf fill) over 24 levels in the thread area, so K1223's 0 px re-shoot could not be read on it (Muse run 26Z; link A and the pulse states gave 0-3 px). Done in ec4dccd820714eceb1acfd976bc3721cabfe1b16 (2026-11-20).
+
+## K1493 (Done 2026-11-20)
+
+- **K1493** · the 1292 probe output files (362 MB) are out of every commit: history rewritten with git filter-repo and force-pushed on Levi's yes (master 7c96f6a37 -> 2c5e2ace2, muse-26p-wip too; trees equal, 5057 commits, 319 renamed; docs/K1493_commit_map.txt). Done in 2c5e2ace2 (2026-11-20).
+
+## K1528 (Done 2026-11-20)
+
+- **K1528** · j15's spur is gone: stage 34b's end-arm burial (link A changes at j15 only, 39 px, only lighter; fill and gfk=0 shots 0 px; bar, guards, npm test pass; live 14:01). Done in ac4387f28 (2026-11-20).
+
+## K1561 (Done 2026-11-20)
+
+- **K1561** · rp=gf fill look: a nub of gap cuts into a thread that comes out from under one thread and at once ends on another (g41_user_tw64 j71, 4.981:7.472; Levi 2026-11-20): `lkGap`'s coverage cut (gf_look.ts) takes every higher piece in a crossing window, a joint's host too (stage 8 fixed the outline only). Done in dcd8e81e6 (2026-11-20).
+
+## K1567 (Done 2026-11-20)
+
+- **K1567** · rp=gf t81s (K1560): stage 35's candidate is built, not landed (9d42c8f90 on worktree-agent-a36a75a8057e449f5): a 5 px step on the under thread's right edge, 18 px. Dropped: answered by Levi 2026-11-20 17:48, "t81s more": one last stage at the place, K1482 stage 38 (`docs/design/K1482_s38_t81s_more.md`) (2026-11-20).
+
+## K1577 (Done 2026-11-20)
+
+- **K1577** · what comes after the ball (asked 2026-11-20): Levi answered 'Do it' to all three changes: the corners he named are next (K1559 t81s's step, K1555 t4s's corner; stage 41), no card and no pick before the all-maze look (K1578), a fuller Muse queue (runs 27T and 27U). Done in f20a66f7d (2026-11-20).
+
+## K1550 (Done 2026-11-20)
+
+- **K1550** · Early WebGL loss cured: the strong repro broke 7/10 gf and 4/10 today loads on master (Pixi draws nothing for the page's life, GPU objects healthy); a load-time loss reloads the page once per tab session, after which the tip gate read 0/45 gf and 0/20 today off the floor (23 error-logging loads), late 5/5 both renderers with no reload, 0 pageerrors. Closed by Run 27K's handoff. Done in 5564d2665 (2026-11-20).
+
+## K1579 (Done 2026-11-20)
+
+- **K1579** · The leftover gate was finished on tip 3a1bd40a4: gf 0/45, today 0/20, late 5/5+5/5, guards pass, deploy green; K1550 closed. Done in 5564d2665 (2026-11-20).
